@@ -2,7 +2,15 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
-export default defineConfig({
+const PROD_API = "https://tu-profesor-particular-backend.onrender.com";
+
+export default defineConfig(({ mode }) => ({
+  define: {
+    // Garantiza que la URL de producción esté disponible aunque Vercel no inyecte la env var
+    ...(mode === "production" && !process.env.VITE_BACKEND_URL
+      ? { "import.meta.env.VITE_BACKEND_URL": JSON.stringify(PROD_API) }
+      : {}),
+  },
   plugins: [
     react(),
     ViteImageOptimizer({
@@ -32,4 +40,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
