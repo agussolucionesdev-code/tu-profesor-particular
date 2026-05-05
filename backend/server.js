@@ -4,6 +4,7 @@ import app from "./src/app.js";
 import connectDB, { disconnectDB } from "./src/config/db.js";
 import { ensureConfiguredAdmin } from "./src/config/adminSeed.js";
 import { processReminders } from "./src/services/reminderService.js";
+import Booking from "./src/models/Booking.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const REQUEST_TIMEOUT_MS = Number(process.env.SERVER_REQUEST_TIMEOUT_MS || 15000);
@@ -99,6 +100,23 @@ const launch = async () => {
       }
     });
     console.log("CRON: daily reminder scheduled for 09:00 AM.");
+
+    // Hourly: auto-finalize confirmed bookings whose end time has passed
+    cron.schedule("0 * * * *", async () => {
+      try {
+        const now = new Date();
+        const result = await Booking.updateMany(
+          { status: "Confirmado", endTime: { $lt: now } },
+          { $set: { status: "Finalizado" } },
+        );
+        if (result.modifiedCount > 0) {
+          console.log(`CRON: auto-finalized ${result.modifiedCount} booking(s).`);
+        }
+      } catch (err) {
+        console.error("CRON: auto-finalize job error:", err.message);
+      }
+    });
+    console.log("CRON: auto-finalize scheduled every hour.");
   } catch (error) {
     // DB connection exhausted all retries. The server stays alive so Render
     // keeps it running — a misconfigured MONGO_URI or a paused Atlas cluster

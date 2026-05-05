@@ -88,6 +88,7 @@ const bookingSchema = new mongoose.Schema(
 
     price: { type: Number, default: 0, min: 0, max: 99999999 },
     notes: { type: String, trim: true, default: "", maxlength: 2000 },
+    studentNotes: { type: String, trim: true, default: "", maxlength: 500 },
     studentEvolution: { type: String, trim: true, default: "", maxlength: 5000 },
     emotionalState: { type: String, trim: true, default: "", maxlength: 1000 },
 

@@ -197,7 +197,7 @@ export const validateContact = ({ email, phone }) => {
   return null;
 };
 
-export const validateSlot = (startTime, duration) => {
+export const validateSlot = (startTime, duration, openingHour = 7, closingHour = 22, advanceNoticeMinutes = 60) => {
   if (!startTime || Number.isNaN(startTime.getTime())) {
     return "La fecha y hora del turno no es válida.";
   }
@@ -216,17 +216,17 @@ export const validateSlot = (startTime, duration) => {
 
   const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
   const opening = new Date(startTime);
-  opening.setHours(7, 0, 0, 0);
+  opening.setHours(openingHour, 0, 0, 0);
   const closing = new Date(startTime);
-  closing.setHours(22, 0, 0, 0);
+  closing.setHours(closingHour, 0, 0, 0);
 
   if (startTime < opening || endTime > closing) {
-    return "El turno debe estar dentro del horario de 07:00 a 22:00.";
+    return `El turno debe estar dentro del horario de ${String(openingHour).padStart(2, "0")}:00 a ${String(closingHour).padStart(2, "0")}:00.`;
   }
 
-  const minStart = new Date(Date.now() + 60 * 60 * 1000);
+  const minStart = new Date(Date.now() + advanceNoticeMinutes * 60 * 1000);
   if (startTime < minStart) {
-    return "Los turnos deben reservarse con al menos 60 minutos de anticipación.";
+    return `Los turnos deben reservarse con al menos ${advanceNoticeMinutes} minutos de anticipación.`;
   }
 
   return null;

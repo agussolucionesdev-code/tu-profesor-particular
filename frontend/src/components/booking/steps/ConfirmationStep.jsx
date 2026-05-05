@@ -29,7 +29,12 @@ const ConfirmationStep = ({
   goToPrev,
   loading,
   loadingPhase,
+  pricePerHour,
 }) => {
+  const estimatedPrice =
+    pricePerHour > 0 && formData.duration >= 0.5
+      ? pricePerHour * formData.duration
+      : null;
   return (
     <>
       <div className="calendar-focus-container confirmation-stage">
@@ -240,6 +245,33 @@ const ConfirmationStep = ({
             </p>
           </div>
         </section>
+
+        {estimatedPrice !== null && (
+          <div
+            style={{
+              background: "var(--color-surface-2, #f0fdf4)",
+              borderLeft: "4px solid var(--color-success, #38a169)",
+              borderRadius: "10px",
+              padding: "0.85rem 1.1rem",
+              marginBottom: "1rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "0.5rem",
+            }}
+          >
+            <div>
+              <strong style={{ fontSize: "0.95rem" }}>Precio estimado</strong>
+              <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.7 }}>
+                (puede variar según el nivel)
+              </p>
+            </div>
+            <strong style={{ fontSize: "1.25rem", color: "var(--color-success, #38a169)" }}>
+              ${estimatedPrice.toLocaleString("es-AR")}
+            </strong>
+          </div>
+        )}
 
         <BookingConfirmationSummary
           dateLabel={confirmationDateLabel}

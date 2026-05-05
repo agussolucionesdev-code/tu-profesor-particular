@@ -9,6 +9,7 @@ import {
   deleteAllBookings,
   rescheduleBooking,
   cancelBookingClient,
+  updateStudentNotes,
 } from "../controllers/bookingController.js";
 import { requireAdmin } from "../middleware/authMiddleware.js";
 import {
@@ -22,6 +23,7 @@ router.post("/reserve", publicMutationLimiter, createBooking);
 router.get("/availability", getAvailability);
 router.post("/reschedule", publicMutationLimiter, rescheduleBooking);
 router.post("/cancel", publicMutationLimiter, cancelBookingClient);
+router.put("/:code/notes", publicMutationLimiter, updateStudentNotes);
 
 const rejectInProduction = (req, res) => {
   res

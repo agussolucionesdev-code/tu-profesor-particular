@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
+import BlockedDate from "../models/BlockedDate.js";
+import { getSetting } from "./settingsController.js";
 import { sendBookingNotifications } from "../config/mailer.js";
 import {
   appendBookingToSheet,
@@ -51,6 +53,7 @@ const publicBooking = (booking) => ({
   endTime: booking.endTime,
   duration: booking.duration,
   status: booking.status,
+  studentNotes: booking.studentNotes,
   createdAt: booking.createdAt,
   updatedAt: booking.updatedAt,
 });
@@ -190,9 +193,24 @@ export const createBooking = async (req, res, next) => {
 
     const startTime = parseDateTimeInput(payload.timeSlot);
     const duration = Number(payload.duration);
-    const slotError = validateSlot(startTime, duration);
+
+    const [openingHour, closingHour, advanceNoticeMinutes, requireManual] = await Promise.all([
+      getSetting("schedule.openingHour"),
+      getSetting("schedule.closingHour"),
+      getSetting("schedule.advanceNoticeMinutes"),
+      getSetting("booking.requireManualConfirmation"),
+    ]);
+
+    const slotError = validateSlot(startTime, duration, openingHour, closingHour, advanceNoticeMinutes);
     if (slotError) {
       return badRequest(res, slotError);
+    }
+
+    // Check if the day is blocked
+    const dateStr = startTime.toISOString().slice(0, 10);
+    const isBlocked = await BlockedDate.exists({ date: dateStr });
+    if (isBlocked) {
+      return badRequest(res, "Ese día no está disponible para reservas.");
     }
 
     const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
@@ -200,6 +218,8 @@ export const createBooking = async (req, res, next) => {
     if (conflict) {
       return badRequest(res, "Horario ocupado.");
     }
+
+    const bookingStatus = requireManual ? "Pendiente" : "Confirmado";
 
     const newBooking = await Booking.create({
       responsibleName: payload.responsibleName,
@@ -218,7 +238,7 @@ export const createBooking = async (req, res, next) => {
       endTime,
       duration,
       notes: "",
-      status: "Confirmado",
+      status: bookingStatus,
     });
 
     // Respond immediately after DB insert — side effects run in background
@@ -265,16 +285,23 @@ export const getAvailability = async (req, res, next) => {
       );
     }
 
-    const bookings = await Booking.find(
-      trustedFilter({
-        ...activeStatusFilter,
-        timeSlot: { $lte: range.to },
-        endTime: { $gte: range.from },
-      }),
-    )
-      .select("timeSlot endTime duration status")
-      .lean()
-      .sort({ timeSlot: 1 });
+    const [bookings, blockedRecords, openingHour, closingHour] = await Promise.all([
+      Booking.find(
+        trustedFilter({
+          ...activeStatusFilter,
+          timeSlot: { $lte: range.to },
+          endTime: { $gte: range.from },
+        }),
+      )
+        .select("timeSlot endTime duration status")
+        .lean()
+        .sort({ timeSlot: 1 }),
+      BlockedDate.find().select("date").lean(),
+      getSetting("schedule.openingHour"),
+      getSetting("schedule.closingHour"),
+    ]);
+
+    const blockedDates = blockedRecords.map((r) => r.date);
 
     res.status(200).json({
       success: true,
@@ -286,6 +313,8 @@ export const getAvailability = async (req, res, next) => {
         duration: booking.duration,
         status: booking.status,
       })),
+      blockedDates,
+      schedule: { openingHour, closingHour },
       requestId: req.requestId,
     });
   } catch (error) {
@@ -547,6 +576,53 @@ export const rescheduleBooking = async (req, res, next) => {
       updateBookingInSheet(booking),
       sendBookingNotifications({ booking, event: "rescheduled", previousTimeSlot }),
     ]).catch((err) => console.error("[rescheduleBooking side-effects]", err.message));
+  } catch (error) {
+    if (typeof next === "function") {
+      return next(error);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const updateStudentNotes = async (req, res, next) => {
+  try {
+    const code = normalizeCode(String(req.params.code ?? "").trim());
+    if (code.length < 6) {
+      return badRequest(res, "Código de reserva inválido.");
+    }
+
+    const { studentNotes } = req.body || {};
+    if (typeof studentNotes !== "string") {
+      return badRequest(res, "El campo 'studentNotes' es requerido.");
+    }
+
+    if (studentNotes.length > 500) {
+      return badRequest(res, "Las notas no pueden superar los 500 caracteres.");
+    }
+
+    const booking = await Booking.findOne({ bookingCode: code });
+    if (!booking) {
+      return notFound(res, "Reserva no encontrada.");
+    }
+
+    if (booking.status === "Cancelado" || booking.status === "Finalizado") {
+      return badRequest(res, "No se pueden actualizar notas en reservas canceladas o finalizadas.");
+    }
+
+    booking.studentNotes = studentNotes.trim();
+    await booking.save();
+
+    setNoStore(res);
+    res.status(200).json({
+      success: true,
+      message: "Notas actualizadas.",
+      requestId: req.requestId,
+    });
   } catch (error) {
     if (typeof next === "function") {
       return next(error);

@@ -42,7 +42,7 @@ import AcademicInfoStep from "./booking/steps/AcademicInfoStep";
 import DateSelectionStep from "./booking/steps/DateSelectionStep";
 import TimeSelectionStep from "./booking/steps/TimeSelectionStep";
 import ConfirmationStep from "./booking/steps/ConfirmationStep";
-import { createBooking } from "../api/bookingApi";
+import { createBooking, fetchPublicSettings } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { useWizardNavigation } from "../hooks/useWizardNavigation";
@@ -109,7 +109,17 @@ const BookingForm = () => {
   const [loadingPhase, setLoadingPhase] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [pricePerHour, setPricePerHour] = useState(0);
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
+
+  useEffect(() => {
+    fetchPublicSettings()
+      .then((res) => {
+        const price = Number(res.data?.data?.["booking.pricePerHour"] ?? 0);
+        if (price > 0) setPricePerHour(price);
+      })
+      .catch(() => {});
+  }, []);
 
   const [showVoiceTip, setShowVoiceTip] = useState(() => {
     try {
@@ -181,6 +191,7 @@ const BookingForm = () => {
     slotSections,
     getDayClassName,
     renderDayContents,
+    isDateAvailable,
     maxAllowedDuration,
     durationOptions,
     availableSlotCount,
@@ -1246,6 +1257,7 @@ const BookingForm = () => {
                 renderCalendarHeader={renderCalendarHeader}
                 getDayClassName={getDayClassName}
                 renderDayContents={renderDayContents}
+                isDateAvailable={isDateAvailable}
               />
             </div>
 
@@ -1306,6 +1318,7 @@ const BookingForm = () => {
                 goToPrev={goToPrev}
                 loading={loading}
                 loadingPhase={loadingPhase}
+                pricePerHour={pricePerHour}
               />
             </div>
           </div>
@@ -1423,6 +1436,7 @@ const BookingForm = () => {
                   calendarClassName="neuro-calendar neuro-calendar-rich neuro-calendar-expanded"
                   dayClassName={getDayClassName}
                   renderDayContents={renderDayContents}
+                  filterDate={isDateAvailable}
                   renderCustomHeader={renderCalendarHeader(1)}
                 />
               </div>

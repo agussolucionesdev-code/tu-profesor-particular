@@ -28,6 +28,7 @@ const DateSelectionStep = ({
   renderCalendarHeader,
   getDayClassName,
   renderDayContents,
+  isDateAvailable,
 }) => {
   return (
     <>
@@ -76,6 +77,9 @@ const DateSelectionStep = ({
                   </div>
                   <div className="legend-item">
                     <span className="legend-icon selected"></span> Elegido
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-icon day-blocked"></span> No disponible
                   </div>
                 </div>
 
@@ -136,6 +140,7 @@ const DateSelectionStep = ({
                   calendarClassName="neuro-calendar neuro-calendar-rich"
                   dayClassName={getDayClassName}
                   renderDayContents={renderDayContents}
+                  filterDate={isDateAvailable}
                   renderCustomHeader={renderCalendarHeader(1)}
                 />
               </div>

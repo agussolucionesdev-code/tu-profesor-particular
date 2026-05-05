@@ -680,6 +680,29 @@
   pointer-events: none;
 }
 
+/* Días bloqueados por el admin */
+.neuro-calendar .react-datepicker__day.day-blocked {
+  background: rgba(100, 100, 120, 0.08) !important;
+  color: #888 !important;
+  text-decoration: line-through;
+  opacity: 0.55;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.neuro-calendar .react-datepicker__day.day-blocked::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #888;
+  pointer-events: none;
+}
+
 /* Días completamente llenos (sin cupos) */
 .neuro-calendar .react-datepicker__day.day-full {
   background: rgba(168, 36, 51, 0.06) !important;
@@ -785,6 +808,13 @@
   border-radius: 50%;
   background: #a82433;
   pointer-events: none;
+}
+
+.calendar-legend .legend-icon.day-blocked {
+  background: rgba(100, 100, 120, 0.10);
+  border-color: #888;
+  opacity: 0.6;
+  text-decoration: line-through;
 }
 
 [data-theme="dark"] .calendar-legend .legend-icon.partial-day {

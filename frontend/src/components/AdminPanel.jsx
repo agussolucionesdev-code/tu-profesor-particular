@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  FaBan,
   FaBell,
   FaCalendarCheck,
   FaChartLine,
   FaClipboardList,
+  FaCog,
   FaExclamationTriangle,
   FaPlus,
   FaSignOutAlt,
@@ -37,6 +39,8 @@ import OverviewView from "./admin/views/OverviewView";
 import AgendaView from "./admin/views/AgendaView";
 import StudentsView from "./admin/views/StudentsView";
 import BookingsView from "./admin/views/BookingsView";
+import BlockedDatesView from "./admin/views/BlockedDatesView";
+import ScheduleSettingsView from "./admin/views/ScheduleSettingsView";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import "../styles/tokens.css";
 import "./AdminPanel.css";
@@ -48,6 +52,8 @@ const VIEW_OPTIONS = [
   { id: "agenda", label: "Agenda", icon: FaCalendarCheck },
   { id: "students", label: "Alumnos", icon: FaUsers },
   { id: "bookings", label: "Turnos", icon: FaClipboardList },
+  { id: "availability", label: "Disponibilidad", icon: FaBan },
+  { id: "settings", label: "Ajustes", icon: FaCog },
 ];
 
 const AdminPanel = () => {
@@ -625,6 +631,14 @@ const AdminPanel = () => {
             onDeleteAll={handleDeleteAll}
             onQuickStatusChange={handleQuickStatusChange}
           />
+        )}
+
+        {activeView === "availability" && (
+          <BlockedDatesView authConfig={authConfig} />
+        )}
+
+        {activeView === "settings" && (
+          <ScheduleSettingsView authConfig={authConfig} />
         )}
       </main>
 

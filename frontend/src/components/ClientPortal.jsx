@@ -21,6 +21,7 @@ import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import {
   lookupBookings,
   cancelBooking,
+  updateStudentNotes,
 } from "../api/bookingApi";
 import {
   getBookingApiMessage,
@@ -37,6 +38,95 @@ const PORTAL_VOICE_OPTIONS = {
   rate: 0.86,
   pitch: 0.98,
   volume: 0.9,
+};
+
+const StudentNotesPanel = ({ booking }) => {
+  const [notes, setNotes] = useState(booking.studentNotes || "");
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState(null); // 'ok' | 'error' | null
+
+  const endTime = new Date(booking.endTime);
+  const isEditable =
+    booking.status !== "Cancelado" &&
+    booking.status !== "Finalizado" &&
+    endTime > new Date();
+
+  if (!isEditable) return null;
+
+  const handleSave = async () => {
+    setSaving(true);
+    setStatus(null);
+    try {
+      await updateStudentNotes(booking.bookingCode, notes);
+      setStatus("ok");
+    } catch {
+      setStatus("error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: "0.75rem",
+        padding: "0.9rem 1rem",
+        background: "var(--color-surface-2, #f8fafc)",
+        borderRadius: "10px",
+        border: "1.5px solid var(--color-border, #e2e8f0)",
+      }}
+    >
+      <label
+        htmlFor={`notes-${booking._id}`}
+        style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", fontSize: "0.9rem" }}
+      >
+        Notas para el profe
+      </label>
+      <textarea
+        id={`notes-${booking._id}`}
+        value={notes}
+        onChange={(e) => { setNotes(e.target.value); setStatus(null); }}
+        maxLength={500}
+        rows={3}
+        placeholder="Contale algo al profe antes de la clase (dudas, temas, contexto…)"
+        style={{
+          width: "100%",
+          resize: "vertical",
+          padding: "0.5rem 0.7rem",
+          borderRadius: "8px",
+          border: "1.5px solid var(--color-border, #e2e8f0)",
+          fontSize: "0.85rem",
+          lineHeight: 1.5,
+          boxSizing: "border-box",
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.4rem" }}>
+        <small style={{ opacity: 0.6 }}>{notes.length}/500</small>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {status === "ok" && <small style={{ color: "var(--color-success, #38a169)" }}>¡Guardado!</small>}
+          {status === "error" && <small style={{ color: "var(--color-danger, #e53e3e)" }}>No se pudo guardar.</small>}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              padding: "0.35rem 0.85rem",
+              borderRadius: "8px",
+              border: "none",
+              background: "var(--brand-green, #3f8f57)",
+              color: "#fff",
+              fontSize: "0.82rem",
+              fontWeight: 600,
+              cursor: saving ? "not-allowed" : "pointer",
+              opacity: saving ? 0.7 : 1,
+            }}
+          >
+            {saving ? "Guardando…" : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const ClientPortal = () => {
@@ -373,6 +463,7 @@ const ClientPortal = () => {
                 onCancel={openCancelModal}
                 onDelete={handleDeleteForever}
               />
+              <StudentNotesPanel booking={booking} />
             </div>
           ))}
         </div>

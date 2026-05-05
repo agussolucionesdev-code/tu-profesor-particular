@@ -37,6 +37,7 @@ const SLOT_SECTIONS_DEFINITION = [
 
 export const useBookingAvailability = (selectedDate, showToast) => {
   const [existingBookings, setExistingBookings] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -45,6 +46,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         setExistingBookings(
           res.data.data.filter((booking) => booking.status !== "Cancelado"),
         );
+        setBlockedDates(Array.isArray(res.data.blockedDates) ? res.data.blockedDates : []);
       } catch (error) {
         console.error("Error fetching bookings", error);
         showToast?.(getBookingApiMessage(error), "warning");
@@ -112,6 +114,9 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     (date) => {
       const today = new Date();
       const dayKey = format(startOfDay(date), "yyyy-MM-dd");
+      if (blockedDates.includes(dayKey)) {
+        return isSameDay(date, today) ? "custom-today day-blocked" : "day-blocked";
+      }
       const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
       const base = isSameDay(date, today) ? "custom-today" : "";
       if (occupied === 0) return base;
@@ -119,7 +124,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         return base ? `${base} day-full` : "day-full";
       return base ? `${base} day-partial` : "day-partial";
     },
-    [dayAvailabilityMap],
+    [dayAvailabilityMap, blockedDates],
   );
 
   const renderDayContents = useCallback(
@@ -191,12 +196,22 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     return options;
   }, [maxAllowedDuration]);
 
+  const isDateAvailable = useCallback(
+    (date) => {
+      const dayKey = format(startOfDay(date), "yyyy-MM-dd");
+      return !blockedDates.includes(dayKey);
+    },
+    [blockedDates],
+  );
+
   return {
     existingBookings,
+    blockedDates,
     availableSlots,
     slotSections,
     getDayClassName,
     renderDayContents,
+    isDateAvailable,
     maxAllowedDuration,
     durationOptions,
     availableSlotCount,

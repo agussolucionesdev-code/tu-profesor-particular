@@ -36,3 +36,33 @@ export const deleteAllBookings = (authConfig) =>
 
 export const loginAdmin = (credentials) =>
   apiClient.post("/api/auth/login", credentials);
+
+/**
+ * Blocked dates
+ */
+export const fetchBlockedDates = () =>
+  apiClient.get("/api/blocked-dates");
+
+export const addBlockedDate = (data, authConfig) =>
+  apiClient.post("/api/blocked-dates", data, authConfig);
+
+export const removeBlockedDate = (date, authConfig) =>
+  apiClient.delete(`/api/blocked-dates/${date}`, authConfig);
+
+/**
+ * Settings
+ */
+export const fetchPublicSettings = () =>
+  apiClient.get("/api/settings");
+
+export const fetchAdminSettings = (authConfig) =>
+  apiClient.get("/api/settings/admin", authConfig);
+
+export const updateSetting = (key, value, authConfig) =>
+  apiClient.put(`/api/settings/${encodeURIComponent(key)}`, { value }, authConfig);
+
+/**
+ * Student notes (public, by booking code)
+ */
+export const updateStudentNotes = (code, studentNotes) =>
+  apiClient.put(`/api/bookings/${encodeURIComponent(code)}/notes`, { studentNotes });

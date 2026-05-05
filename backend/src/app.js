@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 import { getDbConnectionMeta } from "./config/db.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import blockedDatesRoutes from "./routes/blockedDatesRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 import { globalApiLimiter } from "./middleware/rateLimiters.js";
 import { requestContextMiddleware } from "./middleware/requestContext.js";
 
@@ -141,6 +143,8 @@ app.get("/health", (req, res) => {
 
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/blocked-dates", blockedDatesRoutes);
+app.use("/api/settings", settingsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
