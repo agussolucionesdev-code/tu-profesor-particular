@@ -1,0 +1,69 @@
+services:
+  - type: web
+    runtime: node
+    name: tu-profesor-particular-backend
+    region: oregon          # closest to Argentina with lowest latency on free tier
+    plan: starter           # $7/mo — never sleeps; upgrade from free to keep backend always-on
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: NODE_ENV
+        value: production
+      - key: APP_TIME_ZONE
+        value: America/Argentina/Buenos_Aires
+      - key: TRUST_PROXY
+        value: "1"
+      - key: RATE_LIMIT_MAX
+        value: "200"
+      - key: AUTH_RATE_LIMIT_MAX
+        value: "10"
+      - key: PUBLIC_LOOKUP_RATE_LIMIT_MAX
+        value: "40"
+      - key: PUBLIC_MUTATION_RATE_LIMIT_MAX
+        value: "30"
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: JWT_ISSUER
+        value: tu-profesor-particular-backend
+      - key: JWT_AUDIENCE
+        value: tu-profesor-particular-admin
+      - key: MONGO_FALLBACK_TO_MEMORY
+        value: "false"
+      - key: MAX_AVAILABILITY_RANGE_DAYS
+        value: "120"
+      - key: SERVER_REQUEST_TIMEOUT_MS
+        value: "15000"
+      - key: SERVER_HEADERS_TIMEOUT_MS
+        value: "20000"
+      - key: SERVER_KEEP_ALIVE_TIMEOUT_MS
+        value: "5000"
+      - key: GOOGLE_SHEET_TITLE
+        value: Reservas
+      # Secrets — set these manually in the Render dashboard (never commit values)
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GOOGLE_SHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+        sync: false
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: OWNER_NOTIFICATION_EMAIL
+        sync: false

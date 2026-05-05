@@ -1,0 +1,6 @@
+[31merror when starting preview server:
+Error: Port 4180 is already in use
+    at Server.onError$1 (file:///C:/Develop_webs/Tu_Profesor_Particular_Gesti%C3%B3n_Turnos/frontend/node_modules/vite/dist/node/chunks/config.js:14933:28)
+    at Server.emit (node:events:508:28)
+    at emitErrorNT (node:net:1984:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)[39m

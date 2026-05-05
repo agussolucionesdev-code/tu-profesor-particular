@@ -1,0 +1,550 @@
+/* ==========================================================================
+   FOOTER ÉLITE v18.0 - ACADEMIA AGUSTÍN ELÍAS SOSA
+   Safe Zone para botón flotante, Iluminación Ambient Spotlight Profesional
+   ========================================================================== */
+
+/* Busca las variables :root de tu Footer.css y reemplázalas por estas */
+:root {
+  --bg-footer-base: var(--color-bg-light);
+  --bg-footer-panel: var(--color-surface-soft);
+  --bg-card-hover: var(--color-white);
+  --ft-primary: var(--color-accent);
+  --ft-primary-dark: var(--color-primary-dark);
+  --ft-primary-glow: var(--nav-accent-glow);
+  --text-pure: var(--color-text-main);
+  --text-body: var(--color-text-muted);
+  --text-muted: var(--color-text-soft);
+  --border-light: var(--border-soft);
+  --border-strong: var(--border-strong);
+  --transition-smooth: var(--transition-smooth);
+}
+
+[data-theme="dark"] {
+  --bg-footer-base: var(--color-bg-light);
+  --bg-footer-panel: var(--color-surface-soft);
+  --bg-card-hover: var(--color-white);
+  --ft-primary: var(--color-accent);
+  --ft-primary-dark: var(--color-primary-dark);
+  --ft-primary-glow: var(--nav-accent-glow);
+  --text-pure: var(--color-text-main);
+  --text-body: var(--color-text-muted);
+  --text-muted: var(--color-text-soft);
+  --border-light: var(--border-soft);
+  --border-strong: var(--border-strong);
+}
+.footer-elite {
+  background-color: var(--bg-footer-base);
+  color: var(--text-body);
+  font-family: "Inter", sans-serif;
+  margin-top: auto;
+  border-top: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto de luz ambiental superior */
+.footer-ambient-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ft-primary),
+    transparent
+  );
+  box-shadow: 0 0 30px var(--ft-primary);
+  opacity: 0.6;
+}
+
+.footer-grid-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 6rem 2rem 5rem 2rem;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.2fr;
+  gap: 4rem;
+}
+
+/* =========================================
+   COLUMNA 1: IDENTIDAD Y COPY
+   ========================================= */
+.footer-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 2rem;
+}
+
+/* === SOLUCIÓN AL LOGO: SIN CAJAS, CON ILUMINACIÓN TRASERA (SPOTLIGHT) === */
+.logo-premium-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 75px;
+  height: 75px;
+}
+
+/* Luz de fondo sutil proyectada detrás del logo */
+.logo-premium-wrapper::before {
+  content: "";
+  position: absolute;
+  width: 130%;
+  height: 130%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 65%
+  );
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: var(--transition-smooth);
+}
+
+.logo-img-transparent {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* Drop Shadow blanco muy sutil para despegar el compás oscuro del fondo */
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2))
+    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+  transition: var(--transition-smooth);
+}
+
+.logo-premium-wrapper:hover::before {
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.2) 0%,
+    transparent 70%
+  );
+  transform: scale(1.1);
+}
+.logo-premium-wrapper:hover .logo-img-transparent {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+}
+/* ======================================================================= */
+
+.brand-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand-titles h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-pure);
+  letter-spacing: -0.3px;
+}
+.brand-titles span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ft-primary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.brand-philosophy {
+  margin-bottom: 2rem;
+}
+.neuro-hook {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-pure);
+  margin: 0 0 10px 0;
+}
+.neuro-copy {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  margin: 0;
+  max-width: 90%;
+}
+
+.footer-value-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.value-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.value-tag svg {
+  color: var(--ft-primary);
+  font-size: 1.1rem;
+}
+
+/* =========================================
+   COLUMNA 2: NAVEGACIÓN
+   ========================================= */
+.footer-section-title {
+  color: var(--text-pure);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 2rem;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.footer-link-item {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-body);
+  transition: var(--transition-smooth);
+}
+
+.link-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--border-light);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: var(--transition-smooth);
+}
+
+.link-text {
+  font-size: 1rem;
+  font-weight: 500;
+  transition: var(--transition-smooth);
+}
+
+.link-arrow {
+  opacity: 0;
+  transform: translateX(-15px);
+  margin-left: 10px;
+  color: var(--ft-primary);
+  font-size: 0.85rem;
+  transition: var(--transition-smooth);
+}
+
+/* Hover en los Links */
+.footer-link-item:hover {
+  color: var(--text-pure);
+  transform: translateX(8px);
+}
+.footer-link-item:hover .link-icon-box {
+  background: var(--ft-primary);
+  color: white;
+  box-shadow: 0 4px 10px var(--ft-primary-glow);
+}
+.footer-link-item:hover .link-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* =========================================
+   COLUMNA 3: CONTACTO ACCESIBLE
+   ========================================= */
+.footer-contact-address {
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 12px;
+  transition: var(--transition-smooth);
+  border: 1px solid transparent;
+}
+
+.contact-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: var(--border-light);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: var(--transition-smooth);
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.contact-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  transition: var(--transition-smooth);
+}
+.contact-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-body);
+  transition: var(--transition-smooth);
+  line-height: 1.4;
+}
+
+/* Micro-interacciones (Color Original) */
+.contact-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-light);
+  transform: translateX(5px);
+}
+
+.contact-card.wp-card:hover .contact-icon {
+  background: #25d366;
+  color: white;
+  box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2);
+}
+.contact-card.wp-card:hover .contact-value {
+  color: #25d366;
+}
+
+.contact-card.email-card:hover .contact-icon {
+  background: var(--ft-primary);
+  color: white;
+  box-shadow: 0 5px 15px var(--ft-primary-glow);
+}
+.contact-card.email-card:hover .contact-value {
+  color: var(--text-pure);
+}
+
+.contact-card.location-card:hover .contact-icon {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+}
+.contact-card.location-card:hover .contact-value {
+  color: #3b82f6;
+}
+
+/* =========================================
+   PANEL INFERIOR Y SAFE ZONE
+   ========================================= */
+.footer-bottom-panel {
+  background-color: var(--bg-footer-panel);
+  border-top: 1px solid var(--border-strong);
+}
+
+.bottom-panel-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  /* El padding derecho de 120px asegura que NADA toque el botón flotante */
+  padding: 1.5rem 120px 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copyright-area p {
+  margin: 0 0 5px 0;
+  font-size: 0.9rem;
+  color: var(--text-body);
+}
+.copyright-area p strong {
+  color: var(--text-pure);
+  font-weight: 700;
+}
+.copyright-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.social-area {
+  display: flex;
+  gap: 15px;
+}
+
+.social-bubble {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: var(--border-light);
+  color: var(--text-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+.social-bubble:hover {
+  transform: translateY(-5px) scale(1.1);
+  color: white;
+}
+.social-bubble.insta:hover {
+  background: linear-gradient(
+    45deg,
+    #f09433,
+    #e6683c,
+    #dc2743,
+    #cc2366,
+    #bc1888
+  );
+  box-shadow: 0 8px 20px rgba(225, 48, 108, 0.3);
+}
+.social-bubble.fb:hover {
+  background: #1877f2;
+  box-shadow: 0 8px 20px rgba(24, 119, 242, 0.3);
+}
+.social-bubble.in:hover {
+  background: #0a66c2;
+  box-shadow: 0 8px 20px rgba(10, 102, 194, 0.3);
+}
+
+/* =========================================
+   BOTÓN FLOTANTE DINÁMICO (Scroll NATIVO)
+   ========================================= */
+.btn-up-floating {
+  position: fixed;
+  bottom: 35px;
+  right: 35px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: var(--ft-primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 9999;
+
+  /* Lógica de Fade in/out */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.btn-up-floating.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  box-shadow: 0 10px 25px var(--ft-primary-glow);
+}
+
+.btn-up-floating:hover {
+  background: var(--ft-primary-dark);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px var(--ft-primary-glow);
+}
+
+/* =========================================
+   RESPONSIVE (Perfectamente Adaptable)
+   ========================================= */
+@media screen and (max-width: 1100px) {
+  .footer-grid-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+  .footer-brand-col {
+    grid-column: 1 / -1;
+    max-width: 800px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .footer-grid-container {
+    grid-template-columns: 1fr;
+    padding: 4rem 1.5rem;
+    text-align: center;
+  }
+  .footer-header-brand {
+    flex-direction: column;
+    text-align: center;
+  }
+  .brand-philosophy {
+    margin: 0 auto 2rem;
+  }
+  .footer-value-tags {
+    align-items: center;
+  }
+
+  .footer-links-list {
+    align-items: center;
+  }
+  .contact-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 15px;
+  }
+  .contact-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .bottom-panel-container {
+    padding: 2rem 1.5rem 6rem 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .btn-up-floating {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
+
+.brand-titles span,
+.footer-section-title,
+.contact-label,
+.value-tag {
+  font-size: var(--font-size-eyebrow);
+}
+
+.neuro-copy,
+.contact-value,
+.copyright-area p {
+  font-size: var(--font-size-caption);
+  line-height: 1.7;
+}
+
+.link-text {
+  font-size: var(--font-size-label);
+}
+
+.copyright-sub {
+  font-size: 0.82rem;
+}

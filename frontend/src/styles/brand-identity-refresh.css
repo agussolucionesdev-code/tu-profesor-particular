@@ -1,0 +1,496 @@
+/* ==========================================================================
+   Brand Identity Refresh
+   Capa final para unificar la app con una estética limpia, viva y profesional.
+   Se importa al final para consolidar superficies, ritmo visual y jerarquía.
+   ========================================================================== */
+
+:root {
+  --brand-shell-bg:
+    radial-gradient(circle at top left, rgba(88, 152, 96, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(32, 64, 96, 0.08), transparent 28%),
+    linear-gradient(180deg, #f6f9fc 0%, #f9fbfd 48%, #f3f7fb 100%);
+  --brand-shell-panel: rgba(255, 255, 255, 0.82);
+  --brand-shell-panel-strong: rgba(255, 255, 255, 0.94);
+  --brand-shell-border: rgba(24, 56, 88, 0.1);
+  --brand-shell-shadow: 0 24px 60px rgba(20, 38, 58, 0.08);
+  --brand-shell-shadow-soft: 0 14px 30px rgba(20, 38, 58, 0.06);
+  --brand-title-gradient: linear-gradient(135deg, #10253c 0%, #204060 52%, #4a8452 100%);
+}
+
+body {
+  background: var(--brand-shell-bg);
+}
+
+#root {
+  position: relative;
+  isolation: isolate;
+}
+
+.main-content {
+  position: relative;
+}
+
+.main-content::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(88, 152, 96, 0.06), transparent 18%),
+    radial-gradient(circle at 86% 10%, rgba(32, 64, 96, 0.05), transparent 20%),
+    radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.04), transparent 24%);
+  z-index: -1;
+}
+
+.route-loader-shell {
+  background: transparent;
+}
+
+.route-loader-card {
+  border-radius: 24px;
+  background: var(--brand-shell-panel-strong);
+  border: 1px solid var(--brand-shell-border);
+  box-shadow: var(--brand-shell-shadow);
+}
+
+.navbar-elite {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.navbar-utility-cluster,
+.nav-link-btn,
+.nav-utility-btn,
+.theme-toggle-btn,
+.menu-toggle-icon {
+  border-radius: 16px;
+}
+
+.nav-link-btn {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.nav-link-btn:hover,
+.nav-link-btn.active {
+  transform: translateY(-1px);
+}
+
+.booking-page-wrapper,
+.client-portal-wrapper,
+.admin-login-shell--minimal,
+.footer-elite {
+  background: transparent;
+}
+
+.form-card-elevation,
+.client-portal-wrapper .portal-container,
+.admin-login-card,
+.admin-sidebar-shell,
+.admin-card,
+.admin-kpi-card,
+.admin-modal-card,
+.footer-grid-container,
+.bottom-panel-container {
+  border-radius: 28px;
+}
+
+.form-card-elevation {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 252, 254, 0.94));
+  border: 1px solid rgba(24, 56, 88, 0.1);
+  box-shadow: 0 30px 80px rgba(17, 37, 59, 0.09);
+}
+
+.form-card-elevation::before,
+.client-portal-wrapper .portal-container::before,
+.admin-login-card::before,
+.admin-sidebar-shell::before,
+.admin-card::before,
+.admin-kpi-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65), transparent 22%);
+  opacity: 0.85;
+}
+
+.form-card-elevation,
+.client-portal-wrapper .portal-container,
+.admin-login-card,
+.admin-sidebar-shell,
+.admin-card,
+.admin-kpi-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.form-main-title,
+.client-portal-wrapper .portal-title,
+.admin-hero h1,
+.admin-login-card h2,
+.brand-titles h3 {
+  background: var(--brand-title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.form-subtitle,
+.client-portal-wrapper .portal-subtitle,
+.admin-hero p,
+.admin-login-subtitle,
+.brand-philosophy .neuro-copy {
+  color: #526b84;
+}
+
+.form-supertitle,
+.journey-next-pill,
+.stepper-current-pill,
+.route-loader-badge,
+.search-method-pills span,
+.portal-results-summary,
+.admin-eyebrow,
+.admin-login-eyebrow,
+.card-kicker,
+.sidebar-kicker {
+  letter-spacing: 0.12em;
+}
+
+.support-pill,
+.journey-compass,
+.neuro-stepper,
+.journey-meter,
+.premium-input,
+.adult-mode-copy,
+.adult-state-card,
+.selection-insight-card,
+.client-portal-wrapper .guidance-card,
+.client-portal-wrapper .portal-management-alert,
+.client-portal-wrapper .portal-support-card,
+.client-portal-wrapper .search-container,
+.client-portal-wrapper .ticket-card,
+.client-portal-wrapper .empty-state,
+.footer-link-item,
+.contact-card,
+.admin-brand-panel,
+.admin-sidebar-card,
+.sidebar-inline-stats div,
+.admin-nav-btn,
+.admin-hero,
+.admin-login-card,
+.admin-kpi-card {
+  background: var(--brand-shell-panel);
+  border: 1px solid rgba(24, 56, 88, 0.1);
+  box-shadow: var(--brand-shell-shadow-soft);
+}
+
+.support-pill,
+.journey-mini-chip,
+.search-method-pills span,
+.value-tag,
+.admin-nav-btn,
+.sidebar-inline-stats div {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.premium-input,
+.client-portal-wrapper .search-input,
+.admin-input,
+.admin-textarea {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(24, 56, 88, 0.12);
+}
+
+.premium-input:hover,
+.client-portal-wrapper .search-container:hover,
+.admin-input:hover,
+.admin-textarea:hover {
+  border-color: rgba(88, 152, 96, 0.22);
+}
+
+.premium-input:focus-within,
+.client-portal-wrapper .search-container:focus-within {
+  box-shadow:
+    0 0 0 4px rgba(88, 152, 96, 0.1),
+    0 18px 40px rgba(20, 38, 58, 0.08);
+}
+
+.journey-compass,
+.neuro-stepper {
+  border-radius: 24px;
+}
+
+.journey-meter {
+  background: linear-gradient(135deg, rgba(20, 38, 58, 0.96), rgba(74, 132, 82, 0.92));
+  border-color: rgba(32, 64, 96, 0.08);
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.journey-meter span,
+.journey-meter small {
+  color: #ffffff;
+}
+
+.journey-meter-track {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.journey-meter-track div {
+  background: linear-gradient(90deg, #9cd4a3 0%, #ffffff 100%);
+}
+
+.client-portal-wrapper {
+  padding: clamp(7rem, 8vw, 8.5rem) 1.2rem 4rem;
+}
+
+.client-portal-wrapper .portal-container {
+  width: min(100%, 1040px);
+  padding: clamp(1.4rem, 3vw, 2.2rem);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 253, 0.94));
+  border: 1px solid rgba(24, 56, 88, 0.1);
+  box-shadow: 0 28px 70px rgba(17, 37, 59, 0.08);
+}
+
+.client-portal-wrapper .portal-header {
+  margin-bottom: 1.8rem;
+}
+
+.client-portal-wrapper .portal-header-logo {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 0.9rem;
+  padding: 0.7rem;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(237, 246, 238, 0.88));
+  border: 1px solid rgba(88, 152, 96, 0.16);
+  box-shadow: 0 16px 34px rgba(74, 132, 82, 0.1);
+}
+
+.client-portal-wrapper .portal-guidance,
+.client-portal-wrapper .portal-support-strip {
+  gap: 1rem;
+}
+
+.client-portal-wrapper .guidance-card,
+.client-portal-wrapper .portal-support-card {
+  border-radius: 22px;
+}
+
+.client-portal-wrapper .guidance-card svg,
+.client-portal-wrapper .portal-support-card svg,
+.client-portal-wrapper .portal-management-icon,
+.contact-icon,
+.link-icon-box,
+.admin-brand-badge,
+.kpi-icon {
+  background: linear-gradient(135deg, rgba(88, 152, 96, 0.14), rgba(32, 64, 96, 0.08));
+  color: #315c39;
+}
+
+.client-portal-wrapper .search-container {
+  padding: 0.7rem;
+  border-radius: 22px;
+}
+
+.client-portal-wrapper .btn-search,
+.admin-primary-btn,
+.btn-stage-next,
+.btn-neuro-primary,
+.btn-neuro-success {
+  background: linear-gradient(135deg, #17304a 0%, #204060 52%, #4a8452 100%);
+  color: #ffffff;
+  border: 1px solid rgba(32, 64, 96, 0.16);
+  box-shadow: 0 18px 36px rgba(32, 64, 96, 0.22);
+}
+
+.client-portal-wrapper .btn-search:hover,
+.admin-primary-btn:hover,
+.btn-stage-next:hover,
+.btn-neuro-primary:hover,
+.btn-neuro-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 42px rgba(32, 64, 96, 0.26);
+}
+
+.client-portal-wrapper .portal-management-alert,
+.client-portal-wrapper .portal-results-summary {
+  background:
+    linear-gradient(135deg, rgba(88, 152, 96, 0.08), rgba(255, 255, 255, 0.9));
+}
+
+.client-portal-wrapper .ticket-card {
+  border-radius: 24px;
+}
+
+.client-portal-wrapper .ticket-header,
+.client-portal-wrapper .ticket-footer {
+  background: rgba(246, 249, 252, 0.88);
+}
+
+.admin-login-shell,
+.admin-shell {
+  background:
+    radial-gradient(circle at 14% 10%, rgba(88, 152, 96, 0.08), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(32, 64, 96, 0.08), transparent 26%);
+}
+
+.admin-login-card,
+.admin-sidebar-shell,
+.admin-card,
+.admin-kpi-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 253, 0.94));
+}
+
+.admin-hero {
+  background:
+    linear-gradient(135deg, rgba(16, 37, 60, 0.97), rgba(32, 64, 96, 0.94) 58%, rgba(74, 132, 82, 0.84));
+  color: #ffffff;
+  border-color: rgba(32, 64, 96, 0.08);
+  box-shadow: 0 24px 55px rgba(20, 38, 58, 0.18);
+}
+
+.admin-hero h1,
+.admin-hero p,
+.admin-hero .admin-eyebrow {
+  color: #ffffff;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+}
+
+.admin-nav-btn {
+  min-height: 54px;
+}
+
+.admin-nav-btn:hover,
+.admin-secondary-btn:hover,
+.contact-card:hover,
+.footer-link-item:hover,
+.client-portal-wrapper .portal-support-card:hover,
+.client-portal-wrapper .guidance-card:hover,
+.client-portal-wrapper .ticket-card:hover,
+.admin-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(20, 38, 58, 0.12);
+}
+
+.footer-elite {
+  border-top: 1px solid rgba(24, 56, 88, 0.08);
+}
+
+.footer-grid-container {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(248, 251, 253, 0.74));
+  border: 1px solid rgba(24, 56, 88, 0.08);
+  box-shadow: var(--brand-shell-shadow);
+  padding-top: clamp(3.4rem, 6vw, 4.6rem);
+  padding-bottom: clamp(2.8rem, 5vw, 3.6rem);
+}
+
+.bottom-panel-container {
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(24, 56, 88, 0.06);
+  box-shadow: 0 18px 36px rgba(20, 38, 58, 0.05);
+}
+
+.footer-link-item,
+.contact-card {
+  border-radius: 20px;
+}
+
+.link-icon-box,
+.contact-icon {
+  border-radius: 12px;
+}
+
+@media (max-width: 1024px) {
+  .form-card-elevation,
+  .client-portal-wrapper .portal-container,
+  .footer-grid-container {
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .client-portal-wrapper {
+    padding-top: 6.25rem;
+  }
+
+  .client-portal-wrapper .portal-container,
+  .form-card-elevation,
+  .admin-login-card,
+  .admin-sidebar-shell,
+  .admin-card,
+  .admin-kpi-card,
+  .footer-grid-container,
+  .bottom-panel-container {
+    border-radius: 22px;
+  }
+
+  .client-portal-wrapper .search-container {
+    padding: 0.65rem;
+  }
+}
+
+[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top left, rgba(114, 176, 122, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(171, 195, 217, 0.1), transparent 26%),
+    linear-gradient(180deg, #07111d 0%, #091525 54%, #07111d 100%);
+}
+
+[data-theme="dark"] .main-content::before {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(114, 176, 122, 0.1), transparent 18%),
+    radial-gradient(circle at 86% 10%, rgba(171, 195, 217, 0.08), transparent 20%);
+}
+
+[data-theme="dark"] .route-loader-card,
+[data-theme="dark"] .form-card-elevation,
+[data-theme="dark"] .client-portal-wrapper .portal-container,
+[data-theme="dark"] .premium-input,
+[data-theme="dark"] .adult-mode-copy,
+[data-theme="dark"] .adult-state-card,
+[data-theme="dark"] .selection-insight-card,
+[data-theme="dark"] .client-portal-wrapper .guidance-card,
+[data-theme="dark"] .client-portal-wrapper .portal-management-alert,
+[data-theme="dark"] .client-portal-wrapper .portal-support-card,
+[data-theme="dark"] .client-portal-wrapper .search-container,
+[data-theme="dark"] .client-portal-wrapper .ticket-card,
+[data-theme="dark"] .client-portal-wrapper .empty-state,
+[data-theme="dark"] .admin-login-card,
+[data-theme="dark"] .admin-sidebar-shell,
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .admin-kpi-card,
+[data-theme="dark"] .footer-grid-container,
+[data-theme="dark"] .bottom-panel-container {
+  background:
+    linear-gradient(180deg, rgba(13, 26, 41, 0.96), rgba(17, 32, 50, 0.94));
+  border-color: rgba(171, 195, 217, 0.14);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .form-main-title,
+[data-theme="dark"] .client-portal-wrapper .portal-title,
+[data-theme="dark"] .admin-login-card h2,
+[data-theme="dark"] .brand-titles h3 {
+  background: linear-gradient(135deg, #eef6ff 0%, #c9d8e6 54%, #8dd197 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+[data-theme="dark"] .journey-meter {
+  background: linear-gradient(135deg, rgba(114, 176, 122, 0.18), rgba(13, 26, 41, 0.96));
+}

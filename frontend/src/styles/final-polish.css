@@ -1,0 +1,431 @@
+/*
+ * final-polish.css — capa de pulido final.
+ * Se carga al final para corregir contrastes, zoom del calendario,
+ * estados de input, y firmar el modo oscuro/claro con los nuevos tokens.
+ */
+
+/* =====================================================================
+   CALENDAR — pulido completo
+   ===================================================================== */
+
+/* Tipografía base normalizada para evitar el efecto "zoom" */
+.react-datepicker,
+.react-datepicker__month-container,
+.react-datepicker-popper {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.react-datepicker__current-month {
+  font-size: 1.05rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.react-datepicker__day-name {
+  font-size: 0.72rem !important;
+}
+
+.react-datepicker__day {
+  font-size: 0.92rem !important;
+}
+
+/* ------------------------------------------------------------------
+   FIX CRÍTICO: días de OTRO mes (ej: 1 mayo cuando ves abril).
+   La librería los marca con .react-datepicker__day--outside-month.
+   Sin estilos propios, se ven idénticos a los del mes actual y
+   confunden al usuario. Los dejamos visibles pero claramente
+   atenuados, en cursiva, y sin hover/click visual.
+   ------------------------------------------------------------------ */
+.react-datepicker__day--outside-month {
+  opacity: 0.30 !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  border: 1px dashed rgba(148, 163, 184, 0.3) !important;
+  color: var(--text-tertiary, #94a3b8) !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  position: relative;
+}
+
+.react-datepicker__day--outside-month::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  transform: translateX(-50%);
+}
+
+/* Sobreescribimos las reglas decoradas (background verde/amarillo)
+   que sí estaban afectando a los días outside-month en el monolito. */
+.react-datepicker__day--outside-month:not(.react-datepicker__day--disabled):not(
+    .react-datepicker__day--selected
+  ):not(.custom-today),
+.react-datepicker__day--outside-month:hover,
+.react-datepicker__day--outside-month:not(.react-datepicker__day--disabled):not(
+    .react-datepicker__day--selected
+  ):not(.custom-today):hover {
+  background: transparent !important;
+  color: var(--text-tertiary, #94a3b8) !important;
+  border: 1px dashed rgba(148, 163, 184, 0.3) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .react-datepicker__day--outside-month {
+  color: rgba(180, 195, 215, 0.35) !important;
+  border-color: rgba(180, 195, 215, 0.18) !important;
+}
+
+[data-theme="dark"] .react-datepicker__day--outside-month::after {
+  background: rgba(180, 195, 215, 0.28);
+}
+
+/* Refuerzo de contraste mes/año en oscuro */
+[data-theme="dark"] .react-datepicker__current-month {
+  color: var(--text-primary) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .react-datepicker__day-name {
+  color: var(--text-tertiary) !important;
+}
+
+[data-theme="dark"] .react-datepicker__day {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .react-datepicker__day--disabled {
+  color: rgba(180, 195, 215, 0.35) !important;
+}
+
+/* Día seleccionado: contraste fuerte y reconocible al instante */
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: var(--brand-green, #589860) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  border: 2px solid var(--brand-green-deep, #4a8452) !important;
+  box-shadow: 0 4px 12px rgba(88, 152, 96, 0.35) !important;
+  transform: scale(1.05) !important;
+}
+
+[data-theme="dark"] .react-datepicker__day--selected,
+[data-theme="dark"] .react-datepicker__day--keyboard-selected {
+  background: #72b07a !important;
+  border-color: #8bc392 !important;
+  color: #06140a !important;
+}
+
+/* Hoy (custom): borde amarillo distintivo, no se confunde con seleccionado */
+.react-datepicker__day.custom-today {
+  position: relative;
+  border: 2px solid var(--brand-accent-warm, #f59e0b) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  color: var(--brand-accent-warm, #c8821e) !important;
+  font-weight: 900 !important;
+}
+
+[data-theme="dark"] .react-datepicker__day.custom-today {
+  background: rgba(245, 158, 11, 0.14) !important;
+  color: #fbbf24 !important;
+}
+
+/* Día deshabilitado (pasado): tachado liviano para clarificar */
+.react-datepicker__day--disabled:not(.react-datepicker__day--outside-month) {
+  text-decoration: line-through !important;
+  text-decoration-color: rgba(148, 163, 184, 0.4) !important;
+  opacity: 0.5 !important;
+}
+
+/* Hover en días navegables del mes actual */
+.react-datepicker__day:not(.react-datepicker__day--outside-month):not(
+    .react-datepicker__day--disabled
+  ):not(.react-datepicker__day--selected):hover {
+  cursor: pointer;
+}
+
+/* Asegurar que el outline al focusear el día sea claro */
+.react-datepicker__day:focus-visible {
+  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Header navegación: botones más finos y consistentes */
+.booking-month-nav:focus-visible {
+  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* =====================================================================
+   TIME SLOTS — pulido de selección de horarios
+   ===================================================================== */
+
+/* Aire entre secciones del slot grid (mañana/tarde/noche) */
+.slot-section + .slot-section {
+  margin-top: 1.4rem;
+}
+
+/* Separador sutil entre secciones */
+.slot-section-header {
+  border-bottom: 1px solid var(--border-subtle, rgba(15, 23, 42, 0.06));
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+[data-theme="dark"] .slot-section-header {
+  border-bottom-color: var(--border-subtle, rgba(248, 250, 252, 0.08));
+}
+
+/* Estados claros del slot: ahora cada estado tiene una pista visual */
+.slot-btn {
+  position: relative;
+  min-height: 64px;
+  justify-content: center;
+}
+
+.slot-btn:not(.disabled):not(.selected) {
+  background: rgba(88, 152, 96, 0.06) !important;
+  border: 1.5px solid rgba(88, 152, 96, 0.20) !important;
+  color: var(--brand-green-deep, #4a8452) !important;
+}
+
+.slot-btn:not(.disabled):not(.selected):hover {
+  background: rgba(88, 152, 96, 0.14) !important;
+  border-color: var(--brand-green, #589860) !important;
+  color: var(--brand-green-deep, #4a8452) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(88, 152, 96, 0.18) !important;
+}
+
+.slot-btn.selected {
+  background: linear-gradient(
+    135deg,
+    var(--brand-green, #589860),
+    var(--brand-green-deep, #4a8452)
+  ) !important;
+  color: #ffffff !important;
+  border: 1.5px solid var(--brand-green-deep, #4a8452) !important;
+  box-shadow: 0 8px 22px rgba(88, 152, 96, 0.32) !important;
+  transform: translateY(-2px) !important;
+}
+
+.slot-btn.selected::before {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  opacity: 0.85;
+}
+
+.slot-btn.disabled {
+  background: rgba(148, 163, 184, 0.10) !important;
+  border: 1.5px dashed rgba(148, 163, 184, 0.32) !important;
+  color: rgba(100, 116, 139, 0.65) !important;
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+
+[data-theme="dark"] .slot-btn:not(.disabled):not(.selected) {
+  background: rgba(114, 176, 122, 0.10) !important;
+  border-color: rgba(114, 176, 122, 0.28) !important;
+  color: #b6e0bb !important;
+}
+
+[data-theme="dark"] .slot-btn:not(.disabled):not(.selected):hover {
+  background: rgba(114, 176, 122, 0.20) !important;
+  border-color: #72b07a !important;
+}
+
+[data-theme="dark"] .slot-btn.disabled {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(180, 195, 215, 0.18) !important;
+  color: rgba(180, 195, 215, 0.45) !important;
+}
+
+[data-theme="dark"] .slot-btn.selected {
+  background: linear-gradient(135deg, #72b07a, #5e9a66) !important;
+  color: #06140a !important;
+  border-color: #8bc392 !important;
+}
+
+/* Focus ring claro en slots */
+.slot-btn:focus-visible {
+  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Sub-label del slot (Libre/Ocupado/Elegido) */
+.slot-sub-label {
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+/* Mejor uso del espacio en mobile */
+@media (max-width: 640px) {
+  .slots-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+  .slot-btn {
+    min-height: 56px;
+    padding: 8px 6px !important;
+  }
+}
+
+/* =====================================================================
+   INPUTS — estados consistentes
+   ===================================================================== */
+.admin-input:focus,
+.search-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--brand-green) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring-color, rgba(88, 152, 96, 0.4)) !important;
+}
+
+/* =====================================================================
+   FOOTER y MISC
+   ===================================================================== */
+.btn-up-floating {
+  background: var(--brand-navy);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .btn-up-floating {
+  background: var(--brand-green);
+  color: var(--text-on-accent, #06140a);
+}
+
+[data-theme="dark"] .neuro-toast,
+[data-theme="dark"] .portal-toast {
+  background: var(--surface-1) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.4));
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.neuro-modal-overlay {
+  background: var(--surface-overlay, rgba(15, 23, 42, 0.55));
+}
+
+/* Mobile compacto del calendario */
+@media (max-width: 480px) {
+  .react-datepicker__current-month {
+    font-size: 0.95rem !important;
+  }
+  .react-datepicker__day,
+  .react-datepicker__day-name {
+    width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* =====================================================================
+   VOZ — animación del hint
+   ===================================================================== */
+.voice-hint-bubble {
+  animation: tpp-voice-hint-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes tpp-voice-hint-pulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-hint-bubble {
+    animation: none;
+  }
+}
+
+.step-voice-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(88, 152, 96, 0.12);
+  color: var(--brand-green-deep, #4a8452);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .step-voice-indicator {
+  background: rgba(114, 176, 122, 0.18);
+  color: #9fd0a4;
+}
+
+/* =====================================================================
+   LEYENDA del calendario — pintar bien los iconos
+   ===================================================================== */
+.calendar-legend .legend-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-right: 4px;
+  border: 1px solid transparent;
+}
+
+.calendar-legend .legend-icon.disabled {
+  background: rgba(148, 163, 184, 0.20);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.calendar-legend .legend-icon.today {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: var(--brand-accent-warm, #f59e0b);
+}
+
+.calendar-legend .legend-icon.available {
+  background: rgba(88, 152, 96, 0.14);
+  border-color: var(--brand-green, #589860);
+}
+
+.calendar-legend .legend-icon.selected {
+  background: var(--brand-green, #589860);
+  border-color: var(--brand-green-deep, #4a8452);
+}
+
+[data-theme="dark"] .calendar-legend .legend-icon.disabled {
+  background: rgba(180, 195, 215, 0.10);
+  border-color: rgba(180, 195, 215, 0.25);
+}
+
+[data-theme="dark"] .calendar-legend .legend-icon.today {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #fbbf24;
+}
+
+[data-theme="dark"] .calendar-legend .legend-icon.available {
+  background: rgba(114, 176, 122, 0.20);
+  border-color: #72b07a;
+}
+
+[data-theme="dark"] .calendar-legend .legend-icon.selected {
+  background: #72b07a;
+  border-color: #8bc392;
+}

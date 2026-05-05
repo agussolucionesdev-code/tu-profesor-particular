@@ -1,0 +1,212 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+  font-size: var(--font-size-base);
+  width: 100%;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #3f678c #e7eef4;
+}
+
+html[data-text-scale="comfortable"] {
+  --font-size-base: 18px;
+  --font-size-caption: 0.96rem;
+  --font-size-eyebrow: 0.86rem;
+  --font-size-label: 1rem;
+}
+
+html[data-text-scale="large"] {
+  --font-size-base: 19px;
+  --font-size-caption: 1rem;
+  --font-size-eyebrow: 0.9rem;
+  --font-size-label: 1.04rem;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  scrollbar-color: #88afcf #0a1725;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: var(--line-height-reading);
+  text-rendering: optimizeLegibility;
+  font-family: "Inter", system-ui, -apple-system, sans-serif; /* TipografÃ­a moderna y limpia */
+  background-color: var(--color-bg-light);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  width: 100%;
+  overflow-x: hidden;
+  transition:
+    background-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.26s ease,
+    background-image 0.34s ease;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.main-content {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  overflow-x: clip;
+}
+
+.main-content.immersive-page-content {
+  max-width: none;
+}
+
+.route-loader-shell {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.route-loader-card {
+  width: min(100%, 420px);
+  padding: 1.5rem 1.4rem;
+  border-radius: 12px;
+  background: var(--color-white);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.route-loader-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(76, 175, 80, 0.12);
+  color: var(--color-accent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.route-loader-card strong {
+  display: block;
+  color: var(--color-text-main);
+  font-size: 1.05rem;
+}
+
+.route-loader-card p {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.main-content.admin-page-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 100px 0 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.85rem;
+  left: 1rem;
+  z-index: 10001;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: #1d344d;
+  color: #ffffff;
+  font-size: var(--font-size-eyebrow);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-180%);
+  transition: transform 0.2s ease;
+  box-shadow: 0 16px 30px rgba(19, 41, 64, 0.2);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+html[data-theme="dark"] .skip-link {
+  background: #edf4fb;
+  color: #07111d;
+}
+
+@media (max-width: 768px) {
+  .main-content.admin-page-content {
+    padding-top: 85px;
+  }
+
+  .route-loader-shell {
+    min-height: calc(100vh - 85px);
+  }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-left: 1px solid color-mix(in srgb, var(--border-soft) 55%, transparent);
+}
+
+::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
+    var(--scrollbar-thumb) border-box;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    var(--scrollbar-shadow);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
+    var(--scrollbar-thumb-hover) border-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background:
+    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
+    linear-gradient(
+      180deg,
+      rgba(24, 56, 88, 1),
+      rgba(88, 152, 96, 1)
+    ) border-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

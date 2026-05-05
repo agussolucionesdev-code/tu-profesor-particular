@@ -1,0 +1,27 @@
+{
+  "name": "Tu Profesor Particular | Agustín Elías Sosa",
+  "short_name": "Tu Profesor Particular",
+  "description": "Reservá, consultá, reprogramá y gestioná turnos de clases particulares.",
+  "start_url": "/reservar",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef3f9",
+  "theme_color": "#204060",
+  "lang": "es-AR",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

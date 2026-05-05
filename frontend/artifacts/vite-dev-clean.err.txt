@@ -1,0 +1,65 @@
+[2m10:03:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/bookingFormatters.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/utils/bookingFormatters.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/components/BookingForm.jsx. Does the file exist?
+[2m10:03:40[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/bookingFormatters.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/utils/bookingFormatters.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/components/BookingForm.jsx. Does the file exist?
+[2m10:08:02[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/constants/bookingWizard.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/constants/bookingWizard.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/components/BookingForm.jsx. Does the file exist?
+[2m10:41:27[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/neuroToast.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/utils/neuroToast.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/App.jsx. Does the file exist?
+[2m10:41:27[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/neuroToast.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/utils/neuroToast.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/App.jsx. Does the file exist?
+[2m10:41:27[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/utils/neuroToast.js (resolved id: C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/utils/neuroToast.js) in C:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/App.jsx. Does the file exist?
+[2m03:00:55[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\src\layouts\Navbar.jsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (318:8)
+
+[0m [90m 316 |[31m             className[33m=[31m[32m"logo-img-horizontal"[31m
+ [90m 317 |[31m           [33m/[31m[33m>[31m
+[31m[1m>[22m[31m[90m 318 |[31m         [33m<[31m[33m/[31m[33mLink[31m[33m>[31m
+ [90m     |[31m         [31m[1m^[22m[31m
+ [90m 319 |[31m
+ [90m 320 |[31m         [33m<[31m[33mdiv[31m className[33m=[31m[32m"navbar-right-zone"[31m[33m>[31m
+ [90m 321 |[31m           [33m<[31m[33mul[31m className[33m=[31m{[32m`nav-menu-list ${isOpen ? "active" : ""}`[31m}[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Develop_webs/Tu_Profesor_Particular_Gestión_Turnos/frontend/src/layouts/Navbar.jsx[39m:318:8
+[33m  316 |              className="logo-img-horizontal"
+  317 |            />
+  318 |          </Link>
+      |          ^
+  319 |  
+  320 |          <div className="navbar-right-zone">[39m
+      at constructor (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at JSXParserMixin.jsxParseElementAt (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:4742:18)
+      at JSXParserMixin.jsxParseElement (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at JSXParserMixin.parseExprAtom (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at JSXParserMixin.parseExprSubscripts (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:11071:23)
+      at JSXParserMixin.parseUpdate (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:11056:21)
+      at JSXParserMixin.parseMaybeUnary (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:11036:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10889:61)
+      at JSXParserMixin.parseExprOps (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10894:23)
+      at JSXParserMixin.parseMaybeConditional (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10871:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10821:21)
+      at JSXParserMixin.parseExpressionBase (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10774:23)
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10770:39
+      at JSXParserMixin.allowInAnd (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12411:16)
+      at JSXParserMixin.parseExpression (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:10770:17)
+      at JSXParserMixin.parseStatementContent (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12885:23)
+      at JSXParserMixin.parseStatementLike (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12757:17)
+      at JSXParserMixin.parseModuleItem (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12734:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:13306:36)
+      at JSXParserMixin.parseBlockBody (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:13299:10)
+      at JSXParserMixin.parseProgram (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12612:10)
+      at JSXParserMixin.parseTopLevel (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:12602:25)
+      at JSXParserMixin.parse (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:14478:25)
+      at parse (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\parser\lib\index.js:14512:38)
+      at parser (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:261:32)
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:223:11)
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:189:28
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:113:33
+      at step (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:287:14)
+      at C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Develop_webs\Tu_Profesor_Particular_Gestión_Turnos\frontend\node_modules\gensync\index.js:223:11)
