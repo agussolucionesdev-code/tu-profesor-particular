@@ -56,9 +56,35 @@ const shutdown = async (signal, exitCode = 0) => {
   }
 };
 
+const connectWithRetry = async (maxAttempts = 5, delayMs = 5000) => {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await connectDB();
+      return;
+    } catch (error) {
+      const isLast = attempt === maxAttempts;
+      console.error(
+        `DATABASE: connection attempt ${attempt}/${maxAttempts} failed: ${error.message}`,
+      );
+      if (isLast) throw error;
+      console.log(`DATABASE: retrying in ${delayMs / 1000}s…`);
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+};
+
 const launch = async () => {
+  // Start listening immediately so Render's health check can reach /health
+  // while we attempt the database connection in the background.
+  server = app.listen(PORT, () => {
+    logServerBanner();
+  });
+  server.requestTimeout = REQUEST_TIMEOUT_MS;
+  server.headersTimeout = Math.max(HEADERS_TIMEOUT_MS, REQUEST_TIMEOUT_MS + 1000);
+  server.keepAliveTimeout = KEEP_ALIVE_TIMEOUT_MS;
+
   try {
-    await connectDB();
+    await connectWithRetry(5, 5000);
     await ensureConfiguredAdmin();
 
     // Daily reminder: runs at 09:00 AM local time.
@@ -73,17 +99,12 @@ const launch = async () => {
       }
     });
     console.log("CRON: daily reminder scheduled for 09:00 AM.");
-
-    server = app.listen(PORT, () => {
-      logServerBanner();
-    });
-
-    server.requestTimeout = REQUEST_TIMEOUT_MS;
-    server.headersTimeout = Math.max(HEADERS_TIMEOUT_MS, REQUEST_TIMEOUT_MS + 1000);
-    server.keepAliveTimeout = KEEP_ALIVE_TIMEOUT_MS;
   } catch (error) {
-    console.error("CRITICAL ERROR during launch:", error.message);
-    process.exit(1);
+    // DB connection exhausted all retries. The server stays alive so Render
+    // keeps it running — a misconfigured MONGO_URI or a paused Atlas cluster
+    // shouldn't take the whole service down. Fix the env var and redeploy.
+    console.error("DATABASE: all connection attempts failed:", error.message);
+    console.error("SERVER: continuing without database — API will return 503 on data routes.");
   }
 };
 

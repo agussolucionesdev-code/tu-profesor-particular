@@ -120,8 +120,10 @@ app.get("/health", (req, res) => {
   const dbHealth = getDbHealth();
   const dbMeta = getDbConnectionMeta();
 
-  res.status(dbHealth.isConnected ? 200 : 503).json({
-    status: dbHealth.isConnected ? "success" : "error",
+  // Always return 200 so Render's health check passes even while DB is
+  // still connecting. DB health is visible in the response body.
+  res.status(200).json({
+    status: dbHealth.isConnected ? "success" : "starting",
     message: "Agustin Sosa Pro-API is operational",
     environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
