@@ -14,17 +14,15 @@ const scrollToActive = (el) => {
     document.querySelector(".navbar-elite")?.getBoundingClientRect().height ??
     72;
 
-  /* ── Zona segura: desde debajo de la navbar hasta el 88 % del viewport ── */
+  /* ── Zona segura: tercio superior del viewport visible ── */
   const safeTop = navH + 16;
-  const safeBottom = window.innerHeight * 0.88;
-  const safeCenterY = (safeTop + safeBottom) / 2;
 
-  /* ── Centro actual del campo en el viewport ── */
+  /* Posicionar el TOP del campo al 28% del viewport (tercio superior).
+     Esto garantiza que: la progress bar quede visible arriba, el campo
+     esté alto y centrado, y el footer NUNCA aparezca abajo. */
+  const targetViewportY = window.innerHeight * 0.28;
   const elRect = el.getBoundingClientRect();
-  const elCenterY = (elRect.top + elRect.bottom) / 2;
-
-  /* ── Scroll para centrar el campo en la zona segura ── */
-  const targetScrollY = window.scrollY + (elCenterY - safeCenterY);
+  const targetScrollY = window.scrollY + (elRect.top - Math.max(safeTop, targetViewportY));
 
   /* ── Asegurar que la progress bar / section title no queden cortados ── */
   const stageEl = el.closest(".field-flow-stage");
