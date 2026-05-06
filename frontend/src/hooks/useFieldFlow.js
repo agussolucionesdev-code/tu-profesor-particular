@@ -24,15 +24,42 @@ const scrollToActive = (el) => {
     72;
   const anchorSpacing = anchorEl === el ? 112 : 16;
   const totalOffset = navH + anchorSpacing;
-  const top =
+  const initialTop =
     anchorEl.getBoundingClientRect().top + window.scrollY - totalOffset;
   const prefersReduced = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)",
   )?.matches;
   window.scrollTo({
-    top: Math.max(0, top),
+    top: Math.max(0, initialTop),
     behavior: prefersReduced ? "auto" : "smooth",
   });
+
+  window.setTimeout(() => {
+    const blockRect = el.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const bottomSafeArea = Math.max(88, Math.round(viewportHeight * 0.14));
+    const topSafeArea = navH + 16;
+    let adjustedTop = null;
+
+    if (blockRect.bottom > viewportHeight - bottomSafeArea) {
+      adjustedTop =
+        window.scrollY +
+        (blockRect.bottom - (viewportHeight - bottomSafeArea));
+    }
+
+    if (blockRect.top < topSafeArea) {
+      adjustedTop =
+        window.scrollY -
+        (topSafeArea - blockRect.top);
+    }
+
+    if (adjustedTop !== null) {
+      window.scrollTo({
+        top: Math.max(0, adjustedTop),
+        behavior: prefersReduced ? "auto" : "smooth",
+      });
+    }
+  }, prefersReduced ? 0 : 220);
 };
 
 /**
