@@ -8,16 +8,20 @@ import { useRef, useEffect, useCallback, useState } from "react";
  */
 const scrollToActive = (el) => {
   if (!el) return;
+  const sectionTitleEl = el.closest(".form-section-block")?.querySelector(
+    ".section-title",
+  );
+  const progressBarEl = el.closest(".field-flow-stage")?.querySelector(
+    ".field-flow-progress",
+  );
+  const anchorEl = sectionTitleEl || progressBarEl || el;
   const navH =
     document.querySelector(".navbar-elite")?.getBoundingClientRect().height ??
     72;
-  const stepperEl = document.querySelector(".neuro-stepper");
-  const compassEl = document.querySelector(".journey-compass");
-  const stepperH = stepperEl?.getBoundingClientRect().height ?? 0;
-  const compassH = compassEl?.getBoundingClientRect().height ?? 0;
-  const totalOffset = navH + compassH + stepperH + 28;
+  const anchorSpacing = anchorEl === el ? 112 : 20;
+  const totalOffset = navH + anchorSpacing;
   const top =
-    el.getBoundingClientRect().top + window.scrollY - totalOffset;
+    anchorEl.getBoundingClientRect().top + window.scrollY - totalOffset;
   const prefersReduced = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)",
   )?.matches;
