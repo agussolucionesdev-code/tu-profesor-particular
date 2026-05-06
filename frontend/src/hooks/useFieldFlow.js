@@ -152,11 +152,23 @@ const useFieldFlow = ({ fields, resetTrigger, startVisible = true }) => {
 
   // Reset cuando cambia resetTrigger.
   // Si startVisible=false, solo ejecuta cuando el trigger se vuelve truthy.
+  // skipReset: si el campo activo cambió el trigger (ej: adultMode toggle),
+  // no resetear a 0 — mantener el índice actual y solo limpiar verificación.
+  const prevTrigger = useRef(resetTrigger);
   useEffect(() => {
     if (!startVisible && !resetTrigger) return;
-    setActiveIndex(0);
-    setShowVerification(false);
-    setTimeout(() => scrollToField(0), 120);
+    const isInitialMount = prevTrigger.current === resetTrigger;
+    prevTrigger.current = resetTrigger;
+    if (isInitialMount) {
+      // Primer render: ir al campo 0
+      setActiveIndex(0);
+      setShowVerification(false);
+      setTimeout(() => scrollToField(0), 120);
+    } else {
+      // Cambio posterior (ej: toggle adultMode): limpiar verificación
+      // pero mantener el índice actual para no rebobinar.
+      setShowVerification(false);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetTrigger]);
 
