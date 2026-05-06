@@ -39,6 +39,8 @@ const AdminLoginScreen = ({
               value={username}
               onChange={onUsernameChange}
               autoComplete="username"
+              minLength={3}
+              required
               autoFocus
             />
           </label>
@@ -52,6 +54,8 @@ const AdminLoginScreen = ({
               value={password}
               onChange={onPasswordChange}
               autoComplete="current-password"
+              minLength={8}
+              required
             />
           </label>
 
