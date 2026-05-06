@@ -32,6 +32,7 @@ const ACADEMIC_FIELDS = [
 const AcademicInfoStep = ({
   formData,
   isAdult,
+  isVisible = false,
   hasAttemptedNext,
   setHasAttemptedNext,
   isValidField,
@@ -43,6 +44,7 @@ const AcademicInfoStep = ({
   textareaRef,
   getYearGradeOptions,
   goToNext,
+  onBackToPersonal,
 }) => {
   // ── Hook de flujo: resetea cuando la sección se vuelve visible ───────────
   const {
@@ -55,7 +57,7 @@ const AcademicInfoStep = ({
     exitVerification,
   } = useFieldFlow({
     fields: ACADEMIC_FIELDS,
-    resetTrigger: isPersonalInfoComplete,
+    resetTrigger: isVisible,
     startVisible: false,
   });
 
@@ -166,7 +168,8 @@ const AcademicInfoStep = ({
   return (
     <div
       className="progressive-disclosure-grid is-active"
-      style={{ marginTop: "0.5rem" }}
+      style={{ display: isVisible ? undefined : "none", marginTop: "0.5rem" }}
+      aria-hidden={isVisible ? undefined : "true"}
     >
       <div className="progressive-inner">
         <hr className="section-divider-soft" />
@@ -226,7 +229,8 @@ const AcademicInfoStep = ({
                       fieldRefs.current.educationLevel = el;
                     }}
                     onConfirm={() => confirmField("educationLevel")}
-                    showBack={false}
+                    onBack={onBackToPersonal}
+                    showBack={typeof onBackToPersonal === "function"}
                   >
                     <div
                       className={`neuro-input-wrapper premium-input ${getFieldStateClass("educationLevel")}`}

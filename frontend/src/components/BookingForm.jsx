@@ -110,6 +110,7 @@ const BookingForm = () => {
   const [showModal, setShowModal] = useState(false);
   const [successData, setSuccessData] = useState(null);
   const [pricePerHour, setPricePerHour] = useState(0);
+  const [stepOneSection, setStepOneSection] = useState("personal");
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
 
   useEffect(() => {
@@ -215,6 +216,12 @@ const BookingForm = () => {
 
   const playStepSound = () => {};
   const playUnlockSound = () => {};
+
+  useEffect(() => {
+    if (!isPersonalInfoComplete) {
+      setStepOneSection("personal");
+    }
+  }, [isPersonalInfoComplete]);
 
   const syncSliderHeight = useCallback(() => {
     const activePanel = slideRefs.current[currentStep];
@@ -1208,17 +1215,20 @@ const BookingForm = () => {
                 <PersonalInfoStep
                   formData={formData}
                   isAdult={isAdult}
+                  isVisible={stepOneSection === "personal"}
                   hasAttemptedNext={hasAttemptedNext}
                   setHasAttemptedNext={setHasAttemptedNext}
                   isValidField={isValidField}
                   getFieldStateClass={getFieldStateClass}
-                handleChange={handleChange}
-                toggleAdultMode={toggleAdultMode}
-              />
+                  handleChange={handleChange}
+                  toggleAdultMode={toggleAdultMode}
+                  onContinueToAcademic={() => setStepOneSection("academic")}
+                />
 
               <AcademicInfoStep
                 formData={formData}
                 isAdult={isAdult}
+                isVisible={stepOneSection === "academic"}
                 hasAttemptedNext={hasAttemptedNext}
                 setHasAttemptedNext={setHasAttemptedNext}
                 isValidField={isValidField}
@@ -1230,6 +1240,7 @@ const BookingForm = () => {
                 textareaRef={textareaRef}
                 getYearGradeOptions={getYearGradeOptions}
                 goToNext={goToNext}
+                onBackToPersonal={() => setStepOneSection("personal")}
               />
             </div>
 

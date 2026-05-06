@@ -26,12 +26,14 @@ import VerificationScreen from "../shared/VerificationScreen";
 const PersonalInfoStep = ({
   formData,
   isAdult,
+  isVisible = true,
   hasAttemptedNext,
   setHasAttemptedNext,
   isValidField,
   getFieldStateClass,
   handleChange,
   toggleAdultMode,
+  onContinueToAcademic,
 }) => {
   // ── Definición de campos según modo adulto ──────────────────────────────
   const fields = useMemo(() => {
@@ -190,7 +192,11 @@ const PersonalInfoStep = ({
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="form-section-block">
+    <div
+      className="form-section-block"
+      style={{ display: isVisible ? undefined : "none" }}
+      aria-hidden={isVisible ? undefined : "true"}
+    >
       <h1 className="section-title" tabIndex={-1}>
         <FaIdCard aria-hidden="true" />
         Reservá tu clase
@@ -648,7 +654,9 @@ const PersonalInfoStep = ({
             const fieldIndex = fields.findIndex((f) => f.key === fieldKey);
             exitVerification(fieldIndex !== -1 ? fieldIndex : index);
           }}
-          canContinue={false}
+          onContinue={onContinueToAcademic}
+          continueLabel="Ir al perfil académico →"
+          canContinue
         />
       )}
     </div>

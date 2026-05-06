@@ -26,40 +26,31 @@ const scrollToActive = (el) => {
   const totalOffset = navH + anchorSpacing;
   const initialTop =
     anchorEl.getBoundingClientRect().top + window.scrollY - totalOffset;
+  const viewportHeight = window.innerHeight;
+  const bottomSafeArea = Math.max(88, Math.round(viewportHeight * 0.14));
+  const topSafeArea = navH + 16;
+  const currentScrollY = window.scrollY;
+  const projectedDelta = initialTop - currentScrollY;
+  const blockRect = el.getBoundingClientRect();
+  const projectedTop = blockRect.top - projectedDelta;
+  const projectedBottom = blockRect.bottom - projectedDelta;
+  let finalTop = initialTop;
+
+  if (projectedBottom > viewportHeight - bottomSafeArea) {
+    finalTop += projectedBottom - (viewportHeight - bottomSafeArea);
+  }
+
+  if (projectedTop < topSafeArea) {
+    finalTop -= topSafeArea - projectedTop;
+  }
+
   const prefersReduced = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)",
   )?.matches;
   window.scrollTo({
-    top: Math.max(0, initialTop),
+    top: Math.max(0, finalTop),
     behavior: prefersReduced ? "auto" : "smooth",
   });
-
-  window.setTimeout(() => {
-    const blockRect = el.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const bottomSafeArea = Math.max(88, Math.round(viewportHeight * 0.14));
-    const topSafeArea = navH + 16;
-    let adjustedTop = null;
-
-    if (blockRect.bottom > viewportHeight - bottomSafeArea) {
-      adjustedTop =
-        window.scrollY +
-        (blockRect.bottom - (viewportHeight - bottomSafeArea));
-    }
-
-    if (blockRect.top < topSafeArea) {
-      adjustedTop =
-        window.scrollY -
-        (topSafeArea - blockRect.top);
-    }
-
-    if (adjustedTop !== null) {
-      window.scrollTo({
-        top: Math.max(0, adjustedTop),
-        behavior: prefersReduced ? "auto" : "smooth",
-      });
-    }
-  }, prefersReduced ? 0 : 220);
 };
 
 /**
