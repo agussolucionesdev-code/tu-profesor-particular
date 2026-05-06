@@ -838,6 +838,39 @@
   padding-top: 5px;
 }
 
+/* ── Field-level progressive disclosure ─────────────────────────────────── */
+.field-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition:
+    grid-template-rows 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease 0.05s,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
+  pointer-events: none;
+}
+
+.field-reveal > * {
+  overflow: hidden;
+}
+
+.field-reveal[data-visible="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-reveal {
+    transition: none;
+  }
+  .field-reveal[data-visible="false"] {
+    display: none;
+  }
+}
+
 /* ── Premium inputs ──────────────────────────────────────────────────────── */
 .neuro-input-group {
   display: flex;
