@@ -345,11 +345,11 @@ const PersonalInfoStep = ({
                 <FieldBlock
                   key="adultMode"
                   fieldKey="adultMode"
-                  label="Quién reserva"
+                  label="¿El alumno es mayor de edad?"
                   helperText={
                     isAdult
-                      ? "Si cambiás de idea, podés volver al modo con responsable cuando quieras."
-                      : "Si el turno es para un menor, pedimos un adulto responsable para acompañar el contacto."
+                      ? "Usaremos sus propios datos como contacto."
+                      : "Vamos a pedir los datos de un adulto responsable."
                   }
                   isActive
                   isCompleted={activeIndex > fields.findIndex((f) => f.key === "adultMode")}
@@ -364,44 +364,19 @@ const PersonalInfoStep = ({
                   <button
                     id="adultMode"
                     type="button"
-                    className={`neuro-toggle-wrapper premium-input ${isAdult ? "active-box" : ""}`}
+                    className={`adult-toggle-clean ${isAdult ? "is-on" : ""}`}
                     role="switch"
                     aria-checked={isAdult}
                     aria-label="Indicar que el alumno es mayor de edad"
-                    aria-describedby="adult-mode-help"
                     onClick={toggleAdultMode}
                   >
-                    <div className="toggle-text">
-                      <span
-                        className={`toggle-pill ${isAdult ? "active" : "inactive"}`}
-                      >
-                        {isAdult ? "Reserva directa" : "Con responsable"}
-                      </span>
-                      <span className="toggle-title">
-                        El alumno es mayor de edad
-                      </span>
-                      <span className="toggle-subtitle">
-                        {isAdult
-                          ? "Usaremos sus propios datos como contacto principal."
-                          : "Vamos a pedir también los datos del adulto responsable."}
-                      </span>
-                    </div>
-                    <div className="toggle-control-shell" aria-hidden="true">
-                      <span
-                        className={`toggle-state-label ${isAdult ? "active" : ""}`}
-                      >
-                        {isAdult ? "Activo" : "Activar"}
-                      </span>
-                      <div
-                        className={`neuro-toggle ${isAdult ? "active" : ""}`}
-                      ></div>
-                    </div>
+                    <span className="adult-toggle-label">
+                      {isAdult ? "Sí, es mayor" : "No, es menor"}
+                    </span>
+                    <div
+                      className={`neuro-toggle ${isAdult ? "active" : ""}`}
+                    ></div>
                   </button>
-                  <p id="adult-mode-help" className="adult-mode-helper">
-                    {isAdult
-                      ? "Si cambiás de idea, podés volver al modo con responsable en cualquier momento."
-                      : "Podés activarlo cuando quieras; si ya habías cargado responsable, limpiamos esos datos."}
-                  </p>
                 </FieldBlock>
               )}
 

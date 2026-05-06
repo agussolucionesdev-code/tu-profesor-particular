@@ -3044,6 +3044,42 @@
   color: var(--text-primary);
 }
 
+/* ── Adult toggle — clean inline switch ── */
+.adult-toggle-clean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--border-soft, rgba(32, 64, 96, 0.1));
+  border-radius: 12px;
+  background: rgba(32, 64, 96, 0.025);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  font: inherit;
+  min-height: 0;
+}
+
+.adult-toggle-clean:hover {
+  border-color: rgba(32, 64, 96, 0.2);
+}
+
+.adult-toggle-clean.is-on {
+  border-color: rgba(88, 152, 96, 0.3);
+  background: rgba(88, 152, 96, 0.04);
+}
+
+.adult-toggle-clean.is-on:hover {
+  border-color: rgba(88, 152, 96, 0.5);
+}
+
+.adult-toggle-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 /* ── Verification Screen ────────────────────────────────────────── */
 .verification-screen {
   animation: verifyFadeIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
