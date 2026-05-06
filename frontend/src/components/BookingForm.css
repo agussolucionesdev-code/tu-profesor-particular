@@ -2543,7 +2543,7 @@
 }
 
 /* ══════════════════════════════════════════════════════
-   FIELD FLOW — Sistema de inputs campo-a-campo (Typeform style)
+   FIELD FLOW v3 — Card-based conversational inputs
    ══════════════════════════════════════════════════════ */
 
 /* Lista de campos */
@@ -2553,7 +2553,7 @@
   gap: 0;
 }
 
-/* ── Bloque individual — limpio, sin bordes ── */
+/* ── Bloque individual — card flotante cuando activo ── */
 .field-flow-block {
   padding: 0;
   border: none;
@@ -2567,6 +2567,13 @@
 .field-flow-block.is-active {
   opacity: 1;
   pointer-events: auto;
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-soft, rgba(32, 64, 96, 0.08));
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem 1.35rem;
+  box-shadow:
+    0 1px 3px rgba(32, 64, 96, 0.04),
+    0 8px 32px rgba(32, 64, 96, 0.06);
 }
 
 .field-flow-block.is-done {
@@ -2579,18 +2586,18 @@
   pointer-events: none;
 }
 
-/* ── Label — grande, conversacional, tipo Typeform ── */
+/* ── Label — conversacional ── */
 .field-flow-label-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.85rem;
   flex-wrap: wrap;
 }
 
 .field-flow-label {
-  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+  font-size: clamp(1rem, 2vw, 1.2rem);
   font-weight: 700;
   color: var(--text-primary);
   text-transform: none;
@@ -2604,7 +2611,7 @@
 }
 
 .field-flow-label .optional {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
   font-weight: 500;
   text-transform: none;
@@ -2617,24 +2624,23 @@
   animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ── Shell del input — más ancho ── */
+/* ── Shell del input ── */
 .field-flow-input-shell {
   width: 100%;
-  max-width: 560px;
-  transition: max-width 0.3s ease;
+  max-width: 100%;
+  transition: none;
 }
 
 .field-flow-input-shell.focused {
-  max-width: 600px;
+  max-width: 100%;
 }
 
 /* ── Helper text ── */
 .field-flow-helper {
-  margin-top: 0.75rem;
-  font-size: 0.82rem;
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
   color: var(--text-tertiary);
   line-height: 1.5;
-  max-width: 480px;
   animation: fadeInUp 0.25s ease;
 }
 
@@ -2643,49 +2649,50 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Botones — pill confirm + text back ── */
+/* ── Botones — integrados, accent, compactos ── */
 .field-flow-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 0.65rem;
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-soft, rgba(32, 64, 96, 0.06));
   animation: fadeInUp 0.2s ease;
 }
 
 .field-flow-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.86rem;
+  gap: 0.4rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   border: none;
   letter-spacing: 0.01em;
 }
 
 .field-flow-next {
-  background: var(--brand-navy, #204060);
+  background: var(--accent-primary, #589860);
   color: #fff;
-  border-radius: 999px;
-  padding: 0.65rem 1.5rem;
-  min-height: 42px;
-  box-shadow: 0 2px 8px rgba(32, 64, 96, 0.18);
+  border-radius: 12px;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.82rem;
+  min-height: 38px;
+  box-shadow: none;
 }
 
 .field-flow-next:hover {
-  background: var(--accent-primary, #589860);
+  background: var(--accent-hover, #4a7d52);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(88, 152, 96, 0.28);
+  box-shadow: 0 4px 12px rgba(88, 152, 96, 0.2);
 }
 
 .field-flow-next:active {
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(32, 64, 96, 0.14);
 }
 
 .field-flow-next:focus-visible {
-  outline: 3px solid var(--accent-primary);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
 
@@ -2693,41 +2700,43 @@
   background: transparent;
   color: var(--text-tertiary);
   border: none;
-  padding: 0.65rem 0.75rem;
-  min-height: 42px;
+  padding: 0.55rem 0.5rem;
+  font-size: 0.8rem;
+  min-height: 38px;
 }
 
 .field-flow-back:hover {
-  color: var(--text-primary);
+  color: var(--text-secondary);
   background: transparent;
   transform: none;
 }
 
 .field-flow-back:focus-visible {
-  outline: 3px solid var(--accent-primary);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
 
 /* ── Enter hint (desktop only) ── */
 .field-flow-enter-hint {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-tertiary);
   font-weight: 500;
   display: none;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  margin-left: auto;
 }
 
 .field-flow-enter-hint kbd {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
-  background: rgba(32, 64, 96, 0.06);
-  border: 1px solid var(--border-color);
+  padding: 0.12rem 0.4rem;
+  background: rgba(32, 64, 96, 0.05);
+  border: 1px solid var(--border-soft);
   border-radius: 4px;
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2736,48 +2745,51 @@
   }
 }
 
-/* ── Progress bar (reemplaza dots) ── */
+/* ── Progress bar ── */
 .field-flow-progress {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0;
-  margin-bottom: 1.75rem;
+  gap: 3px;
+  margin-bottom: 1.25rem;
   padding: 0;
-  height: 3px;
-  background: var(--border-soft, rgba(32, 64, 96, 0.08));
-  border-radius: 2px;
-  overflow: hidden;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .field-flow-progress::after {
   content: attr(data-step-label);
   position: absolute;
   right: 0;
-  top: -22px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--text-tertiary);
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
 .field-flow-dot,
 .field-flow-dot.done,
 .field-flow-dot.active {
   flex: 1;
-  height: 3px !important;
+  max-width: 48px;
+  height: 4px !important;
   width: auto !important;
   min-height: 0 !important;
   min-width: 0 !important;
-  max-height: 3px;
-  border-radius: 0 !important;
+  max-height: 4px;
+  border-radius: 2px !important;
   border: none;
   outline: none;
-  background: transparent;
+  background: var(--border-soft, rgba(32, 64, 96, 0.08));
   cursor: default;
   padding: 0;
   margin: 0;
-  transition: background 0.35s ease;
+  transition: background 0.3s ease;
   box-sizing: border-box;
   display: block !important;
   line-height: 1 !important;
@@ -2795,7 +2807,6 @@
 
 .field-flow-dot.active {
   background: var(--brand-navy, #204060);
-  border-radius: 0 2px 2px 0 !important;
 }
 
 .field-flow-dot:disabled {
@@ -2879,12 +2890,16 @@
 
 /* ══ Responsive field-flow ═════════════════════════════ */
 @media (max-width: 640px) {
+  .field-flow-block.is-active {
+    padding: 1.25rem 1.15rem 1.1rem;
+    border-radius: 16px;
+  }
   .field-flow-input-shell,
   .field-flow-input-shell.focused {
     max-width: 100%;
   }
   .field-flow-label {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   .field-flow-actions {
     flex-wrap: wrap;
@@ -2895,6 +2910,9 @@
   }
   .field-flow-btn.field-flow-back {
     flex: 0 0 auto;
+  }
+  .field-flow-enter-hint {
+    display: none !important;
   }
 }
 
@@ -2909,7 +2927,7 @@
 /* El section-divider-soft ya existe en el CSS del step, no necesita más */
 
 /* ══════════════════════════════════════════════════════════════════
-   FIELD FLOW v2 — Typeform-style underline inputs + animaciones
+   FIELD FLOW v3 — Card inputs + refined animations
    ══════════════════════════════════════════════════════════════════ */
 
 /* Contenedor del campo único activo */
@@ -2917,35 +2935,32 @@
   position: relative;
 }
 
-/* ── Animación de entrada — fade + rise + blur ── */
+/* ── Animación de entrada — fade + rise ── */
 .field-flow-single {
-  animation: fieldFlowEntrance 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fieldFlowEntrance 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes fieldFlowEntrance {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
-    filter: blur(2px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
-/* ── Underline inputs — reemplaza bordered boxes ── */
+/* ── Input dentro de la card — fondo sutil con borde suave ── */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input,
 .field-flow-block.is-active .neuro-toggle-wrapper.premium-input,
 .field-flow-block.is-active .neuro-textarea-wrapper.premium-input {
-  background: transparent !important;
-  border: none !important;
-  border-bottom: 2px solid var(--border-color) !important;
-  border-radius: 0 !important;
+  background: rgba(32, 64, 96, 0.025) !important;
+  border: 1.5px solid var(--border-soft, rgba(32, 64, 96, 0.1)) !important;
+  border-radius: 12px !important;
   box-shadow: none !important;
   min-height: auto;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* Eliminar pseudo left-border accent */
@@ -2954,75 +2969,77 @@
   display: none;
 }
 
-/* Focus: underline verde + glow sutil */
+/* Focus: borde accent + fondo más cálido */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input:focus-within:not(.error),
 .field-flow-block.is-active .neuro-textarea-wrapper.premium-input:focus-within:not(.error) {
-  border-bottom-color: var(--accent-primary) !important;
-  box-shadow: 0 2px 8px rgba(88, 152, 96, 0.15) !important;
+  border-color: var(--accent-primary) !important;
+  background: rgba(88, 152, 96, 0.04) !important;
+  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.08) !important;
   transform: none !important;
 }
 
-/* Valid: underline verde, fondo transparente */
+/* Valid: borde verde sutil */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input.is-valid,
 .field-flow-block.is-active .neuro-textarea-wrapper.premium-input.is-valid {
-  border-bottom-color: var(--accent-primary) !important;
-  background: transparent !important;
+  border-color: rgba(88, 152, 96, 0.35) !important;
+  background: rgba(88, 152, 96, 0.03) !important;
 }
 
 .field-flow-block.is-active .neuro-input-wrapper.premium-input.is-valid::before {
   display: none;
 }
 
-/* Error: underline rojo */
+/* Error: borde rojo */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input.error,
 .field-flow-block.is-active .neuro-textarea-wrapper.premium-input.error {
-  border-bottom-color: var(--error-color) !important;
-  box-shadow: 0 2px 8px rgba(180, 35, 24, 0.1) !important;
+  border-color: var(--error-color) !important;
+  background: rgba(180, 35, 24, 0.03) !important;
+  box-shadow: none !important;
 }
 
-/* ── Input text — sin icono izquierdo, font más grande ── */
+/* ── Input text — sin icono izquierdo, tipografía mejorada ── */
 .field-flow-block.is-active .neuro-input-wrapper input,
 .field-flow-block.is-active .neuro-input-wrapper select {
-  padding: 12px 40px 12px 0 !important;
-  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  padding: 14px 40px 14px 14px !important;
+  font-size: 0.95rem;
   font-weight: 600;
   min-height: 48px !important;
 }
 
 .field-flow-block.is-active .neuro-textarea-wrapper textarea {
-  padding: 12px 40px 12px 0 !important;
-  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  padding: 14px 40px 14px 14px !important;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
-/* Ocultar icono decorativo izquierdo (label grande ya da contexto) */
+/* Ocultar icono decorativo izquierdo */
 .field-flow-block.is-active .input-icon {
   display: none;
 }
 
-/* Valid icon → flush right */
+/* Valid icon → posición ajustada */
 .field-flow-block.is-active .valid-icon {
-  right: 0;
-  font-size: 1.15rem;
+  right: 12px;
+  font-size: 1rem;
 }
 
-/* Select chevron → flush right */
+/* Select chevron */
 .field-flow-block.is-active .select-chevron {
-  right: 0;
+  right: 12px;
 }
 
 .field-flow-block.is-active .neuro-input-wrapper select {
-  padding-right: 28px !important;
+  padding-right: 36px !important;
 }
 
-/* ── Hover sutil en underline (sin lift) ── */
+/* ── Hover sutil ── */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input:hover:not(.error):not(:focus-within) {
-  border-bottom-color: rgba(32, 64, 96, 0.35) !important;
+  border-color: rgba(32, 64, 96, 0.2) !important;
   transform: none !important;
   box-shadow: none !important;
 }
 
-/* Label del campo activo ya es grande (definido arriba) — no override */
+/* Label del campo activo */
 .field-flow-block.is-active .field-flow-label {
   color: var(--text-primary);
 }
