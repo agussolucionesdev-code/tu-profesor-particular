@@ -8,17 +8,21 @@ import { useRef, useEffect, useCallback, useState } from "react";
  */
 const scrollToActive = (el) => {
   if (!el) return;
+  const formCardEl = el.closest(".form-card-elevation");
+  const journeyCompassEl = formCardEl?.querySelector(".journey-compass");
+  const stepperEl = formCardEl?.querySelector(".neuro-stepper");
   const sectionTitleEl = el.closest(".form-section-block")?.querySelector(
     ".section-title",
   );
   const progressBarEl = el.closest(".field-flow-stage")?.querySelector(
     ".field-flow-progress",
   );
-  const anchorEl = sectionTitleEl || progressBarEl || el;
+  const anchorEl =
+    journeyCompassEl || stepperEl || sectionTitleEl || progressBarEl || el;
   const navH =
     document.querySelector(".navbar-elite")?.getBoundingClientRect().height ??
     72;
-  const anchorSpacing = anchorEl === el ? 112 : 20;
+  const anchorSpacing = anchorEl === el ? 112 : 16;
   const totalOffset = navH + anchorSpacing;
   const top =
     anchorEl.getBoundingClientRect().top + window.scrollY - totalOffset;
