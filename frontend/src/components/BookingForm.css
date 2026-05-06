@@ -22,10 +22,10 @@
   max-width: 860px;
   min-width: 0;
   border-radius: 20px;
-  box-shadow: var(--shadow-card);
-  padding: 2rem 2.5rem;
+  box-shadow: 0 4px 24px rgba(32, 64, 96, 0.07), 0 1px 4px rgba(32, 64, 96, 0.04);
+  padding: 2rem 2.5rem 2.5rem;
   position: relative;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(32, 64, 96, 0.09);
   overflow: hidden;
 }
 
@@ -82,35 +82,35 @@
 /* ── Header ──────────────────────────────────────────────────────────────── */
 .form-header-neuro {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .form-supertitle {
   display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 900;
-  color: var(--accent-primary);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--accent-hover);
   text-transform: uppercase;
-  letter-spacing: 3px;
-  background: var(--accent-light);
-  padding: 8px 18px;
+  letter-spacing: 0.18em;
+  background: rgba(88, 152, 96, 0.08);
+  padding: 6px 16px;
   border-radius: var(--radius-full);
-  margin-bottom: 14px;
-  border: 1px solid rgba(88, 152, 96, 0.2);
+  margin-bottom: 12px;
+  border: 1px solid rgba(88, 152, 96, 0.18);
 }
 
 .form-main-title {
   color: var(--text-primary);
-  font-size: clamp(1.85rem, 4vw, 2.5rem);
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
   font-weight: 900;
-  letter-spacing: -0.025em;
-  margin: 0 0 10px 0;
+  letter-spacing: -0.028em;
+  margin: 0 0 8px 0;
   line-height: 1.08;
 }
 
 .form-subtitle {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   margin: 0;
 }
@@ -254,47 +254,44 @@
 
 /* ── Journey compass ─────────────────────────────────────────────────────── */
 .journey-compass {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, 180px);
-  gap: 1rem;
+  display: flex;
   align-items: center;
+  gap: 0.75rem;
   background: transparent;
-  border: 1px solid var(--border-soft);
-  border-radius: 10px;
-  padding: 1rem 1.1rem;
-  margin: -0.5rem 0 1.75rem;
+  border: none;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: 0;
+  padding: 0.1rem 0 0.9rem;
+  margin: -0.5rem 0 1.5rem;
 }
 
 .journey-kicker {
   display: inline-block;
-  color: var(--accent-hover);
-  font-size: 0.68rem;
-  font-weight: 900;
+  color: var(--text-tertiary);
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.25rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0;
+  white-space: nowrap;
 }
 
 .journey-copy h3 {
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  margin: 0 0 0.25rem;
+  margin: 0;
 }
 
 .journey-copy p {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin: 0;
+  display: none;
 }
 
 .journey-heading-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.35rem;
+  gap: 0.6rem;
+  margin-bottom: 0;
 }
 
 .journey-next-pill {
@@ -309,47 +306,18 @@
   font-weight: 800;
 }
 
-.journey-one-line { max-width: 46ch; }
+.journey-one-line { display: none; }
 
-.journey-chip-row {
-  display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-  margin-top: 0.8rem;
-}
+.journey-chip-row { display: none; }
 
-.journey-mini-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.42rem 0.7rem;
-  border-radius: var(--radius-full);
-  background: var(--surface-card);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  color: var(--text-secondary);
-  font-size: 0.76rem;
-  font-weight: 800;
-}
+.journey-mini-chip { display: none; }
 
-.journey-meter {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
-  padding: 0.75rem 0.8rem;
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-  color: var(--text-secondary);
-  font-weight: 800;
-}
+/* Meter oculto — el progreso vive en el stepper progress bar */
+.journey-meter { display: none; }
 
-.journey-meter span {
-  color: var(--text-primary);
-  font-size: 1.35rem;
-  font-weight: 900;
-}
-
-.journey-meter small { font-size: 0.72rem; }
-.journey-meter-copy  { line-height: 1.45; }
+.journey-meter span { display: none; }
+.journey-meter small { display: none; }
+.journey-meter-copy  { display: none; }
 
 .journey-meter-track {
   width: 100%;
@@ -370,22 +338,19 @@
 .neuro-stepper {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  margin-bottom: 2.75rem;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
   position: relative;
-  padding: 1rem;
+  padding: 0.7rem 0.85rem 0.75rem;
   border: 1px solid var(--border-soft);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface-card);
   overflow: hidden;
 }
 
-/* Cabecera del stepper */
+/* Cabecera del stepper — solo se usa para a11y, visualmente se oculta */
 .stepper-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+  display: none;
 }
 
 .stepper-head-copy {
@@ -434,19 +399,7 @@
   margin: 0.12rem 0 0;
 }
 
-.stepper-nav-hint {
-  color: var(--text-tertiary);
-  font-size: 0.75rem;
-  line-height: 1.45;
-  margin: 0;
-  max-width: 210px;
-  min-width: 0;
-  text-align: right;
-  flex-shrink: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-}
+.stepper-nav-hint { display: none; }
 
 /* Barra de progreso (ahora en flujo normal, no absoluta) */
 .stepper-progress-rail { width: 100%; }
@@ -473,7 +426,7 @@
 .stepper-grid {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 /* Botón de cada paso */
@@ -481,12 +434,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex: 1;
   min-width: 0;
-  padding: 0.7rem 0.4rem;
+  padding: 0.5rem 0.3rem;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   font: inherit;
   cursor: default;
@@ -531,8 +484,8 @@
 
 /* Círculo */
 .step-circle {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--surface-card);
   border: 2px solid var(--border-color);
@@ -540,10 +493,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 800;
   transition: var(--transition-smooth);
-  box-shadow: 0 0 0 3px var(--surface-card);
+  box-shadow: 0 0 0 2px var(--surface-card);
   flex-shrink: 0;
 }
 
@@ -614,11 +567,11 @@
 .step-label {
   position: static;
   top: auto;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
   color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2212,26 +2165,31 @@
   gap: 10px;
   min-height: 46px;
   padding: 0 28px;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   border: none;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .btn-ready {
-  background: linear-gradient(135deg, var(--brand-navy-deep, #183858), var(--brand-navy, #204060));
+  background: linear-gradient(135deg, #204060 0%, #2a5580 100%);
   color: white;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 3px 12px rgba(32, 64, 96, 0.22), 0 1px 4px rgba(32, 64, 96, 0.14);
 }
 
 .btn-ready:hover {
-  background: linear-gradient(135deg, var(--accent-deep, #345e3a), var(--accent-primary, #589860));
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 25px rgba(88, 152, 96, 0.28);
+  background: linear-gradient(135deg, #589860 0%, #4a7d52 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(88, 152, 96, 0.32), 0 4px 10px rgba(88, 152, 96, 0.18);
+}
+
+.btn-ready:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(32, 64, 96, 0.2);
 }
 
 .btn-disabled {
@@ -2483,23 +2441,8 @@
   }
 
   .journey-compass {
-    grid-template-columns: 1fr;
-    padding: 0.95rem;
-    gap: 0.85rem;
-  }
-
-  .journey-heading-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.45rem;
-  }
-
-  .journey-one-line {
-    max-width: none;
-  }
-
-  .journey-meter {
-    width: 100%;
+    padding: 0.1rem 0 0.8rem;
+    gap: 0.55rem;
   }
 
   .stepper-head {
@@ -2598,3 +2541,325 @@
   .btn-stage-next.is-ready svg { animation: none !important; }
   .side-nav-arrow.ready         { animation: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════
+   FIELD FLOW — Sistema de inputs campo-a-campo guiado
+   ══════════════════════════════════════════════════════ */
+
+/* Lista de campos */
+.field-flow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Bloque individual de campo */
+.field-flow-block {
+  padding: 1.25rem 0 1.25rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  border-left: 3px solid transparent;
+  transition: opacity 0.3s ease, border-left-color 0.3s ease, padding-left 0.3s ease;
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.field-flow-block:first-child {
+  padding-top: 0.5rem;
+}
+
+.field-flow-block.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  border-left-color: var(--accent-primary);
+  padding-left: 1rem;
+}
+
+.field-flow-block.is-done {
+  opacity: 0.65;
+  pointer-events: auto;
+  cursor: default;
+  padding-left: 0.5rem;
+  border-left-color: rgba(88, 152, 96, 0.25);
+}
+
+/* Cuando está done y no activo: mostrar compacto */
+.field-flow-block.is-done:not(.is-active) .field-flow-input-shell {
+  pointer-events: none;
+}
+
+/* Label row */
+.field-flow-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.field-flow-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field-flow-done-badge {
+  color: var(--accent-primary);
+  font-size: 1rem;
+  flex-shrink: 0;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shell del input */
+.field-flow-input-shell {
+  width: 100%;
+  max-width: 480px;
+  transition: max-width 0.35s ease;
+}
+
+.field-flow-input-shell.focused {
+  max-width: 560px;
+}
+
+/* Helper text visible solo cuando activo */
+.field-flow-helper {
+  margin-top: 0.5rem;
+  animation: fadeInUp 0.25s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Botones de acción del campo */
+.field-flow-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  animation: fadeInUp 0.2s ease;
+}
+
+.field-flow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.35rem;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  border: none;
+  min-height: 40px;
+  letter-spacing: 0.01em;
+}
+
+.field-flow-next {
+  background: linear-gradient(135deg, #204060 0%, #2a5580 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(32,64,96,0.22), 0 1px 3px rgba(32,64,96,0.14);
+}
+
+.field-flow-next:hover {
+  background: linear-gradient(135deg, #589860 0%, #4a7d52 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(88,152,96,0.32), 0 3px 8px rgba(88,152,96,0.16);
+}
+
+.field-flow-next:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(32,64,96,0.18);
+}
+
+.field-flow-next:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.field-flow-back {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+  padding: 0.6rem 1rem;
+}
+
+.field-flow-back:hover {
+  border-color: rgba(32,64,96,0.3);
+  color: var(--brand-navy, #204060);
+  background: rgba(32,64,96,0.04);
+  transform: translateY(-1px);
+}
+
+.field-flow-back:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Indicador de progreso por puntos */
+.field-flow-progress {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.field-flow-dot {
+  display: block;
+  width: 7px !important;
+  height: 7px !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  max-height: 7px;
+  line-height: 1;
+  border-radius: 50%;
+  border: none;
+  outline: none;
+  background: var(--border-color);
+  cursor: default;
+  padding: 0;
+  flex-shrink: 0;
+  align-self: center;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: content-box;
+}
+
+.field-flow-dot.done {
+  background: rgba(88, 152, 96, 0.55);
+  cursor: pointer;
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.field-flow-dot.done:hover {
+  background: var(--accent-primary);
+  transform: scale(1.3);
+}
+
+.field-flow-dot.active {
+  background: var(--brand-navy, #204060);
+  width: 20px !important;
+  height: 7px !important;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.field-flow-dot:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Clase utilitaria para texto solo para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ══ Correcciones de accesibilidad ══════════════════════
+   Contraste cabezales calendario — WCAG AA (≥ 4.5:1)
+   ════════════════════════════════════════════════════ */
+.react-datepicker__day-name {
+  color: #5a7a9a !important; /* ratio ≈ 4.6:1 sobre blanco */
+}
+
+[data-theme="dark"] .react-datepicker__day-name {
+  color: #94b8d4 !important;
+}
+
+/* Touch targets mínimos 44×44 px para días del calendario */
+.react-datepicker__day {
+  width: 44px !important;
+  height: 44px !important;
+  line-height: 44px !important;
+}
+
+.react-datepicker__week,
+.react-datepicker__day-names {
+  grid-template-columns: repeat(7, 44px) !important;
+  gap: 4px !important;
+}
+
+.react-datepicker__day-name {
+  width: 44px !important;
+  line-height: 44px !important;
+}
+
+/* Botones mes anterior/siguiente: 44×44 px */
+.booking-month-nav {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* ══ H1 en la página (fix jerarquía de headings) ════════ */
+/* El section-title del paso 1 ya usa h1 en el nuevo JSX  */
+
+/* ══ Duraciones — ocultar las de más de 4h por defecto ═ */
+.duration-list-item-extended {
+  display: none;
+}
+.duration-list-show-more .duration-list-item-extended {
+  display: flex;
+}
+
+/* ══ Estado vacío de horarios — texto claro ════════════ */
+.slots-empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.slots-empty-state strong {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+/* ══ Responsive field-flow ═════════════════════════════ */
+@media (max-width: 640px) {
+  .field-flow-input-shell,
+  .field-flow-input-shell.focused {
+    max-width: 100%;
+  }
+  .field-flow-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ══ Redesign overrides — garantizan que las reglas de accesibilidad global
+      (button { min-height: 44px } en theme-polish.css) no rompan los dots ══ */
+.field-flow-dot,
+.field-flow-dot.done,
+.field-flow-dot.active {
+  min-height: 0 !important;
+  height: 7px !important;
+  line-height: 1 !important;
+  display: block !important;
+}
+
+.field-flow-dot.active {
+  width: 20px !important;
+}
+
+/* journey-copy: se convierte en flex row dentro del nuevo flex compass */
+.journey-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* El section-divider-soft ya existe en el CSS del step, no necesita más */
