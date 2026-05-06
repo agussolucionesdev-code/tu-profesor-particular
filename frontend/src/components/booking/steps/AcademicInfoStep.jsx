@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   FaGraduationCap,
   FaLayerGroup,
@@ -24,6 +25,32 @@ const AcademicInfoStep = ({
   getYearGradeOptions,
   goToNext,
 }) => {
+  const showYearGrade = isValidField("educationLevel");
+  const showSubjectSchool = showYearGrade && isValidField("yearGrade");
+
+  const yearGradeRef = useRef(null);
+  const subjectSchoolRef = useRef(null);
+
+  useEffect(() => {
+    if (showYearGrade) {
+      const t = setTimeout(
+        () => yearGradeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        80
+      );
+      return () => clearTimeout(t);
+    }
+  }, [showYearGrade]);
+
+  useEffect(() => {
+    if (showSubjectSchool) {
+      const t = setTimeout(
+        () => subjectSchoolRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        80
+      );
+      return () => clearTimeout(t);
+    }
+  }, [showSubjectSchool]);
+
   return (
     <>
       <div
@@ -71,109 +98,126 @@ const AcademicInfoStep = ({
                 )}
               </div>
             </div>
-            <div className="neuro-input-group">
-              <div className="label-row">
-                <label htmlFor="yearGrade">
-                  Año / grado <span className="required">*</span>
-                </label>
-                {hasAttemptedNext && !isValidField("yearGrade") && (
-                  <span className="error-text">Requerido</span>
-                )}
-              </div>
-              <div
-                className={`neuro-input-wrapper premium-input ${getFieldStateClass("yearGrade")}`}
-              >
-                <FaSortNumericDown className="input-icon" />
-                <select
-                  id="yearGrade"
-                  name="yearGrade"
-                  value={formData.yearGrade}
-                  onChange={handleChange}
-                  disabled={!formData.educationLevel}
-                  aria-invalid={
-                    hasAttemptedNext && !isValidField("yearGrade")
-                  }
+
+            <div
+              className="field-reveal"
+              data-visible={String(showYearGrade || hasAttemptedNext)}
+              ref={yearGradeRef}
+            >
+              <div className="neuro-input-group">
+                <div className="label-row">
+                  <label htmlFor="yearGrade">
+                    Año / grado <span className="required">*</span>
+                  </label>
+                  {hasAttemptedNext && !isValidField("yearGrade") && (
+                    <span className="error-text">Requerido</span>
+                  )}
+                </div>
+                <div
+                  className={`neuro-input-wrapper premium-input ${getFieldStateClass("yearGrade")}`}
                 >
-                  {!formData.educationLevel && (
-                    <option value="">Elegí el nivel primero</option>
+                  <FaSortNumericDown className="input-icon" />
+                  <select
+                    id="yearGrade"
+                    name="yearGrade"
+                    value={formData.yearGrade}
+                    onChange={handleChange}
+                    disabled={!formData.educationLevel}
+                    aria-invalid={
+                      hasAttemptedNext && !isValidField("yearGrade")
+                    }
+                    tabIndex={showYearGrade || hasAttemptedNext ? undefined : -1}
+                  >
+                    {!formData.educationLevel && (
+                      <option value="">Elegí el nivel primero</option>
+                    )}
+                    {formData.educationLevel && (
+                      <option value="">Elegí curso, año o grado</option>
+                    )}
+                    {getYearGradeOptions().map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  {isValidField("yearGrade") && (
+                    <FaCheckCircle className="valid-icon select-valid" />
                   )}
-                  {formData.educationLevel && (
-                    <option value="">Elegí curso, año o grado</option>
-                  )}
-                  {getYearGradeOptions().map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                {isValidField("yearGrade") && (
-                  <FaCheckCircle className="valid-icon select-valid" />
-                )}
+                </div>
               </div>
             </div>
           </div>
-          <div className="form-grid-2">
-            <div className="neuro-input-group">
-              <div className="label-row">
-                <label htmlFor="subject">
-                  Materia a Preparar <span className="required">*</span>
-                </label>
-                {hasAttemptedNext && !isValidField("subject") && (
-                  <span className="error-text">Requerido</span>
-                )}
+
+          <div
+            className="field-reveal"
+            data-visible={String(showSubjectSchool || hasAttemptedNext)}
+            ref={subjectSchoolRef}
+          >
+            <div className="form-grid-2">
+              <div className="neuro-input-group">
+                <div className="label-row">
+                  <label htmlFor="subject">
+                    Materia a Preparar <span className="required">*</span>
+                  </label>
+                  {hasAttemptedNext && !isValidField("subject") && (
+                    <span className="error-text">Requerido</span>
+                  )}
+                </div>
+                <div
+                  className={`neuro-input-wrapper premium-input ${getFieldStateClass("subject")}`}
+                >
+                  <FaBookOpen className="input-icon" />
+                  <input
+                    id="subject"
+                    type="text"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    list="subject-suggestions"
+                    aria-invalid={hasAttemptedNext && !isValidField("subject")}
+                    placeholder="Materia, tema o examen a preparar"
+                    autoComplete="off"
+                    tabIndex={showSubjectSchool || hasAttemptedNext ? undefined : -1}
+                  />
+                  {isValidField("subject") && (
+                    <FaCheckCircle className="valid-icon" />
+                  )}
+                </div>
+                <datalist id="subject-suggestions">
+                  {getSubjectSuggestions(formData.educationLevel).map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
               </div>
-              <div
-                className={`neuro-input-wrapper premium-input ${getFieldStateClass("subject")}`}
-              >
-                <FaBookOpen className="input-icon" />
-                <input
-                  id="subject"
-                  type="text"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  list="subject-suggestions"
-                  aria-invalid={hasAttemptedNext && !isValidField("subject")}
-                  placeholder="Materia, tema o examen a preparar"
-                  autoComplete="off"
-                />
-                {isValidField("subject") && (
-                  <FaCheckCircle className="valid-icon" />
-                )}
-              </div>
-              <datalist id="subject-suggestions">
-                {getSubjectSuggestions(formData.educationLevel).map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-            </div>
-            <div className="neuro-input-group">
-              <div className="label-row">
-                <label htmlFor="school">
-                  Institución / colegio{" "}
-                  <span className="required">*</span>
-                </label>
-                {hasAttemptedNext && !isValidField("school") && (
-                  <span className="error-text">Requerido</span>
-                )}
-              </div>
-              <div
-                className={`neuro-input-wrapper premium-input ${getFieldStateClass("school")}`}
-              >
-                <FaSchool className="input-icon" />
-                <input
-                  id="school"
-                  type="text"
-                  name="school"
-                  value={formData.school}
-                  onChange={handleChange}
-                  autoComplete="organization"
-                  aria-invalid={hasAttemptedNext && !isValidField("school")}
-                  placeholder="Escuela, facultad o institución"
-                />
-                {isValidField("school") && (
-                  <FaCheckCircle className="valid-icon" />
-                )}
+              <div className="neuro-input-group">
+                <div className="label-row">
+                  <label htmlFor="school">
+                    Institución / colegio{" "}
+                    <span className="required">*</span>
+                  </label>
+                  {hasAttemptedNext && !isValidField("school") && (
+                    <span className="error-text">Requerido</span>
+                  )}
+                </div>
+                <div
+                  className={`neuro-input-wrapper premium-input ${getFieldStateClass("school")}`}
+                >
+                  <FaSchool className="input-icon" />
+                  <input
+                    id="school"
+                    type="text"
+                    name="school"
+                    value={formData.school}
+                    onChange={handleChange}
+                    autoComplete="organization"
+                    aria-invalid={hasAttemptedNext && !isValidField("school")}
+                    placeholder="Escuela, facultad o institución"
+                    tabIndex={showSubjectSchool || hasAttemptedNext ? undefined : -1}
+                  />
+                  {isValidField("school") && (
+                    <FaCheckCircle className="valid-icon" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
