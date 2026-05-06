@@ -151,22 +151,47 @@ const useFieldFlow = ({ fields, resetTrigger, startVisible = true }) => {
   );
 
   // Reset cuando cambia resetTrigger.
-  // Si startVisible=false, solo ejecuta cuando el trigger se vuelve truthy.
-  // skipReset: si el campo activo cambió el trigger (ej: adultMode toggle),
-  // no resetear a 0 — mantener el índice actual y solo limpiar verificación.
+  //
+  // Dos modos de operación:
+  //
+  // startVisible=true (PersonalInfoStep, resetTrigger=isAdult):
+  //   - La sección siempre está visible.
+  //   - Primer render: inicializar y scrollear al campo 0.
+  //   - Cambios posteriores (toggle isAdult): mantener índice, solo limpiar verificación.
+  //
+  // startVisible=false (AcademicInfoStep, resetTrigger=isVisible):
+  //   - La sección empieza oculta.
+  //   - Mientras esté oculta (trigger falsy): ignorar y marcar como no-vista.
+  //   - Primer vez visible (false → true): inicializar + scroll (como si fuera mount inicial).
+  //   - Si vuelve a ocultarse y reaparece: reinicializar + scroll también.
+  //   - No hay cambios de trigger mientras está visible (no aplica isAdult aquí).
   const prevTrigger = useRef(resetTrigger);
+  // Tracks si la sección ya fue inicializada al menos una vez estando visible.
+  // Se resetea a false cuando la sección se oculta, para reinicializar al reaparecer.
+  const sectionEverVisible = useRef(startVisible);
+
   useEffect(() => {
-    if (!startVisible && !resetTrigger) return;
+    if (!startVisible && !resetTrigger) {
+      // Sección oculta: resetear bandera para que la próxima aparición reinicialice.
+      sectionEverVisible.current = false;
+      return;
+    }
+
+    const isFirstAppearance = !sectionEverVisible.current;
+    // Para startVisible=true: detectar el primer render (trigger no ha cambiado aún).
     const isInitialMount = prevTrigger.current === resetTrigger;
+
     prevTrigger.current = resetTrigger;
-    if (isInitialMount) {
-      // Primer render: ir al campo 0
+
+    if (isFirstAppearance || isInitialMount) {
+      // Primera vez visible (o primer render): ir al campo 0 y scrollear.
+      sectionEverVisible.current = true;
       setActiveIndex(0);
       setShowVerification(false);
       setTimeout(() => scrollToField(0), 120);
     } else {
-      // Cambio posterior (ej: toggle adultMode): limpiar verificación
-      // pero mantener el índice actual para no rebobinar.
+      // Cambio posterior mientras ya está visible (ej: toggle adultMode):
+      // limpiar verificación pero mantener el índice actual para no rebobinar.
       setShowVerification(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
