@@ -18,7 +18,6 @@ jobs:
 
       - name: Deploy to Vercel Production
         run: vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }} --scope agussolucionesdev-1918s-projects
-        working-directory: ./frontend
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
