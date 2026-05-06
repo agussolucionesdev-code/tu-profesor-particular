@@ -6,7 +6,6 @@ import {
   FaUserCheck,
   FaIdCard,
   FaEnvelope,
-  FaChevronDown,
 } from "react-icons/fa";
 import {
   RESPONSIBLE_RELATIONSHIP_OPTIONS,
@@ -14,6 +13,7 @@ import {
 } from "../../../utils/bookingFormatters";
 import useFieldFlow from "../../../hooks/useFieldFlow";
 import FieldBlock from "../shared/FieldBlock";
+import SelectField from "../shared/SelectField";
 import VerificationScreen from "../shared/VerificationScreen";
 
 /**
@@ -455,41 +455,23 @@ const PersonalInfoStep = ({
                   onBack={() => jumpTo(activeIndex - 1)}
                   showBack
                 >
-                  <div
-                    className={`neuro-input-wrapper premium-input select-input-wrapper ${getFieldStateClass("responsibleRelationship")}`}
-                  >
-                    <FaIdCard className="input-icon" aria-hidden="true" />
-                    <select
-                      id="responsibleRelationship"
-                      name="responsibleRelationship"
-                      value={formData.responsibleRelationship}
-                      onChange={handleRelationshipChange}
-                      aria-invalid={
-                        hasAttemptedNext &&
-                        !isValidField("responsibleRelationship")
-                          ? "true"
-                          : "false"
-                      }
-                      aria-describedby="responsibleRelationship-help"
-                    >
-                      <option value="">Seleccioná el vínculo</option>
-                      {RESPONSIBLE_RELATIONSHIP_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown
-                      className="select-chevron"
-                      aria-hidden="true"
-                    />
-                    {isValidField("responsibleRelationship") && (
-                      <FaCheckCircle
-                        className="valid-icon select-valid"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
+                  <SelectField
+                    id="responsibleRelationship"
+                    name="responsibleRelationship"
+                    value={formData.responsibleRelationship}
+                    onChange={handleRelationshipChange}
+                    options={RESPONSIBLE_RELATIONSHIP_OPTIONS}
+                    placeholder="Seleccioná el vínculo"
+                    isValid={isValidField("responsibleRelationship")}
+                    stateClass={getFieldStateClass("responsibleRelationship")}
+                    aria-invalid={
+                      hasAttemptedNext &&
+                      !isValidField("responsibleRelationship")
+                        ? "true"
+                        : "false"
+                    }
+                    aria-describedby="responsibleRelationship-help"
+                  />
                   <p id="responsibleRelationship-help" className="sr-only">
                     Así queda claro quién está gestionando el turno.
                   </p>

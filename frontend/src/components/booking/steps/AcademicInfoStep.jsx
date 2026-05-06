@@ -1,18 +1,24 @@
 import { useCallback, useMemo, useRef, useEffect } from "react";
 import {
   FaGraduationCap,
-  FaLayerGroup,
-  FaSortNumericDown,
   FaBookOpen,
   FaSchool,
   FaCheckCircle,
   FaLightbulb,
-  FaChevronDown,
 } from "react-icons/fa";
 import { getSubjectSuggestions } from "../../../constants/bookingWizard";
 import useFieldFlow from "../../../hooks/useFieldFlow";
 import FieldBlock from "../shared/FieldBlock";
+import SelectField from "../shared/SelectField";
 import VerificationScreen from "../shared/VerificationScreen";
+
+const EDUCATION_LEVEL_OPTIONS = [
+  { value: "Primaria", label: "Primaria" },
+  { value: "Secundaria", label: "Secundaria" },
+  { value: "Secundaria Tecnica", label: "Secundaria técnica" },
+  { value: "Terciario", label: "Terciario / Superior" },
+  { value: "Universitario", label: "Universitario" },
+];
 
 const ACADEMIC_FIELDS = [
   { key: "educationLevel" },
@@ -233,41 +239,21 @@ const AcademicInfoStep = ({
                     onBack={onBackToPersonal}
                     showBack={typeof onBackToPersonal === "function"}
                   >
-                    <div
-                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("educationLevel")}`}
-                    >
-                      <FaLayerGroup className="input-icon" aria-hidden="true" />
-                      <select
-                        id="educationLevel"
-                        name="educationLevel"
-                        value={formData.educationLevel}
-                        onChange={makeSelectHandler("educationLevel")}
-                        aria-invalid={
-                          hasAttemptedNext && !isValidField("educationLevel")
-                            ? "true"
-                            : "false"
-                        }
-                      >
-                        <option value="">Elegí el nivel educativo</option>
-                        <option value="Primaria">Primaria</option>
-                        <option value="Secundaria">Secundaria</option>
-                        <option value="Secundaria Tecnica">
-                          Secundaria técnica
-                        </option>
-                        <option value="Terciario">Terciario / Superior</option>
-                        <option value="Universitario">Universitario</option>
-                      </select>
-                      <FaChevronDown
-                        className="select-chevron"
-                        aria-hidden="true"
-                      />
-                      {isValidField("educationLevel") && (
-                        <FaCheckCircle
-                          className="valid-icon select-valid"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
+                    <SelectField
+                      id="educationLevel"
+                      name="educationLevel"
+                      value={formData.educationLevel}
+                      onChange={makeSelectHandler("educationLevel")}
+                      options={EDUCATION_LEVEL_OPTIONS}
+                      placeholder="Elegí el nivel educativo"
+                      isValid={isValidField("educationLevel")}
+                      stateClass={getFieldStateClass("educationLevel")}
+                      aria-invalid={
+                        hasAttemptedNext && !isValidField("educationLevel")
+                          ? "true"
+                          : "false"
+                      }
+                    />
                   </FieldBlock>
                 )}
 
@@ -293,48 +279,26 @@ const AcademicInfoStep = ({
                     onBack={() => jumpTo(0)}
                     showBack
                   >
-                    <div
-                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("yearGrade")}`}
-                    >
-                      <FaSortNumericDown
-                        className="input-icon"
-                        aria-hidden="true"
-                      />
-                      <select
-                        id="yearGrade"
-                        name="yearGrade"
-                        value={formData.yearGrade}
-                        onChange={makeSelectHandler("yearGrade")}
-                        disabled={!formData.educationLevel}
-                        aria-invalid={
-                          hasAttemptedNext && !isValidField("yearGrade")
-                            ? "true"
-                            : "false"
-                        }
-                      >
-                        {!formData.educationLevel && (
-                          <option value="">Elegí el nivel primero</option>
-                        )}
-                        {formData.educationLevel && (
-                          <option value="">Elegí curso, año o grado</option>
-                        )}
-                        {getYearGradeOptions().map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                      <FaChevronDown
-                        className="select-chevron"
-                        aria-hidden="true"
-                      />
-                      {isValidField("yearGrade") && (
-                        <FaCheckCircle
-                          className="valid-icon select-valid"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
+                    <SelectField
+                      id="yearGrade"
+                      name="yearGrade"
+                      value={formData.yearGrade}
+                      onChange={makeSelectHandler("yearGrade")}
+                      options={getYearGradeOptions().map((o) => ({ value: o, label: o }))}
+                      placeholder={
+                        !formData.educationLevel
+                          ? "Elegí el nivel primero"
+                          : "Elegí curso, año o grado"
+                      }
+                      disabled={!formData.educationLevel}
+                      isValid={isValidField("yearGrade")}
+                      stateClass={getFieldStateClass("yearGrade")}
+                      aria-invalid={
+                        hasAttemptedNext && !isValidField("yearGrade")
+                          ? "true"
+                          : "false"
+                      }
+                    />
                   </FieldBlock>
                 )}
 
