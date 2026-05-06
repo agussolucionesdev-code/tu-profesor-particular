@@ -191,6 +191,7 @@ const AcademicInfoStep = ({
             {/* ── Progress dots ── */}
             <nav
               className="field-flow-progress"
+              data-step-label={`${activeIndex + 1} de ${ACADEMIC_FIELDS.length}`}
               aria-label="Progreso de perfil académico"
             >
               {ACADEMIC_FIELDS.map((field, index) => (

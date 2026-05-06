@@ -1,48 +1,40 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 
 /**
- * Hace scroll al elemento con un offset calculado considerando navbar,
- * stepper y compass. Respeta prefers-reduced-motion.
+ * Centra el campo activo en la zona segura del viewport (entre navbar y
+ * el 88 % inferior). Garantiza que la barra de progreso quede visible
+ * arriba y que el footer nunca se vea. Respeta prefers-reduced-motion.
  *
- * @param {HTMLElement} el - Elemento DOM al que hacer scroll
+ * @param {HTMLElement} el - Elemento DOM del field-block activo
  */
 const scrollToActive = (el) => {
   if (!el) return;
-  const formCardEl = el.closest(".form-card-elevation");
-  const journeyCompassEl = formCardEl?.querySelector(".journey-compass");
-  const stepperEl = formCardEl?.querySelector(".neuro-stepper");
-  const sectionTitleEl = el.closest(".form-section-block")?.querySelector(
-    ".section-title",
-  );
-  const progressBarEl = el.closest(".field-flow-stage")?.querySelector(
-    ".field-flow-progress",
-  );
-  const anchorEl =
-    journeyCompassEl || stepperEl || sectionTitleEl || progressBarEl || el;
+
   const navH =
     document.querySelector(".navbar-elite")?.getBoundingClientRect().height ??
     72;
-  const anchorSpacing = anchorEl === el ? 112 : 16;
-  const totalOffset = navH + anchorSpacing;
-  const initialTop =
-    anchorEl.getBoundingClientRect().top + window.scrollY - totalOffset;
-  const viewportHeight = window.innerHeight;
-  const bottomSafeArea = Math.max(88, Math.round(viewportHeight * 0.14));
-  const topSafeArea = navH + 16;
-  const currentScrollY = window.scrollY;
-  const projectedDelta = initialTop - currentScrollY;
-  const blockRect = el.getBoundingClientRect();
-  const projectedTop = blockRect.top - projectedDelta;
-  const projectedBottom = blockRect.bottom - projectedDelta;
-  let finalTop = initialTop;
 
-  if (projectedBottom > viewportHeight - bottomSafeArea) {
-    finalTop += projectedBottom - (viewportHeight - bottomSafeArea);
-  }
+  /* ── Zona segura: desde debajo de la navbar hasta el 88 % del viewport ── */
+  const safeTop = navH + 16;
+  const safeBottom = window.innerHeight * 0.88;
+  const safeCenterY = (safeTop + safeBottom) / 2;
 
-  if (projectedTop < topSafeArea) {
-    finalTop -= topSafeArea - projectedTop;
-  }
+  /* ── Centro actual del campo en el viewport ── */
+  const elRect = el.getBoundingClientRect();
+  const elCenterY = (elRect.top + elRect.bottom) / 2;
+
+  /* ── Scroll para centrar el campo en la zona segura ── */
+  const targetScrollY = window.scrollY + (elCenterY - safeCenterY);
+
+  /* ── Asegurar que la progress bar / section title no queden cortados ── */
+  const stageEl = el.closest(".field-flow-stage");
+  const anchorEl =
+    stageEl?.querySelector(".field-flow-progress") ||
+    el.closest(".progressive-inner")?.querySelector(".section-title") ||
+    el;
+  const anchorTop =
+    anchorEl.getBoundingClientRect().top + window.scrollY - safeTop;
+  const finalTop = Math.min(targetScrollY, anchorTop);
 
   const prefersReduced = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)",

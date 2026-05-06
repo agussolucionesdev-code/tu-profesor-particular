@@ -2543,7 +2543,7 @@
 }
 
 /* ══════════════════════════════════════════════════════
-   FIELD FLOW — Sistema de inputs campo-a-campo guiado
+   FIELD FLOW — Sistema de inputs campo-a-campo (Typeform style)
    ══════════════════════════════════════════════════════ */
 
 /* Lista de campos */
@@ -2553,55 +2553,61 @@
   gap: 0;
 }
 
-/* Bloque individual de campo */
+/* ── Bloque individual — limpio, sin bordes ── */
 .field-flow-block {
-  padding: 1.25rem 0 1.25rem 1rem;
-  border-bottom: 1px solid var(--border-soft);
-  border-left: 3px solid transparent;
-  transition: opacity 0.3s ease, border-left-color 0.3s ease, padding-left 0.3s ease;
-  opacity: 0.38;
-  pointer-events: none;
+  padding: 0;
+  border: none;
+  transition: opacity 0.4s ease;
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.field-flow-block:first-child {
-  padding-top: 0.5rem;
-}
+.field-flow-block:first-child { padding-top: 0; }
 
 .field-flow-block.is-active {
   opacity: 1;
   pointer-events: auto;
-  border-left-color: var(--accent-primary);
-  padding-left: 1rem;
 }
 
 .field-flow-block.is-done {
   opacity: 0.65;
   pointer-events: auto;
   cursor: default;
-  padding-left: 0.5rem;
-  border-left-color: rgba(88, 152, 96, 0.25);
 }
 
-/* Cuando está done y no activo: mostrar compacto */
 .field-flow-block.is-done:not(.is-active) .field-flow-input-shell {
   pointer-events: none;
 }
 
-/* Label row */
+/* ── Label — grande, conversacional, tipo Typeform ── */
 .field-flow-label-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .field-flow-label {
-  font-size: 0.8rem;
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
   font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.field-flow-label .required {
+  color: var(--accent-primary);
+  font-weight: 400;
+}
+
+.field-flow-label .optional {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-transform: none;
 }
 
 .field-flow-done-badge {
@@ -2611,20 +2617,24 @@
   animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Shell del input */
+/* ── Shell del input — más ancho ── */
 .field-flow-input-shell {
   width: 100%;
-  max-width: 480px;
-  transition: max-width 0.35s ease;
+  max-width: 560px;
+  transition: max-width 0.3s ease;
 }
 
 .field-flow-input-shell.focused {
-  max-width: 560px;
+  max-width: 600px;
 }
 
-/* Helper text visible solo cuando activo */
+/* ── Helper text ── */
 .field-flow-helper {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  max-width: 480px;
   animation: fadeInUp 0.25s ease;
 }
 
@@ -2633,12 +2643,12 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Botones de acción del campo */
+/* ── Botones — pill confirm + text back ── */
 .field-flow-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.85rem;
+  gap: 1rem;
+  margin-top: 1rem;
   animation: fadeInUp 0.2s ease;
 }
 
@@ -2646,32 +2656,32 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.6rem 1.35rem;
-  border-radius: 10px;
-  font-size: 0.83rem;
+  font-size: 0.86rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   border: none;
-  min-height: 40px;
   letter-spacing: 0.01em;
 }
 
 .field-flow-next {
-  background: linear-gradient(135deg, #204060 0%, #2a5580 100%);
+  background: var(--brand-navy, #204060);
   color: #fff;
-  box-shadow: 0 2px 10px rgba(32,64,96,0.22), 0 1px 3px rgba(32,64,96,0.14);
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  min-height: 42px;
+  box-shadow: 0 2px 8px rgba(32, 64, 96, 0.18);
 }
 
 .field-flow-next:hover {
-  background: linear-gradient(135deg, #589860 0%, #4a7d52 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(88,152,96,0.32), 0 3px 8px rgba(88,152,96,0.16);
+  background: var(--accent-primary, #589860);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(88, 152, 96, 0.28);
 }
 
 .field-flow-next:active {
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(32,64,96,0.18);
+  box-shadow: 0 1px 4px rgba(32, 64, 96, 0.14);
 }
 
 .field-flow-next:focus-visible {
@@ -2681,16 +2691,16 @@
 
 .field-flow-back {
   background: transparent;
-  color: var(--text-secondary);
-  border: 1.5px solid var(--border-color);
-  padding: 0.6rem 1rem;
+  color: var(--text-tertiary);
+  border: none;
+  padding: 0.65rem 0.75rem;
+  min-height: 42px;
 }
 
 .field-flow-back:hover {
-  border-color: rgba(32,64,96,0.3);
-  color: var(--brand-navy, #204060);
-  background: rgba(32,64,96,0.04);
-  transform: translateY(-1px);
+  color: var(--text-primary);
+  background: transparent;
+  transform: none;
 }
 
 .field-flow-back:focus-visible {
@@ -2698,54 +2708,94 @@
   outline-offset: 2px;
 }
 
-/* Indicador de progreso por puntos */
-.field-flow-progress {
-  display: flex;
+/* ── Enter hint (desktop only) ── */
+.field-flow-enter-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  display: none;
   align-items: center;
-  justify-content: flex-start;
-  gap: 5px;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  gap: 0.3rem;
 }
 
-.field-flow-dot {
-  display: block;
-  width: 7px !important;
-  height: 7px !important;
+.field-flow-enter-hint kbd {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  background: rgba(32, 64, 96, 0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .field-flow-enter-hint {
+    display: inline-flex;
+  }
+}
+
+/* ── Progress bar (reemplaza dots) ── */
+.field-flow-progress {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1.75rem;
+  padding: 0;
+  height: 3px;
+  background: var(--border-soft, rgba(32, 64, 96, 0.08));
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.field-flow-progress::after {
+  content: attr(data-step-label);
+  position: absolute;
+  right: 0;
+  top: -22px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.field-flow-dot,
+.field-flow-dot.done,
+.field-flow-dot.active {
+  flex: 1;
+  height: 3px !important;
+  width: auto !important;
   min-height: 0 !important;
   min-width: 0 !important;
-  max-height: 7px;
-  line-height: 1;
-  border-radius: 50%;
+  max-height: 3px;
+  border-radius: 0 !important;
   border: none;
   outline: none;
-  background: var(--border-color);
+  background: transparent;
   cursor: default;
   padding: 0;
-  flex-shrink: 0;
-  align-self: center;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-sizing: content-box;
+  margin: 0;
+  transition: background 0.35s ease;
+  box-sizing: border-box;
+  display: block !important;
+  line-height: 1 !important;
 }
 
 .field-flow-dot.done {
-  background: rgba(88, 152, 96, 0.55);
+  background: var(--accent-primary, #589860);
   cursor: pointer;
-  width: 7px !important;
-  height: 7px !important;
 }
 
 .field-flow-dot.done:hover {
-  background: var(--accent-primary);
-  transform: scale(1.3);
+  background: var(--accent-hover, #4a7d52);
+  transform: none;
 }
 
 .field-flow-dot.active {
   background: var(--brand-navy, #204060);
-  width: 20px !important;
-  height: 7px !important;
-  border-radius: 4px;
-  cursor: default;
+  border-radius: 0 2px 2px 0 !important;
 }
 
 .field-flow-dot:disabled {
@@ -2833,25 +2883,19 @@
   .field-flow-input-shell.focused {
     max-width: 100%;
   }
-  .field-flow-btn {
+  .field-flow-label {
+    font-size: 1.1rem;
+  }
+  .field-flow-actions {
+    flex-wrap: wrap;
+  }
+  .field-flow-btn.field-flow-next {
     flex: 1;
     justify-content: center;
   }
-}
-
-/* ══ Redesign overrides — garantizan que las reglas de accesibilidad global
-      (button { min-height: 44px } en theme-polish.css) no rompan los dots ══ */
-.field-flow-dot,
-.field-flow-dot.done,
-.field-flow-dot.active {
-  min-height: 0 !important;
-  height: 7px !important;
-  line-height: 1 !important;
-  display: block !important;
-}
-
-.field-flow-dot.active {
-  width: 20px !important;
+  .field-flow-btn.field-flow-back {
+    flex: 0 0 auto;
+  }
 }
 
 /* journey-copy: se convierte en flex row dentro del nuevo flex compass */
@@ -2865,7 +2909,7 @@
 /* El section-divider-soft ya existe en el CSS del step, no necesita más */
 
 /* ══════════════════════════════════════════════════════════════════
-   FIELD FLOW v2 — One-at-a-time con animaciones + pantalla verificación
+   FIELD FLOW v2 — Typeform-style underline inputs + animaciones
    ══════════════════════════════════════════════════════════════════ */
 
 /* Contenedor del campo único activo */
@@ -2873,40 +2917,114 @@
   position: relative;
 }
 
-/* El wrapper que anima la entrada del campo */
+/* ── Animación de entrada — fade + rise + blur ── */
 .field-flow-single {
-  animation: fieldSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fieldFlowEntrance 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes fieldSlideIn {
+@keyframes fieldFlowEntrance {
   from {
     opacity: 0;
-    transform: translateX(18px) translateY(4px);
+    transform: translateY(20px) scale(0.98);
+    filter: blur(2px);
   }
   to {
     opacity: 1;
-    transform: translateX(0) translateY(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
-/* Input mejorado: borde izquierdo accent + hover lift */
+/* ── Underline inputs — reemplaza bordered boxes ── */
 .field-flow-block.is-active .neuro-input-wrapper.premium-input,
-.field-flow-block.is-active .neuro-toggle-wrapper.premium-input {
-  box-shadow: 0 2px 12px rgba(32, 64, 96, 0.08), 0 1px 3px rgba(32, 64, 96, 0.06);
+.field-flow-block.is-active .neuro-toggle-wrapper.premium-input,
+.field-flow-block.is-active .neuro-textarea-wrapper.premium-input {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid var(--border-color) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: auto;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.field-flow-block.is-active .neuro-input-wrapper.premium-input:focus-within {
-  box-shadow:
-    0 0 0 3px rgba(88, 152, 96, 0.22),
-    0 4px 16px rgba(88, 152, 96, 0.12);
-  transform: translateY(-1px);
+/* Eliminar pseudo left-border accent */
+.field-flow-block.is-active .neuro-input-wrapper.premium-input::before,
+.field-flow-block.is-active .neuro-textarea-wrapper.premium-input::before {
+  display: none;
 }
 
-/* Label del campo activo: más prominente */
+/* Focus: underline verde + glow sutil */
+.field-flow-block.is-active .neuro-input-wrapper.premium-input:focus-within:not(.error),
+.field-flow-block.is-active .neuro-textarea-wrapper.premium-input:focus-within:not(.error) {
+  border-bottom-color: var(--accent-primary) !important;
+  box-shadow: 0 2px 8px rgba(88, 152, 96, 0.15) !important;
+  transform: none !important;
+}
+
+/* Valid: underline verde, fondo transparente */
+.field-flow-block.is-active .neuro-input-wrapper.premium-input.is-valid,
+.field-flow-block.is-active .neuro-textarea-wrapper.premium-input.is-valid {
+  border-bottom-color: var(--accent-primary) !important;
+  background: transparent !important;
+}
+
+.field-flow-block.is-active .neuro-input-wrapper.premium-input.is-valid::before {
+  display: none;
+}
+
+/* Error: underline rojo */
+.field-flow-block.is-active .neuro-input-wrapper.premium-input.error,
+.field-flow-block.is-active .neuro-textarea-wrapper.premium-input.error {
+  border-bottom-color: var(--error-color) !important;
+  box-shadow: 0 2px 8px rgba(180, 35, 24, 0.1) !important;
+}
+
+/* ── Input text — sin icono izquierdo, font más grande ── */
+.field-flow-block.is-active .neuro-input-wrapper input,
+.field-flow-block.is-active .neuro-input-wrapper select {
+  padding: 12px 40px 12px 0 !important;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  font-weight: 600;
+  min-height: 48px !important;
+}
+
+.field-flow-block.is-active .neuro-textarea-wrapper textarea {
+  padding: 12px 40px 12px 0 !important;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  font-weight: 600;
+}
+
+/* Ocultar icono decorativo izquierdo (label grande ya da contexto) */
+.field-flow-block.is-active .input-icon {
+  display: none;
+}
+
+/* Valid icon → flush right */
+.field-flow-block.is-active .valid-icon {
+  right: 0;
+  font-size: 1.15rem;
+}
+
+/* Select chevron → flush right */
+.field-flow-block.is-active .select-chevron {
+  right: 0;
+}
+
+.field-flow-block.is-active .neuro-input-wrapper select {
+  padding-right: 28px !important;
+}
+
+/* ── Hover sutil en underline (sin lift) ── */
+.field-flow-block.is-active .neuro-input-wrapper.premium-input:hover:not(.error):not(:focus-within) {
+  border-bottom-color: rgba(32, 64, 96, 0.35) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Label del campo activo ya es grande (definido arriba) — no override */
 .field-flow-block.is-active .field-flow-label {
   color: var(--text-primary);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
 }
 
 /* ── Verification Screen ────────────────────────────────────────── */

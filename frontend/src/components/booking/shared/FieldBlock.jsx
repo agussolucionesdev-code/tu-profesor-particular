@@ -92,6 +92,9 @@ const FieldBlock = ({
         >
           {confirmLabel} <FaArrowRight />
         </button>
+        <span className="field-flow-enter-hint" aria-hidden="true">
+          o presion&aacute; <kbd>Enter</kbd> ↵
+        </span>
       </div>
     )}
   </div>

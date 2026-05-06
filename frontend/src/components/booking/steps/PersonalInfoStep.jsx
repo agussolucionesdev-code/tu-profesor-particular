@@ -215,6 +215,7 @@ const PersonalInfoStep = ({
           {/* ── Progress dots ── */}
           <nav
             className="field-flow-progress"
+            data-step-label={`${activeIndex + 1} de ${fields.length}`}
             aria-label="Progreso de datos personales"
           >
             {fields.map((field, index) => (
