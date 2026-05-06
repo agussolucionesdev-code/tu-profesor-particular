@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { loginAdmin } from "../api/bookingApi";
+import { getBookingApiMessage } from "../utils/bookingFormatters";
 
 export const useAdminAuth = () => {
   const [authToken, setAuthToken] = useState(
@@ -38,7 +39,7 @@ export const useAdminAuth = () => {
       setAuthError(
         status === 401 || status === 403
           ? "Credenciales incorrectas. Verificá usuario y contraseña."
-          : "No se pudo conectar con el servidor. Intentá nuevamente.",
+          : getBookingApiMessage(error),
       );
     } finally {
       setLoading(false);
