@@ -1209,6 +1209,7 @@ const BookingForm = () => {
                   formData={formData}
                   isAdult={isAdult}
                   hasAttemptedNext={hasAttemptedNext}
+                  setHasAttemptedNext={setHasAttemptedNext}
                   isValidField={isValidField}
                   getFieldStateClass={getFieldStateClass}
                 handleChange={handleChange}
@@ -1219,6 +1220,7 @@ const BookingForm = () => {
                 formData={formData}
                 isAdult={isAdult}
                 hasAttemptedNext={hasAttemptedNext}
+                setHasAttemptedNext={setHasAttemptedNext}
                 isValidField={isValidField}
                 getFieldStateClass={getFieldStateClass}
                 handleChange={handleChange}
