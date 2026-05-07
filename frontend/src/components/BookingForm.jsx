@@ -567,7 +567,7 @@ const BookingForm = () => {
           voiceOptions: STEP_VOICE_OPTIONS,
         },
       );
-      scrollToStepIssue(2, ".calendar-glass-box, .section-title");
+      scrollToStepIssue(2, ".calendar-card, .section-title");
       return false;
     }
     if (
@@ -636,7 +636,7 @@ const BookingForm = () => {
           voiceOptions: STEP_VOICE_OPTIONS,
         },
       );
-      scrollToStepIssue(2, ".calendar-glass-box, .section-title");
+      scrollToStepIssue(2, ".calendar-card, .section-title");
       return;
     }
 
@@ -678,7 +678,9 @@ const BookingForm = () => {
       if (isCalendarExpanded) {
         setIsCalendarExpanded(false);
       }
-      scrollToStepAction(2);
+      // No scroll on date pick — user is already viewing the calendar.
+      // Only nudge if the section-title is above the fold.
+      smoothScrollToStep(2, { selector: ".date-step-content", delay: 80 });
       speakWarmGuidance(
         "Fecha elegida. Bien: ahora tocá el botón para ver horarios disponibles y elegir el que te quede más cómodo.",
       );
@@ -688,7 +690,7 @@ const BookingForm = () => {
   const clearDateSelection = () => {
     setFormData((prev) => ({ ...prev, timeSlot: null }));
     playStepSound();
-    scrollToStepIssue(2, ".calendar-glass-box, .calendar-selection-banner");
+    scrollToStepIssue(2, ".calendar-card, .section-title");
     speakWarmGuidance(
       "Fecha quitada. Cuando quieras, elegí otra fecha disponible y seguimos con calma.",
     );
