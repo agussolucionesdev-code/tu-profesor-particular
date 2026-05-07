@@ -297,7 +297,7 @@ const BookingForm = () => {
     (targetStep = currentStep) => {
       smoothScrollToStep(targetStep, {
         selector:
-          ".btn-stage-next.is-ready, .btn-neuro-primary.btn-ready, .btn-neuro-success.ready-to-pulse, .calendar-selection-banner.is-active, .duration-summary-card.is-ready",
+          ".calendar-actions-row, .btn-date-next.is-ready, .btn-neuro-success.ready-to-pulse, .duration-summary-card.is-ready",
         delay: 260,
       });
     },
@@ -668,7 +668,7 @@ const BookingForm = () => {
     if (formData.timeSlot && isSameDay(date, formData.timeSlot)) {
       setFormData((prev) => ({ ...prev, timeSlot: null }));
       playStepSound();
-      scrollToStepIssue(2, ".calendar-glass-box, .calendar-selection-banner");
+      scrollToStepIssue(2, ".calendar-card, .section-title");
       speakWarmGuidance(
         "Fecha quitada. Elegí otro día disponible cuando quieras; seguimos con los horarios libres sin perder lo que ya completaste.",
       );
