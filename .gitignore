@@ -25,3 +25,8 @@ backend/.env
 frontend/.env
 
 .vercel
+
+# Claude worktrees and local MongoDB data
+.claude/worktrees/
+.mongodb-local/
+.playwright-mcp/
