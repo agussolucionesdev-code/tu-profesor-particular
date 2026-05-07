@@ -1259,14 +1259,10 @@ const BookingForm = () => {
                 selectedDayOnly={selectedDayOnly}
                 selectedDayLabel={selectedDayLabel}
                 availableSlotCount={availableSlotCount}
-                nextFreeSlot={nextFreeSlot}
-                isDesktopCalendarViewport={isDesktopCalendarViewport}
-                isCalendarExpanded={isCalendarExpanded}
                 handleDateSelect={handleDateSelect}
                 clearDateSelection={clearDateSelection}
                 handleProceedToTimeStep={handleProceedToTimeStep}
                 goToPrev={goToPrev}
-                openCalendarExpanded={openCalendarExpanded}
                 renderCalendarHeader={renderCalendarHeader}
                 getDayClassName={getDayClassName}
                 renderDayContents={renderDayContents}
