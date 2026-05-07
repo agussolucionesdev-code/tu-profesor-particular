@@ -19,6 +19,7 @@ import "./styles/minimalist-design.css";
 import "./styles/final-polish.css";
 import "./styles/booking-interactions.css";
 import "./styles/brand-identity-refresh.css";
+import "./styles/motion-system.css";
 
 const BookingForm = lazy(() => import("./components/BookingForm"));
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
@@ -51,7 +52,8 @@ const AppContent = () => {
       <Navbar />
       <main
         id="main-content"
-        className={`main-content ${isAdminRoute ? "admin-page-content" : ""} ${
+        key={pathname}
+        className={`main-content page-enter ${isAdminRoute ? "admin-page-content" : ""} ${
           isBookingExperience ? "immersive-page-content" : ""
         }`}
         tabIndex="-1"

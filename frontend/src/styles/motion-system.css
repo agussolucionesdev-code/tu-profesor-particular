@@ -1,0 +1,391 @@
+/* ==========================================================================
+   motion-system.css — Sistema de movimiento global
+   Tu Profesor Particular · Agustín Elías Sosa
+
+   Cuatro capas:
+   1. Tokens de movimiento (variables)
+   2. Scroll reveal (.reveal → .is-visible)
+   3. Micro-interacciones (botones, cards, links)
+   4. Animaciones continuas (float, shimmer, etc.)
+
+   Siempre respeta prefers-reduced-motion al final.
+   ========================================================================== */
+
+/* ──────────────────────────────────────────────────────────────────
+   1. TOKENS DE MOVIMIENTO
+   ────────────────────────────────────────────────────────────────── */
+:root {
+  --motion-instant:  60ms ease;
+  --motion-micro:    140ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-swift:    240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-smooth:   380ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease:     420ms cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-spring:   500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-lazy:     640ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Stagger step entre ítems de una lista */
+  --stagger-step: 65ms;
+
+  /* Easing curves exportadas */
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-standard:   cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   2. SCROLL REVEAL
+   ────────────────────────────────────────────────────────────────── */
+
+/* Base — invisible hasta que el observer agrega .is-visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity  var(--motion-ease),
+    transform var(--motion-ease);
+  will-change: opacity, transform;
+}
+
+/* Variante: desde abajo (default, ya definida arriba) */
+.reveal-up {
+  transform: translateY(22px);
+}
+
+/* Variante: desde izquierda */
+.reveal-left {
+  transform: translateX(-28px);
+}
+
+/* Variante: desde derecha */
+.reveal-right {
+  transform: translateX(28px);
+}
+
+/* Variante: escalar */
+.reveal-scale {
+  transform: scale(0.94);
+}
+
+/* Variante: fade puro (sin desplazamiento) */
+.reveal-fade {
+  transform: none;
+}
+
+/* Estado visible (agregado por useInView / Reveal.jsx) */
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger: cada hijo recibe --i para escalonar el delay */
+.stagger-children > * {
+  transition-delay: calc(var(--i, 0) * var(--stagger-step));
+}
+
+/* Stagger automático para los primeros 12 hijos (sin necesitar --i) */
+.stagger-auto > *:nth-child(1)  { transition-delay: calc(1  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(2)  { transition-delay: calc(2  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(3)  { transition-delay: calc(3  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(4)  { transition-delay: calc(4  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(5)  { transition-delay: calc(5  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(6)  { transition-delay: calc(6  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(7)  { transition-delay: calc(7  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(8)  { transition-delay: calc(8  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(9)  { transition-delay: calc(9  * var(--stagger-step)); }
+.stagger-auto > *:nth-child(10) { transition-delay: calc(10 * var(--stagger-step)); }
+.stagger-auto > *:nth-child(11) { transition-delay: calc(11 * var(--stagger-step)); }
+.stagger-auto > *:nth-child(12) { transition-delay: calc(12 * var(--stagger-step)); }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   3. MICRO-INTERACCIONES
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── 3a. Press feedback en botones ──────────────────────────────── */
+/* Todos los botones de acción principales responden al click */
+.field-flow-next,
+.field-flow-back,
+.adult-toggle-clean,
+.btn-stage-next,
+.btn-stage-back,
+.btn-neuro-primary,
+.btn-neuro-secondary,
+.btn-up-floating,
+[class*="btn-booking"],
+[class*="btn-confirm"],
+[class*="slot-btn"]:not(.disabled) {
+  transition:
+    transform var(--motion-micro),
+    box-shadow var(--motion-micro),
+    background-color var(--motion-swift),
+    filter var(--motion-swift);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.field-flow-next:active,
+.field-flow-back:active,
+.adult-toggle-clean:active,
+.btn-stage-next:active,
+.btn-stage-back:active,
+.btn-neuro-primary:active,
+.btn-neuro-secondary:active,
+[class*="slot-btn"]:not(.disabled):active {
+  transform: scale(0.96);
+  transition-duration: 60ms;
+}
+
+.btn-up-floating:active {
+  transform: scale(0.92) translateY(2px);
+}
+
+/* ── 3b. Hover lift en cards ─────────────────────────────────────── */
+.contact-card,
+.footer-link-item {
+  transition:
+    transform var(--motion-swift),
+    box-shadow var(--motion-swift),
+    border-color var(--motion-swift),
+    background var(--motion-swift);
+}
+
+@media (hover: hover) {
+  .contact-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 32px rgba(32, 64, 96, 0.14);
+  }
+
+  .footer-link-item:hover .link-arrow {
+    transform: translateX(5px);
+    opacity: 1;
+  }
+
+  /* Social bubbles — spin on hover */
+  .social-bubble {
+    transition: transform var(--motion-spring), box-shadow var(--motion-swift);
+  }
+
+  .social-bubble:hover {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 24px rgba(32, 64, 96, 0.2);
+  }
+
+  /* Booking form card subtle hover */
+  .booking-form-card {
+    transition: box-shadow var(--motion-smooth);
+  }
+
+  .booking-form-card:hover {
+    box-shadow: 0 8px 40px rgba(32, 64, 96, 0.1);
+  }
+
+  /* Field flow card active hover */
+  .field-flow-block.is-active:hover {
+    box-shadow:
+      0 2px 4px rgba(32, 64, 96, 0.04),
+      0 12px 40px rgba(32, 64, 96, 0.09);
+  }
+
+  /* Custom select hover */
+  .custom-select-trigger:hover {
+    border-color: rgba(32, 64, 96, 0.22);
+  }
+}
+
+/* ── 3c. Link arrow fluido ───────────────────────────────────────── */
+.footer-link-item .link-arrow {
+  transition: transform var(--motion-swift), opacity var(--motion-swift);
+  opacity: 0.5;
+}
+
+/* ── 3d. Focus ring animado ──────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--brand-green, #589860);
+  outline-offset: 3px;
+  border-radius: 6px;
+  transition: outline-color var(--motion-micro);
+}
+
+/* ── 3e. Navbar scroll shadow (si no tiene ya) ───────────────────── */
+.navbar-elite {
+  transition:
+    box-shadow var(--motion-smooth),
+    background var(--motion-smooth),
+    backdrop-filter var(--motion-smooth);
+}
+
+/* ── 3f. Botones CTA — shimmer en hover ──────────────────────────── */
+.field-flow-next,
+.btn-neuro-primary,
+.btn-stage-next.is-ready {
+  position: relative;
+  overflow: hidden;
+}
+
+.field-flow-next::after,
+.btn-neuro-primary::after,
+.btn-stage-next.is-ready::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@media (hover: hover) {
+  .field-flow-next:hover::after,
+  .btn-neuro-primary:hover::after,
+  .btn-stage-next.is-ready:hover::after {
+    transform: translateX(100%);
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   4. ANIMACIONES CONTINUAS
+   ────────────────────────────────────────────────────────────────── */
+
+/* ── Float suave (para elementos decorativos) ── */
+@keyframes motionFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+.motion-float {
+  animation: motionFloat 4s ease-in-out infinite;
+}
+
+/* ── Shimmer de carga ── */
+@keyframes motionShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.motion-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(32, 64, 96, 0.06) 25%,
+    rgba(32, 64, 96, 0.12) 50%,
+    rgba(32, 64, 96, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: motionShimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ── Glow verde pulsante ── */
+@keyframes motionGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0px   rgba(88, 152, 96, 0); }
+  50%       { box-shadow: 0 0 0 6px   rgba(88, 152, 96, 0.18); }
+}
+
+.motion-glow {
+  animation: motionGlowPulse 2.4s ease-in-out infinite;
+}
+
+/* ── Bounce para iconos de confirmación ── */
+@keyframes motionBounce {
+  0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+  40%                      { transform: translateY(-10px); }
+  70%                      { transform: translateY(-5px); }
+}
+
+.motion-bounce {
+  animation: motionBounce 1s ease both;
+}
+
+/* ── Spin suave ── */
+@keyframes motionSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.motion-spin {
+  animation: motionSpin 1s linear infinite;
+}
+
+/* ── Page transition: fade al cambiar ruta ── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: pageIn 0.35s var(--ease-out-expo) both;
+}
+
+/* ── Typing dot loader ── */
+@keyframes typingDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1; }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: typingDot 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+
+/* ──────────────────────────────────────────────────────────────────
+   5. UTILIDADES
+   ────────────────────────────────────────────────────────────────── */
+
+/* Wrapper para aplicar reveal a listas enteras */
+.reveal-list > li,
+.reveal-list > .item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity  var(--motion-smooth),
+    transform var(--motion-smooth);
+}
+
+.reveal-list.is-visible > li,
+.reveal-list.is-visible > .item {
+  opacity: 1;
+  transform: none;
+}
+
+/* Transición de height para paneles colapsables */
+.collapse-transition {
+  overflow: hidden;
+  transition: max-height var(--motion-smooth), opacity var(--motion-smooth);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────
+   6. REDUCED MOTION
+   Always last — overrides everything above.
+   ────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto !important;
+  }
+
+  .reveal,
+  .reveal-list > li,
+  .reveal-list > .item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

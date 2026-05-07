@@ -17,6 +17,8 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
+import Reveal from "../components/ui/Reveal";
+import useInView from "../hooks/useInView";
 import "./Footer.css";
 
 const FOOTER_LINKS = [
@@ -61,6 +63,7 @@ const SOCIAL_LINKS = [
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [showTopBtn, setShowTopBtn] = useState(false);
+  const [linksRef, linksVisible] = useInView({ threshold: 0.2 });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,7 +87,7 @@ const Footer = () => {
         <div className="footer-ambient-glow"></div>
 
         <div className="footer-grid-container">
-          <div className="footer-brand-col">
+          <Reveal direction="left" delay={0} className="footer-brand-col">
             <div className="footer-header-brand">
               <div className="logo-premium-wrapper">
                 <img
@@ -119,12 +122,12 @@ const Footer = () => {
                 <FaGlobe aria-hidden="true" /> GESTIÓN SIMPLE
               </span>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="footer-nav-col">
+          <Reveal direction="up" delay={80} className="footer-nav-col">
             <h4 className="footer-section-title">Explorar</h4>
             <nav aria-label="Navegación del pie de página">
-              <ul className="footer-links-list">
+              <ul ref={linksRef} className={`footer-links-list reveal-list stagger-auto${linksVisible ? " is-visible" : ""}`}>
                 {FOOTER_LINKS.map((item) => (
                   <li key={item.to}>
                     <Link to={item.to} className="footer-link-item">
@@ -136,9 +139,9 @@ const Footer = () => {
                 ))}
               </ul>
             </nav>
-          </div>
+          </Reveal>
 
-          <div className="footer-contact-col">
+          <Reveal direction="right" delay={160} className="footer-contact-col">
             <h4 className="footer-section-title">Hablemos</h4>
             <address className="footer-contact-address">
               <a
@@ -188,9 +191,10 @@ const Footer = () => {
                 </div>
               </a>
             </address>
-          </div>
+          </Reveal>
         </div>
 
+        <Reveal direction="fade" delay={200} as="div">
         <div className="footer-bottom-panel">
           <div className="bottom-panel-container">
             <div className="copyright-area">
@@ -221,6 +225,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
+        </Reveal>
       </footer>
 
       <button
