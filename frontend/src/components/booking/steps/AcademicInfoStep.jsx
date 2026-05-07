@@ -10,6 +10,7 @@ import { getSubjectSuggestions } from "../../../constants/bookingWizard";
 import useFieldFlow from "../../../hooks/useFieldFlow";
 import FieldBlock from "../shared/FieldBlock";
 import SelectField from "../shared/SelectField";
+import AutocompleteField from "../shared/AutocompleteField";
 import VerificationScreen from "../shared/VerificationScreen";
 
 const EDUCATION_LEVEL_OPTIONS = [
@@ -324,40 +325,23 @@ const AcademicInfoStep = ({
                     onBack={() => jumpTo(1)}
                     showBack
                   >
-                    <div
-                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("subject")}`}
-                    >
-                      <FaBookOpen className="input-icon" aria-hidden="true" />
-                      <input
-                        id="subject"
-                        type="text"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        list="subject-suggestions"
-                        aria-invalid={
-                          hasAttemptedNext && !isValidField("subject")
-                            ? "true"
-                            : "false"
-                        }
-                        placeholder="Materia, tema o examen a preparar"
-                        autoComplete="off"
-                        onKeyDown={(e) => handleKey(e, "subject")}
-                      />
-                      {isValidField("subject") && (
-                        <FaCheckCircle
-                          className="valid-icon"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
-                    <datalist id="subject-suggestions">
-                      {getSubjectSuggestions(formData.educationLevel).map(
-                        (suggestion) => (
-                          <option key={suggestion} value={suggestion} />
-                        ),
-                      )}
-                    </datalist>
+                    <AutocompleteField
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      suggestions={getSubjectSuggestions(formData.educationLevel)}
+                      placeholder="Materia, tema o examen a preparar"
+                      icon={<FaBookOpen className="input-icon" aria-hidden="true" />}
+                      isValid={isValidField("subject")}
+                      stateClass={getFieldStateClass("subject")}
+                      aria-invalid={
+                        hasAttemptedNext && !isValidField("subject")
+                          ? "true"
+                          : "false"
+                      }
+                      onKeyDown={(e) => handleKey(e, "subject")}
+                    />
                   </FieldBlock>
                 )}
 

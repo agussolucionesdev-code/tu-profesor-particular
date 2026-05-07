@@ -1,3 +1,263 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   CONFIRMATION STEP — Minimalist card-based layout
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.confirm-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+/* ── Summary strip: pills row ──────────────────────────────────── */
+.confirm-summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.confirm-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-soft, rgba(32, 64, 96, 0.08));
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a2a3a);
+  text-transform: capitalize;
+}
+
+.confirm-fact svg {
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+.confirm-fact.accent {
+  background: rgba(88, 152, 96, 0.08);
+  border-color: rgba(88, 152, 96, 0.2);
+  color: var(--accent-primary, #589860);
+}
+
+/* ── Duration card ─────────────────────────────────────────────── */
+.confirm-duration-card {
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-soft, rgba(32, 64, 96, 0.08));
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  box-shadow:
+    0 1px 3px rgba(32, 64, 96, 0.04),
+    0 8px 32px rgba(32, 64, 96, 0.06);
+  width: 100%;
+  animation: fieldFlowEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: box-shadow 0.28s ease, border-color 0.22s ease;
+}
+
+.confirm-duration-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirm-duration-header h4 {
+  font-size: 1rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.confirm-duration-limit {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-primary, #589860);
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(88, 152, 96, 0.08);
+  border: 1px solid rgba(88, 152, 96, 0.15);
+  white-space: nowrap;
+}
+
+.confirm-duration-selected {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary, #5a6a7a);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.confirm-duration-selected svg {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+/* ── Summary card ──────────────────────────────────────────────── */
+.confirm-summary-card {
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-soft, rgba(32, 64, 96, 0.08));
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  box-shadow:
+    0 1px 3px rgba(32, 64, 96, 0.04),
+    0 8px 32px rgba(32, 64, 96, 0.06);
+  width: 100%;
+  animation: fieldFlowEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.confirm-summary-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.confirm-summary-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.confirm-summary-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--brand-navy, #204060);
+  color: #fff;
+}
+
+.confirm-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.65rem;
+}
+
+.confirm-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: rgba(32, 64, 96, 0.03);
+  border: 1px solid rgba(32, 64, 96, 0.06);
+  transition: background 180ms ease;
+}
+
+.confirm-detail-item span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-tertiary, #8295ac);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.confirm-detail-item span svg {
+  font-size: 0.62rem;
+  opacity: 0.5;
+}
+
+.confirm-detail-item strong {
+  font-size: 0.88rem;
+  color: var(--text-primary, #1a2a3a);
+  line-height: 1.35;
+}
+
+.confirm-lookup-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #8295ac);
+  text-align: center;
+  margin: 0.65rem 0 0;
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────── */
+[data-theme="dark"] .confirm-duration-card,
+[data-theme="dark"] .confirm-summary-card {
+  background: var(--surface-card);
+  border-color: rgba(114, 176, 122, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .confirm-fact {
+  background: rgba(17, 32, 50, 0.8);
+  border-color: rgba(171, 195, 217, 0.14);
+  color: #edf4fb;
+}
+
+[data-theme="dark"] .confirm-fact.accent {
+  background: rgba(114, 176, 122, 0.12);
+  border-color: rgba(114, 176, 122, 0.2);
+  color: #72b07a;
+}
+
+[data-theme="dark"] .confirm-detail-item {
+  background: rgba(17, 32, 50, 0.6);
+  border-color: rgba(171, 195, 217, 0.1);
+}
+
+[data-theme="dark"] .confirm-detail-item strong {
+  color: #edf4fb;
+}
+
+[data-theme="dark"] .confirm-summary-badge {
+  background: #72b07a;
+  color: #06140a;
+}
+
+[data-theme="dark"] .confirm-duration-limit {
+  background: rgba(114, 176, 122, 0.12);
+  border-color: rgba(114, 176, 122, 0.2);
+  color: #72b07a;
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .confirm-step-content {
+    max-width: 100%;
+  }
+
+  .confirm-duration-card,
+  .confirm-summary-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .confirm-detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 400px) {
+  .confirm-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .confirm-summary-strip {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LEGACY CONFIRMATION STYLES (kept for backwards compat)
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .confirmation-stage {
   display: grid;
   gap: 1.2rem;
