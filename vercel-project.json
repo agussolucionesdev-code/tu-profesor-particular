@@ -1,0 +1,116 @@
+{
+  "keys": [
+    "id",
+    "name",
+    "speedInsights",
+    "webAnalytics",
+    "accountId",
+    "createdAt",
+    "framework",
+    "updatedAt",
+    "resourceConfig",
+    "productionDeployment",
+    "domain",
+    "targets",
+    "rootDirectory",
+    "ssoProtection",
+    "productionDeploymentsFastLane",
+    "lastAliasRequest",
+    "commandForIgnoringBuildStep",
+    "autoAssignCustomDomains",
+    "nodeVersion",
+    "autoAssignCustomDomainsUpdatedBy"
+  ],
+  "sample": {
+    "id": "prj_rQVLdLCF0MUhNuKtYGmGOb4VpHuM",
+    "name": "tu-profesor-particular",
+    "speedInsights": {
+      "id": "tqT4KdY89xHrONm13XMIWkEQoYW",
+      "hasData": false
+    },
+    "webAnalytics": {
+      "id": "AwiZ8Er3qp0gqeZBeCOrr5l6v"
+    },
+    "accountId": "team_vfce8UOHAdEynL9h73wzXQvJ",
+    "createdAt": 1777946871297,
+    "framework": "vite",
+    "updatedAt": 1778028971736,
+    "resourceConfig": {
+      "fluid": true,
+      "functionDefaultRegions": [
+        "iad1"
+      ]
+    },
+    "productionDeployment": {
+      "id": "dpl_8G9E8ddSvMX6W2EQNAmahMePK2XJ",
+      "readyState": "READY",
+      "meta": {
+        "githubCommitAuthorName": "AgustinSosa-Dev",
+        "githubCommitAuthorEmail": "agustinsosa.dev@gmail.com",
+        "githubCommitMessage": "feat: progressive disclosure campo por campo con auto-scroll en Paso 1",
+        "githubCommitOrg": "agussolucionesdev-code",
+        "githubCommitRef": "develop",
+        "githubCommitRepo": "tu-profesor-particular",
+        "githubCommitSha": "8d6e953ee79bc65219c011d116198590e60ee9b5",
+        "githubDeployment": "1",
+        "githubOrg": "agussolucionesdev-code",
+        "githubRepo": "tu-profesor-particular",
+        "gitDirty": "1",
+        "actor": "claude-code/2.1.121/agent"
+      },
+      "createdAt": 1778028944039,
+      "url": "tu-profesor-particular-9oorcvxub.vercel.app",
+      "target": "production",
+      "userId": "CLGLlccIt7tVOKBWSbFeLsl7",
+      "name": "tu-profesor-particular",
+      "previewCommentsEnabled": true,
+      "deploymentIsStale": false,
+      "creator": {
+        "uid": "CLGLlccIt7tVOKBWSbFeLsl7",
+        "username": "agussolucionesdev-1918"
+      }
+    },
+    "domain": "turnos.tuprofesorparticular.com.ar",
+    "targets": {
+      "production": {
+        "id": "dpl_8G9E8ddSvMX6W2EQNAmahMePK2XJ",
+        "readyState": "READY",
+        "meta": {
+          "githubCommitAuthorName": "AgustinSosa-Dev",
+          "githubCommitAuthorEmail": "agustinsosa.dev@gmail.com",
+          "githubCommitMessage": "feat: progressive disclosure campo por campo con auto-scroll en Paso 1",
+          "githubCommitOrg": "agussolucionesdev-code",
+          "githubCommitRef": "develop",
+          "githubCommitRepo": "tu-profesor-particular",
+          "githubCommitSha": "8d6e953ee79bc65219c011d116198590e60ee9b5",
+          "githubDeployment": "1",
+          "githubOrg": "agussolucionesdev-code",
+          "githubRepo": "tu-profesor-particular",
+          "gitDirty": "1",
+          "actor": "claude-code/2.1.121/agent"
+        },
+        "createdAt": 1778028944039,
+        "url": "tu-profesor-particular-9oorcvxub.vercel.app",
+        "target": "production",
+        "userId": "CLGLlccIt7tVOKBWSbFeLsl7",
+        "name": "tu-profesor-particular",
+        "previewCommentsEnabled": true,
+        "deploymentIsStale": false,
+        "creator": {
+          "uid": "CLGLlccIt7tVOKBWSbFeLsl7",
+          "username": "agussolucionesdev-1918"
+        }
+      }
+    },
+    "rootDirectory": "frontend",
+    "ssoProtection": {
+      "deploymentType": "all_except_custom_domains"
+    },
+    "productionDeploymentsFastLane": true,
+    "lastAliasRequest": null,
+    "commandForIgnoringBuildStep": null,
+    "autoAssignCustomDomains": true,
+    "nodeVersion": "24.x",
+    "autoAssignCustomDomainsUpdatedBy": "system"
+  }
+}

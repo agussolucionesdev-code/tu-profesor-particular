@@ -23,3 +23,5 @@ Thumbs.db
 
 backend/.env
 frontend/.env
+
+.vercel

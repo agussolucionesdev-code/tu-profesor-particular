@@ -706,14 +706,14 @@ const BookingForm = () => {
         timeSlot: prev.timeSlot ? startOfDay(prev.timeSlot) : null,
       }));
       playStepSound();
-      scrollToStepIssue(3, ".slot-btn:not(.disabled), .section-title");
+      smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
       speakWarmGuidance(
         "Horario quitado. Elegí otro bloque libre y seguimos sin apuro.",
       );
     } else {
       setFormData((prev) => ({ ...prev, timeSlot: timeObj }));
       playUnlockSound();
-      scrollToStepAction(3);
+      smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
       speakWarmGuidance(
         `Horario elegido: a las ${format(timeObj, "HH:mm")}. Perfecto. Ahora revisamos el resumen y ajustamos la duración ideal.`,
       );
@@ -726,7 +726,7 @@ const BookingForm = () => {
       timeSlot: prev.timeSlot ? startOfDay(prev.timeSlot) : null,
     }));
     playStepSound();
-    scrollToStepIssue(3, ".slot-btn:not(.disabled), .section-title");
+    smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
     speakWarmGuidance(
       "Horario quitado. Podés tocar cualquier bloque libre para elegir uno nuevo.",
     );
@@ -1291,7 +1291,6 @@ const BookingForm = () => {
                 slotSections={slotSections}
                 availableSlots={availableSlots}
                 availableSlotCount={availableSlotCount}
-                nextFreeSlot={nextFreeSlot}
                 handleTimeSelect={handleTimeSelect}
                 clearTimeSelection={clearTimeSelection}
                 handleProceedToConfirmationStep={

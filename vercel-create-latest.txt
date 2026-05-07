@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "text": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid request: missing required property `name`.\"}}"
+}

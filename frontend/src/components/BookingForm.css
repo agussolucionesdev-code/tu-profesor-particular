@@ -1524,6 +1524,245 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   TIME STEP — Minimalist card layout (mirrors date-step-content pattern)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.time-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+/* ── Header: title + change-date link ────────────────────────────────────── */
+.time-step-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.time-change-date-link {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 200ms ease, text-decoration-color 200ms ease;
+  font-family: inherit;
+}
+
+.time-change-date-link:hover {
+  color: var(--accent-primary, #589860);
+  text-decoration-color: currentColor;
+}
+
+/* ── Micro-legend dots (time-specific) ───────────────────────────────────── */
+.ml-dot.ml-occupied {
+  background: var(--bi-slot-dis-bg, rgba(148, 163, 184, 0.15));
+  border: 1.5px dashed var(--bi-slot-dis-border, rgba(148, 163, 184, 0.3));
+}
+
+.ml-dot.ml-available {
+  background: var(--bi-slot-avail-bg, rgba(88, 152, 96, 0.08));
+  border: 1.5px solid var(--bi-slot-avail-border, rgba(88, 152, 96, 0.35));
+}
+
+/* ── Slots card ──────────────────────────────────────────────────────────── */
+.time-slots-card {
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-soft, rgba(32, 64, 96, 0.08));
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  box-shadow:
+    0 1px 3px rgba(32, 64, 96, 0.04),
+    0 8px 32px rgba(32, 64, 96, 0.06);
+  width: 100%;
+  animation: fieldFlowEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: box-shadow 0.28s ease, border-color 0.22s ease;
+}
+
+@media (hover: hover) {
+  .time-slots-card:hover {
+    box-shadow:
+      0 2px 4px rgba(32, 64, 96, 0.04),
+      0 12px 40px rgba(32, 64, 96, 0.09);
+  }
+}
+
+/* ── Actions row: chip + CTA ─────────────────────────────────────────────── */
+.time-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  flex-wrap: wrap;
+  min-height: 42px;
+}
+
+/* ── Time chip ───────────────────────────────────────────────────────────── */
+.time-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: var(--brand-navy, #204060);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 2px 8px rgba(32, 64, 96, 0.2);
+  animation: chipPopIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  min-height: 0;
+}
+
+.time-chip:hover {
+  background: var(--brand-navy-deep, #183858);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(32, 64, 96, 0.28);
+}
+
+.time-chip:active {
+  transform: scale(0.96);
+  transition-duration: 60ms;
+}
+
+.time-chip svg:first-child {
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+
+.time-chip-x {
+  font-size: 0.58rem;
+  opacity: 0.5;
+  transition: opacity 180ms ease;
+}
+
+.time-chip:hover .time-chip-x {
+  opacity: 1;
+}
+
+/* ── CTA button ──────────────────────────────────────────────────────────── */
+.btn-time-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 240ms ease,
+    transform 200ms ease,
+    box-shadow 240ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+  min-height: 0;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-time-next.is-ready {
+  background: var(--accent-primary, #589860);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(88, 152, 96, 0.22);
+}
+
+.btn-time-next.is-ready:hover {
+  background: var(--accent-hover, #4a8452);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(88, 152, 96, 0.3);
+}
+
+.btn-time-next.is-ready:active {
+  transform: scale(0.97);
+  transition-duration: 60ms;
+}
+
+.btn-time-next.is-locked {
+  background: transparent;
+  color: var(--text-tertiary);
+  border: 1.5px dashed rgba(148, 163, 184, 0.25);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-time-next.is-locked svg {
+  opacity: 0.4;
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+[data-theme="dark"] .time-slots-card {
+  background: var(--surface-card);
+  border-color: rgba(114, 176, 122, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .time-chip {
+  background: #72b07a;
+  color: #06140a;
+}
+
+[data-theme="dark"] .btn-time-next.is-ready {
+  background: #72b07a;
+  color: #06140a;
+}
+
+[data-theme="dark"] .time-change-date-link {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .time-change-date-link:hover {
+  color: #72b07a;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .time-step-content {
+    max-width: 100%;
+  }
+
+  .time-slots-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .time-step-header {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .time-actions-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-time-next {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    LEGACY Calendar CSS (kept for backwards compat with other components)
    ══════════════════════════════════════════════════════════════════════════ */
 
