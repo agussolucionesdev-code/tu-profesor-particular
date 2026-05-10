@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   FaBan,
   FaBell,
+  FaCalendarAlt,
   FaCalendarCheck,
   FaChartLine,
   FaClipboardList,
@@ -29,6 +30,7 @@ import StudentsView from "./admin/views/StudentsView";
 import BookingsView from "./admin/views/BookingsView";
 import BlockedDatesView from "./admin/views/BlockedDatesView";
 import ScheduleSettingsView from "./admin/views/ScheduleSettingsView";
+import CalendarView from "./admin/views/CalendarView";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import "../styles/tokens.css";
 import "./AdminPanel.css";
@@ -38,6 +40,7 @@ import "../styles/accessibility-system.css";
 const VIEW_OPTIONS = [
   { id: "overview", label: "Resumen", icon: FaChartLine },
   { id: "agenda", label: "Agenda", icon: FaCalendarCheck },
+  { id: "calendar", label: "Calendario", icon: FaCalendarAlt },
   { id: "students", label: "Alumnos", icon: FaUsers },
   { id: "bookings", label: "Turnos", icon: FaClipboardList },
   { id: "availability", label: "Disponibilidad", icon: FaBan },
@@ -344,6 +347,13 @@ const AdminPanel = () => {
             onDeleteBooking={deleteBooking}
             onDeleteAll={deleteAllBookings}
             onQuickStatusChange={handleQuickStatusChange}
+          />
+        )}
+
+        {activeView === "calendar" && (
+          <CalendarView
+            sortedBookings={sortedBookings}
+            onSelectBooking={setViewBooking}
           />
         )}
 
