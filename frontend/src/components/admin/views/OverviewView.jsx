@@ -1,5 +1,4 @@
 import {
-  FaCalendarAlt,
   FaCheckCircle,
   FaDollarSign,
   FaRegClock,
@@ -21,15 +20,7 @@ const OverviewView = ({
   onQuickStatusChange,
 }) => {
   const next = overviewData.upcomingBookings[0];
-
-  const now = new Date();
-  const monthRevenue = dashboard.enriched
-    .filter((b) => {
-      if (b.status !== "Finalizado") return false;
-      const d = b.start;
-      return d && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-    })
-    .reduce((sum, b) => sum + (Number(b.price) || 0), 0);
+  const { monthRevenue, lastMonthRevenue } = overviewData;
   const maxWeekFlow = Math.max(
     ...overviewData.weekFlow.map((day) => day.count),
     1,
@@ -320,15 +311,19 @@ const OverviewView = ({
               <span>{overviewData.students.length}</span>
               <p>Perfiles, materias y próximos encuentros con contexto.</p>
             </div>
-            <div className="priority-card" style={{ background: "var(--color-surface-2, #f0fdf4)", borderLeft: "4px solid var(--color-success, #38a169)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <FaDollarSign aria-hidden="true" style={{ color: "var(--color-success, #38a169)" }} />
+            <div className="priority-card success">
+              <div className="priority-card-title">
+                <FaDollarSign aria-hidden="true" />
                 <strong>Ingresos del mes</strong>
               </div>
-              <span style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-success, #38a169)" }}>
+              <span className="priority-card-value">
                 ${monthRevenue.toLocaleString("es-AR")}
               </span>
-              <p>Suma de clases finalizadas en el mes actual con precio cargado.</p>
+              <p>
+                {lastMonthRevenue > 0
+                  ? `${monthRevenue >= lastMonthRevenue ? "+" : ""}${Math.round(((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)}% vs mes anterior`
+                  : "Suma de clases finalizadas con precio cargado."}
+              </p>
             </div>
           </div>
         </article>

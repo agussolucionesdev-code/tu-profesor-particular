@@ -7,31 +7,19 @@ import {
   FaChartLine,
   FaClipboardList,
   FaCog,
+  FaDollarSign,
   FaExclamationTriangle,
   FaPlus,
   FaSignOutAlt,
   FaUsers,
 } from "react-icons/fa";
-import {
-  buildStudentKey as studentKey,
-  formatDayLabel as formatDay,
-  formatLongDateLabel as formatDate,
-  formatTimeLabel as formatTime,
-  getBookingStatusBucket as bookingStatusBucket,
-  getResponsibleDisplay as responsibleLabel,
-  getResponsibleRelationshipDisplay as responsibleRelationshipLabel,
-  getResponsibleSummary as responsibleSummary,
-  isSameCalendarDay as sameDay,
-  normalizeText as norm,
-  toSafeDate as toDate,
-} from "../utils/bookingFormatters";
-import {
-  fetchAllBookings,
-  updateBooking,
-  deleteBooking,
-  deleteAllBookings,
-} from "../api/bookingApi";
+import { normalizeText as norm } from "../utils/bookingFormatters";
+import { sendWhatsApp, getSentMessages } from "../utils/whatsappHelper";
 import { useAdminAuth } from "../hooks/useAdminAuth";
+import { useBookingsData } from "../hooks/useBookingsData";
+import { useBookingFilters } from "../hooks/useBookingFilters";
+import { useDashboardStats } from "../hooks/useDashboardStats";
+import { useBookingEditModal } from "../hooks/useBookingEditModal";
 import AdminLoginScreen from "./admin/AdminLoginScreen";
 import BookingEditModal from "./admin/BookingEditModal";
 import BookingDetailModal from "./admin/BookingDetailModal";
@@ -70,240 +58,66 @@ const AdminPanel = () => {
     handleLogout,
   } = useAdminAuth();
 
-  const [bookings, setBookings] = useState([]);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [sentMessages, setSentMessages] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Todos");
+  const {
+    bookings,
+    sortedBookings,
+    dataLoading,
+    handleQuickStatusChange,
+    updateBookingFields,
+    deleteBooking,
+    deleteAllBookings,
+    clearBookings,
+  } = useBookingsData({ authConfig, isAuthenticated, handleLogout });
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    filteredBookings,
+    matchCount,
+    totalCount,
+  } = useBookingFilters(sortedBookings);
+
+  const { dashboard, overviewData, heroText } =
+    useDashboardStats(sortedBookings);
+
+  const {
+    selectedBooking,
+    editNotes,
+    editEvolution,
+    editEmotionalState,
+    setEditNotes,
+    setEditEvolution,
+    setEditEmotionalState,
+    openEditBooking,
+    closeEditBooking,
+    handleSave,
+    handleStatusChange,
+  } = useBookingEditModal(updateBookingFields);
+
   const [activeView, setActiveView] = useState("overview");
-  const [selectedBooking, setSelectedBooking] = useState(null);
   const [viewBooking, setViewBooking] = useState(null);
-  const [editNotes, setEditNotes] = useState("");
-  const [editEvolution, setEditEvolution] = useState("");
-  const [editEmotionalState, setEditEmotionalState] = useState("");
+  const [sentMessages, setSentMessages] = useState(getSentMessages);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (!isAuthenticated) return;
-      if (e.ctrlKey || e.metaKey) {
-        if (e.key === "n" || e.key === "N") {
+      if (!isAuthenticated || e.ctrlKey || e.metaKey) return;
+      if (e.key === "n" || e.key === "N") {
+        if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           window.open("/", "_blank");
-        }
-        if (e.key === "r" || e.key === "R") {
-          e.preventDefault();
-          setDataLoading(true);
-          fetchAllBookings(authConfig)
-            .then((res) =>
-              setBookings(Array.isArray(res.data.data) ? res.data.data : []),
-            )
-            .catch((error) => console.error("Error al recargar reservas:", error))
-            .finally(() => setDataLoading(false));
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isAuthenticated, authConfig]);
+  }, [isAuthenticated]);
 
-  useEffect(() => {
-    const loadBookings = async () => {
-      setDataLoading(true);
-      try {
-        const response = await fetchAllBookings(authConfig);
-        setBookings(Array.isArray(response.data.data) ? response.data.data : []);
-      } catch (error) {
-        console.error("Error al cargar reservas:", error);
-        if (error.response?.status === 401) {
-          handleLogout();
-          setBookings([]);
-        }
-      } finally {
-        setDataLoading(false);
-      }
-    };
-
-    if (isAuthenticated) loadBookings();
-  }, [authConfig, isAuthenticated, handleLogout]);
-
-  const sortedBookings = useMemo(
-    () =>
-      [...bookings].sort((a, b) => {
-        const first = toDate(a.timeSlot)?.getTime() ?? 0;
-        const second = toDate(b.timeSlot)?.getTime() ?? 0;
-        return first - second;
-      }),
-    [bookings],
-  );
-
-  const filteredBookings = useMemo(() => {
-    const term = norm(searchTerm);
-    return sortedBookings.filter((booking) => {
-      const blob = norm(
-        [
-          booking.studentName,
-          booking.responsibleName,
-          booking.bookingCode,
-          booking.phone,
-          booking.email,
-          booking.subject,
-        ].join(" "),
-      );
-      const matchesSearch = !term || blob.includes(term);
-      const matchesStatus =
-        filterStatus === "Todos" ||
-        bookingStatusBucket(booking.status) === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-  }, [filterStatus, searchTerm, sortedBookings]);
-
-  const dashboard = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const enriched = sortedBookings.map((booking) => ({
-      ...booking,
-      start: toDate(booking.timeSlot),
-      end: toDate(booking.endTime),
-    }));
-
-    const stats = {
-      total: enriched.length,
-      pending: enriched.filter((booking) => booking.status === "Pendiente").length,
-      confirmed: enriched.filter(
-        (booking) => bookingStatusBucket(booking.status) === "Confirmado",
-      ).length,
-      cancelled: enriched.filter((booking) => booking.status === "Cancelado").length,
-      finalized: enriched.filter((booking) => booking.status === "Finalizado").length,
-    };
-
-    return { now, today, next24h, enriched, stats };
-  }, [sortedBookings]);
-
-  const overviewData = useMemo(() => {
-    const todayBookings = dashboard.enriched.filter(
-      (booking) =>
-        booking.start &&
-        sameDay(booking.start, dashboard.today) &&
-        booking.status !== "Cancelado",
-    );
-    const upcomingBookings = dashboard.enriched.filter(
-      (booking) =>
-        booking.start &&
-        booking.start >= dashboard.now &&
-        booking.status !== "Cancelado",
-    );
-    const upcoming24h = upcomingBookings.filter(
-      (booking) => booking.start && booking.start <= dashboard.next24h,
-    );
-    const overduePending = dashboard.enriched.filter(
-      (booking) =>
-        booking.status === "Pendiente" &&
-        booking.start &&
-        booking.start < dashboard.now,
-    );
-    const weekFlow = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(dashboard.today);
-      date.setDate(dashboard.today.getDate() + index);
-      const count = dashboard.enriched.filter(
-        (booking) =>
-          booking.start &&
-          sameDay(booking.start, date) &&
-          booking.status !== "Cancelado",
-      ).length;
-      return { label: formatDay(date), count };
-    });
-
-    const subjectsMap = new Map();
-    dashboard.enriched.forEach((booking) => {
-      const subject =
-        String(booking.subject || "Sin materia").trim() || "Sin materia";
-      subjectsMap.set(subject, (subjectsMap.get(subject) || 0) + 1);
-    });
-    const topSubjects = [...subjectsMap.entries()]
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
-    const studentsMap = new Map();
-    dashboard.enriched.forEach((booking) => {
-      const key = studentKey(booking);
-      const existing = studentsMap.get(key);
-      if (!existing) {
-        studentsMap.set(key, {
-          key,
-          studentName: booking.studentName,
-          responsibleName: responsibleLabel(booking),
-          responsibleRelationship: responsibleRelationshipLabel(booking),
-          responsibleSummary: responsibleSummary(booking),
-          school: booking.school,
-          educationLevel: booking.educationLevel,
-          yearGrade: booking.yearGrade,
-          phone: booking.phone,
-          email: booking.email,
-          totalBookings: 1,
-          nextBooking:
-            booking.start &&
-            booking.start >= dashboard.now &&
-            booking.status !== "Cancelado"
-              ? booking.start
-              : null,
-          subjects: new Set([booking.subject].filter(Boolean)),
-          searchBlob: norm(
-            [
-              booking.studentName,
-              booking.responsibleName,
-              responsibleRelationshipLabel(booking),
-              booking.phone,
-              booking.email,
-              booking.subject,
-              booking.school,
-            ].join(" "),
-          ),
-        });
-        return;
-      }
-
-      existing.totalBookings += 1;
-      if (booking.subject) existing.subjects.add(booking.subject);
-      if (
-        booking.start &&
-        booking.start >= dashboard.now &&
-        booking.status !== "Cancelado" &&
-        (!existing.nextBooking || booking.start < existing.nextBooking)
-      ) {
-        existing.nextBooking = booking.start;
-      }
-    });
-
-    const students = [...studentsMap.values()]
-      .map((student) => ({ ...student, subjects: [...student.subjects] }))
-      .sort(
-        (a, b) =>
-          (a.nextBooking?.getTime() ?? Infinity) -
-          (b.nextBooking?.getTime() ?? Infinity),
-      );
-
-    const recentActivity = [...dashboard.enriched]
-      .sort(
-        (a, b) =>
-          (toDate(b.updatedAt)?.getTime() ?? 0) -
-          (toDate(a.updatedAt)?.getTime() ?? 0),
-      )
-      .slice(0, 6);
-
-    return {
-      todayBookings,
-      upcomingBookings,
-      upcoming24h,
-      overduePending,
-      weekFlow,
-      topSubjects,
-      students,
-      recentActivity,
-    };
-  }, [dashboard]);
+  const handleSendWhatsApp = (booking) => {
+    const updated = sendWhatsApp(booking);
+    if (updated) setSentMessages(updated);
+  };
 
   const filteredStudents = useMemo(() => {
     const term = norm(searchTerm);
@@ -312,113 +126,6 @@ const AdminPanel = () => {
       student.searchBlob.includes(term),
     );
   }, [overviewData.students, searchTerm]);
-
-  const heroText = useMemo(() => {
-    if (!dashboard.stats.total) return "Todavía no hay reservas cargadas.";
-    if (overviewData.todayBookings.length > 0) {
-      return `Hoy tenés ${overviewData.todayBookings.length} clases activas y ${overviewData.upcoming24h.length} movimientos en las próximas 24 horas.`;
-    }
-    if (dashboard.stats.pending > 0) {
-      return `Tenés ${dashboard.stats.pending} registros pendientes para revisar.`;
-    }
-    return "Todo en orden. Buen momento para revisar alumnos y agenda.";
-  }, [
-    dashboard.stats.pending,
-    dashboard.stats.total,
-    overviewData.todayBookings.length,
-    overviewData.upcoming24h.length,
-  ]);
-
-  const handleQuickStatusChange = async (id, newStatus) => {
-    try {
-      await updateBooking(id, { status: newStatus }, authConfig);
-      setBookings((current) =>
-        current.map((booking) =>
-          booking._id === id ? { ...booking, status: newStatus } : booking,
-        ),
-      );
-    } catch {
-      alert("No se pudo actualizar el estado.");
-    }
-  };
-
-  const sendWhatsApp = (booking) => {
-    if (!booking.phone) {
-      alert("Este registro no tiene un teléfono válido para WhatsApp.");
-      return;
-    }
-
-    let phone = String(booking.phone).replace(/\D/g, "");
-    if (phone.length === 10) phone = `549${phone}`;
-    const start = toDate(booking.timeSlot);
-    const when = start
-      ? `${formatDate(start)} a las ${formatTime(start)} hs`
-      : "fecha pendiente";
-    const name = booking.studentName || "Alumno";
-    const message = `Hola ${name}, soy Agustín Sosa. Te escribo por tu turno de ${booking.subject} previsto para ${when}.`;
-    window.open(
-      `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
-    setSentMessages((current) => ({ ...current, [booking._id]: true }));
-  };
-
-  const handleUpdate = async () => {
-    try {
-      const payload = {
-        status: selectedBooking.status,
-        notes: editNotes,
-        studentEvolution: editEvolution,
-        emotionalState: editEmotionalState,
-      };
-      await updateBooking(selectedBooking._id, payload, authConfig);
-      setBookings((current) =>
-        current.map((booking) =>
-          booking._id === selectedBooking._id
-            ? { ...booking, ...payload }
-            : booking,
-        ),
-      );
-      setSelectedBooking(null);
-    } catch {
-      alert("No se pudieron guardar los cambios.");
-    }
-  };
-
-  const openEditBooking = (booking) => {
-    setSelectedBooking(booking);
-    setEditNotes(booking.notes || "");
-    setEditEvolution(booking.studentEvolution || "");
-    setEditEmotionalState(booking.emotionalState || "");
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta reserva?")) return;
-    try {
-      await deleteBooking(id, authConfig);
-      setBookings((current) => current.filter((booking) => booking._id !== id));
-    } catch {
-      alert("Error al eliminar la reserva.");
-    }
-  };
-
-  const handleDeleteAll = async () => {
-    if (
-      !window.confirm("Estás por borrar toda la base de reservas. ¿Continuar?")
-    )
-      return;
-    const confirmation = prompt("Escribe ELIMINAR para confirmar:");
-    if (confirmation !== "ELIMINAR") return;
-    setDataLoading(true);
-    try {
-      await deleteAllBookings(authConfig);
-      setBookings([]);
-    } catch {
-      alert("No se pudo limpiar la base.");
-    } finally {
-      setDataLoading(false);
-    }
-  };
 
   if (!isAuthenticated) {
     return (
@@ -504,7 +211,7 @@ const AdminPanel = () => {
           className="admin-logout-btn"
           onClick={() => {
             handleLogout();
-            setBookings([]);
+            clearBookings();
           }}
         >
           <FaSignOutAlt />
@@ -542,8 +249,8 @@ const AdminPanel = () => {
               <FaCalendarCheck />
             </div>
             <div>
-              <span>Próximas clases</span>
-              <strong>{overviewData.upcomingBookings.length}</strong>
+              <span>Clases hoy</span>
+              <strong>{overviewData.todayBookings.length}</strong>
               <small>
                 {overviewData.upcoming24h.length} en las próximas 24 hs
               </small>
@@ -554,9 +261,13 @@ const AdminPanel = () => {
               <FaExclamationTriangle />
             </div>
             <div>
-              <span>Agenda confirmada</span>
-              <strong>{dashboard.stats.confirmed}</strong>
-              <small>{overviewData.upcoming24h.length} próximas 24 hs</small>
+              <span>Pendientes</span>
+              <strong>{dashboard.stats.pending}</strong>
+              <small>
+                {overviewData.overduePending.length > 0
+                  ? `${overviewData.overduePending.length} vencidos`
+                  : "Sin vencidos"}
+              </small>
             </div>
           </article>
           <article className="admin-kpi-card">
@@ -565,25 +276,26 @@ const AdminPanel = () => {
             </div>
             <div>
               <span>Alumnos activos</span>
-              <strong>{overviewData.students.length}</strong>
-              <small>{dashboard.stats.total} reservas registradas</small>
+              <strong>
+                {overviewData.students.filter((s) => s.nextBooking).length}
+              </strong>
+              <small>{overviewData.students.length} registrados</small>
             </div>
           </article>
           <article className="admin-kpi-card">
-            <div className="kpi-icon slate">
-              <FaChartLine />
+            <div className="kpi-icon success">
+              <FaDollarSign />
             </div>
             <div>
-              <span>Conversión</span>
+              <span>Ingresos del mes</span>
               <strong>
-                {dashboard.stats.total
-                  ? Math.round(
-                      (dashboard.stats.confirmed / dashboard.stats.total) * 100,
-                    )
-                  : 0}
-                %
+                ${overviewData.monthRevenue.toLocaleString("es-AR")}
               </strong>
-              <small>{dashboard.stats.cancelled} cancelados</small>
+              <small>
+                {overviewData.lastMonthRevenue > 0
+                  ? `${overviewData.monthRevenue >= overviewData.lastMonthRevenue ? "+" : ""}${Math.round(((overviewData.monthRevenue - overviewData.lastMonthRevenue) / overviewData.lastMonthRevenue) * 100)}% vs mes anterior`
+                  : "Sin datos del mes anterior"}
+              </small>
             </div>
           </article>
         </section>
@@ -593,7 +305,7 @@ const AdminPanel = () => {
             overviewData={overviewData}
             dashboard={dashboard}
             onSelectBooking={setViewBooking}
-            onSendWhatsApp={sendWhatsApp}
+            onSendWhatsApp={handleSendWhatsApp}
             onQuickStatusChange={handleQuickStatusChange}
           />
         )}
@@ -601,7 +313,7 @@ const AdminPanel = () => {
         {activeView === "agenda" && (
           <AgendaView
             overviewData={overviewData}
-            onSendWhatsApp={sendWhatsApp}
+            onSendWhatsApp={handleSendWhatsApp}
             onQuickStatusChange={handleQuickStatusChange}
           />
         )}
@@ -622,13 +334,15 @@ const AdminPanel = () => {
             bookings={bookings}
             sentMessages={sentMessages}
             dataLoading={dataLoading}
+            matchCount={matchCount}
+            totalCount={totalCount}
             onSearchTermChange={setSearchTerm}
             onFilterStatusChange={setFilterStatus}
-            onSendWhatsApp={sendWhatsApp}
+            onSendWhatsApp={handleSendWhatsApp}
             onSelectBooking={setViewBooking}
             onEditBooking={openEditBooking}
-            onDeleteBooking={handleDelete}
-            onDeleteAll={handleDeleteAll}
+            onDeleteBooking={deleteBooking}
+            onDeleteAll={deleteAllBookings}
             onQuickStatusChange={handleQuickStatusChange}
           />
         )}
@@ -648,14 +362,12 @@ const AdminPanel = () => {
           editNotes={editNotes}
           editEvolution={editEvolution}
           editEmotionalState={editEmotionalState}
-          onClose={() => setSelectedBooking(null)}
+          onClose={closeEditBooking}
           onNotesChange={(e) => setEditNotes(e.target.value)}
           onEvolutionChange={(e) => setEditEvolution(e.target.value)}
           onEmotionalStateChange={(e) => setEditEmotionalState(e.target.value)}
-          onStatusChange={(e) =>
-            setSelectedBooking({ ...selectedBooking, status: e.target.value })
-          }
-          onSave={handleUpdate}
+          onStatusChange={handleStatusChange}
+          onSave={handleSave}
         />
       )}
 
@@ -663,7 +375,7 @@ const AdminPanel = () => {
         <BookingDetailModal
           booking={viewBooking}
           onClose={() => setViewBooking(null)}
-          onContactWhatsApp={sendWhatsApp}
+          onContactWhatsApp={handleSendWhatsApp}
         />
       )}
     </div>

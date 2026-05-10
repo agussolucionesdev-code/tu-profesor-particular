@@ -13,12 +13,11 @@ import {
 import {
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
-  getBookingStatusLabel as bookingStatusLabel,
   getResponsibleRelationshipDisplay as responsibleRelationshipLabel,
   toSafeDate as toDate,
 } from "../../../utils/bookingFormatters";
 
-const STATUS_FILTERS = ["Todos", "Confirmado", "Cancelado"];
+const STATUS_FILTERS = ["Todos", "Pendiente", "Confirmado", "Finalizado", "Cancelado"];
 
 const BookingsView = ({
   searchTerm,
@@ -27,6 +26,8 @@ const BookingsView = ({
   bookings,
   sentMessages,
   dataLoading,
+  matchCount,
+  totalCount,
   onSearchTermChange,
   onFilterStatusChange,
   onSendWhatsApp,
@@ -74,6 +75,12 @@ const BookingsView = ({
       </div>
     </div>
 
+    {(searchTerm || filterStatus !== "Todos") && (
+      <p className="admin-search-count" aria-live="polite" role="status">
+        Mostrando {matchCount} de {totalCount} turnos
+      </p>
+    )}
+
     {dataLoading ? (
       <div className="admin-loading-state">
         <FaSpinner className="spinner giant" />
@@ -106,8 +113,8 @@ const BookingsView = ({
                   className={booking.status === "Cancelado" ? "row-cancelled" : ""}
                 >
                   <td>
-                    <span className={`status-pill ${bookingStatusLabel(booking.status)}`}>
-                      {bookingStatusLabel(booking.status)}
+                    <span className={`status-pill ${booking.status}`}>
+                      {booking.status}
                     </span>
                   </td>
                   <td>
@@ -143,6 +150,7 @@ const BookingsView = ({
                       type="button"
                       onClick={() => onSendWhatsApp(booking)}
                       className={`admin-whatsapp-btn ${sentMessages[booking._id] ? "sent" : ""}`}
+                      title="Enviar mensaje por WhatsApp"
                     >
                       <FaWhatsapp aria-hidden="true" />
                       {sentMessages[booking._id] ? "Enviado" : "WhatsApp"}
@@ -154,6 +162,7 @@ const BookingsView = ({
                         <button
                           type="button"
                           className="icon-action success"
+                          title="Confirmar reserva"
                           aria-label={`Confirmar reserva de ${booking.studentName}`}
                           onClick={() =>
                             onQuickStatusChange(booking._id, "Confirmado")
@@ -165,6 +174,7 @@ const BookingsView = ({
                       <button
                         type="button"
                         className="icon-action neutral"
+                        title="Ver ficha completa"
                         aria-label={`Ver ficha de ${booking.studentName}`}
                         onClick={() => onSelectBooking(booking)}
                       >
@@ -173,6 +183,7 @@ const BookingsView = ({
                       <button
                         type="button"
                         className="icon-action info"
+                        title="Editar reserva"
                         aria-label={`Editar reserva de ${booking.studentName}`}
                         onClick={() => onEditBooking(booking)}
                       >
@@ -181,6 +192,7 @@ const BookingsView = ({
                       <button
                         type="button"
                         className="icon-action danger"
+                        title="Eliminar reserva"
                         aria-label={`Eliminar reserva de ${booking.studentName}`}
                         onClick={() => onDeleteBooking(booking._id)}
                       >
