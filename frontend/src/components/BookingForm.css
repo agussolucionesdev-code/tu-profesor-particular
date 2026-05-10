@@ -17,9 +17,9 @@
 /* ── Form card ───────────────────────────────────────────────────────────── */
 .form-card-elevation {
   background: var(--surface-card);
-  flex: 1 1 860px;
-  width: min(100%, 860px);
-  max-width: 860px;
+  flex: 1 1 1080px;
+  width: min(100%, 1080px);
+  max-width: 1080px;
   min-width: 0;
   border-radius: 20px;
   box-shadow: 0 4px 24px rgba(32, 64, 96, 0.07), 0 1px 4px rgba(32, 64, 96, 0.04);
@@ -82,7 +82,7 @@
 /* ── Header ──────────────────────────────────────────────────────────────── */
 .form-header-neuro {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .form-supertitle {
@@ -587,6 +587,49 @@
 /* Caption oculta en desktop */
 .step-caption { display: none; }
 
+/* ── Compact stepper (horizontal) ────────────────────────────────────────── */
+.neuro-stepper-compact {
+  padding: 0.5rem 0.75rem;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.stepper-grid-horizontal {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.stepper-item-compact {
+  flex-direction: row;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.step-label-compact {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  transition: color 0.22s ease;
+}
+
+.stepper-item-compact.is-current .step-label-compact,
+.stepper-item-compact.is-completed .step-label-compact {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+@media (max-width: 520px) {
+  .step-label-compact {
+    display: none;
+  }
+  .stepper-item-compact {
+    padding: 0.3rem;
+  }
+}
+
 /* ── Slider / form panels ────────────────────────────────────────────────── */
 .form-slider-window {
   width: 100%;
@@ -610,6 +653,8 @@
   width: 100%;
   padding: 0 5px;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
   transform: scale(0.95);
   transition:
     opacity 0.6s ease,

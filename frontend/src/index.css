@@ -56,6 +56,8 @@ body {
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 img,
@@ -76,6 +78,7 @@ select {
   margin: 0 auto;
   padding: 0;
   overflow-x: clip;
+  flex: 1;
 }
 
 .main-content.immersive-page-content {

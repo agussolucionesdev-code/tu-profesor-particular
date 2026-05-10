@@ -1,27 +1,28 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
-import { getResponsibleRelationshipDisplay } from "../../utils/bookingFormatters";
-
-const formatDateLong = (value) =>
-  new Date(value).toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-const formatTime = (value) =>
-  new Date(value).toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+import {
+  formatDateLong,
+  formatTime,
+  getResponsibleRelationshipDisplay,
+  isAdultBooking,
+} from "../../utils/bookingFormatters";
+import "./CancelModal.css";
 
 const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
   const dialogRef = useRef(null);
+  const isAdult = isAdultBooking(cancelingBooking);
 
   useEffect(() => {
     dialogRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   useEffect(() => {
@@ -32,80 +33,94 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  return (
-    <div className="modal-overlay cancel-overlay" onClick={onClose}>
+  return createPortal(
+    <div className="cancel-overlay" onClick={onClose} aria-hidden="true">
       <div
         ref={dialogRef}
-        className="modal-box danger-modal cancel-soft-modal"
+        className="cancel-dialog"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-title"
         tabIndex={-1}
+        aria-hidden="false"
       >
-        <div className="cancel-soft-header">
-          <div className="danger-icon soft">
+        {/* Header */}
+        <div className="cancel-header">
+          <span className="cancel-icon" aria-hidden="true">
             <FaExclamationTriangle />
-          </div>
+          </span>
           <div>
-            <span className="modal-kicker">Cancelar con claridad</span>
-            <h3 id="cancel-title">¿Querés liberar este horario?</h3>
-            <p className="danger-text">
-              Si confirmás, este turno deja de aparecer en Mis Turnos y el
-              horario vuelve a quedar disponible sin dejarte ruido visual.
+            <h3 id="cancel-title" className="cancel-title">
+              ¿Querés liberar este horario?
+            </h3>
+            <p className="cancel-subtitle">
+              Si confirmás, el turno se cancela y el horario vuelve a estar
+              disponible.
             </p>
           </div>
         </div>
 
-        <div className="cancel-soft-summary">
-          <article>
-            <span>Código</span>
-            <strong>#{cancelingBooking.bookingCode}</strong>
-          </article>
-          <article>
-            <span>Alumno</span>
-            <strong>{cancelingBooking.studentName}</strong>
-          </article>
-          <article>
-            <span>Adulto responsable</span>
-            <strong>{cancelingBooking.responsibleName || "No informado"}</strong>
-          </article>
-          <article>
-            <span>Parentesco</span>
-            <strong>{getResponsibleRelationshipDisplay(cancelingBooking)}</strong>
-          </article>
-          <article>
-            <span>Fecha</span>
-            <strong>{formatDateLong(cancelingBooking.timeSlot)}</strong>
-          </article>
-          <article>
-            <span>Horario</span>
-            <strong>
-              {formatTime(cancelingBooking.timeSlot)} -{" "}
+        {/* Summary grid */}
+        <dl className="cancel-grid">
+          <div className="cancel-row">
+            <dt>Código</dt>
+            <dd>#{cancelingBooking.bookingCode}</dd>
+          </div>
+          <div className="cancel-row">
+            <dt>Alumno</dt>
+            <dd>{cancelingBooking.studentName}</dd>
+          </div>
+          {!isAdult && (
+            <>
+              <div className="cancel-row">
+                <dt>Adulto responsable</dt>
+                <dd>{cancelingBooking.responsibleName || "No informado"}</dd>
+              </div>
+              <div className="cancel-row">
+                <dt>Parentesco</dt>
+                <dd>{getResponsibleRelationshipDisplay(cancelingBooking)}</dd>
+              </div>
+            </>
+          )}
+          <div className="cancel-row">
+            <dt>Fecha</dt>
+            <dd>{formatDateLong(cancelingBooking.timeSlot)}</dd>
+          </div>
+          <div className="cancel-row">
+            <dt>Horario</dt>
+            <dd>
+              {formatTime(cancelingBooking.timeSlot)} –{" "}
               {formatTime(cancelingBooking.endTime)} hs
-            </strong>
-          </article>
-        </div>
+            </dd>
+          </div>
+        </dl>
 
-        <div className="cancel-soft-note">
-          <FaInfoCircle />
+        {/* Info note */}
+        <p className="cancel-note">
+          <FaInfoCircle aria-hidden="true" />
           <span>
-            Si más adelante necesitás otra clase, podés volver a reservar
-            normalmente. Este turno cancelado ya no seguirá visible en tu lista
-            activa.
+            Si necesitás otra clase, podés volver a reservar normalmente en
+            cualquier momento.
           </span>
-        </div>
+        </p>
 
-        <div className="modal-footer danger-footer cancel-soft-footer">
-          <button onClick={onClose} className="btn-modal safe-return">
+        {/* Actions */}
+        <div className="cancel-footer">
+          <button type="button" className="cancel-btn-keep" onClick={onClose}>
             No, mantenerlo
           </button>
-          <button onClick={onConfirm} className="btn-modal danger-confirm">
+          <button
+            type="button"
+            className="cancel-btn-confirm"
+            onClick={onConfirm}
+          >
             Sí, liberar horario
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

@@ -87,14 +87,18 @@ const ConfirmationStep = ({
                     : `${duration} h`;
               const sublabel =
                 mins === 30
-                  ? "Repaso rápido"
+                  ? "Express"
                   : mins === 45
                     ? "Clase corta"
                     : mins === 60
-                      ? "Clase estándar"
+                      ? "Estándar"
                       : mins === 90
-                        ? "Clase extendida"
-                        : "Clase intensiva";
+                        ? "Extendida"
+                        : mins === 120
+                          ? "Doble"
+                          : mins === 150
+                            ? "Intensiva"
+                            : "Maratón";
               const isRecommended = mins === 60;
 
               return (

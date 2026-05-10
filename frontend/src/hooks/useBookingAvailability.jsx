@@ -148,7 +148,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
   );
 
   const maxAllowedDuration = useMemo(() => {
-    if (!selectedDate || selectedDate.getHours() === 0) return 10;
+    if (!selectedDate || selectedDate.getHours() === 0) return 3;
     const bookingsSameDay = existingBookings
       .filter((booking) => isSameDay(new Date(booking.timeSlot), selectedDate))
       .map((booking) => ({ start: new Date(booking.timeSlot) }))
@@ -159,7 +159,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     const nextLimit =
       bookingsSameDay.length > 0 ? bookingsSameDay[0].start : closingTime;
     const diffMinutes = differenceInMinutes(nextLimit, selectedDate);
-    return Math.floor(Math.max(0.5, Math.min(diffMinutes / 60, 10)) * 10) / 10;
+    return Math.floor(Math.max(0.5, Math.min(diffMinutes / 60, 3)) * 10) / 10;
   }, [selectedDate, existingBookings]);
 
   const selectedDayOnly = useMemo(() => {

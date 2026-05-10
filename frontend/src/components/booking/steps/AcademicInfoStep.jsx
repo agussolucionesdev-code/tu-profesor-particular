@@ -109,6 +109,8 @@ const AcademicInfoStep = ({
 
   // ── Auto-confirm en selects (educationLevel, yearGrade) ──────────────────
   const selectTimeoutRef = useRef(null);
+  const confirmFieldRef = useRef(confirmField);
+  confirmFieldRef.current = confirmField;
 
   const makeSelectHandler = useCallback(
     (fieldKey) => (e) => {
@@ -116,11 +118,11 @@ const AcademicInfoStep = ({
       if (selectTimeoutRef.current) clearTimeout(selectTimeoutRef.current);
       if (e.target.value) {
         selectTimeoutRef.current = setTimeout(() => {
-          confirmField(fieldKey);
+          confirmFieldRef.current(fieldKey);
         }, 280);
       }
     },
-    [confirmField, handleChange],
+    [handleChange],
   );
 
   useEffect(() => {

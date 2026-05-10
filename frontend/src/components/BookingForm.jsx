@@ -14,24 +14,16 @@ import {
 } from "date-fns";
 import es from "date-fns/locale/es";
 import {
-  FaWhatsapp,
-  FaCalendarAlt,
   FaClock,
   FaCheckCircle,
   FaInfoCircle,
   FaExclamationCircle,
   FaLightbulb,
   FaCalendarCheck,
-  FaArrowRight,
-  FaArrowLeft,
-  FaHourglassHalf,
-  FaShieldAlt,
   FaTicketAlt,
   FaTimesCircle,
-  FaUserLock,
   FaChevronLeft,
   FaChevronRight,
-  FaSearchPlus,
   FaTimes,
   FaVolumeUp,
 } from "react-icons/fa";
@@ -46,10 +38,7 @@ import { createBooking, fetchPublicSettings } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { useWizardNavigation } from "../hooks/useWizardNavigation";
-import {
-  BOOKING_SUPPORT_PILLS,
-  WIZARD_STEPS,
-} from "../constants/bookingWizard";
+import { WIZARD_STEPS } from "../constants/bookingWizard";
 import {
   ADULT_RELATIONSHIP_VALUE,
   formatDurationOptionLabel,
@@ -93,7 +82,6 @@ const VOICE_TIP_KEY = "voice_guide_tip_dismissed";
 const VOICE_CHANGE_EVENT = "neuro-voice-muted-changed";
 
 const BookingForm = () => {
-  const supportPillIcons = [FaCheckCircle, FaWhatsapp, FaUserLock];
   const sliderWindowRef = useRef(null);
   const slideRefs = useRef({});
 
@@ -183,8 +171,6 @@ const BookingForm = () => {
     toggleAdultMode,
     resetForm,
     getFieldStateClass,
-    completionPercent,
-    requiredChecks,
   } = useBookingWizard(showToast);
 
   const {
@@ -415,9 +401,7 @@ const BookingForm = () => {
     };
   }, [isCalendarExpanded]);
 
-  const completedRequiredFields = requiredChecks.filter(Boolean).length;
   const currentStepInfo = WIZARD_STEPS.find((step) => step.id === currentStep);
-  const nextStepInfo = WIZARD_STEPS.find((step) => step.id === currentStep + 1);
   const getSlidePanelA11y = (stepId) => {
     const isActive = currentStep === stepId;
     return {
@@ -425,13 +409,6 @@ const BookingForm = () => {
       inert: !isActive,
     };
   };
-  const stepperFlowCopy = nextStepInfo
-    ? `Completá este tramo y enseguida seguimos con ${nextStepInfo.label.toLowerCase()}.`
-    : "Ya estás en el cierre final: revisá el resumen y confirmá tu reserva.";
-  const stepperInteractionCopy =
-    currentStep > 1
-      ? "Podés tocar cualquier paso completado para volver sin perder lo que ya cargaste."
-      : "Vamos habilitando cada paso en orden para que la reserva quede clara, prolija y sin errores.";
   const isTimeSelected = Boolean(
     formData.timeSlot && formData.timeSlot.getHours() !== 0,
   );
@@ -592,6 +569,11 @@ const BookingForm = () => {
 
   const goToStep = (targetStep) => {
     if (!navigateToStep(targetStep)) return;
+
+    // 1A: Default duration to 1h when entering confirmation step
+    if (targetStep === 4 && !formData.duration) {
+      handleChange({ target: { name: "duration", value: 1 } });
+    }
 
     playStepSound();
     smoothScrollToStep(targetStep);
@@ -839,10 +821,8 @@ const BookingForm = () => {
         actualDuration: formData.duration,
         durationLabel: formatDurationOptionLabel(formData.duration),
         cleanStudentName: formData.studentName,
-        responsibleLabel: isAdult
-          ? "Alumno mayor de edad"
-          : formData.responsibleName,
-        responsibleRelationshipLabel,
+        responsibleLabel: isAdult ? null : formData.responsibleName,
+        responsibleRelationshipLabel: isAdult ? null : responsibleRelationshipLabel,
         email: safeEmail,
         phone: formData.phone,
         subject: formData.subject,
@@ -900,7 +880,19 @@ const BookingForm = () => {
   };
 
   const whatsappConfirmText = successData
-    ? `Hola Prof. Agustín. Acabo de reservar un turno.\n\nAlumno: ${successData.cleanStudentName}\nResponsable: ${successData.responsibleLabel}\nParentesco: ${successData.responsibleRelationshipLabel}\nFecha: ${successData.day}\nHorario: ${successData.startTime} a ${successData.endTime} hs (${successData.actualDuration} hs)\nCódigo: ${successData.bookingCode}\nGestión: después voy a entrar en Mis Turnos con este código.\n\nGracias.`
+    ? [
+        `Hola Prof. Agustín. Acabo de reservar un turno.`,
+        ``,
+        `Alumno: ${successData.cleanStudentName}`,
+        successData.responsibleLabel ? `Responsable: ${successData.responsibleLabel}` : null,
+        successData.responsibleRelationshipLabel ? `Parentesco: ${successData.responsibleRelationshipLabel}` : null,
+        `Fecha: ${successData.day}`,
+        `Horario: ${successData.startTime} a ${successData.endTime} hs (${successData.actualDuration} hs)`,
+        `Código: ${successData.bookingCode}`,
+        `Gestión: después voy a entrar en Mis Turnos con este código.`,
+        ``,
+        `Gracias.`,
+      ].filter((l) => l !== null).join("\n")
     : "";
   const toastMeta = {
     success: {
@@ -996,25 +988,10 @@ const BookingForm = () => {
         </div>
 
         <div className="form-header-neuro">
-          <span className="form-supertitle">SISTEMA DE GESTIÓN DE TURNOS</span>
           <h2 className="form-main-title">Asegurá tu clase</h2>
           <p className="form-subtitle">
             Completá tus datos y elegí el momento ideal para aprender.
           </p>
-          <div
-            className="form-support-strip"
-            aria-label="Beneficios del sistema de reserva"
-          >
-            {BOOKING_SUPPORT_PILLS.map((pill, index) => {
-              const Icon = supportPillIcons[index];
-              return (
-                <div key={pill} className="support-pill">
-                  <Icon />
-                  <span>{pill}</span>
-                </div>
-              );
-            })}
-          </div>
 
           {showVoiceTip && (
             <div className="voice-guide-tip" role="note" aria-label="Sugerencia: guía por voz disponible">
@@ -1044,73 +1021,14 @@ const BookingForm = () => {
           )}
         </div>
 
-        <section
-          className="journey-compass"
-          aria-labelledby="journey-step-title"
-          aria-live="polite"
-        >
-          <div className="journey-copy">
-            <span className="journey-kicker">
-              Paso {currentStep} de {WIZARD_STEPS.length}
-            </span>
-            <div className="journey-heading-row">
-              <h3 id="journey-step-title">{currentStepInfo?.title}</h3>
-              {nextStepInfo && (
-                <span className="journey-next-pill">
-                  Sigue: {nextStepInfo.label}
-                </span>
-              )}
-            </div>
-            <p className="journey-one-line">{currentStepInfo?.message}</p>
-            <div
-              className="journey-chip-row"
-              aria-label="Claves del paso actual"
-            >
-              {currentStepInfo?.chips?.map((chip) => (
-                <span key={chip} className="journey-mini-chip">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div
-            className="journey-meter"
-            aria-label="Datos requeridos completos"
-          >
-            <span>{completionPercent}%</span>
-            <div className="journey-meter-track">
-              <div style={{ width: `${completionPercent}%` }}></div>
-            </div>
-            <small className="journey-meter-copy">
-              {completedRequiredFields} de {requiredChecks.length} datos clave
-            </small>
-          </div>
-        </section>
-
-        <div
-          className="neuro-stepper"
+        <nav
+          className="neuro-stepper neuro-stepper-compact"
           role="progressbar"
           aria-label="Progreso de reserva"
           aria-valuemin="1"
           aria-valuemax={WIZARD_STEPS.length}
           aria-valuenow={currentStep}
         >
-          <div className="stepper-head">
-            <div className="stepper-head-copy">
-              <span className="stepper-kicker">Recorrido guiado</span>
-              <div className="stepper-context-row">
-                <strong className="stepper-head-title">
-                  {currentStepInfo?.label}
-                </strong>
-                <span className="stepper-current-pill">
-                  {currentStep} / {WIZARD_STEPS.length}
-                </span>
-              </div>
-              <p>{stepperFlowCopy}</p>
-            </div>
-            <p className="stepper-nav-hint">{stepperInteractionCopy}</p>
-          </div>
-
           <div className="stepper-progress-rail" aria-hidden="true">
             <div className="stepper-progress-bar">
               <div
@@ -1120,80 +1038,47 @@ const BookingForm = () => {
             </div>
           </div>
 
-          <div className="stepper-grid">
+          <div className="stepper-grid stepper-grid-horizontal">
             {WIZARD_STEPS.map((step) => {
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;
-              const isUpcoming = step.id === currentStep + 1;
               const stepState = isCompleted
                 ? "completed"
                 : isCurrent
                   ? "current"
-                  : isUpcoming
-                    ? "upcoming"
-                    : "locked";
-              const stepStatusLabel = isCompleted
-                ? "Listo"
-                : isCurrent
-                  ? "Ahora"
-                  : isUpcoming
-                    ? "Sigue"
-                    : "Después";
-              const stepHint = isCompleted
-                ? "Tocá para volver"
-                : isCurrent
-                  ? "Estás aquí"
-                  : isUpcoming
-                    ? "Se habilita al completar este paso"
-                    : "Aún bloqueado";
+                  : "locked";
 
               return (
                 <button
                   type="button"
                   key={step.id}
-                  className={`stepper-item is-${stepState} ${isCompleted ? "is-clickable" : ""}`}
+                  className={`stepper-item stepper-item-compact is-${stepState} ${isCompleted ? "is-clickable" : ""}`}
                   onClick={() => handleStepClick(step.id)}
                   aria-current={isCurrent ? "step" : undefined}
                   aria-label={
                     isCompleted
                       ? `Volver a ${step.label}`
                       : isCurrent
-                        ? `${step.label} es el paso actual`
-                        : `${step.label} se habilita más adelante`
+                        ? `${step.label} — paso actual`
+                        : `${step.label} — pendiente`
                   }
                   disabled={step.id > currentStep}
                 >
-                  <span className="step-node">
-                    <span
-                      className={`step-circle ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""}`}
-                    >
-                      {isCompleted ? (
-                        <FaCheckCircle className="check-icon" />
-                      ) : (
-                        step.id
-                      )}
-                    </span>
+                  <span
+                    className={`step-circle ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""}`}
+                  >
+                    {isCompleted ? (
+                      <FaCheckCircle className="check-icon" />
+                    ) : (
+                      step.id
+                    )}
                   </span>
-
-                  <span className="step-card">
-                    <span className="step-card-meta">
-                      <span className={`step-status-pill is-${stepState}`}>
-                        {stepStatusLabel}
-                      </span>
-                      <span className="step-action-hint">{stepHint}</span>
-                    </span>
-                    <span
-                      className={`step-label ${currentStep >= step.id ? "active-label" : ""}`}
-                    >
-                      {step.label}
-                    </span>
-                    <small className="step-caption">{step.title}</small>
-                  </span>
+                  <span className="step-label-compact">{step.label}</span>
                 </button>
               );
             })}
           </div>
-        </div>
+        </nav>
 
         <div
           ref={sliderWindowRef}

@@ -1,189 +1,458 @@
-/* =========================================
-   SCOPED CLIENT PORTAL STYLES (FINAL)
-   ========================================= */
+/* =============================================================================
+   CLIENT PORTAL — Clean rewrite
+   Covers ONLY portal-level UI. Modals live in portal/CancelModal.css,
+   portal/RescheduleModal.css, and portal/StudentNotesPanel.css.
+   ============================================================================= */
 
+/* ---------------------------------------------------------------------------
+   0. Local design tokens (scoped to .client-portal-wrapper)
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper {
-  --cp-bg: #f1f5f9;
-  --cp-white: #ffffff;
-  --cp-primary: #1e293b;
-  --cp-accent: #589860;
-  --cp-success: #589860;
-  --cp-warning: #f59e0b;
-  --cp-danger: #ef4444;
-  --cp-text-main: #334155;
-  --cp-text-muted: #64748b;
-  --cp-border: #e2e8f0;
-  --cp-radius: 12px;
-  --cp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --cp-primary:      var(--brand-navy, #204060);
+  --cp-accent:       var(--accent-primary, #589860);
+  --cp-danger:       #cf4f4f;
+  --cp-warning:      #d08a2e;
+  --cp-surface:      var(--surface-card, #ffffff);
+  --cp-border:       var(--border-soft, #e2e8f0);
+  --cp-text-main:    var(--text-primary,   #1e293b);
+  --cp-text-muted:   var(--text-secondary, #64748b);
+  --cp-text-faint:   var(--text-tertiary,  #94a3b8);
+  --cp-bg:           var(--bg-page, #f1f5f9);
+  --cp-shadow:       0 4px 24px rgba(19, 41, 64, 0.08);
+  --cp-radius-card:  12px;
+  --cp-radius-btn:   8px;
+  --cp-radius-input: 8px;
+}
 
+/* ---------------------------------------------------------------------------
+   1. Page wrapper
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper {
   font-family: "Inter", sans-serif;
   min-height: 90vh;
   display: flex;
   justify-content: center;
-  padding: 3rem 1.5rem;
-  background-color: var(--cp-bg);
+  padding: calc(100px + 1.5rem) 1.2rem 3rem;
+  background: var(--cp-bg);
   width: 100%;
 }
 
+/* ---------------------------------------------------------------------------
+   2. Container
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .portal-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1080px;
 }
 
-/* HEADER */
+/* ---------------------------------------------------------------------------
+   3. Header
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .portal-header {
+  position: relative;
+  overflow: hidden;
   text-align: center;
-  margin-bottom: 2.5rem;
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
+}
+
+.client-portal-wrapper .portal-header::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  bottom: -70px;
+  width: 200px;
+  height: 200px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(88, 152, 96, 0.12), transparent 68%);
+  pointer-events: none;
+}
+
+.client-portal-wrapper .portal-header-logo {
+  position: relative;
+  z-index: 1;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin: 0 auto 0.6rem;
+  display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.18));
 }
 
 .client-portal-wrapper .portal-title {
-  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 800;
-  color: var(--cp-primary);
-  margin: 0 0 0.5rem 0;
+  color: var(--cp-text-main);
+  letter-spacing: -0.03em;
+  margin: 0 0 0.4rem;
 }
 
 .client-portal-wrapper .portal-subtitle {
+  position: relative;
+  z-index: 1;
   color: var(--cp-text-muted);
   font-size: 1rem;
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.55;
 }
 
 .client-portal-wrapper .header-decoration {
-  width: 50px;
-  height: 4px;
-  background: var(--cp-success);
-  margin: 1.5rem auto 0;
-  border-radius: 2px;
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cp-primary), var(--cp-accent));
+  margin: 1.2rem auto 0;
 }
 
-/* SEARCH */
+/* ---------------------------------------------------------------------------
+   4. Guidance cards grid
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .portal-guidance {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.client-portal-wrapper .guidance-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  min-height: 112px;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
+}
+
+.client-portal-wrapper .guidance-card::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(88, 152, 96, 0.08), transparent 72%);
+  pointer-events: none;
+}
+
+.client-portal-wrapper .guidance-card svg {
+  color: var(--cp-accent);
+  font-size: 1.05rem;
+}
+
+.client-portal-wrapper .guidance-card strong {
+  color: var(--cp-text-main);
+  font-size: 0.95rem;
+}
+
+.client-portal-wrapper .guidance-card span {
+  color: var(--cp-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------------------
+   5. Management alert banner
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .portal-management-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid rgba(88, 152, 96, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(88, 152, 96, 0.06)
+  );
+  box-shadow: var(--cp-shadow);
+}
+
+.client-portal-wrapper .portal-management-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1d344d, #204060);
+  color: #b3d9b8;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.client-portal-wrapper .portal-management-copy strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--cp-text-main);
+  font-size: 0.95rem;
+}
+
+.client-portal-wrapper .portal-management-copy p {
+  margin: 0;
+  color: var(--cp-text-muted);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.client-portal-wrapper .search-method-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.client-portal-wrapper .search-method-pills span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text-main);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   6. Search form
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .search-container {
   display: flex;
-  gap: 10px;
-  background: var(--cp-white);
-  padding: 8px;
-  border-radius: 12px;
-  box-shadow: var(--cp-shadow);
-  margin-bottom: 2rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 16px;
   border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
 }
 
 .client-portal-wrapper .search-input {
   flex: 1;
-  padding: 12px 15px;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
   border: none;
+  border-radius: var(--cp-radius-input);
+  background: rgba(248, 251, 253, 0.94);
   font-size: 1rem;
-  outline: none;
-  color: var(--cp-primary);
+  color: var(--cp-text-main);
   font-weight: 600;
-  background: transparent;
+  outline: none;
 }
 
 .client-portal-wrapper .btn-search {
-  background-color: var(--cp-primary);
-  color: white;
+  min-height: 48px;
+  padding: 0 1.5rem;
   border: none;
-  padding: 0 2rem;
-  border-radius: 8px;
+  border-radius: var(--cp-radius-btn);
+  background: linear-gradient(135deg, #1d344d, #204060);
+  color: #ffffff;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
 .client-portal-wrapper .btn-search:hover {
-  background-color: #0f172a;
+  background: linear-gradient(135deg, #183858, #1a3352);
+  box-shadow: 0 8px 20px rgba(29, 52, 77, 0.22);
 }
 
-/* CARDS */
+/* ---------------------------------------------------------------------------
+   7. Search helper text
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .search-helper {
+  margin: 0 0 1rem;
+  color: var(--cp-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   8. Results summary banner
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .portal-results-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid rgba(88, 152, 96, 0.22);
+  background: rgba(88, 152, 96, 0.08);
+  color: #2d6b34;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* ---------------------------------------------------------------------------
+   9. Error / info message
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .message-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid #fecaca;
+  border-left: 5px solid var(--cp-danger);
+  background: #fef2f2;
+  color: var(--cp-danger);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   10. Empty state
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--cp-text-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   11. Ticket grid + wrapper animation
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .tickets-grid {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+.ticket-wrapper {
+  transition: opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease,
+    margin-bottom 0.5s ease;
+  opacity: 1;
+  max-height: 800px;
+  overflow: hidden;
+  transform: translateX(0);
+}
+
+.ticket-wrapper.fade-out-exit {
+  opacity: 0;
+  transform: translateX(80px);
+  max-height: 0;
+  margin-bottom: -1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   12. Ticket card
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .ticket-card {
-  background: var(--cp-white);
-  border-radius: var(--cp-radius);
+  border-radius: var(--cp-radius-card);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
   box-shadow: var(--cp-shadow);
   overflow: hidden;
-  border: 1px solid var(--cp-border);
-  transition: transform 0.2s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .client-portal-wrapper .ticket-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(19, 41, 64, 0.12);
 }
 
+/* Status accent stripe */
 .client-portal-wrapper .ticket-card.Confirmado {
-  border-top: 5px solid var(--cp-success);
+  border-top: 4px solid var(--cp-accent);
 }
 .client-portal-wrapper .ticket-card.Pendiente {
-  border-top: 5px solid var(--cp-warning);
+  border-top: 4px solid var(--cp-warning);
 }
 .client-portal-wrapper .ticket-card.Cancelado {
-  border-top: 5px solid var(--cp-danger);
-  opacity: 0.9;
+  border-top: 4px solid var(--cp-danger);
+  opacity: 0.92;
 }
 
-/* Card Header */
+/* Card header */
 .client-portal-wrapper .ticket-header {
-  padding: 1rem 1.5rem;
-  background: #f8fafc;
-  border-bottom: 1px solid var(--cp-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.9rem 1.25rem;
+  background: rgba(248, 251, 253, 0.9);
+  border-bottom: 1px solid var(--cp-border);
 }
 
+/* Ticket code chip */
 .client-portal-wrapper .ticket-code {
-  font-family: monospace;
-  font-weight: 700;
-  color: var(--cp-text-muted);
-  background: #e2e8f0;
-  padding: 4px 8px;
-  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--cp-text-muted);
+  background: rgba(226, 232, 240, 0.8);
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
+/* Hash icon inside ticket code */
+.client-portal-wrapper .ticket-code-icon {
+  font-size: 0.8em;
+  margin-right: 4px;
+}
+
+/* Status badge */
 .client-portal-wrapper .status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
 }
 
 .client-portal-wrapper .status-badge.Confirmado {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(88, 152, 96, 0.14);
+  color: #2d6b34;
 }
 .client-portal-wrapper .status-badge.Pendiente {
-  background: #fef3c7;
-  color: #b45309;
+  background: rgba(208, 138, 46, 0.16);
+  color: #7c4e0d;
 }
 .client-portal-wrapper .status-badge.Cancelado {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(207, 79, 79, 0.14);
+  color: #8b2020;
 }
 
-/* Card Body */
+/* Card body */
 .client-portal-wrapper .ticket-body {
-  padding: 1.5rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   gap: 2rem;
+  padding: 1.5rem 1.25rem;
 }
 
 .client-portal-wrapper .info-section {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.25rem;
 }
 
 .client-portal-wrapper .info-block {
@@ -193,19 +462,20 @@
 }
 
 .client-portal-wrapper .label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--cp-text-muted);
-  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cp-text-muted);
 }
 
 .client-portal-wrapper .value-primary {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--cp-primary);
+  color: var(--cp-text-main);
 }
 
 .client-portal-wrapper .value-secondary {
@@ -213,9 +483,16 @@
   color: var(--cp-text-main);
 }
 
+.client-portal-wrapper .highlight-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--cp-text-main);
+}
+
 .client-portal-wrapper .date-highlight {
   font-size: 1.1rem;
   text-transform: capitalize;
+  color: var(--cp-text-main);
 }
 
 .client-portal-wrapper .time-highlight {
@@ -227,905 +504,423 @@
 }
 
 .client-portal-wrapper .duration-badge {
-  background: #edf6ee;
+  display: inline-block;
+  background: rgba(88, 152, 96, 0.1);
   color: var(--cp-accent);
   font-size: 0.75rem;
-  padding: 2px 6px;
+  font-weight: 700;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-weight: 700;
-}
-
-.client-portal-wrapper .contact-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.client-portal-wrapper .contact-item {
-  font-size: 0.85rem;
-  color: var(--cp-text-main);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.client-portal-wrapper .contact-item.missing {
-  color: #cbd5e1;
-  font-style: italic;
-}
-
-/* Card Footer */
-.client-portal-wrapper .ticket-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--cp-border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.8rem;
-  background: #fafafa;
-}
-
-.client-portal-wrapper .btn-action {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-  font-size: 0.85rem;
-}
-
-.client-portal-wrapper .btn-reschedule {
-  background: white;
-  border-color: var(--cp-border);
-  color: var(--cp-primary);
-}
-.client-portal-wrapper .btn-reschedule:hover {
-  border-color: var(--cp-accent);
-  color: var(--cp-accent);
-}
-
-.client-portal-wrapper .btn-cancel {
-  background: #fef2f2;
-  color: var(--cp-danger);
-  border-color: #fecaca;
-}
-.client-portal-wrapper .btn-cancel:hover {
-  background: var(--cp-danger);
-  color: white;
-  border-color: var(--cp-danger);
-}
-
-.client-portal-wrapper .btn-delete-forever {
-  background: var(--cp-primary);
-  color: white;
-  border-color: var(--cp-primary);
-}
-.client-portal-wrapper .btn-delete-forever:hover {
-  background: #000;
-}
-
-.client-portal-wrapper .message-error {
-  text-align: center;
-  color: var(--cp-danger);
-  background: #fef2f2;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-}
-
-.client-portal-wrapper .empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: var(--cp-text-muted);
-}
-
-/* Modal specific overrides if needed */
-.client-portal-wrapper .modal-box {
-  border-top: 5px solid var(--cp-accent);
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  .client-portal-wrapper .ticket-body {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  .client-portal-wrapper .ticket-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  .client-portal-wrapper .ticket-footer {
-    flex-direction: column;
-  }
-  .client-portal-wrapper .btn-action {
-    width: 100%;
-    justify-content: center;
-  }
-  .client-portal-wrapper .search-container {
-    flex-direction: column;
-  }
-  .client-portal-wrapper .btn-search {
-    width: 100%;
-  }
-}
-
-/* ... (ESTILOS ANTERIORES SE MANTIENEN HASTA TICKET CARDS) ... */
-
-/* --- TICKET CARDS (ESTILO BOLETO MEJORADO) --- */
-.client-portal-wrapper .tickets-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.client-portal-wrapper .ticket-card {
-  background: var(--cp-white);
-  border-radius: var(--cp-radius);
-  box-shadow: var(--cp-shadow);
-  overflow: hidden;
-  position: relative;
-  border: 1px solid var(--cp-border);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.client-portal-wrapper .ticket-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
-}
-
-/* Bordes de Estado */
-.client-portal-wrapper .ticket-card.Confirmado {
-  border-top: 5px solid var(--cp-success);
-}
-.client-portal-wrapper .ticket-card.Pendiente {
-  border-top: 5px solid var(--cp-warning);
-}
-.client-portal-wrapper .ticket-card.Cancelado {
-  border-top: 5px solid var(--cp-danger);
-  opacity: 0.95;
-}
-
-/* Header */
-.client-portal-wrapper .ticket-header {
-  padding: 1.2rem 2rem;
-  background: #f8fafc;
-  border-bottom: 1px solid var(--cp-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.client-portal-wrapper .ticket-code {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--cp-text-muted);
-  background: #e2e8f0;
-  padding: 6px 10px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Badge Estado */
-.client-portal-wrapper .status-badge {
-  font-size: 0.8rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 6px 14px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.client-portal-wrapper .status-badge.Confirmado {
-  background: #dcfce7;
-  color: #166534;
-}
-.client-portal-wrapper .status-badge.Pendiente {
-  background: #fef3c7;
-  color: #b45309;
-}
-.client-portal-wrapper .status-badge.Cancelado {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-/* Cuerpo */
-.client-portal-wrapper .ticket-body {
-  padding: 2rem;
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 3rem;
-}
-
-.client-portal-wrapper .info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.8rem;
-}
-
-.client-portal-wrapper .info-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.client-portal-wrapper .label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--cp-text-muted);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* TipografÃ­a de Valores */
-.client-portal-wrapper .value-primary {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--cp-primary);
-}
-
-.client-portal-wrapper .highlight-name {
-  font-size: 1.3rem;
-  color: var(--cp-primary);
-  font-weight: 800;
 }
 
 .client-portal-wrapper .value-tertiary {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--cp-text-main);
-  background: #f1f5f9;
+  background: rgba(241, 245, 249, 0.9);
   padding: 8px 12px;
   border-radius: 6px;
   border-left: 3px solid var(--cp-accent);
-  display: inline-block;
 }
 
-/* Fechas y Horas */
-.client-portal-wrapper .date-highlight {
-  font-size: 1.2rem;
-  text-transform: capitalize;
-  color: var(--cp-primary);
-}
-
-.client-portal-wrapper .time-highlight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--cp-text-muted);
-  font-weight: 500;
-}
-
-.client-portal-wrapper .duration-badge {
-  background: #eef2ff;
-  color: var(--cp-accent);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-/* Contacto / Firma */
+/* Contact block */
 .client-portal-wrapper .contact-signature {
-  margin-top: auto; /* Empuja hacia abajo si hay espacio */
-  background: #fafafa;
-  padding: 10px;
+  margin-top: auto;
+  padding: 0.75rem;
   border-radius: 8px;
-  border: 1px dashed #e2e8f0;
+  border: 1px dashed var(--cp-border);
+  background: var(--cp-surface);
 }
 
 .client-portal-wrapper .contact-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 5px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .client-portal-wrapper .contact-item {
-  font-size: 0.9rem;
-  color: var(--cp-text-main);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-}
-
-/* Footer */
-.client-portal-wrapper .ticket-footer {
-  padding: 1.2rem 2rem;
-  border-top: 1px solid var(--cp-border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  background: #fafafa;
-}
-
-.client-portal-wrapper .btn-action {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-  font-size: 0.9rem;
-}
-
-/* Botones de acciÃ³n (iguales que antes) */
-.client-portal-wrapper .btn-reschedule {
-  background: white;
-  border-color: var(--cp-border);
-  color: var(--cp-primary);
-}
-.client-portal-wrapper .btn-reschedule:hover {
-  border-color: var(--cp-accent);
-  color: var(--cp-accent);
-}
-.client-portal-wrapper .btn-cancel {
-  background: #fef2f2;
-  color: var(--cp-danger);
-  border-color: #fecaca;
-}
-.client-portal-wrapper .btn-cancel:hover {
-  background: var(--cp-danger);
-  color: white;
-  border-color: var(--cp-danger);
-}
-.client-portal-wrapper .btn-delete-forever {
-  background: var(--cp-primary);
-  color: white;
-  border-color: var(--cp-primary);
-}
-.client-portal-wrapper .btn-delete-forever:hover {
-  background: #000;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .client-portal-wrapper .ticket-body {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .client-portal-wrapper .ticket-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  .client-portal-wrapper .ticket-footer {
-    flex-direction: column;
-  }
-  .client-portal-wrapper .btn-action {
-    width: 100%;
-    justify-content: center;
-  }
-}
-/* ... (MANTENER TODO EL CSS ANTERIOR DEL ARCHIVO, AGREGAR ESTO AL FINAL) ... */
-
-/* =========================================
-   MODALES PREMIUM & DANGER
-   ========================================= */
-
-/* --- Modal Base Overrides --- */
-.client-portal-wrapper .modal-box {
-  border-radius: 16px;
-  border: none; /* Quitamos bordes viejos */
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  padding: 0;
-  overflow: hidden;
-  max-width: 450px;
-  width: 95%;
-}
-
-/* --- PREMIUM MODAL (Reprogramar) --- */
-.client-portal-wrapper .premium-modal {
-  background: #ffffff;
-}
-
-.client-portal-wrapper .modal-header-premium {
-  background: #1e293b; /* Azul oscuro marca */
-  color: white;
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.client-portal-wrapper .modal-header-premium h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #fff;
-}
-
-.client-portal-wrapper .modal-header-premium p {
-  margin: 5px 0 0 0;
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
-.client-portal-wrapper .modal-body {
-  padding: 1.5rem;
-}
-
-/* ComparaciÃ³n Antes -> DespuÃ©s */
-.client-portal-wrapper .reschedule-comparison {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f8fafc;
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  border: 1px solid #e2e8f0;
-}
-
-.client-portal-wrapper .date-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.client-portal-wrapper .date-box span {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #64748b;
-  font-weight: 700;
-}
-.client-portal-wrapper .date-box strong {
-  font-size: 1.1rem;
-  color: #1e293b;
-}
-.client-portal-wrapper .date-box small {
-  font-size: 0.85rem;
-  color: #334155;
-}
-
-.client-portal-wrapper .date-box.new strong {
-  color: #183858;
-} /* Azul para lo nuevo */
-
-.client-portal-wrapper .arrow-box {
-  color: #cbd5e1;
-  font-size: 1.2rem;
-}
-
-/* Inputs dentro del modal */
-.client-portal-wrapper .input-group-modal {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-}
-.client-portal-wrapper .input-group-modal label {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-
-/* Calendario INLINE estilo Pro */
-.react-datepicker {
-  font-family: "Inter", sans-serif !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 12px !important;
-  box-shadow: none !important;
-  width: 100% !important;
-}
-.react-datepicker__month-container {
-  width: 100% !important;
-}
-.react-datepicker__header {
-  background-color: #f1f5f9 !important;
-  border-bottom: none !important;
-}
-.react-datepicker__day--selected {
-  background-color: #1e293b !important;
-  border-radius: 50% !important;
-}
-.react-datepicker__day--keyboard-selected {
-  background-color: #589860 !important;
-}
-
-/* DuraciÃ³n */
-.client-portal-wrapper .duration-row {
-  margin-top: 1rem;
-}
-.client-portal-wrapper .premium-input {
-  padding: 10px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-  color: #1e293b;
-}
-
-/* Footer Botones */
-.client-portal-wrapper .modal-footer {
-  padding: 1.5rem;
-  background: #f8fafc;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-.client-portal-wrapper .btn-modal {
-  flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  transition: all 0.2s;
-  border: none;
-}
-.client-portal-wrapper .btn-modal.cancel {
-  background: white;
-  border: 1px solid #cbd5e1;
-  color: #64748b;
-}
-.client-portal-wrapper .btn-modal.cancel:hover {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-
-.client-portal-wrapper .btn-modal.confirm {
-  background: #1e293b;
-  color: white;
-}
-.client-portal-wrapper .btn-modal.confirm:hover {
-  background: #0f172a;
-  transform: translateY(-1px);
-}
-
-/* --- DANGER MODAL (Cancelar) --- */
-.client-portal-wrapper .danger-modal {
-  text-align: center;
-  padding: 2.5rem 2rem 2rem 2rem;
-  border-top: 6px solid #ef4444; /* Borde rojo arriba */
-}
-
-.client-portal-wrapper .danger-icon {
-  font-size: 3rem;
-  color: #ef4444;
-  margin-bottom: 1rem;
-  background: #fef2f2;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  margin: 0 auto 1.5rem auto;
-}
-
-.client-portal-wrapper .danger-modal h3 {
-  font-size: 1.5rem;
-  color: #1e293b;
-  margin-bottom: 0.5rem;
-}
-.client-portal-wrapper .danger-text {
-  color: #64748b;
-  margin-bottom: 2rem;
-  line-height: 1.5;
-}
-
-.client-portal-wrapper .danger-footer {
-  padding: 0;
-  background: transparent;
-  border: none;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.client-portal-wrapper .safe-return {
-  background: #e2e8f0;
-  color: #1e293b;
-  order: 2; /* BotÃ³n gris abajo */
-}
-.client-portal-wrapper .safe-return:hover {
-  background: #cbd5e1;
-}
-
-.client-portal-wrapper .danger-confirm {
-  background: #ef4444;
-  color: white;
-  order: 1; /* BotÃ³n rojo arriba para confirmaciÃ³n explicita */
-  width: 100%;
-}
-.client-portal-wrapper .danger-confirm:hover {
-  background: #dc2626;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* ... (MANTENER TODO EL CSS PREVIO) ... */
-
-/* AGREGAR AL FINAL DEL ARCHIVO: */
-
-/* --- TOAST NOTIFICATION (ALERTA DINÃMICA) --- */
-.portal-toast {
-  position: fixed;
-  bottom: 30px; /* Abajo a la derecha */
-  right: 30px;
-  background: white;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 9999;
-  animation: slideUpFade 0.4s ease-out;
-  border-left: 6px solid;
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--cp-text-main);
-}
-
-.portal-toast.success {
-  border-color: var(--cp-success);
-}
-.portal-toast.success svg {
-  color: var(--cp-success);
-  font-size: 1.2rem;
-}
-
-.portal-toast.error {
-  border-color: var(--cp-danger);
-}
-.portal-toast.error svg {
-  color: var(--cp-danger);
-  font-size: 1.2rem;
-}
-
-@keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* --- AJUSTES EXTRA TICKET (Datos Alumno Mini) --- */
-.client-portal-wrapper .student-contact-mini {
-  margin-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.client-portal-wrapper .student-contact-mini span {
-  font-size: 0.85rem;
-  color: #64748b;
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--cp-text-main);
 }
 
-/* Ajuste de Contacto Profe para que se destaque */
-.client-portal-wrapper .contact-signature {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-}
-.client-portal-wrapper .contact-signature .label {
-  color: var(--cp-primary);
-  margin-bottom: 8px;
+.client-portal-wrapper .contact-item.missing {
+  color: var(--cp-text-faint);
+  font-style: italic;
 }
 
-/* ... (MANTENER TODO EL CSS ANTERIOR INTACTO) ... */
-
-/* AGREGAR AL FINAL: */
-
-/* --- ANIMACIÃ“N DE SALIDA SUAVE (FADE OUT) --- */
-
-.ticket-wrapper {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); /* TransiciÃ³n suave */
-  opacity: 1;
-  max-height: 500px; /* Altura mÃ¡xima arbitraria para permitir colapso */
-  overflow: hidden; /* Necesario para que el colapso funcione */
-  transform: translateX(0);
-  margin-bottom: 0;
-}
-
-.ticket-wrapper.fade-out-exit {
-  opacity: 0;
-  transform: translateX(100px); /* Se desliza a la derecha al irse */
-  max-height: 0; /* Colapsa el espacio que ocupaba */
-  margin-bottom: -1.5rem; /* Compensa el gap del grid */
-}
-
-/* =========================================
-   ETAPA 3 - PORTAL RESPONSABLE / ALUMNO
-   ========================================= */
-
-.client-portal-wrapper .portal-guidance {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.client-portal-wrapper .guidance-card {
-  background: #ffffff;
-  border: 1px solid var(--cp-border);
-  border-radius: 8px;
-  padding: 0.9rem;
-  min-height: 112px;
+.client-portal-wrapper .student-contact-mini {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  gap: 2px;
+  margin-top: 6px;
 }
 
-.client-portal-wrapper .guidance-card svg {
-  color: var(--cp-accent);
-  font-size: 1.05rem;
-}
-
-.client-portal-wrapper .guidance-card strong {
-  color: var(--cp-primary);
-  font-size: 0.95rem;
-}
-
-.client-portal-wrapper .guidance-card span {
+.client-portal-wrapper .student-contact-mini span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
   color: var(--cp-text-muted);
-  font-size: 0.86rem;
-  line-height: 1.35;
 }
 
-.client-portal-wrapper .search-container {
-  margin-bottom: 0.5rem;
-}
-
-.client-portal-wrapper .search-helper {
-  margin: 0 0 1rem 0;
-  color: var(--cp-text-muted);
-  font-size: 0.9rem;
-  text-align: center;
-  line-height: 1.45;
-}
-
-.client-portal-wrapper .portal-results-summary {
+/* Card footer */
+.client-portal-wrapper .ticket-footer {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin: 0 0 1rem 0;
-  padding: 0.85rem 1rem;
-  background: #edf6ee;
-  color: #065f46;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  font-weight: 700;
-}
-
-.client-portal-wrapper .message-error {
-  border: 1px solid #fecaca;
-  border-left: 5px solid var(--cp-danger);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  line-height: 1.45;
-}
-
-.client-portal-wrapper .modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: rgba(15, 23, 42, 0.62);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.client-portal-wrapper .modal-box {
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-}
-
-.client-portal-wrapper .premium-modal {
-  max-width: 620px;
-}
-
-.client-portal-wrapper .reschedule-comparison {
+  flex-wrap: wrap;
   gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--cp-border);
+  background: rgba(248, 251, 253, 0.9);
 }
 
-.client-portal-wrapper .date-box {
-  flex: 1;
-  text-align: center;
-}
-
-.client-portal-wrapper .date-box strong {
-  text-transform: capitalize;
-  line-height: 1.25;
-}
-
-.client-portal-wrapper .change-preview,
-.client-portal-wrapper .duration-preview {
-  color: var(--cp-text-muted);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.client-portal-wrapper .change-preview {
-  background: #edf6ee;
-  border: 1px solid rgba(88, 152, 96, 0.22);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  margin: -0.5rem 0 1.25rem 0;
-}
-
-.client-portal-wrapper .duration-preview {
-  margin-top: 0.5rem;
-}
-
-.client-portal-wrapper .btn-modal:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.client-portal-wrapper .cancel-detail-list {
+/* Action buttons */
+.client-portal-wrapper .btn-action {
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin: 0 0 1.25rem 0;
-  padding: 1rem;
-  background: #f8fafc;
-  border: 1px solid var(--cp-border);
-  border-radius: 8px;
-  color: var(--cp-primary);
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0.6rem 1rem;
+  border-radius: var(--cp-radius-btn);
+  border: 1px solid transparent;
+  font-size: 0.88rem;
   font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.client-portal-wrapper .cancel-detail-list span:last-child {
-  color: var(--cp-text-muted);
-  font-weight: 600;
+/* Reschedule = brand navy outline */
+.client-portal-wrapper .btn-reschedule {
+  background: var(--cp-surface);
+  border-color: var(--cp-primary);
+  color: var(--cp-primary);
+}
+.client-portal-wrapper .btn-reschedule:hover {
+  background: var(--cp-primary);
+  color: #ffffff;
 }
 
+/* Cancel = red outline */
+.client-portal-wrapper .btn-cancel {
+  background: rgba(207, 79, 79, 0.06);
+  border-color: rgba(207, 79, 79, 0.35);
+  color: var(--cp-danger);
+}
+.client-portal-wrapper .btn-cancel:hover {
+  background: var(--cp-danger);
+  border-color: var(--cp-danger);
+  color: #ffffff;
+}
+
+/* Delete = gray/dark */
+.client-portal-wrapper .btn-delete-forever {
+  background: var(--cp-text-faint);
+  border-color: var(--cp-text-faint);
+  color: #ffffff;
+}
+.client-portal-wrapper .btn-delete-forever:hover {
+  background: #64748b;
+  border-color: #64748b;
+}
+
+/* Cancelled note in footer */
 .client-portal-wrapper .cancelled-note {
   margin-right: auto;
-  color: #991b1b;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  padding: 0.65rem 0.75rem;
-  font-size: 0.9rem;
+  border: 1px solid rgba(207, 79, 79, 0.25);
+  background: rgba(207, 79, 79, 0.06);
+  color: #8b2020;
+  font-size: 0.85rem;
   font-weight: 700;
   line-height: 1.35;
 }
 
-.client-portal-wrapper .portal-toast {
-  max-width: min(420px, calc(100vw - 2rem));
+/* ---------------------------------------------------------------------------
+   13. Toast notification
+   --------------------------------------------------------------------------- */
+.portal-toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  max-width: min(400px, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--cp-text-main);
+  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(12px);
+  animation: toastSlideIn 0.35s ease-out both;
 }
 
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+.portal-toast-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.portal-toast-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.portal-toast-copy strong {
+  font-size: 0.93rem;
+  color: var(--cp-text-main);
+}
+
+.portal-toast-copy span,
+.portal-toast-copy small {
+  font-size: 0.84rem;
+  color: var(--cp-text-muted);
+  line-height: 1.5;
+}
+
+/* Toast variants */
+.portal-toast.success { border-color: rgba(88, 152, 96, 0.22); }
+.portal-toast.success .portal-toast-icon { background: rgba(88, 152, 96, 0.1); color: #2d6b34; }
+
+.portal-toast.warning { border-color: rgba(208, 138, 46, 0.24); }
+.portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.12); color: #7c4e0d; }
+
+.portal-toast.error { border-color: rgba(207, 79, 79, 0.22); }
+.portal-toast.error .portal-toast-icon { background: rgba(207, 79, 79, 0.1); color: #8b2020; }
+
+.portal-toast.info { border-color: rgba(32, 64, 96, 0.18); }
+.portal-toast.info .portal-toast-icon { background: rgba(32, 64, 96, 0.08); color: #204060; }
+
+/* ---------------------------------------------------------------------------
+   14. Support strip
+   --------------------------------------------------------------------------- */
+.client-portal-wrapper .portal-support-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.client-portal-wrapper .portal-support-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--cp-radius-card);
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
+}
+
+.client-portal-wrapper .portal-support-card svg {
+  color: var(--cp-accent);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.client-portal-wrapper .portal-support-card strong {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--cp-text-main);
+  margin-bottom: 0.2rem;
+}
+
+.client-portal-wrapper .portal-support-card span {
+  font-size: 0.84rem;
+  color: var(--cp-text-muted);
+  line-height: 1.45;
+}
+
+/* ---------------------------------------------------------------------------
+   15. Focus-visible outlines (accessibility)
+   --------------------------------------------------------------------------- */
 .client-portal-wrapper .search-input:focus-visible,
 .client-portal-wrapper .btn-search:focus-visible,
-.client-portal-wrapper .btn-action:focus-visible,
-.client-portal-wrapper .btn-modal:focus-visible,
-.client-portal-wrapper .premium-input:focus-visible {
-  outline: 3px solid rgba(88, 152, 96, 0.35);
-  outline-offset: 3px;
+.client-portal-wrapper .btn-action:focus-visible {
+  outline: 3px solid rgba(88, 152, 96, 0.4);
+  outline-offset: 2px;
 }
 
+/* ---------------------------------------------------------------------------
+   16. Dark mode
+   --------------------------------------------------------------------------- */
+[data-theme="dark"] .client-portal-wrapper {
+  --cp-surface:    var(--surface-card, #0f172a);
+  --cp-border:     var(--border-soft, rgba(148, 163, 184, 0.2));
+  --cp-text-main:  var(--text-primary,  #edf4fb);
+  --cp-text-muted: var(--text-secondary,#94a3b8);
+  --cp-text-faint: var(--text-tertiary, #64748b);
+  --cp-bg:         var(--bg-page, #07111f);
+  --cp-shadow:     0 4px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* Header */
+[data-theme="dark"] .client-portal-wrapper .portal-header {
+  background: rgba(14, 27, 44, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+}
+
+/* Guidance cards */
+[data-theme="dark"] .client-portal-wrapper .guidance-card {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+/* Management alert */
+[data-theme="dark"] .client-portal-wrapper .portal-management-alert {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.92),
+    rgba(88, 152, 96, 0.1)
+  );
+  border-color: rgba(114, 176, 122, 0.22);
+}
+
+[data-theme="dark"] .client-portal-wrapper .portal-management-icon {
+  background: linear-gradient(135deg, #8ec795, #43794c);
+  color: #04110d;
+}
+
+[data-theme="dark"] .client-portal-wrapper .search-method-pills span {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #edf4fb;
+}
+
+/* Search */
+[data-theme="dark"] .client-portal-wrapper .search-container {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+[data-theme="dark"] .client-portal-wrapper .search-input {
+  background: rgba(17, 32, 50, 0.96);
+  color: #edf4fb;
+}
+
+[data-theme="dark"] .client-portal-wrapper .btn-search {
+  background: linear-gradient(135deg, #112032, #1d344d);
+}
+[data-theme="dark"] .client-portal-wrapper .btn-search:hover {
+  background: linear-gradient(135deg, #0d1a28, #183858);
+}
+
+/* Results summary */
+[data-theme="dark"] .client-portal-wrapper .portal-results-summary {
+  background: rgba(88, 152, 96, 0.12);
+  border-color: rgba(114, 176, 122, 0.24);
+  color: #9ad2a1;
+}
+
+/* Error */
+[data-theme="dark"] .client-portal-wrapper .message-error {
+  background: rgba(207, 79, 79, 0.1);
+  border-color: rgba(207, 79, 79, 0.3);
+}
+
+/* Ticket card */
+[data-theme="dark"] .client-portal-wrapper .ticket-card {
+  background: rgba(14, 27, 44, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+[data-theme="dark"] .client-portal-wrapper .ticket-header,
+[data-theme="dark"] .client-portal-wrapper .ticket-footer {
+  background: rgba(17, 32, 50, 0.96);
+}
+
+[data-theme="dark"] .client-portal-wrapper .ticket-code {
+  background: rgba(17, 32, 50, 0.96);
+  border-color: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .client-portal-wrapper .status-badge.Confirmado {
+  background: rgba(114, 176, 122, 0.16);
+  color: #9ad2a1;
+}
+[data-theme="dark"] .client-portal-wrapper .status-badge.Pendiente {
+  background: rgba(208, 138, 46, 0.18);
+  color: #f0c27e;
+}
+[data-theme="dark"] .client-portal-wrapper .status-badge.Cancelado {
+  background: rgba(207, 79, 79, 0.16);
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .client-portal-wrapper .value-tertiary {
+  background: rgba(17, 32, 50, 0.9);
+}
+
+[data-theme="dark"] .client-portal-wrapper .contact-signature {
+  background: rgba(17, 32, 50, 0.8);
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+/* Buttons */
+[data-theme="dark"] .client-portal-wrapper .btn-reschedule {
+  background: transparent;
+  border-color: rgba(171, 195, 217, 0.4);
+  color: #edf4fb;
+}
+[data-theme="dark"] .client-portal-wrapper .btn-reschedule:hover {
+  background: rgba(32, 64, 96, 0.5);
+  border-color: rgba(171, 195, 217, 0.6);
+}
+
+[data-theme="dark"] .client-portal-wrapper .cancelled-note {
+  background: rgba(207, 79, 79, 0.1);
+  border-color: rgba(207, 79, 79, 0.22);
+  color: #fca5a5;
+}
+
+/* Toast */
+[data-theme="dark"] .portal-toast {
+  background: rgba(14, 27, 44, 0.97);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+[data-theme="dark"] .portal-toast-copy strong { color: #edf4fb; }
+[data-theme="dark"] .portal-toast.success .portal-toast-icon { background: rgba(88, 152, 96, 0.16); color: #9ad2a1; }
+[data-theme="dark"] .portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.16); color: #fcd34d; }
+[data-theme="dark"] .portal-toast.error   .portal-toast-icon { background: rgba(207, 79, 79, 0.16); color: #fca5a5; }
+[data-theme="dark"] .portal-toast.info    .portal-toast-icon { background: rgba(32, 64, 96, 0.18); color: #93c5fd; }
+
+/* Support strip */
+[data-theme="dark"] .client-portal-wrapper .portal-support-card {
+  background: rgba(14, 27, 44, 0.96);
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+/* ---------------------------------------------------------------------------
+   17. Responsive — 768px
+   --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
+  .client-portal-wrapper {
+    padding-top: calc(80px + 1.25rem);
+  }
+
   .client-portal-wrapper .portal-guidance {
     grid-template-columns: 1fr;
   }
@@ -1134,2129 +929,76 @@
     min-height: auto;
   }
 
-  .client-portal-wrapper .cancelled-note {
-    width: 100%;
-    margin-right: 0;
-  }
-}
-
-@media (max-width: 520px) {
-  .client-portal-wrapper {
-    padding: 2rem 1rem;
-  }
-
-  .client-portal-wrapper .reschedule-comparison {
+  .client-portal-wrapper .portal-management-alert {
     flex-direction: column;
   }
 
-  .client-portal-wrapper .arrow-box {
-    transform: rotate(90deg);
+  .client-portal-wrapper .ticket-body {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
-  .client-portal-wrapper .portal-toast {
-    left: 1rem;
-    right: 1rem;
-    bottom: 1rem;
+  .client-portal-wrapper .ticket-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .client-portal-wrapper .ticket-footer {
+    flex-direction: column;
+  }
+
+  .client-portal-wrapper .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .client-portal-wrapper .cancelled-note {
+    margin-right: 0;
+    width: 100%;
   }
 }
 
+/* ---------------------------------------------------------------------------
+   18. Responsive — 480px
+   --------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .client-portal-wrapper {
+    padding: calc(72px + 1rem) 0.85rem 2rem;
+  }
+
+  .client-portal-wrapper .portal-header {
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+  }
+
+  .client-portal-wrapper .search-container {
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .client-portal-wrapper .btn-search {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .portal-toast {
+    top: auto;
+    bottom: 1rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    max-width: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   19. Reduced motion
+   --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .client-portal-wrapper *,
+  .ticket-wrapper,
   .portal-toast {
     animation: none !important;
     transition: none !important;
   }
 }
-
-[data-theme="dark"] .client-portal-wrapper {
-  --cp-bg: #07111f;
-  --cp-white: #0f172a;
-  --cp-primary: #e5eef7;
-  --cp-accent: #8ec795;
-  --cp-success: #8ec795;
-  --cp-warning: #fbbf24;
-  --cp-danger: #f87171;
-  --cp-text-main: #cbd5e1;
-  --cp-text-muted: #94a3b8;
-  --cp-border: rgba(148, 163, 184, 0.24);
-  --cp-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-header,
-[data-theme="dark"] .client-portal-wrapper .ticket-header,
-[data-theme="dark"] .client-portal-wrapper .ticket-footer,
-[data-theme="dark"] .client-portal-wrapper .modal-footer,
-[data-theme="dark"] .client-portal-wrapper .reschedule-comparison,
-[data-theme="dark"] .client-portal-wrapper .cancel-detail-list,
-[data-theme="dark"] .client-portal-wrapper .contact-signature {
-  background: #111827;
-}
-
-[data-theme="dark"] .client-portal-wrapper .guidance-card,
-[data-theme="dark"] .client-portal-wrapper .search-container,
-[data-theme="dark"] .client-portal-wrapper .premium-modal,
-[data-theme="dark"] .client-portal-wrapper .ticket-card {
-  background: #0f172a;
-  border-color: rgba(148, 163, 184, 0.24);
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-input,
-[data-theme="dark"] .client-portal-wrapper .premium-input {
-  color: #e5eef7;
-}
-
-.client-portal-wrapper {
-  background:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.08), transparent 28%),
-    linear-gradient(180deg, #f0fdf4 0%, #eff6ff 42%, #f8fafc 100%);
-  padding-top: 6.5rem;
-}
-
-.client-portal-wrapper .portal-header {
-  position: relative;
-  overflow: hidden;
-  padding: 2rem 1.5rem;
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 16% 18%, rgba(114, 176, 122, 0.26), transparent 24%),
-    radial-gradient(circle at 85% 18%, rgba(96, 165, 250, 0.22), transparent 22%),
-    linear-gradient(135deg, #0f172a, #1e293b 55%, #047857);
-  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.18);
-}
-
-.client-portal-wrapper .portal-header::after {
-  content: "";
-  position: absolute;
-  right: -80px;
-  bottom: -90px;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 68%);
-}
-
-.client-portal-wrapper .portal-title {
-  position: relative;
-  z-index: 1;
-  color: #ffffff;
-}
-
-.client-portal-wrapper .portal-subtitle {
-  position: relative;
-  z-index: 1;
-  color: rgba(241, 245, 249, 0.86);
-}
-
-.client-portal-wrapper .portal-header-logo {
-  position: relative;
-  z-index: 1;
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  margin: 0 auto 0.6rem;
-  display: block;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35));
-}
-
-.client-portal-wrapper .header-decoration {
-  position: relative;
-  z-index: 1;
-  width: 110px;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), #b3d9b8);
-}
-
-.client-portal-wrapper .guidance-card {
-  position: relative;
-  overflow: hidden;
-  min-height: 120px;
-  padding: 1.05rem 1rem;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
-}
-
-.client-portal-wrapper .guidance-card::after {
-  content: "";
-  position: absolute;
-  top: -40px;
-  right: -25px;
-  width: 110px;
-  height: 110px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(88, 152, 96, 0.1), transparent 72%);
-  pointer-events: none;
-}
-
-.client-portal-wrapper .guidance-card strong {
-  font-size: 1rem;
-}
-
-.client-portal-wrapper .search-container {
-  margin-bottom: 0.75rem;
-  padding: 12px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.12);
-}
-
-.client-portal-wrapper .search-input {
-  padding: 1rem 1.05rem;
-  border-radius: 16px;
-  background: #f8fafc;
-}
-
-.client-portal-wrapper .btn-search {
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.14);
-}
-
-.client-portal-wrapper .portal-management-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1.1rem 1.15rem;
-  border-radius: 20px;
-  border: 1px solid rgba(88, 152, 96, 0.18);
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.14), transparent 34%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.03), rgba(88, 152, 96, 0.12));
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
-}
-
-.client-portal-wrapper .portal-management-icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #b3d9b8;
-  font-size: 1.05rem;
-  flex-shrink: 0;
-}
-
-.client-portal-wrapper .portal-management-copy strong {
-  display: block;
-  margin-bottom: 0.25rem;
-  color: var(--cp-primary);
-  font-size: 1rem;
-}
-
-.client-portal-wrapper .portal-management-copy p {
-  margin: 0;
-  color: var(--cp-text-main);
-  line-height: 1.55;
-}
-
-.client-portal-wrapper .search-method-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.85rem;
-}
-
-.client-portal-wrapper .search-method-pills span {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.45rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--cp-primary);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.client-portal-wrapper .portal-results-summary {
-  justify-content: flex-start;
-  border-radius: 16px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-}
-
-.client-portal-wrapper .portal-history-hint {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  margin: 0 0 1rem 0;
-  padding: 1rem 1.05rem;
-  border-radius: 16px;
-  border: 1px solid rgba(32, 64, 96, 0.18);
-  background: #eff6ff;
-  color: #1d4ed8;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
-}
-
-.client-portal-wrapper .portal-history-hint span {
-  line-height: 1.48;
-}
-
-.client-portal-wrapper .portal-toast {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-  padding: 1rem 1.1rem;
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(255, 255, 255, 0.96);
-  color: var(--cp-text-main);
-  box-shadow: 0 25px 50px rgba(15, 23, 42, 0.16);
-  backdrop-filter: blur(14px);
-}
-
-.client-portal-wrapper .portal-toast-icon {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  background: #eff6ff;
-  color: #0f172a;
-  font-size: 1.05rem;
-  flex-shrink: 0;
-}
-
-.client-portal-wrapper .portal-toast-copy {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.24rem;
-}
-
-.client-portal-wrapper .portal-toast-copy strong {
-  color: var(--cp-primary);
-  font-size: 0.95rem;
-}
-
-.client-portal-wrapper .portal-toast-copy span {
-  color: var(--cp-text-muted);
-  font-size: 0.88rem;
-  line-height: 1.5;
-}
-
-.client-portal-wrapper .portal-toast-copy small {
-  color: var(--cp-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.client-portal-wrapper .portal-toast.success {
-  border-color: rgba(88, 152, 96, 0.22);
-}
-
-.client-portal-wrapper .portal-toast.success .portal-toast-icon {
-  background: #edf6ee;
-  color: #43794c;
-}
-
-.client-portal-wrapper .portal-toast.warning {
-  border-color: rgba(245, 158, 11, 0.24);
-}
-
-.client-portal-wrapper .portal-toast.warning .portal-toast-icon {
-  background: #fffbeb;
-  color: #d97706;
-}
-
-.client-portal-wrapper .portal-toast.error {
-  border-color: rgba(239, 68, 68, 0.24);
-}
-
-.client-portal-wrapper .portal-toast.error .portal-toast-icon {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.client-portal-wrapper .portal-toast.info {
-  border-color: rgba(32, 64, 96, 0.2);
-}
-
-.client-portal-wrapper .portal-toast.info .portal-toast-icon {
-  background: #eff6ff;
-  color: #183858;
-}
-
-[data-theme="dark"] .client-portal-wrapper {
-  background:
-    radial-gradient(circle at top, rgba(114, 176, 122, 0.08), transparent 28%),
-    linear-gradient(180deg, #07111f 0%, #08111c 48%, #07111f 100%);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-header {
-  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.32);
-}
-
-[data-theme="dark"] .client-portal-wrapper .guidance-card,
-[data-theme="dark"] .client-portal-wrapper .search-container {
-  background: rgba(15, 23, 42, 0.92);
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-input {
-  background: #111827;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-management-alert {
-  border-color: rgba(114, 176, 122, 0.22);
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 34%),
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(114, 176, 122, 0.12));
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-management-icon {
-  background: linear-gradient(135deg, #8ec795, #43794c);
-  color: #04110d;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-management-copy p,
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy span,
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy small {
-  color: #cbd5e1;
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-method-pills span {
-  background: rgba(15, 23, 42, 0.92);
-  border-color: rgba(148, 163, 184, 0.22);
-  color: #e5eef7;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-history-hint {
-  background: rgba(32, 64, 96, 0.12);
-  border-color: rgba(96, 165, 250, 0.24);
-  color: #bfdbfe;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast {
-  background: rgba(15, 23, 42, 0.96);
-  border-color: rgba(148, 163, 184, 0.22);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy strong {
-  color: #e5eef7;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast.success .portal-toast-icon {
-  background: rgba(88, 152, 96, 0.18);
-  color: #b3d9b8;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast.warning .portal-toast-icon {
-  background: rgba(245, 158, 11, 0.18);
-  color: #fcd34d;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast.error .portal-toast-icon {
-  background: rgba(239, 68, 68, 0.18);
-  color: #fca5a5;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-toast.info .portal-toast-icon {
-  background: rgba(32, 64, 96, 0.18);
-  color: #93c5fd;
-}
-
-@media (max-width: 768px) {
-  .client-portal-wrapper {
-    padding-top: 5.75rem;
-  }
-
-  .client-portal-wrapper .portal-header {
-    padding: 1.75rem 1.15rem;
-  }
-
-  .client-portal-wrapper .portal-management-alert {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 640px) {
-  .client-portal-wrapper {
-    padding: 5.5rem 1rem 2rem;
-  }
-
-  .client-portal-wrapper .search-container {
-    flex-direction: column;
-  }
-
-  .client-portal-wrapper .btn-search {
-    min-height: 52px;
-    padding: 1rem;
-  }
-
-  .client-portal-wrapper .portal-toast {
-    left: 1rem;
-    right: 1rem;
-    max-width: none;
-  }
-}
-
-/* ========================================================================== */
-/* v53.0 - Portal modals y tarjetas mas consistentes                           */
-/* ========================================================================== */
-
-.client-portal-wrapper .ticket-card {
-  border-radius: 24px;
-  box-shadow: 0 20px 42px rgba(15, 23, 42, 0.1);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.client-portal-wrapper .ticket-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.12);
-}
-
-.client-portal-wrapper .ticket-header,
-.client-portal-wrapper .ticket-footer {
-  background: rgba(248, 250, 252, 0.88);
-}
-
-.client-portal-wrapper .btn-action {
-  min-height: 44px;
-  padding: 0.8rem 1rem;
-  border-radius: 14px;
-}
-
-.client-portal-wrapper .modal-overlay {
-  padding: 1rem;
-  backdrop-filter: blur(14px);
-  background: rgba(15, 23, 42, 0.72);
-}
-
-.client-portal-wrapper .modal-box {
-  width: 100%;
-  border-radius: 30px;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 32px 70px rgba(15, 23, 42, 0.28);
-}
-
-.client-portal-wrapper .modal-kicker {
-  display: inline-flex;
-  margin-bottom: 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #43794c;
-}
-
-.client-portal-wrapper .reschedule-modal-box {
-  max-width: min(1080px, calc(100vw - 1.25rem));
-  max-height: min(92vh, 940px);
-  overflow: auto;
-  background:
-    radial-gradient(circle at top right, rgba(88, 152, 96, 0.14), transparent 24%),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-}
-
-.client-portal-wrapper .reschedule-header {
-  padding: 1.5rem 1.6rem 1rem;
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.16), transparent 26%),
-    linear-gradient(135deg, #0f172a, #1e293b 58%, #047857);
-  color: #f8fafc;
-}
-
-.client-portal-wrapper .reschedule-header .modal-kicker {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.client-portal-wrapper .reschedule-header h3,
-.client-portal-wrapper .reschedule-header p {
-  color: #f8fafc;
-}
-
-.client-portal-wrapper .reschedule-modal-body {
-  padding: 1.35rem 1.5rem 1.5rem;
-  background: transparent;
-}
-
-.client-portal-wrapper .reschedule-modal-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
-  gap: 1.2rem;
-}
-
-.client-portal-wrapper .reschedule-overview-panel,
-.client-portal-wrapper .reschedule-editor-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.client-portal-wrapper .reschedule-comparison-modern {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
-  gap: 0.8rem;
-  align-items: center;
-}
-
-.client-portal-wrapper .date-box {
-  min-height: 156px;
-  padding: 1rem;
-  border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
-}
-
-.client-portal-wrapper .date-box.old {
-  background:
-    radial-gradient(circle at top right, rgba(148, 163, 184, 0.14), transparent 28%),
-    rgba(255, 255, 255, 0.98);
-}
-
-.client-portal-wrapper .date-box.new {
-  background:
-    radial-gradient(circle at top right, rgba(88, 152, 96, 0.16), transparent 28%),
-    rgba(236, 253, 245, 0.98);
-}
-
-.client-portal-wrapper .date-box span,
-.client-portal-wrapper .reschedule-mini-facts span,
-.client-portal-wrapper .cancel-soft-summary span {
-  display: inline-flex;
-  margin-bottom: 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #94a3b8;
-}
-
-.client-portal-wrapper .date-box strong,
-.client-portal-wrapper .reschedule-mini-facts strong,
-.client-portal-wrapper .cancel-soft-summary strong {
-  display: block;
-  color: #0f172a;
-  line-height: 1.35;
-}
-
-.client-portal-wrapper .date-box small,
-.client-portal-wrapper .change-preview span {
-  color: #475569;
-  line-height: 1.55;
-}
-
-.client-portal-wrapper .arrow-box {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #b3d9b8;
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.18);
-}
-
-.client-portal-wrapper .change-preview-rich,
-.client-portal-wrapper .calendar-panel,
-.client-portal-wrapper .duration-panel,
-.client-portal-wrapper .cancel-soft-note {
-  padding: 1rem 1.05rem;
-  border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.12), transparent 28%),
-    rgba(255, 255, 255, 0.96);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
-}
-
-.client-portal-wrapper .change-preview-rich {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.client-portal-wrapper .change-preview-rich strong {
-  color: #0f172a;
-  font-size: 1rem;
-}
-
-.client-portal-wrapper .reschedule-mini-facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.client-portal-wrapper .reschedule-mini-facts article,
-.client-portal-wrapper .cancel-soft-summary article {
-  min-height: 110px;
-  padding: 0.95rem;
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
-}
-
-.client-portal-wrapper .calendar-panel .react-datepicker {
-  border: none;
-  box-shadow: none;
-  background: transparent;
-}
-
-.client-portal-wrapper .duration-panel input {
-  min-height: 52px;
-  border-radius: 16px;
-}
-
-.client-portal-wrapper .reschedule-footer,
-.client-portal-wrapper .cancel-soft-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  padding: 1rem 1.4rem 1.25rem;
-  background: rgba(255, 255, 255, 0.94);
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
-  backdrop-filter: blur(14px);
-}
-
-.client-portal-wrapper .cancel-soft-modal {
-  max-width: min(620px, calc(100vw - 1.25rem));
-  background:
-    radial-gradient(circle at top right, rgba(239, 68, 68, 0.14), transparent 26%),
-    linear-gradient(180deg, #ffffff, #fff7f7);
-}
-
-.client-portal-wrapper .cancel-soft-header {
-  display: flex;
-  gap: 1rem;
-  padding: 1.4rem 1.5rem 0.8rem;
-}
-
-.client-portal-wrapper .danger-icon.soft {
-  width: 68px;
-  height: 68px;
-  display: grid;
-  place-items: center;
-  border-radius: 22px;
-  background: linear-gradient(135deg, #fee2e2, #fef2f2);
-  color: #dc2626;
-  flex-shrink: 0;
-  box-shadow: 0 18px 36px rgba(239, 68, 68, 0.18);
-}
-
-.client-portal-wrapper .cancel-soft-header h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.5rem;
-}
-
-.client-portal-wrapper .cancel-soft-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-  padding: 0 1.5rem 1rem;
-}
-
-.client-portal-wrapper .cancel-soft-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.8rem;
-  margin: 0 1.5rem 1.2rem;
-}
-
-.client-portal-wrapper .cancel-soft-note svg {
-  flex-shrink: 0;
-  color: #dc2626;
-  margin-top: 0.15rem;
-}
-
-.client-portal-wrapper .cancel-soft-note span {
-  color: #475569;
-  line-height: 1.6;
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-card,
-[data-theme="dark"] .client-portal-wrapper .reschedule-modal-box,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-modal,
-[data-theme="dark"] .client-portal-wrapper .date-box,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich,
-[data-theme="dark"] .client-portal-wrapper .calendar-panel,
-[data-theme="dark"] .client-portal-wrapper .duration-panel,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-note,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts article,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-summary article,
-[data-theme="dark"] .client-portal-wrapper .reschedule-footer,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-footer {
-  background-color: rgba(15, 23, 42, 0.96);
-  border-color: rgba(148, 163, 184, 0.18);
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-header {
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.2), transparent 24%),
-    linear-gradient(135deg, #07111f, #0f172a 58%, #047857);
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box strong,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts strong,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-header h3,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-summary strong {
-  color: #f8fafc;
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box small,
-[data-theme="dark"] .client-portal-wrapper .change-preview span,
-[data-theme="dark"] .client-portal-wrapper .danger-text,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-note span {
-  color: #cbd5e1;
-}
-
-[data-theme="dark"] .client-portal-wrapper .danger-icon.soft {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(30, 41, 59, 0.96));
-  color: #fda4af;
-}
-
-@media (max-width: 920px) {
-  .client-portal-wrapper .reschedule-modal-grid,
-  .client-portal-wrapper .cancel-soft-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .client-portal-wrapper .reschedule-mini-facts {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .client-portal-wrapper .reschedule-modal-box,
-  .client-portal-wrapper .cancel-soft-modal {
-    max-width: calc(100vw - 0.85rem);
-    border-radius: 24px;
-  }
-
-  .client-portal-wrapper .reschedule-header,
-  .client-portal-wrapper .reschedule-modal-body,
-  .client-portal-wrapper .cancel-soft-header,
-  .client-portal-wrapper .cancel-soft-summary,
-  .client-portal-wrapper .cancel-soft-note,
-  .client-portal-wrapper .reschedule-footer,
-  .client-portal-wrapper .cancel-soft-footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .client-portal-wrapper .reschedule-comparison-modern,
-  .client-portal-wrapper .reschedule-mini-facts {
-    grid-template-columns: 1fr;
-  }
-
-  .client-portal-wrapper .arrow-box {
-    margin: 0 auto;
-    transform: rotate(90deg);
-  }
-
-  .client-portal-wrapper .cancel-soft-header {
-    flex-direction: column;
-  }
-
-  .client-portal-wrapper .reschedule-footer,
-  .client-portal-wrapper .cancel-soft-footer {
-    flex-direction: column;
-  }
-}
-
-/* ========================================================================== */
-/* v54.0 - Portal y modales alineados a la marca                              */
-/* ========================================================================== */
-
-.client-portal-wrapper {
-  --cp-bg: var(--color-bg-light);
-  --cp-white: var(--color-white);
-  --cp-primary: var(--brand-navy);
-  --cp-primary-soft: #2b5478;
-  --cp-accent: var(--brand-green);
-  --cp-accent-soft: rgba(88, 152, 96, 0.1);
-  --cp-success: var(--brand-green);
-  --cp-warning: #d08a2e;
-  --cp-danger: #cf4f4f;
-  --cp-text-main: var(--color-text-main);
-  --cp-text-muted: var(--color-text-muted);
-  --cp-border: var(--border-soft);
-  --cp-shadow: var(--shadow-card);
-  padding: calc(100px + 1.5rem) 1.2rem 3rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(243, 247, 250, 1) 54%),
-    var(--cp-bg);
-}
-
-[data-theme="dark"] .client-portal-wrapper {
-  --cp-white: var(--color-white);
-  --cp-primary: #edf4fb;
-  --cp-primary-soft: #aac1d8;
-  --cp-accent: var(--color-accent);
-  --cp-accent-soft: rgba(114, 176, 122, 0.14);
-  --cp-text-main: var(--color-text-main);
-  --cp-text-muted: var(--color-text-muted);
-  --cp-border: var(--border-soft);
-  --cp-shadow: var(--shadow-card);
-  background:
-    linear-gradient(180deg, rgba(9, 20, 34, 0.98) 0%, rgba(7, 17, 29, 1) 62%),
-    var(--cp-bg);
-}
-
-.client-portal-wrapper .portal-container {
-  max-width: 1040px;
-}
-
-.client-portal-wrapper .portal-header {
-  padding: 2rem 1.6rem;
-  border-radius: 30px;
-  border: 1px solid var(--cp-border);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 60px rgba(19, 41, 64, 0.08);
-}
-
-.client-portal-wrapper .portal-header::after {
-  background:
-    radial-gradient(circle at center, rgba(88, 152, 96, 0.18), transparent 62%);
-  opacity: 0.5;
-}
-
-.client-portal-wrapper .portal-title {
-  color: var(--cp-text-main);
-  font-size: clamp(2rem, 4vw, 3rem);
-  letter-spacing: -0.04em;
-}
-
-.client-portal-wrapper .portal-subtitle {
-  max-width: 620px;
-  margin: 0.7rem auto 0;
-  color: var(--cp-text-muted);
-}
-
-.client-portal-wrapper .header-decoration {
-  width: 64px;
-  height: 5px;
-  background: linear-gradient(90deg, var(--cp-primary), var(--cp-accent));
-}
-
-.client-portal-wrapper .search-container {
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem;
-  border-radius: 22px;
-  border: 1px solid var(--cp-border);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 20px 50px rgba(19, 41, 64, 0.08);
-}
-
-.client-portal-wrapper .search-input {
-  min-height: 54px;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  background: rgba(248, 251, 253, 0.94);
-}
-
-.client-portal-wrapper .btn-search {
-  min-height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #1d344d, #2b5478);
-  box-shadow: 0 18px 34px rgba(29, 52, 77, 0.18);
-}
-
-.client-portal-wrapper .btn-search:hover {
-  background: linear-gradient(135deg, #183858, #204060);
-}
-
-.client-portal-wrapper .ticket-card {
-  border-radius: 24px;
-  border: 1px solid var(--cp-border);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 44px rgba(19, 41, 64, 0.08);
-}
-
-.client-portal-wrapper .ticket-header,
-.client-portal-wrapper .ticket-footer {
-  background: rgba(248, 251, 253, 0.94);
-}
-
-.client-portal-wrapper .ticket-code {
-  background: rgba(237, 243, 247, 0.96);
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(88, 152, 96, 0.14);
-  color: #426f47;
-}
-
-.client-portal-wrapper .status-badge.Pendiente {
-  background: rgba(208, 138, 46, 0.16);
-  color: #8a5810;
-}
-
-.client-portal-wrapper .btn-action {
-  border-radius: 16px;
-}
-
-.client-portal-wrapper .modal-overlay {
-  background: rgba(13, 26, 41, 0.7);
-}
-
-.client-portal-wrapper .modal-box {
-  border-radius: 30px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-}
-
-.client-portal-wrapper .modal-kicker {
-  color: var(--cp-accent);
-}
-
-.client-portal-wrapper .reschedule-modal-box {
-  max-width: min(1120px, calc(100vw - 2rem));
-  max-height: min(88vh, 860px);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.client-portal-wrapper .reschedule-header {
-  padding: 1.4rem 1.5rem 1rem;
-  background: linear-gradient(135deg, #1d344d, #204060 66%, #365e7d);
-}
-
-.client-portal-wrapper .reschedule-modal-body {
-  padding: 1.15rem 1.2rem 1.2rem;
-}
-
-.client-portal-wrapper .reschedule-modal-grid {
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  gap: 1rem;
-}
-
-.client-portal-wrapper .date-box,
-.client-portal-wrapper .change-preview-rich,
-.client-portal-wrapper .calendar-panel,
-.client-portal-wrapper .duration-panel,
-.client-portal-wrapper .cancel-soft-note,
-.client-portal-wrapper .reschedule-mini-facts article,
-.client-portal-wrapper .cancel-soft-summary article {
-  border-radius: 24px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  background: rgba(248, 251, 253, 0.96);
-  box-shadow: 0 14px 34px rgba(19, 41, 64, 0.06);
-}
-
-.client-portal-wrapper .date-box {
-  min-height: 142px;
-}
-
-.client-portal-wrapper .date-box.old {
-  background: rgba(248, 251, 253, 0.96);
-}
-
-.client-portal-wrapper .date-box.new {
-  background: rgba(237, 246, 238, 0.96);
-  border-color: rgba(88, 152, 96, 0.18);
-}
-
-.client-portal-wrapper .date-box strong,
-.client-portal-wrapper .change-preview-rich strong,
-.client-portal-wrapper .reschedule-mini-facts strong,
-.client-portal-wrapper .cancel-soft-summary strong {
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .date-box small,
-.client-portal-wrapper .change-preview span,
-.client-portal-wrapper .cancel-soft-note span {
-  color: var(--cp-text-muted);
-}
-
-.client-portal-wrapper .arrow-box {
-  background: linear-gradient(135deg, #1d344d, #2b5478);
-  color: #edf4fb;
-  box-shadow: 0 18px 34px rgba(29, 52, 77, 0.16);
-}
-
-.client-portal-wrapper .change-preview-rich {
-  background: rgba(237, 243, 247, 0.78);
-}
-
-.client-portal-wrapper .calendar-panel .react-datepicker,
-.client-portal-wrapper .calendar-panel .react-datepicker__month-container {
-  width: 100% !important;
-  background: transparent !important;
-}
-
-.client-portal-wrapper .calendar-panel .react-datepicker {
-  border: none !important;
-}
-
-.client-portal-wrapper .react-datepicker__header {
-  background: rgba(237, 243, 247, 0.96) !important;
-  border-bottom: 1px solid rgba(32, 64, 96, 0.08) !important;
-}
-
-.client-portal-wrapper .react-datepicker__current-month,
-.client-portal-wrapper .react-datepicker-time__header,
-.client-portal-wrapper .react-datepicker-year-header {
-  color: var(--cp-text-main) !important;
-  font-weight: 800 !important;
-}
-
-.client-portal-wrapper .react-datepicker__day-name,
-.client-portal-wrapper .react-datepicker__time-name {
-  color: var(--cp-text-muted) !important;
-}
-
-.client-portal-wrapper .react-datepicker__day,
-.client-portal-wrapper .react-datepicker__time-list-item {
-  border-radius: 14px !important;
-  color: var(--cp-text-main) !important;
-}
-
-.client-portal-wrapper .react-datepicker__day:hover,
-.client-portal-wrapper .react-datepicker__time-list-item:hover {
-  background: rgba(32, 64, 96, 0.08) !important;
-}
-
-.client-portal-wrapper .react-datepicker__day--selected,
-.client-portal-wrapper .react-datepicker__time-list-item--selected {
-  background: #1d344d !important;
-  color: #edf4fb !important;
-}
-
-.client-portal-wrapper .react-datepicker__day--keyboard-selected {
-  background: rgba(88, 152, 96, 0.18) !important;
-  color: #426f47 !important;
-}
-
-.client-portal-wrapper .react-datepicker__day--today {
-  box-shadow: inset 0 0 0 1px rgba(88, 152, 96, 0.42);
-}
-
-.client-portal-wrapper .react-datepicker__time-container {
-  width: 102px !important;
-  border-left: 1px solid rgba(32, 64, 96, 0.08) !important;
-}
-
-.client-portal-wrapper .react-datepicker__time-box {
-  width: 100% !important;
-}
-
-.client-portal-wrapper .react-datepicker__time-list {
-  padding: 0.45rem !important;
-}
-
-.client-portal-wrapper .react-datepicker__time-list-item {
-  min-height: 36px !important;
-  line-height: 36px !important;
-}
-
-.client-portal-wrapper .duration-panel input {
-  border-radius: 18px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.client-portal-wrapper .reschedule-footer,
-.client-portal-wrapper .cancel-soft-footer {
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1px solid rgba(32, 64, 96, 0.08);
-}
-
-.client-portal-wrapper .btn-modal {
-  min-height: 52px;
-  border-radius: 18px;
-  font-weight: 800;
-}
-
-.client-portal-wrapper .btn-modal.cancel,
-.client-portal-wrapper .safe-return {
-  background: rgba(237, 243, 247, 0.96);
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .btn-modal.confirm {
-  background: linear-gradient(135deg, #1d344d, #2b5478);
-  box-shadow: 0 18px 34px rgba(29, 52, 77, 0.16);
-}
-
-.client-portal-wrapper .cancel-soft-modal {
-  max-width: min(640px, calc(100vw - 2rem));
-  background: rgba(255, 255, 255, 0.98);
-}
-
-.client-portal-wrapper .cancel-soft-header {
-  padding: 1.35rem 1.35rem 0.7rem;
-}
-
-.client-portal-wrapper .danger-icon.soft {
-  background: linear-gradient(135deg, rgba(207, 79, 79, 0.12), rgba(255, 244, 244, 0.96));
-  box-shadow: 0 18px 34px rgba(207, 79, 79, 0.14);
-}
-
-.client-portal-wrapper .cancel-soft-header h3 {
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .danger-text {
-  color: var(--cp-text-muted);
-}
-
-.client-portal-wrapper .danger-confirm {
-  background: linear-gradient(135deg, #cf4f4f, #b83e3e);
-  box-shadow: 0 18px 34px rgba(207, 79, 79, 0.18);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-header,
-[data-theme="dark"] .client-portal-wrapper .search-container,
-[data-theme="dark"] .client-portal-wrapper .ticket-card,
-[data-theme="dark"] .client-portal-wrapper .ticket-header,
-[data-theme="dark"] .client-portal-wrapper .ticket-footer,
-[data-theme="dark"] .client-portal-wrapper .reschedule-modal-box,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-modal,
-[data-theme="dark"] .client-portal-wrapper .date-box,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich,
-[data-theme="dark"] .client-portal-wrapper .calendar-panel,
-[data-theme="dark"] .client-portal-wrapper .duration-panel,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-note,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts article,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-summary article,
-[data-theme="dark"] .client-portal-wrapper .reschedule-footer,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-footer {
-  background-color: rgba(14, 27, 44, 0.96);
-  border-color: rgba(171, 195, 217, 0.14);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-header {
-  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.28);
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-input,
-[data-theme="dark"] .client-portal-wrapper .ticket-code,
-[data-theme="dark"] .client-portal-wrapper .btn-modal.cancel,
-[data-theme="dark"] .client-portal-wrapper .safe-return {
-  background: rgba(17, 32, 50, 0.96);
-  border-color: rgba(171, 195, 217, 0.12);
-  color: var(--cp-text-main);
-}
-
-[data-theme="dark"] .client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(114, 176, 122, 0.16);
-  color: #9ad2a1;
-}
-
-[data-theme="dark"] .client-portal-wrapper .status-badge.Pendiente {
-  background: rgba(208, 138, 46, 0.18);
-  color: #f0c27e;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-header,
-[data-theme="dark"] .client-portal-wrapper .btn-search,
-[data-theme="dark"] .client-portal-wrapper .btn-modal.confirm {
-  background: linear-gradient(135deg, #112032, #1d344d);
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box.new {
-  background: rgba(114, 176, 122, 0.12);
-  border-color: rgba(114, 176, 122, 0.18);
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box strong,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts strong,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-summary strong,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-header h3 {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box small,
-[data-theme="dark"] .client-portal-wrapper .change-preview span,
-[data-theme="dark"] .client-portal-wrapper .danger-text,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-note span {
-  color: var(--cp-text-muted);
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__header {
-  background: rgba(17, 32, 50, 0.96) !important;
-  border-bottom-color: rgba(171, 195, 217, 0.12) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker,
-[data-theme="dark"] .client-portal-wrapper .calendar-panel .react-datepicker {
-  background: transparent !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__day:hover,
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__time-list-item:hover {
-  background: rgba(171, 195, 217, 0.1) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__day--selected,
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__time-list-item--selected {
-  background: rgba(114, 176, 122, 0.22) !important;
-  color: #edf4fb !important;
-}
-
-@media (max-width: 920px) {
-  .client-portal-wrapper {
-    padding-top: calc(88px + 1.4rem);
-  }
-
-  .client-portal-wrapper .reschedule-modal-grid,
-  .client-portal-wrapper .cancel-soft-summary {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .client-portal-wrapper .portal-header,
-  .client-portal-wrapper .search-container {
-    border-radius: 24px;
-  }
-
-  .client-portal-wrapper .search-container {
-    flex-direction: column;
-  }
-
-  .client-portal-wrapper .btn-search {
-    width: 100%;
-  }
-
-  .client-portal-wrapper .reschedule-modal-box,
-  .client-portal-wrapper .cancel-soft-modal {
-    max-width: calc(100vw - 0.9rem);
-  }
-}
-
-/* ========================================================================== */
-/* v55.0 - Reprogramacion guiada, amplia y totalmente alineada a la marca     */
-/* ========================================================================== */
-
-.client-portal-wrapper .reschedule-modal-box {
-  max-width: min(1240px, calc(100vw - 1.4rem));
-  max-height: min(92vh, 920px);
-  border-radius: 34px;
-  overflow: auto;
-}
-
-.client-portal-wrapper .reschedule-header {
-  display: grid;
-  gap: 1rem;
-  padding: 1.45rem 1.55rem 1.15rem;
-  background: linear-gradient(135deg, #1d344d, #204060 58%, #3f6f8d);
-}
-
-.client-portal-wrapper .reschedule-header-copy {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.client-portal-wrapper .reschedule-header h3 {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin: 0;
-  font-size: clamp(1.6rem, 2vw, 2rem);
-}
-
-.client-portal-wrapper .reschedule-header p {
-  max-width: 72ch;
-  margin: 0;
-  color: rgba(237, 244, 251, 0.88);
-  line-height: 1.6;
-}
-
-.client-portal-wrapper .reschedule-steps-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.client-portal-wrapper .reschedule-step-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(237, 244, 251, 0.16);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(237, 244, 251, 0.88);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.client-portal-wrapper .reschedule-step-chip.active {
-  background: rgba(114, 176, 122, 0.16);
-  border-color: rgba(114, 176, 122, 0.28);
-  color: #eff8f0;
-}
-
-.client-portal-wrapper .reschedule-modal-body {
-  padding: 1.2rem 1.3rem 1.25rem;
-}
-
-.client-portal-wrapper .reschedule-modal-grid {
-  grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.15fr);
-  gap: 1.05rem;
-  align-items: start;
-}
-
-.client-portal-wrapper .reschedule-overview-panel,
-.client-portal-wrapper .reschedule-editor-panel {
-  gap: 1rem;
-}
-
-.client-portal-wrapper .reschedule-panel-intro,
-.client-portal-wrapper .reschedule-editor-head {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem 1.05rem;
-  border-radius: 24px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 253, 0.96));
-  box-shadow: 0 16px 34px rgba(19, 41, 64, 0.06);
-}
-
-.client-portal-wrapper .reschedule-panel-kicker {
-  color: var(--cp-accent);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.client-portal-wrapper .reschedule-panel-intro strong,
-.client-portal-wrapper .reschedule-editor-head strong {
-  color: var(--cp-text-main);
-  font-size: 1.08rem;
-  line-height: 1.35;
-}
-
-.client-portal-wrapper .reschedule-panel-intro p,
-.client-portal-wrapper .reschedule-editor-head p {
-  margin: 0;
-  color: var(--cp-text-muted);
-  line-height: 1.6;
-}
-
-.client-portal-wrapper .reschedule-comparison-modern {
-  grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
-  gap: 0.9rem;
-  padding: 1rem;
-  border-radius: 26px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  background: rgba(248, 251, 253, 0.86);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.client-portal-wrapper .date-box {
-  min-height: 184px;
-  justify-content: center;
-  align-items: flex-start;
-  text-align: left;
-  padding: 1.15rem 1.1rem;
-}
-
-.client-portal-wrapper .date-box span {
-  color: var(--cp-text-muted);
-  letter-spacing: 0.12em;
-}
-
-.client-portal-wrapper .date-box strong {
-  font-size: clamp(1.2rem, 2vw, 1.5rem);
-  line-height: 1.2;
-  text-transform: capitalize;
-}
-
-.client-portal-wrapper .date-box small {
-  font-size: 1rem;
-}
-
-.client-portal-wrapper .date-box.new {
-  background: linear-gradient(180deg, rgba(237, 246, 238, 0.96), rgba(245, 251, 246, 0.96));
-}
-
-.client-portal-wrapper .arrow-box {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-}
-
-.client-portal-wrapper .change-preview-rich {
-  gap: 0.55rem;
-  padding: 1.05rem 1.1rem;
-}
-
-.client-portal-wrapper .change-preview-rich strong {
-  font-size: 1.08rem;
-  line-height: 1.35;
-}
-
-.client-portal-wrapper .reschedule-status-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.client-portal-wrapper .reschedule-status-grid article {
-  min-height: 116px;
-}
-
-.client-portal-wrapper .reschedule-selection-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-}
-
-.client-portal-wrapper .reschedule-selection-pill {
-  display: grid;
-  gap: 0.35rem;
-  min-height: 108px;
-  padding: 0.95rem 1rem;
-  border-radius: 22px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  background: rgba(248, 251, 253, 0.96);
-  box-shadow: 0 14px 30px rgba(19, 41, 64, 0.05);
-}
-
-.client-portal-wrapper .reschedule-selection-pill span {
-  color: var(--cp-text-muted);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.client-portal-wrapper .reschedule-selection-pill strong {
-  color: var(--cp-text-main);
-  line-height: 1.35;
-}
-
-.client-portal-wrapper .reschedule-selection-pill.accent {
-  background: linear-gradient(180deg, rgba(237, 246, 238, 0.96), rgba(245, 251, 246, 0.96));
-  border-color: rgba(88, 152, 96, 0.18);
-}
-
-.client-portal-wrapper .calendar-panel-premium {
-  padding: 1.05rem 1.1rem 1.15rem;
-}
-
-.client-portal-wrapper .calendar-panel-head,
-.client-portal-wrapper .duration-panel-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  margin-bottom: 0.95rem;
-}
-
-.client-portal-wrapper .calendar-panel-head label,
-.client-portal-wrapper .duration-panel-head label {
-  color: var(--cp-text-main);
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.client-portal-wrapper .calendar-panel-helper,
-.client-portal-wrapper .duration-panel-head span {
-  color: var(--cp-text-muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.client-portal-wrapper .reschedule-datepicker-header {
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.9rem;
-}
-
-.client-portal-wrapper .reschedule-datepicker-header strong {
-  color: var(--cp-text-main);
-  font-size: 1.2rem;
-  font-weight: 900;
-  text-align: center;
-  text-transform: capitalize;
-}
-
-.client-portal-wrapper .reschedule-month-nav {
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.96);
-  color: var(--cp-primary);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-}
-
-.client-portal-wrapper .reschedule-month-nav:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(19, 41, 64, 0.08);
-}
-
-.client-portal-wrapper .reschedule-month-nav:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 138px;
-  width: 100% !important;
-  border: none !important;
-  background: transparent !important;
-  gap: 0.85rem;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__month-container {
-  width: auto !important;
-  padding: 0 0.25rem 0.25rem;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__header {
-  padding: 0 !important;
-  background: transparent !important;
-  border-bottom: none !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__day-names,
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__week {
-  display: grid !important;
-  grid-template-columns: repeat(7, minmax(44px, 1fr));
-  justify-items: center;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__day-name {
-  width: auto !important;
-  margin: 0 0 0.6rem !important;
-  color: var(--cp-text-muted) !important;
-  font-weight: 800 !important;
-  text-transform: lowercase;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__month {
-  margin: 0 !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__day {
-  width: 42px !important;
-  line-height: 42px !important;
-  margin: 0 0 0.4rem !important;
-  font-weight: 800 !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__time-container {
-  width: 138px !important;
-  border-left: 1px solid rgba(32, 64, 96, 0.08) !important;
-  background: rgba(237, 243, 247, 0.72);
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__header--time {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border-bottom: 1px solid rgba(32, 64, 96, 0.08) !important;
-  padding: 0.9rem 0.65rem !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__time {
-  background: transparent !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__time-box {
-  width: 100% !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__time-list {
-  height: 332px !important;
-  padding: 0.55rem !important;
-}
-
-.client-portal-wrapper .calendar-panel-premium .react-datepicker__time-list-item {
-  min-height: 42px !important;
-  line-height: 42px !important;
-  margin-bottom: 0.3rem;
-  font-size: 0.96rem;
-  font-weight: 800;
-}
-
-.client-portal-wrapper .duration-panel-premium {
-  padding: 1.05rem 1.1rem;
-}
-
-.client-portal-wrapper .duration-quick-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-  gap: 0.6rem;
-  margin-bottom: 0.95rem;
-}
-
-.client-portal-wrapper .duration-quick-btn {
-  min-height: 48px;
-  border: 1px solid rgba(32, 64, 96, 0.1);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.96);
-  color: var(--cp-text-main);
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.client-portal-wrapper .duration-quick-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 22px rgba(19, 41, 64, 0.08);
-}
-
-.client-portal-wrapper .duration-quick-btn.selected {
-  background: linear-gradient(135deg, #1d344d, #2b5478);
-  color: #edf4fb;
-  border-color: transparent;
-}
-
-.client-portal-wrapper .duration-manual-row {
-  display: grid;
-  grid-template-columns: minmax(140px, 0.9fr) minmax(170px, 1.1fr);
-  gap: 0.8rem;
-  align-items: stretch;
-}
-
-.client-portal-wrapper .duration-panel-premium input {
-  min-height: 54px;
-}
-
-.client-portal-wrapper .duration-preview-card {
-  display: grid;
-  align-content: center;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 18px;
-  background: rgba(237, 246, 238, 0.94);
-  border: 1px solid rgba(88, 152, 96, 0.18);
-}
-
-.client-portal-wrapper .duration-preview-card span {
-  color: var(--cp-text-muted);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.client-portal-wrapper .duration-preview-card strong {
-  color: var(--cp-text-main);
-  font-size: 1.1rem;
-}
-
-.client-portal-wrapper .duration-preview {
-  display: block;
-  margin-top: 0.8rem;
-  color: var(--cp-text-muted);
-  line-height: 1.55;
-}
-
-.client-portal-wrapper .reschedule-footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px 300px;
-  gap: 0.85rem;
-  align-items: center;
-}
-
-.client-portal-wrapper .reschedule-footer-note {
-  color: var(--cp-text-muted);
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-header,
-[data-theme="dark"] .client-portal-wrapper .btn-modal.confirm {
-  background: linear-gradient(135deg, #112032, #1d344d 62%, #2b5478);
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-panel-intro,
-[data-theme="dark"] .client-portal-wrapper .reschedule-editor-head,
-[data-theme="dark"] .client-portal-wrapper .reschedule-comparison-modern,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill,
-[data-theme="dark"] .client-portal-wrapper .reschedule-month-nav,
-[data-theme="dark"] .client-portal-wrapper .duration-quick-btn {
-  background: rgba(17, 32, 50, 0.96);
-  border-color: rgba(171, 195, 217, 0.14);
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-panel-intro strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-editor-head strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-datepicker-header strong,
-[data-theme="dark"] .client-portal-wrapper .duration-preview-card strong {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-panel-intro p,
-[data-theme="dark"] .client-portal-wrapper .reschedule-editor-head p,
-[data-theme="dark"] .client-portal-wrapper .calendar-panel-helper,
-[data-theme="dark"] .client-portal-wrapper .duration-panel-head span,
-[data-theme="dark"] .client-portal-wrapper .reschedule-footer-note,
-[data-theme="dark"] .client-portal-wrapper .duration-preview,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill span {
-  color: var(--cp-text-muted);
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-step-chip {
-  border-color: rgba(237, 244, 251, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-step-chip.active {
-  background: rgba(114, 176, 122, 0.18);
-  border-color: rgba(114, 176, 122, 0.24);
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box.new,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill.accent,
-[data-theme="dark"] .client-portal-wrapper .duration-preview-card {
-  background: rgba(114, 176, 122, 0.14);
-  border-color: rgba(114, 176, 122, 0.2);
-}
-
-[data-theme="dark"] .client-portal-wrapper .calendar-panel-premium .react-datepicker__time-container {
-  background: rgba(17, 32, 50, 0.92);
-  border-left-color: rgba(171, 195, 217, 0.12) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .calendar-panel-premium .react-datepicker__header--time {
-  background: rgba(13, 26, 41, 0.92) !important;
-  border-bottom-color: rgba(171, 195, 217, 0.12) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .duration-quick-btn.selected {
-  background: rgba(114, 176, 122, 0.2);
-  color: #edf4fb;
-  border-color: rgba(114, 176, 122, 0.26);
-}
-
-@media (max-width: 1100px) {
-  .client-portal-wrapper .reschedule-modal-grid,
-  .client-portal-wrapper .reschedule-selection-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .client-portal-wrapper .reschedule-footer {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 760px) {
-  .client-portal-wrapper .reschedule-modal-box {
-    max-width: calc(100vw - 0.9rem);
-    border-radius: 28px;
-  }
-
-  .client-portal-wrapper .reschedule-header,
-  .client-portal-wrapper .reschedule-modal-body,
-  .client-portal-wrapper .reschedule-footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .client-portal-wrapper .reschedule-comparison-modern,
-  .client-portal-wrapper .reschedule-status-grid,
-  .client-portal-wrapper .duration-manual-row,
-  .client-portal-wrapper .calendar-panel-premium .react-datepicker {
-    grid-template-columns: 1fr;
-  }
-
-  .client-portal-wrapper .calendar-panel-premium .react-datepicker__time-container {
-    width: 100% !important;
-    border-left: none !important;
-    border-top: 1px solid rgba(32, 64, 96, 0.08);
-    border-radius: 18px;
-  }
-
-  .client-portal-wrapper .arrow-box {
-    margin: 0 auto;
-    transform: rotate(90deg);
-  }
-}
-
-/* Portal polish v56: visible actions, calmer reschedule/cancel flow */
-.client-portal-wrapper .ticket-wrapper:not(.fade-out-exit) {
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-.client-portal-wrapper .ticket-card {
-  overflow: visible;
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer {
-  position: relative;
-  z-index: 2;
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  align-items: stretch;
-  padding: clamp(1rem, 2vw, 1.25rem);
-  border-top: 1px solid rgba(32, 64, 96, 0.1);
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(248, 251, 253, 0.98), rgba(237, 243, 247, 0.96));
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .cancelled-note,
-.client-portal-wrapper .ticket-card .ticket-footer .btn-delete-forever {
-  grid-column: 1 / -1;
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .btn-action {
-  display: inline-flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  min-height: 54px;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  border-radius: 18px;
-  font-size: 0.98rem;
-  font-weight: 900;
-  letter-spacing: 0.01em;
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .btn-reschedule {
-  border-color: rgba(114, 176, 122, 0.26);
-  background: linear-gradient(135deg, #1d344d, #2b5478 64%, #4f8f58);
-  color: #ffffff;
-  box-shadow: 0 18px 34px rgba(29, 52, 77, 0.18);
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .btn-reschedule:hover,
-.client-portal-wrapper .ticket-card .ticket-footer .btn-reschedule:focus-visible {
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow:
-    0 22px 38px rgba(29, 52, 77, 0.22),
-    0 0 0 4px rgba(114, 176, 122, 0.14);
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .btn-cancel {
-  border-color: rgba(220, 38, 38, 0.18);
-  background: linear-gradient(180deg, rgba(255, 247, 247, 0.98), rgba(254, 226, 226, 0.92));
-  color: #991b1b;
-}
-
-.client-portal-wrapper .ticket-card .ticket-footer .btn-cancel:hover,
-.client-portal-wrapper .ticket-card .ticket-footer .btn-cancel:focus-visible {
-  background: linear-gradient(135deg, #991b1b, #dc2626);
-  color: #ffffff;
-  border-color: transparent;
-}
-
-.client-portal-wrapper .modal-box.reschedule-modal-box {
-  width: min(1080px, calc(100vw - 1rem));
-  max-height: min(92vh, 920px);
-  border-radius: 30px;
-}
-
-.client-portal-wrapper .reschedule-modal-box .reschedule-header,
-.client-portal-wrapper .reschedule-modal-box .reschedule-modal-body,
-.client-portal-wrapper .reschedule-modal-box .reschedule-footer {
-  padding-left: clamp(1rem, 2.3vw, 1.55rem);
-  padding-right: clamp(1rem, 2.3vw, 1.55rem);
-}
-
-.client-portal-wrapper .reschedule-modal-box .reschedule-modal-grid {
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  gap: clamp(0.85rem, 1.7vw, 1.1rem);
-}
-
-.client-portal-wrapper .reschedule-modal-box .reschedule-overview-panel,
-.client-portal-wrapper .reschedule-modal-box .reschedule-editor-panel {
-  min-width: 0;
-}
-
-.client-portal-wrapper .reschedule-modal-box .reschedule-comparison-modern,
-.client-portal-wrapper .reschedule-modal-box .reschedule-status-grid,
-.client-portal-wrapper .reschedule-modal-box .reschedule-selection-strip {
-  gap: 0.7rem;
-}
-
-.client-portal-wrapper .reschedule-modal-box .date-box {
-  min-height: 132px;
-}
-
-.client-portal-wrapper .reschedule-modal-box .reschedule-mini-facts article,
-.client-portal-wrapper .reschedule-modal-box .reschedule-selection-pill {
-  min-height: 88px;
-  padding: 0.82rem 0.9rem;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium {
-  padding: 0.9rem;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker {
-  grid-template-columns: minmax(0, 1fr) minmax(118px, 132px) !important;
-  gap: 0.75rem;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day-names,
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__week {
-  grid-template-columns: repeat(7, minmax(32px, 1fr)) !important;
-  gap: 4px !important;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day-name,
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day {
-  width: 36px !important;
-  justify-self: center;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day {
-  height: 36px !important;
-  line-height: 36px !important;
-  margin-bottom: 0.25rem !important;
-  border-radius: 13px !important;
-}
-
-.client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__time-list {
-  height: 292px !important;
-}
-
-.client-portal-wrapper .reschedule-modal-box .duration-panel-premium {
-  padding: 0.9rem;
-}
-
-.client-portal-wrapper .reschedule-modal-box .duration-quick-grid {
-  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
-}
-
-.client-portal-wrapper .reschedule-modal-box .duration-quick-btn {
-  min-height: 46px;
-}
-
-.client-portal-wrapper .modal-box.cancel-soft-modal {
-  width: min(620px, calc(100vw - 1rem));
-  border-radius: 28px;
-}
-
-.client-portal-wrapper .cancel-soft-modal .cancel-soft-summary {
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 0.75rem;
-}
-
-.client-portal-wrapper .cancel-soft-modal .cancel-soft-summary article {
-  min-height: 88px;
-  padding: 0.9rem;
-}
-
-.client-portal-wrapper .cancel-soft-modal .cancel-soft-note {
-  align-items: flex-start;
-  line-height: 1.58;
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-card .ticket-footer {
-  border-top-color: rgba(171, 195, 217, 0.14);
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.1), transparent 34%),
-    linear-gradient(180deg, rgba(17, 32, 50, 0.96), rgba(13, 26, 41, 0.96));
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-card .ticket-footer .btn-reschedule {
-  background: linear-gradient(135deg, #204060, #2b5478 62%, #72b07a);
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-card .ticket-footer .btn-cancel {
-  border-color: rgba(248, 113, 113, 0.24);
-  background: linear-gradient(180deg, rgba(87, 29, 29, 0.44), rgba(69, 16, 16, 0.52));
-  color: #fecaca;
-}
-
-@media (max-width: 1180px) {
-  .client-portal-wrapper .reschedule-modal-box .reschedule-modal-grid,
-  .client-portal-wrapper .reschedule-modal-box .reschedule-selection-strip {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-@media (max-width: 720px) {
-  .client-portal-wrapper .ticket-card .ticket-footer,
-  .client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker,
-  .client-portal-wrapper .reschedule-modal-box .duration-manual-row {
-    grid-template-columns: 1fr !important;
-  }
-
-  .client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__time-container {
-    width: 100% !important;
-    border-left: none !important;
-    border-top: 1px solid rgba(32, 64, 96, 0.08);
-  }
-
-  .client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day-name,
-  .client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day {
-    width: clamp(30px, 11vw, 38px) !important;
-  }
-
-  .client-portal-wrapper .reschedule-modal-box .calendar-panel-premium .react-datepicker__day {
-    height: clamp(30px, 11vw, 38px) !important;
-    line-height: clamp(30px, 11vw, 38px) !important;
-  }
-}
-
-/* ==========================================================================
-   DARK MODE — Contraste reprogramación + time picker
-   Asegura legibilidad del mes, días deshabilitados y lista de horarios
-   dentro del flujo de reprogramación.
-   ========================================================================== */
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__current-month {
-  color: #edf4fb !important;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__day-name {
-  color: #9fb2c4 !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__day--disabled {
-  background: rgba(24, 42, 64, 0.55) !important;
-  color: #6d8098 !important;
-  border: 1px dashed rgba(141, 159, 181, 0.28) !important;
-  opacity: 0.7 !important;
-  text-decoration: line-through !important;
-  text-decoration-color: rgba(141, 159, 181, 0.45) !important;
-}
-
-[data-theme="dark"]
-  .client-portal-wrapper
-  .react-datepicker__day:not(.react-datepicker__day--disabled):not(
-    .react-datepicker__day--selected
-  ) {
-  color: #d7f0da !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__day--keyboard-selected {
-  background: rgba(114, 176, 122, 0.22) !important;
-  color: #edf4fb !important;
-  border-radius: 10px !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__time-container {
-  border-left-color: rgba(171, 195, 217, 0.14) !important;
-  background: rgba(13, 26, 41, 0.96) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__time-list-item {
-  color: #d7f0da !important;
-  background: transparent !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__time-list-item--disabled {
-  color: #6d8098 !important;
-  text-decoration: line-through !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .react-datepicker__navigation-icon::before {
-  border-color: #aac1d8 !important;
-}
-

@@ -1,0 +1,106 @@
+.notes-panel {
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-surface-2, #f8fafc);
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border, #e2e8f0);
+}
+
+.notes-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--color-text, #1a202c);
+}
+
+.notes-textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--color-border, #e2e8f0);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #1a202c);
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--brand-green, #3f8f57);
+  box-shadow: 0 0 0 3px rgba(63, 143, 87, 0.15);
+}
+
+.notes-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.notes-counter {
+  font-size: 0.78rem;
+  opacity: 0.6;
+  color: var(--color-text, #1a202c);
+}
+
+.notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notes-status-ok {
+  font-size: 0.78rem;
+  color: var(--color-success, #38a169);
+}
+
+.notes-status-error {
+  font-size: 0.78rem;
+  color: var(--color-danger, #e53e3e);
+}
+
+.notes-save-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--brand-green, #3f8f57);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.notes-save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.notes-save-btn:not(:disabled):hover {
+  opacity: 0.88;
+}
+
+/* Dark mode */
+[data-theme="dark"] .notes-panel {
+  background: var(--color-surface-2, #1e2533);
+  border-color: var(--color-border, #2d3748);
+}
+
+[data-theme="dark"] .notes-label {
+  color: var(--color-text, #e2e8f0);
+}
+
+[data-theme="dark"] .notes-textarea {
+  background: var(--color-surface, #171e2b);
+  color: var(--color-text, #e2e8f0);
+  border-color: var(--color-border, #2d3748);
+}
+
+[data-theme="dark"] .notes-counter {
+  color: var(--color-text, #e2e8f0);
+}

@@ -23,18 +23,20 @@ const BookingConfirmationSummary = ({
       label: "Alumno",
       value: studentName || "Sin completar",
     },
-    {
-      icon: <FaUserTie aria-hidden="true" />,
-      label: "Responsable",
-      value: isAdult
-        ? "Alumno mayor de edad"
-        : responsibleName || "Adulto responsable",
-    },
-    {
-      icon: <FaIdCard aria-hidden="true" />,
-      label: "Parentesco",
-      value: responsibleRelationshipLabel || "Sin completar",
-    },
+    ...(!isAdult
+      ? [
+          {
+            icon: <FaUserTie aria-hidden="true" />,
+            label: "Responsable",
+            value: responsibleName || "Adulto responsable",
+          },
+          {
+            icon: <FaIdCard aria-hidden="true" />,
+            label: "Parentesco",
+            value: responsibleRelationshipLabel || "Sin completar",
+          },
+        ]
+      : []),
     {
       icon: <FaLayerGroup aria-hidden="true" />,
       label: "Nivel",

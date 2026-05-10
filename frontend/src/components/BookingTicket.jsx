@@ -15,6 +15,8 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 import {
+  formatDateLong,
+  formatTime,
   formatDurationOptionLabel,
   getBookingStatusLabel,
   getResponsibleRelationshipDisplay,
@@ -22,35 +24,14 @@ import {
 } from "../utils/bookingFormatters";
 
 const BookingTicket = ({ booking, onEdit, onCancel, onDelete }) => {
-  const dateObj = new Date(booking.timeSlot);
+  const dateStr = formatDateLong(booking.timeSlot);
+
   const endTimeObj = new Date(
-    dateObj.getTime() + booking.duration * 60 * 60 * 1000,
+    new Date(booking.timeSlot).getTime() + booking.duration * 60 * 60 * 1000,
   );
 
-  const timeStart = !Number.isNaN(dateObj.getTime())
-    ? dateObj.toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-    : "--:--";
-
-  const timeEnd = !Number.isNaN(endTimeObj.getTime())
-    ? endTimeObj.toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-    : "--:--";
-
-  const dateStr = !Number.isNaN(dateObj.getTime())
-    ? dateObj.toLocaleDateString("es-AR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "Fecha inválida";
+  const timeStart = formatTime(booking.timeSlot);
+  const timeEnd = formatTime(endTimeObj);
 
   const displayStatus = getBookingStatusLabel(booking.status);
   const isAdultStudent = isAdultBooking(booking);
@@ -59,14 +40,19 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete }) => {
   return (
     <div className={`ticket-card ${displayStatus}`}>
       <div className="ticket-header">
-        <span className="ticket-code">
-          <FaHashtag aria-hidden="true" style={{ fontSize: "0.8em", marginRight: "4px" }} />
+        <span
+          className="ticket-code"
+          aria-label={`Código de reserva: ${booking.bookingCode}`}
+        >
+          <FaHashtag className="ticket-code-icon" aria-hidden="true" />
           {booking.bookingCode}
         </span>
         <div className={`status-badge ${displayStatus}`}>
-          {displayStatus === "Cancelado"
-            ? <FaTimesCircle aria-hidden="true" />
-            : <FaCheckCircle aria-hidden="true" />}{" "}
+          {displayStatus === "Cancelado" ? (
+            <FaTimesCircle aria-hidden="true" />
+          ) : (
+            <FaCheckCircle aria-hidden="true" />
+          )}{" "}
           {displayStatus}
         </div>
       </div>
@@ -118,7 +104,7 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete }) => {
           </div>
 
           {booking.subject && (
-            <div className="info-block" style={{ marginTop: "10px" }}>
+            <div className="info-block">
               <div className="label">
                 <FaBookOpen aria-hidden="true" /> Materia / Tema
               </div>
@@ -179,7 +165,7 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete }) => {
             </button>
             <button
               type="button"
-              onClick={() => onCancel(booking.bookingCode)}
+              onClick={() => onCancel(booking)}
               className="btn-action btn-cancel"
               aria-label={`Cancelar turno de ${booking.studentName}`}
             >

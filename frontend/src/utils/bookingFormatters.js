@@ -51,6 +51,21 @@ export const isSameCalendarDay = (first, second) =>
   first.getMonth() === second.getMonth() &&
   first.getDate() === second.getDate();
 
+export const formatDateLong = (value) =>
+  new Date(value).toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+export const formatTime = (value) =>
+  new Date(value).toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
 export const formatDayLabel = (value) =>
   value.toLocaleDateString("es-AR", { weekday: "short", day: "2-digit" });
 

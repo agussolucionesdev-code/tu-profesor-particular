@@ -17,13 +17,11 @@ body {
 .menu-toggle-icon,
 .btn-search,
 .btn-action,
-.btn-modal,
 .btn-neuro-primary,
 .btn-neuro-secondary,
 .btn-neuro-success,
 .btn-stage-next,
 .duration-chip,
-.duration-quick-btn,
 .booking-month-nav,
 .calendar-zoom-button,
 .calendar-secondary-action,
@@ -51,13 +49,11 @@ body {
 .menu-toggle-icon:focus-visible,
 .btn-search:focus-visible,
 .btn-action:focus-visible,
-.btn-modal:focus-visible,
 .btn-neuro-primary:focus-visible,
 .btn-neuro-secondary:focus-visible,
 .btn-neuro-success:focus-visible,
 .btn-stage-next:focus-visible,
 .duration-chip:focus-visible,
-.duration-quick-btn:focus-visible,
 .booking-month-nav:focus-visible,
 .calendar-zoom-button:focus-visible,
 .calendar-secondary-action:focus-visible,
@@ -403,40 +399,19 @@ body {
 .client-portal-wrapper .ticket-header,
 .client-portal-wrapper .ticket-footer,
 .client-portal-wrapper .contact-signature,
-.client-portal-wrapper .portal-toast,
-.client-portal-wrapper .reschedule-modal-box,
-.client-portal-wrapper .cancel-soft-modal,
-.client-portal-wrapper .reschedule-panel-intro,
-.client-portal-wrapper .reschedule-editor-head,
-.client-portal-wrapper .reschedule-comparison-modern,
-.client-portal-wrapper .reschedule-selection-pill,
-.client-portal-wrapper .calendar-panel-premium,
-.client-portal-wrapper .duration-panel-premium,
-.client-portal-wrapper .duration-preview-card,
-.client-portal-wrapper .reschedule-mini-facts article,
-.client-portal-wrapper .cancel-soft-summary article,
-.client-portal-wrapper .change-preview-rich,
-.client-portal-wrapper .reschedule-footer,
-.client-portal-wrapper .cancel-soft-footer,
-.client-portal-wrapper .cancel-soft-note {
+.client-portal-wrapper .portal-toast {
   border-color: var(--polish-border-soft);
   box-shadow: var(--polish-shadow-soft);
 }
 
-.client-portal-wrapper .ticket-card,
-.client-portal-wrapper .reschedule-modal-box,
-.client-portal-wrapper .cancel-soft-modal {
+.client-portal-wrapper .ticket-card {
   border-radius: 30px;
 }
 
 .client-portal-wrapper .ticket-code,
 .client-portal-wrapper .value-tertiary,
 .client-portal-wrapper .search-input,
-.client-portal-wrapper .btn-reschedule,
-.client-portal-wrapper .btn-modal.cancel,
-.client-portal-wrapper .safe-return,
-.client-portal-wrapper .reschedule-month-nav,
-.client-portal-wrapper .duration-quick-btn {
+.client-portal-wrapper .btn-reschedule {
   border-color: var(--border-soft);
   background: var(--color-white);
 }
@@ -444,11 +419,7 @@ body {
 .client-portal-wrapper .ticket-code,
 .client-portal-wrapper .value-tertiary,
 .client-portal-wrapper .search-input,
-.client-portal-wrapper .btn-reschedule,
-.client-portal-wrapper .btn-modal.cancel,
-.client-portal-wrapper .safe-return,
-.client-portal-wrapper .reschedule-month-nav,
-.client-portal-wrapper .duration-quick-btn {
+.client-portal-wrapper .btn-reschedule {
   background: linear-gradient(180deg, var(--polish-surface-0), var(--polish-surface-1));
 }
 
@@ -493,9 +464,7 @@ body {
   font-size: 1.05em;
 }
 
-.client-portal-wrapper .btn-action,
-.client-portal-wrapper .btn-modal,
-.client-portal-wrapper .duration-quick-btn {
+.client-portal-wrapper .btn-action {
   min-height: 50px;
   border-radius: 16px;
   font-weight: 800;
@@ -538,22 +507,7 @@ body {
 [data-theme="dark"] .client-portal-wrapper .ticket-header,
 [data-theme="dark"] .client-portal-wrapper .ticket-footer,
 [data-theme="dark"] .client-portal-wrapper .contact-signature,
-[data-theme="dark"] .client-portal-wrapper .portal-toast,
-[data-theme="dark"] .client-portal-wrapper .reschedule-modal-box,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-modal,
-[data-theme="dark"] .client-portal-wrapper .reschedule-panel-intro,
-[data-theme="dark"] .client-portal-wrapper .reschedule-editor-head,
-[data-theme="dark"] .client-portal-wrapper .reschedule-comparison-modern,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill,
-[data-theme="dark"] .client-portal-wrapper .calendar-panel-premium,
-[data-theme="dark"] .client-portal-wrapper .duration-panel-premium,
-[data-theme="dark"] .client-portal-wrapper .duration-preview-card,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts article,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-summary article,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich,
-[data-theme="dark"] .client-portal-wrapper .reschedule-footer,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-footer,
-[data-theme="dark"] .client-portal-wrapper .cancel-soft-note {
+[data-theme="dark"] .client-portal-wrapper .portal-toast {
   background:
     radial-gradient(circle at top right, rgba(114, 176, 122, 0.08), transparent 34%),
     linear-gradient(180deg, var(--polish-surface-0), var(--polish-surface-1));
@@ -563,11 +517,7 @@ body {
 [data-theme="dark"] .client-portal-wrapper .ticket-code,
 [data-theme="dark"] .client-portal-wrapper .value-tertiary,
 [data-theme="dark"] .client-portal-wrapper .search-input,
-[data-theme="dark"] .client-portal-wrapper .btn-reschedule,
-[data-theme="dark"] .client-portal-wrapper .btn-modal.cancel,
-[data-theme="dark"] .client-portal-wrapper .safe-return,
-[data-theme="dark"] .client-portal-wrapper .reschedule-month-nav,
-[data-theme="dark"] .client-portal-wrapper .duration-quick-btn {
+[data-theme="dark"] .client-portal-wrapper .btn-reschedule {
   background: linear-gradient(180deg, var(--polish-surface-1), var(--polish-surface-2));
   color: #edf4fb;
 }
@@ -598,10 +548,6 @@ body {
 [data-theme="dark"] .client-portal-wrapper .ticket-code,
 [data-theme="dark"] .client-portal-wrapper .value-tertiary,
 [data-theme="dark"] .client-portal-wrapper .date-box strong,
-[data-theme="dark"] .client-portal-wrapper .change-preview-rich strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-mini-facts strong,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill strong,
-[data-theme="dark"] .client-portal-wrapper .duration-preview-card strong,
 [data-theme="dark"] .client-portal-wrapper .portal-toast-copy strong {
   color: #edf4fb;
 }
@@ -621,7 +567,6 @@ body {
   color: #07111d;
 }
 
-[data-theme="dark"] .client-portal-wrapper .btn-modal.confirm,
 [data-theme="dark"] .client-portal-wrapper .btn-search {
   background: linear-gradient(135deg, #1d344d, #2b5478 62%, #589860) !important;
   border-color: rgba(114, 176, 122, 0.22) !important;
@@ -631,38 +576,7 @@ body {
     inset 0 0 0 1px rgba(114, 176, 122, 0.12);
 }
 
-[data-theme="dark"] .client-portal-wrapper .btn-modal.cancel,
-[data-theme="dark"] .client-portal-wrapper .safe-return {
-  background: linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.95)) !important;
-  border-color: rgba(171, 195, 217, 0.14) !important;
-  color: #edf4fb !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-header {
-  background: linear-gradient(135deg, #112032, #1d344d 62%, #2b5478) !important;
-  color: #edf4fb !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-header h3,
-[data-theme="dark"] .client-portal-wrapper .reschedule-header p {
-  color: #edf4fb !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-step-chip {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(237, 244, 251, 0.16) !important;
-  color: rgba(237, 244, 251, 0.86) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .reschedule-step-chip.active {
-  background: rgba(114, 176, 122, 0.18) !important;
-  border-color: rgba(114, 176, 122, 0.24) !important;
-  color: #edf4fb !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box.new,
-[data-theme="dark"] .client-portal-wrapper .reschedule-selection-pill.accent,
-[data-theme="dark"] .client-portal-wrapper .duration-preview-card {
+[data-theme="dark"] .client-portal-wrapper .date-box.new {
   background:
     radial-gradient(circle at top right, rgba(114, 176, 122, 0.16), transparent 38%),
     linear-gradient(180deg, rgba(15, 34, 28, 0.96), rgba(13, 26, 41, 0.94));
@@ -756,8 +670,7 @@ body {
     gap: 0.75rem;
   }
 
-  .client-portal-wrapper .btn-action,
-  .client-portal-wrapper .btn-modal {
+  .client-portal-wrapper .btn-action {
     width: 100%;
     justify-content: center;
   }
@@ -818,21 +731,6 @@ body {
     .ticket-footer,
     .contact-signature,
     .portal-toast,
-    .reschedule-modal-box,
-    .cancel-soft-modal,
-    .reschedule-panel-intro,
-    .reschedule-editor-head,
-    .reschedule-comparison-modern,
-    .reschedule-selection-pill,
-    .calendar-panel-premium,
-    .duration-panel-premium,
-    .duration-preview-card,
-    .reschedule-mini-facts article,
-    .cancel-soft-summary article,
-    .change-preview-rich,
-    .reschedule-footer,
-    .cancel-soft-footer,
-    .cancel-soft-note,
     .admin-login-shell,
     .admin-login-card,
     .admin-nav-btn,
@@ -1090,9 +988,9 @@ body {
 /* ========================================================================== */
 
 .booking-page-wrapper > .form-card-elevation {
-  flex: 1 1 960px;
-  width: min(100%, 960px);
-  max-width: 960px;
+  flex: 1 1 1080px;
+  width: min(100%, 1080px);
+  max-width: 1080px;
   min-width: 0;
 }
 
