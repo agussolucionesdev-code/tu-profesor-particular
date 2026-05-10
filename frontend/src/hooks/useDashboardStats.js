@@ -68,7 +68,17 @@ export const useDashboardStats = (sortedBookings) => {
           sameDay(b.start, date) &&
           b.status !== "Cancelado",
       ).length;
-      return { label: formatDay(date), count };
+      return {
+        label: formatDay(date),
+        fullLabel: date.toLocaleDateString("es-AR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        }),
+        count,
+        isToday: index === 0,
+        isPast: false, // weekFlow starts from today, all items are today or future
+      };
     });
 
     const subjectsMap = new Map();

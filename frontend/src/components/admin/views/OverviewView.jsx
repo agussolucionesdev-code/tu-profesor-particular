@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import {
   FaCheckCircle,
   FaDollarSign,
+  FaFlag,
   FaRegClock,
   FaTrashAlt,
   FaWhatsapp,
@@ -9,9 +11,97 @@ import {
   formatLongDateLabel as formatDate,
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
-  getBookingStatusLabel as bookingStatusLabel,
 } from "../../../utils/bookingFormatters";
 
+/* ─── countdown helper ─── */
+const formatCountdown = (ms) => {
+  if (ms <= 0) return "ahora mismo";
+  const totalMin = Math.floor(ms / 60_000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0 && m > 0) return `en ${h}h ${m}min`;
+  if (h > 0) return `en ${h}h`;
+  return `en ${m}min`;
+};
+
+/* ─── Next class widget with live countdown ─── */
+const NextClassWidget = ({ next, onSendWhatsApp, onQuickStatusChange }) => {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!next) {
+    return (
+      <p className="empty-copy">No hay clases programadas próximamente.</p>
+    );
+  }
+
+  const isInProgress =
+    next.start && next.end && now >= next.start && now < next.end;
+  const msUntil = next.start ? next.start.getTime() - now.getTime() : null;
+  const countdown =
+    msUntil !== null && !isInProgress ? formatCountdown(msUntil) : null;
+
+  return (
+    <>
+      <div className="next-class-info">
+        {isInProgress && (
+          <div className="next-class-live-badge" aria-live="polite">
+            <span className="live-dot" aria-hidden="true" />
+            En clase
+          </div>
+        )}
+        <strong className="next-class-student">{next.studentName}</strong>
+        <span className="next-class-subject">{next.subject}</span>
+        <div className="next-class-time">
+          <FaRegClock aria-hidden="true" />
+          {next.start
+            ? `${formatDate(next.start)} · ${formatTime(next.start)} hs`
+            : "--"}
+        </div>
+        {countdown && (
+          <div className="next-class-countdown">{countdown}</div>
+        )}
+      </div>
+
+      <div className="next-class-actions">
+        <button
+          type="button"
+          className="admin-primary-btn slim"
+          title="Contactar por WhatsApp"
+          onClick={() => onSendWhatsApp(next)}
+        >
+          <FaWhatsapp aria-hidden="true" /> WhatsApp
+        </button>
+        {next.status === "Pendiente" && (
+          <button
+            type="button"
+            className="admin-secondary-btn slim"
+            title="Confirmar clase"
+            onClick={() => onQuickStatusChange(next._id, "Confirmado")}
+          >
+            <FaCheckCircle aria-hidden="true" /> Confirmar
+          </button>
+        )}
+        {(next.status === "Confirmado" || isInProgress) && (
+          <button
+            type="button"
+            className="admin-secondary-btn slim"
+            title="Marcar como finalizada"
+            onClick={() => onQuickStatusChange(next._id, "Finalizado")}
+          >
+            <FaFlag aria-hidden="true" /> Finalizar
+          </button>
+        )}
+      </div>
+    </>
+  );
+};
+
+/* ─── Main view ─── */
 const OverviewView = ({
   overviewData,
   dashboard,
@@ -19,7 +109,6 @@ const OverviewView = ({
   onSendWhatsApp,
   onQuickStatusChange,
 }) => {
-  const next = overviewData.upcomingBookings[0];
   const { monthRevenue, lastMonthRevenue } = overviewData;
   const maxWeekFlow = Math.max(
     ...overviewData.weekFlow.map((day) => day.count),
@@ -38,29 +127,11 @@ const OverviewView = ({
             </div>
           </div>
           <div className="next-class-details">
-            {!next ? (
-              <p className="empty-copy">No hay clases programadas próximamente.</p>
-            ) : (
-              <>
-                <div className="next-class-info">
-                  <strong>{next.studentName}</strong>
-                  <span>{next.subject}</span>
-                  <div className="next-class-time">
-                    <FaRegClock />{" "}
-                    {next.start
-                      ? `${formatDate(next.start)} a las ${formatTime(next.start)} hs`
-                      : "--"}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="admin-primary-btn slim"
-                  onClick={() => onSendWhatsApp(next)}
-                >
-                  <FaWhatsapp aria-hidden="true" /> Contactar
-                </button>
-              </>
-            )}
+            <NextClassWidget
+              next={overviewData.upcomingBookings[0]}
+              onSendWhatsApp={onSendWhatsApp}
+              onQuickStatusChange={onQuickStatusChange}
+            />
           </div>
         </article>
 
@@ -77,7 +148,18 @@ const OverviewView = ({
             aria-label={`Pulso semanal: ${overviewData.weekFlow.map((d) => `${d.label} ${d.count} clase${d.count !== 1 ? "s" : ""}`).join(", ")}`}
           >
             {overviewData.weekFlow.map((item) => (
-              <div key={item.label} className="admin-bar-column" aria-hidden="true">
+              <div
+                key={item.label}
+                className={[
+                  "admin-bar-column",
+                  item.isToday ? "is-today" : "",
+                  item.isPast ? "is-past" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-hidden="true"
+                title={`${item.fullLabel}: ${item.count} clase${item.count !== 1 ? "s" : ""}`}
+              >
                 <span className="admin-bar-value">{item.count}</span>
                 <div className="admin-bar-track">
                   <div
@@ -155,6 +237,7 @@ const OverviewView = ({
                     <button
                       type="button"
                       className="inline-action success"
+                      title="Confirmar reserva"
                       aria-label={`Confirmar reserva de ${booking.studentName}`}
                       onClick={() =>
                         onQuickStatusChange(booking._id, "Confirmado")
@@ -165,6 +248,7 @@ const OverviewView = ({
                     <button
                       type="button"
                       className="inline-action danger"
+                      title="Cancelar reserva"
                       aria-label={`Cancelar reserva de ${booking.studentName}`}
                       onClick={() =>
                         onQuickStatusChange(booking._id, "Cancelado")
@@ -240,6 +324,7 @@ const OverviewView = ({
                   <button
                     type="button"
                     className="inline-action"
+                    title="Contactar por WhatsApp"
                     aria-label={`Contactar a ${booking.studentName} por WhatsApp`}
                     onClick={() => onSendWhatsApp(booking)}
                   >
@@ -272,7 +357,10 @@ const OverviewView = ({
                   <div className="activity-copy">
                     <strong>{booking.studentName}</strong>
                     <span>
-                      {booking.subject} · {bookingStatusLabel(booking.status)}
+                      {booking.subject} ·{" "}
+                      <span className={`inline-status ${booking.status}`}>
+                        {booking.status}
+                      </span>
                     </span>
                   </div>
                   <small>
