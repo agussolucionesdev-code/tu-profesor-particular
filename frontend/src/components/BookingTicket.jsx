@@ -121,7 +121,7 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete }) => {
             <div className="value-primary date-highlight">{dateStr}</div>
 
             <div className="value-secondary time-highlight">
-              <FaClock aria-hidden="true" /> {timeStart} - {timeEnd} hs
+              <FaClock aria-hidden="true" /> {timeStart} - {timeEnd} h
               <span className="duration-badge">
                 {formatDurationOptionLabel(booking.duration)}
               </span>

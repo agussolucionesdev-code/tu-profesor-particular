@@ -59,7 +59,7 @@ const NextClassWidget = ({ next, onSendWhatsApp, onQuickStatusChange }) => {
         <div className="next-class-time">
           <FaRegClock aria-hidden="true" />
           {next.start
-            ? `${formatDate(next.start)} · ${formatTime(next.start)} hs`
+            ? `${formatDate(next.start)} · ${formatTime(next.start)} h`
             : "--"}
         </div>
         {countdown && (
@@ -228,7 +228,7 @@ const OverviewView = ({
                     <strong>{booking.studentName}</strong>
                     <span>
                       {booking.start
-                        ? `${formatShortDate(booking.start)} · ${formatTime(booking.start)} hs`
+                        ? `${formatShortDate(booking.start)} · ${formatTime(booking.start)} h`
                         : "--"}
                     </span>
                     <small>{booking.subject}</small>
@@ -308,7 +308,7 @@ const OverviewView = ({
           </div>
           <div className="timeline-list">
             {overviewData.upcoming24h.length === 0 ? (
-              <p className="empty-copy">Sin movimientos en las próximas 24 hs.</p>
+              <p className="empty-copy">Sin movimientos en las próximas 24 h.</p>
             ) : (
               overviewData.upcoming24h.map((booking) => (
                 <div key={booking._id} className="timeline-item">
@@ -316,7 +316,7 @@ const OverviewView = ({
                     <strong>{booking.studentName}</strong>
                     <span>
                       {booking.start
-                        ? `${formatDate(booking.start)} · ${formatTime(booking.start)} hs`
+                        ? `${formatDate(booking.start)} · ${formatTime(booking.start)} h`
                         : "--"}
                     </span>
                     <small>{booking.subject}</small>

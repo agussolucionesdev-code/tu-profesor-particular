@@ -272,7 +272,11 @@ export const getResponsibleSummary = (booking) => {
 export const getBookingStatusBucket = (status) =>
   String(status ?? "").trim() === "Cancelado" ? "Cancelado" : "Confirmado";
 
-export const getBookingStatusLabel = (status) => getBookingStatusBucket(status);
+export const getBookingStatusLabel = (status) => {
+  const s = String(status ?? "").trim();
+  const VALID = ["Pendiente", "Confirmado", "Finalizado", "Cancelado"];
+  return VALID.includes(s) ? s : "Pendiente";
+};
 
 export const buildStudentKey = (booking) =>
   [

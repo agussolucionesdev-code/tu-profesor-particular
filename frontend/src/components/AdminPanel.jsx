@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaBan,
@@ -10,6 +10,7 @@ import {
   FaCog,
   FaDollarSign,
   FaExclamationTriangle,
+  FaHistory,
   FaKeyboard,
   FaPlus,
   FaSignOutAlt,
@@ -17,6 +18,7 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import { sendWhatsApp, getSentMessages } from "../utils/whatsappHelper";
+import { toSafeDate as toDate } from "../utils/bookingFormatters";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 import { useBookingsData } from "../hooks/useBookingsData";
 import { useBookingFilters } from "../hooks/useBookingFilters";
@@ -33,6 +35,7 @@ import BookingsView from "./admin/views/BookingsView";
 import BlockedDatesView from "./admin/views/BlockedDatesView";
 import ScheduleSettingsView from "./admin/views/ScheduleSettingsView";
 import CalendarView from "./admin/views/CalendarView";
+import HistoryView from "./admin/views/HistoryView";
 import { SkeletonKPI } from "./admin/shared/Skeleton";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import "../styles/tokens.css";
@@ -46,6 +49,7 @@ const VIEW_OPTIONS = [
   { id: "calendar", label: "Calendario", icon: FaCalendarAlt },
   { id: "students", label: "Alumnos", icon: FaUsers },
   { id: "bookings", label: "Turnos", icon: FaClipboardList },
+  { id: "history", label: "Historial", icon: FaHistory },
   { id: "availability", label: "Disponibilidad", icon: FaBan },
   { id: "settings", label: "Ajustes", icon: FaCog },
 ];
@@ -75,6 +79,25 @@ const AdminPanel = () => {
     clearBookings,
   } = useBookingsData({ authConfig, isAuthenticated, handleLogout });
 
+  const { activeBookings, historyBookings } = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const active = [];
+    const history = [];
+
+    sortedBookings.forEach((b) => {
+      const date = toDate(b.timeSlot);
+      const isActive =
+        date &&
+        date >= todayStart &&
+        (b.status === "Pendiente" || b.status === "Confirmado");
+      (isActive ? active : history).push(b);
+    });
+
+    return { activeBookings: active, historyBookings: history };
+  }, [sortedBookings]);
+
   const {
     searchTerm,
     setSearchTerm,
@@ -83,7 +106,7 @@ const AdminPanel = () => {
     filteredBookings,
     matchCount,
     totalCount,
-  } = useBookingFilters(sortedBookings);
+  } = useBookingFilters(activeBookings);
 
   const { dashboard, overviewData, heroText } =
     useDashboardStats(sortedBookings);
@@ -111,7 +134,7 @@ const AdminPanel = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const VIEW_KEYS = ["1", "2", "3", "4", "5", "6", "7"];
+    const VIEW_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8"];
     const handleKeyDown = (e) => {
       // Skip if inside an input/textarea
       const tag = document.activeElement?.tagName;
@@ -208,7 +231,7 @@ const AdminPanel = () => {
           <div className="sidebar-alert-list">
             <div>
               <FaBell />
-              <span>{overviewData.upcoming24h.length} en 24 hs</span>
+              <span>{overviewData.upcoming24h.length} en 24 h</span>
             </div>
             <div>
               <FaExclamationTriangle />
@@ -285,7 +308,7 @@ const AdminPanel = () => {
                   <span>Clases hoy</span>
                   <strong>{overviewData.todayBookings.length}</strong>
                   <small>
-                    {overviewData.upcoming24h.length} en las próximas 24 hs
+                    {overviewData.upcoming24h.length} en las próximas 24 h
                   </small>
                 </div>
               </article>
@@ -380,6 +403,16 @@ const AdminPanel = () => {
             onDeleteBooking={deleteBooking}
             onDeleteAll={deleteAllBookings}
             onQuickStatusChange={handleQuickStatusChange}
+          />
+        )}
+
+        {activeView === "history" && (
+          <HistoryView
+            historyBookings={historyBookings}
+            sentMessages={sentMessages}
+            dataLoading={dataLoading}
+            onSendWhatsApp={handleSendWhatsApp}
+            onSelectBooking={setViewBooking}
           />
         )}
 

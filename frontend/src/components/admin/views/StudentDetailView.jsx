@@ -242,7 +242,7 @@ const StudentDetailView = ({
                       <span className="sd-session-date">
                         <FaGraduationCap aria-hidden="true" />
                         {b.timeSlot
-                          ? `${formatShortDate(new Date(b.timeSlot))} · ${formatTime(new Date(b.timeSlot))} hs`
+                          ? `${formatShortDate(new Date(b.timeSlot))} · ${formatTime(new Date(b.timeSlot))} h`
                           : "--"}
                         {b.duration ? ` · ${b.duration}h` : ""}
                       </span>

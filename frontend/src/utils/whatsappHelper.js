@@ -35,7 +35,7 @@ export const sendWhatsApp = (booking) => {
 
   const start = toDate(booking.timeSlot);
   const when = start
-    ? `${formatDate(start)} a las ${formatTime(start)} hs`
+    ? `${formatDate(start)} a las ${formatTime(start)} h`
     : "fecha pendiente";
   const name = booking.studentName || "Alumno";
   const message = `Hola ${name}, soy Agustín Sosa. Te escribo por tu turno de ${booking.subject} previsto para ${when}.`;

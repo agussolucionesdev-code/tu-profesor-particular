@@ -34,7 +34,7 @@ const AgendaView = ({
                 <strong>{booking.studentName}</strong>
                 <span>
                   {booking.start
-                    ? `${formatDate(booking.start)} · ${formatTime(booking.start)} hs`
+                    ? `${formatDate(booking.start)} · ${formatTime(booking.start)} h`
                     : "--"}
                 </span>
                 <small>{booking.subject}</small>
@@ -70,7 +70,7 @@ const AgendaView = ({
                 <strong>{booking.studentName}</strong>
                 <span>
                   {booking.start
-                    ? `${formatShortDate(booking.start)} · ${formatTime(booking.start)} hs`
+                    ? `${formatShortDate(booking.start)} · ${formatTime(booking.start)} h`
                     : "--"}
                 </span>
                 <small>{booking.subject}</small>

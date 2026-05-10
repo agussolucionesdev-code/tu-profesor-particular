@@ -76,7 +76,7 @@ const BookingSuccessModal = ({
   const alert = getDeliveryAlert(successData);
   const durationText =
     successData?.durationLabel ||
-    `${successData?.actualDuration || "--"} hs`;
+    `${successData?.actualDuration || "--"} h`;
 
   const detailRows = [
     { label: "Alumno", value: successData?.cleanStudentName },
@@ -122,7 +122,7 @@ const BookingSuccessModal = ({
             </span>
             <span>
               <FaClock aria-hidden="true" /> {successData?.startTime} a{" "}
-              {successData?.endTime} hs
+              {successData?.endTime} h
             </span>
             <span>
               <FaHourglassHalf aria-hidden="true" /> {durationText}

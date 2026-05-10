@@ -51,7 +51,9 @@ const BookingEditModal = ({
               value={bookingStatusLabel(booking.status)}
               onChange={onStatusChange}
             >
+              <option value="Pendiente">Pendiente</option>
               <option value="Confirmado">Confirmado</option>
+              <option value="Finalizado">Finalizado</option>
               <option value="Cancelado">Cancelado</option>
             </select>
           </label>

@@ -120,7 +120,7 @@ const BookingDetailModal = ({ booking, onClose, onContactWhatsApp }) => {
               <strong>Horario</strong>
               <span>
                 {booking.timeSlot
-                  ? `${formatTime(toDate(booking.timeSlot))} hs`
+                  ? `${formatTime(toDate(booking.timeSlot))} h`
                   : "--"}
               </span>
             </p>

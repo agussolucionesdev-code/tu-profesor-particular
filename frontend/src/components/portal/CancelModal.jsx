@@ -91,7 +91,7 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
             <dt>Horario</dt>
             <dd>
               {formatTime(cancelingBooking.timeSlot)} –{" "}
-              {formatTime(cancelingBooking.endTime)} hs
+              {formatTime(cancelingBooking.endTime)} h
             </dd>
           </div>
         </dl>

@@ -430,7 +430,7 @@ const BookingForm = () => {
                 "HH:mm",
               )
             : "--:--"
-        } hs`
+        } h`
       : "";
   const confirmationEducationLabel = [
     formData.educationLevel,
@@ -720,7 +720,7 @@ const BookingForm = () => {
       })
     : "";
   const selectedTimeLabel = isTimeSelected
-    ? `${format(formData.timeSlot, "HH:mm")} hs`
+    ? `${format(formData.timeSlot, "HH:mm")} h`
     : "";
 
   useEffect(() => {
@@ -887,7 +887,7 @@ const BookingForm = () => {
         successData.responsibleLabel ? `Responsable: ${successData.responsibleLabel}` : null,
         successData.responsibleRelationshipLabel ? `Parentesco: ${successData.responsibleRelationshipLabel}` : null,
         `Fecha: ${successData.day}`,
-        `Horario: ${successData.startTime} a ${successData.endTime} hs (${successData.actualDuration} hs)`,
+        `Horario: ${successData.startTime} a ${successData.endTime} h (${successData.actualDuration} h)`,
         `Código: ${successData.bookingCode}`,
         `Gestión: después voy a entrar en Mis Turnos con este código.`,
         ``,
@@ -1308,7 +1308,7 @@ const BookingForm = () => {
                   </div>
                   <strong>
                     {nextFreeSlot
-                      ? `Probá ${format(nextFreeSlot, "HH:mm")} hs`
+                      ? `Probá ${format(nextFreeSlot, "HH:mm")} h`
                       : "Mirá varios días"}
                   </strong>
                   <small>

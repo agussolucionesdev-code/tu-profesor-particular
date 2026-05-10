@@ -219,7 +219,7 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
             <span className="reschedule-slot-label">Actual</span>
             <strong className="reschedule-slot-date">{formatDateLong(editingBooking.timeSlot)}</strong>
             <span className="reschedule-slot-time">
-              {formatTime(editingBooking.timeSlot)} – {formatTime(editingBooking.endTime)} hs
+              {formatTime(editingBooking.timeSlot)} – {formatTime(editingBooking.endTime)} h
             </span>
           </div>
           <div className="reschedule-arrow" aria-hidden="true">
@@ -229,7 +229,7 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
             <span className="reschedule-slot-label">Propuesta</span>
             <strong className="reschedule-slot-date">{formatDateLong(newDate)}</strong>
             <span className="reschedule-slot-time">
-              {formatTime(newDate)} – {formatTime(newEndDate)} hs
+              {formatTime(newDate)} – {formatTime(newEndDate)} h
             </span>
           </div>
         </div>
@@ -251,7 +251,7 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
               maxTime={maxTime}
               minDate={new Date()}
               excludeTimes={getExcludedTimes(newDate)}
-              dateFormat="dd 'de' MMMM - HH:mm 'hs'"
+              dateFormat="dd 'de' MMMM - HH:mm 'h'"
               formatWeekDay={(nameOfDay) => nameOfDay.slice(0, 2)}
               calendarClassName="reschedule-datepicker"
               renderCustomHeader={({
@@ -331,7 +331,7 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
                 />
                 <div className="reschedule-end-time">
                   <span>Finaliza</span>
-                  <strong>{formatTime(newEndDate)} hs</strong>
+                  <strong>{formatTime(newEndDate)} h</strong>
                 </div>
               </div>
             </div>

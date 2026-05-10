@@ -1,25 +1,21 @@
 import { useMemo, useState } from "react";
 import {
   FaCalendarAlt,
-  FaCheckCircle,
   FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
   FaChevronUp,
-  FaEdit,
   FaEye,
   FaFilter,
-  FaFlag,
   FaRegClock,
   FaSearch,
   FaSpinner,
-  FaTimesCircle,
-  FaTrashAlt,
   FaWhatsapp,
 } from "react-icons/fa";
 import {
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
+  normalizeText as norm,
   getResponsibleRelationshipDisplay as responsibleRelationshipLabel,
   toSafeDate as toDate,
 } from "../../../utils/bookingFormatters";
@@ -35,36 +31,45 @@ const SortIcon = ({ active, dir }) => {
     : <FaChevronDown className="sort-icon active" aria-hidden="true" />;
 };
 
-const BookingsView = ({
-  searchTerm,
-  filterStatus,
-  filteredBookings,
-  bookings,
+const HistoryView = ({
+  historyBookings,
   sentMessages,
   dataLoading,
-  matchCount,
-  totalCount,
-  onSearchTermChange,
-  onFilterStatusChange,
   onSendWhatsApp,
   onSelectBooking,
-  onEditBooking,
-  onDeleteBooking,
-  onDeleteAll,
-  onQuickStatusChange,
 }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Todos");
   const [sortKey, setSortKey] = useState("timeSlot");
-  const [sortDir, setSortDir] = useState("asc");
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const [bulkLoading, setBulkLoading] = useState(false);
+  const [sortDir, setSortDir] = useState("desc");
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortKey(key); setSortDir("asc"); }
+    else { setSortKey(key); setSortDir("desc"); }
   };
 
+  const filtered = useMemo(() => {
+    const term = norm(searchTerm);
+    return historyBookings.filter((booking) => {
+      const blob = norm(
+        [
+          booking.studentName,
+          booking.responsibleName,
+          booking.bookingCode,
+          booking.phone,
+          booking.email,
+          booking.subject,
+        ].join(" "),
+      );
+      const matchesSearch = !term || blob.includes(term);
+      const matchesStatus =
+        filterStatus === "Todos" || booking.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [historyBookings, searchTerm, filterStatus]);
+
   const sorted = useMemo(() => {
-    return [...filteredBookings].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let valA, valB;
       switch (sortKey) {
         case "timeSlot":
@@ -90,7 +95,7 @@ const BookingsView = ({
       if (valA > valB) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [filteredBookings, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir]);
 
   const {
     currentPage,
@@ -105,39 +110,6 @@ const BookingsView = ({
     hasPrev,
   } = usePagination(sorted, PAGE_SIZE);
 
-  /* ── Selection ── */
-  const allSelected =
-    pageItems.length > 0 && pageItems.every((b) => selectedIds.has(b._id));
-  const someSelected = selectedIds.size > 0;
-
-  const toggleAll = () => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (allSelected) pageItems.forEach((b) => next.delete(b._id));
-      else pageItems.forEach((b) => next.add(b._id));
-      return next;
-    });
-  };
-
-  const toggleOne = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const handleBulkAction = async (newStatus) => {
-    setBulkLoading(true);
-    try {
-      await Promise.all([...selectedIds].map((id) => onQuickStatusChange(id, newStatus)));
-      setSelectedIds(new Set());
-    } finally {
-      setBulkLoading(false);
-    }
-  };
-
   const thProps = (key, label) => ({
     className: `sortable-th ${sortKey === key ? "is-sorted" : ""}`,
     onClick: () => toggleSort(key),
@@ -149,20 +121,21 @@ const BookingsView = ({
     <section className="admin-card">
       <div className="admin-card-header spread">
         <div>
-          <span className="card-kicker">Gestor</span>
-          <h3>Control detallado de turnos</h3>
+          <span className="card-kicker">Archivo</span>
+          <h3>Historial de turnos</h3>
+          <p className="card-subtitle">Clases pasadas, finalizadas y canceladas</p>
         </div>
       </div>
 
       <div className="admin-toolbar">
         <label className="admin-search-box">
           <FaSearch aria-hidden="true" />
-          <span className="sr-only">Buscar reserva</span>
+          <span className="sr-only">Buscar en historial</span>
           <input
             type="search"
             placeholder="Buscar alumno, código, responsable o contacto..."
             value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             autoComplete="off"
           />
         </label>
@@ -174,7 +147,7 @@ const BookingsView = ({
               type="button"
               className={`status-filter-chip ${filterStatus === s ? "is-active" : ""}`}
               aria-pressed={filterStatus === s}
-              onClick={() => onFilterStatusChange(s)}
+              onClick={() => setFilterStatus(s)}
             >
               {s}
             </button>
@@ -184,72 +157,22 @@ const BookingsView = ({
 
       {(searchTerm || filterStatus !== "Todos") && (
         <p className="admin-search-count" aria-live="polite" role="status">
-          Mostrando {matchCount} de {totalCount} turnos
+          Mostrando {filtered.length} de {historyBookings.length} registros
         </p>
-      )}
-
-      {/* Bulk action bar */}
-      {someSelected && (
-        <div className="bulk-action-bar" role="toolbar" aria-label="Acciones en masa">
-          <span className="bulk-count">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}</span>
-          <button
-            type="button"
-            className="bulk-btn confirm"
-            onClick={() => handleBulkAction("Confirmado")}
-            disabled={bulkLoading}
-            title="Confirmar seleccionados"
-          >
-            <FaCheckCircle aria-hidden="true" /> Confirmar
-          </button>
-          <button
-            type="button"
-            className="bulk-btn finalize"
-            onClick={() => handleBulkAction("Finalizado")}
-            disabled={bulkLoading}
-            title="Finalizar seleccionados"
-          >
-            <FaFlag aria-hidden="true" /> Finalizar
-          </button>
-          <button
-            type="button"
-            className="bulk-btn cancel"
-            onClick={() => handleBulkAction("Cancelado")}
-            disabled={bulkLoading}
-            title="Cancelar seleccionados"
-          >
-            <FaTimesCircle aria-hidden="true" /> Cancelar
-          </button>
-          <button
-            type="button"
-            className="bulk-btn clear"
-            onClick={() => setSelectedIds(new Set())}
-          >
-            Limpiar selección
-          </button>
-        </div>
       )}
 
       {dataLoading ? (
         <div className="admin-loading-state">
           <FaSpinner className="spinner giant" />
-          <p>Sincronizando turnos...</p>
+          <p>Cargando historial...</p>
         </div>
       ) : (
         <>
-          {/* ── Desktop table ── */}
+          {/* Desktop table */}
           <div className="admin-table-shell hide-mobile">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th className="th-check">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleAll}
-                      aria-label="Seleccionar todos en esta página"
-                      title="Seleccionar todos"
-                    />
-                  </th>
                   <th {...thProps("status", "estado")}>
                     Estado <SortIcon active={sortKey === "status"} dir={sortDir} />
                   </th>
@@ -270,27 +193,16 @@ const BookingsView = ({
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="empty-table-state">
-                      No se encontraron reservas con esos filtros.
+                    <td colSpan="7" className="empty-table-state">
+                      No se encontraron registros con esos filtros.
                     </td>
                   </tr>
                 ) : (
                   pageItems.map((booking) => (
                     <tr
                       key={booking._id}
-                      className={[
-                        booking.status === "Cancelado" ? "row-cancelled" : "",
-                        selectedIds.has(booking._id) ? "row-selected" : "",
-                      ].filter(Boolean).join(" ")}
+                      className={booking.status === "Cancelado" ? "row-cancelled" : ""}
                     >
-                      <td className="th-check">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(booking._id)}
-                          onChange={() => toggleOne(booking._id)}
-                          aria-label={`Seleccionar reserva de ${booking.studentName}`}
-                        />
-                      </td>
                       <td>
                         <span className={`status-pill ${booking.status}`}>
                           {booking.status}
@@ -333,17 +245,6 @@ const BookingsView = ({
                       </td>
                       <td>
                         <div className="table-actions">
-                          {booking.status === "Pendiente" && (
-                            <button
-                              type="button"
-                              className="icon-action success"
-                              title="Confirmar reserva"
-                              aria-label={`Confirmar reserva de ${booking.studentName}`}
-                              onClick={() => onQuickStatusChange(booking._id, "Confirmado")}
-                            >
-                              <FaCheckCircle aria-hidden="true" />
-                            </button>
-                          )}
                           <button
                             type="button"
                             className="icon-action neutral"
@@ -352,24 +253,6 @@ const BookingsView = ({
                             onClick={() => onSelectBooking(booking)}
                           >
                             <FaEye aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="icon-action info"
-                            title="Editar reserva"
-                            aria-label={`Editar reserva de ${booking.studentName}`}
-                            onClick={() => onEditBooking(booking)}
-                          >
-                            <FaEdit aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="icon-action danger"
-                            title="Eliminar reserva"
-                            aria-label={`Eliminar reserva de ${booking.studentName}`}
-                            onClick={() => onDeleteBooking(booking._id)}
-                          >
-                            <FaTrashAlt aria-hidden="true" />
                           </button>
                         </div>
                       </td>
@@ -380,10 +263,10 @@ const BookingsView = ({
             </table>
           </div>
 
-          {/* ── Mobile cards ── */}
+          {/* Mobile cards */}
           <div className="booking-cards-list show-mobile">
             {pageItems.length === 0 ? (
-              <p className="empty-copy">No se encontraron reservas con esos filtros.</p>
+              <p className="empty-copy">No se encontraron registros con esos filtros.</p>
             ) : (
               pageItems.map((booking) => (
                 <div
@@ -405,21 +288,13 @@ const BookingsView = ({
                     </div>
                   </div>
                   <div className="booking-card-actions">
-                    {booking.status === "Pendiente" && (
-                      <button
-                        type="button"
-                        className="icon-action success"
-                        title="Confirmar"
-                        onClick={() => onQuickStatusChange(booking._id, "Confirmado")}
-                      >
-                        <FaCheckCircle aria-hidden="true" />
-                      </button>
-                    )}
-                    <button type="button" className="icon-action neutral" title="Ver" onClick={() => onSelectBooking(booking)}>
+                    <button
+                      type="button"
+                      className="icon-action neutral"
+                      title="Ver"
+                      onClick={() => onSelectBooking(booking)}
+                    >
                       <FaEye aria-hidden="true" />
-                    </button>
-                    <button type="button" className="icon-action info" title="Editar" onClick={() => onEditBooking(booking)}>
-                      <FaEdit aria-hidden="true" />
                     </button>
                     <button
                       type="button"
@@ -429,18 +304,15 @@ const BookingsView = ({
                     >
                       <FaWhatsapp aria-hidden="true" />
                     </button>
-                    <button type="button" className="icon-action danger" title="Eliminar" onClick={() => onDeleteBooking(booking._id)}>
-                      <FaTrashAlt aria-hidden="true" />
-                    </button>
                   </div>
                 </div>
               ))
             )}
           </div>
 
-          {/* ── Pagination ── */}
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination-bar" role="navigation" aria-label="Paginación">
+            <div className="pagination-bar" role="navigation" aria-label="Paginación del historial">
               <button
                 type="button"
                 className="page-btn"
@@ -493,20 +365,8 @@ const BookingsView = ({
           )}
         </>
       )}
-
-      {bookings.length > 0 && import.meta.env.DEV && (
-        <div className="admin-danger-zone">
-          <div>
-            <strong>Zona de resguardo</strong>
-            <p>Solo para limpiar datos de prueba. Pide doble confirmación.</p>
-          </div>
-          <button type="button" className="admin-danger-btn" onClick={onDeleteAll} disabled={dataLoading}>
-            <FaTrashAlt /> Limpiar base de prueba
-          </button>
-        </div>
-      )}
     </section>
   );
 };
 
-export default BookingsView;
+export default HistoryView;
