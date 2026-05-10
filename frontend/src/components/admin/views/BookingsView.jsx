@@ -1,12 +1,19 @@
+import { useMemo, useState } from "react";
 import {
   FaCalendarAlt,
   FaCheckCircle,
+  FaChevronDown,
+  FaChevronLeft,
+  FaChevronRight,
+  FaChevronUp,
   FaEdit,
   FaEye,
   FaFilter,
+  FaFlag,
   FaRegClock,
   FaSearch,
   FaSpinner,
+  FaTimesCircle,
   FaTrashAlt,
   FaWhatsapp,
 } from "react-icons/fa";
@@ -16,8 +23,17 @@ import {
   getResponsibleRelationshipDisplay as responsibleRelationshipLabel,
   toSafeDate as toDate,
 } from "../../../utils/bookingFormatters";
+import { usePagination } from "../../../hooks/usePagination";
 
 const STATUS_FILTERS = ["Todos", "Pendiente", "Confirmado", "Finalizado", "Cancelado"];
+const PAGE_SIZE = 20;
+
+const SortIcon = ({ active, dir }) => {
+  if (!active) return <FaChevronDown className="sort-icon inactive" aria-hidden="true" />;
+  return dir === "asc"
+    ? <FaChevronUp className="sort-icon active" aria-hidden="true" />
+    : <FaChevronDown className="sort-icon active" aria-hidden="true" />;
+};
 
 const BookingsView = ({
   searchTerm,
@@ -36,198 +52,461 @@ const BookingsView = ({
   onDeleteBooking,
   onDeleteAll,
   onQuickStatusChange,
-}) => (
-  <section className="admin-card">
-    <div className="admin-card-header spread">
-      <div>
-        <span className="card-kicker">Gestor</span>
-        <h3>Control detallado de turnos</h3>
-      </div>
-    </div>
+}) => {
+  const [sortKey, setSortKey] = useState("timeSlot");
+  const [sortDir, setSortDir] = useState("asc");
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
-    <div className="admin-toolbar">
-      <label className="admin-search-box">
-        <FaSearch aria-hidden="true" />
-        <span className="sr-only">Buscar reserva</span>
-        <input
-          type="search"
-          placeholder="Buscar alumno, código, responsable o contacto..."
-          value={searchTerm}
-          onChange={(event) => onSearchTermChange(event.target.value)}
-          autoComplete="off"
-        />
-      </label>
-      <div className="status-filter-row" role="group" aria-label="Filtrar por estado">
-        <span aria-hidden="true">
-          <FaFilter /> Filtrar
-        </span>
-        {STATUS_FILTERS.map((status) => (
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const sorted = useMemo(() => {
+    return [...filteredBookings].sort((a, b) => {
+      let valA, valB;
+      switch (sortKey) {
+        case "timeSlot":
+          valA = toDate(a.timeSlot)?.getTime() ?? 0;
+          valB = toDate(b.timeSlot)?.getTime() ?? 0;
+          break;
+        case "studentName":
+          valA = (a.studentName || "").toLowerCase();
+          valB = (b.studentName || "").toLowerCase();
+          break;
+        case "status":
+          valA = a.status || "";
+          valB = b.status || "";
+          break;
+        case "subject":
+          valA = (a.subject || "").toLowerCase();
+          valB = (b.subject || "").toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+      if (valA < valB) return sortDir === "asc" ? -1 : 1;
+      if (valA > valB) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredBookings, sortKey, sortDir]);
+
+  const {
+    currentPage,
+    totalPages,
+    pageItems,
+    startIndex,
+    endIndex,
+    goToNext,
+    goToPrev,
+    goToPage,
+    hasNext,
+    hasPrev,
+  } = usePagination(sorted, PAGE_SIZE);
+
+  /* ── Selection ── */
+  const allSelected =
+    pageItems.length > 0 && pageItems.every((b) => selectedIds.has(b._id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allSelected) pageItems.forEach((b) => next.delete(b._id));
+      else pageItems.forEach((b) => next.add(b._id));
+      return next;
+    });
+  };
+
+  const toggleOne = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkAction = async (newStatus) => {
+    setBulkLoading(true);
+    try {
+      await Promise.all([...selectedIds].map((id) => onQuickStatusChange(id, newStatus)));
+      setSelectedIds(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const thProps = (key, label) => ({
+    className: `sortable-th ${sortKey === key ? "is-sorted" : ""}`,
+    onClick: () => toggleSort(key),
+    "aria-sort": sortKey === key ? (sortDir === "asc" ? "ascending" : "descending") : "none",
+    title: `Ordenar por ${label}`,
+  });
+
+  return (
+    <section className="admin-card">
+      <div className="admin-card-header spread">
+        <div>
+          <span className="card-kicker">Gestor</span>
+          <h3>Control detallado de turnos</h3>
+        </div>
+      </div>
+
+      <div className="admin-toolbar">
+        <label className="admin-search-box">
+          <FaSearch aria-hidden="true" />
+          <span className="sr-only">Buscar reserva</span>
+          <input
+            type="search"
+            placeholder="Buscar alumno, código, responsable o contacto..."
+            value={searchTerm}
+            onChange={(e) => onSearchTermChange(e.target.value)}
+            autoComplete="off"
+          />
+        </label>
+        <div className="status-filter-row" role="group" aria-label="Filtrar por estado">
+          <span aria-hidden="true"><FaFilter /> Filtrar</span>
+          {STATUS_FILTERS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`status-filter-chip ${filterStatus === s ? "is-active" : ""}`}
+              aria-pressed={filterStatus === s}
+              onClick={() => onFilterStatusChange(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {(searchTerm || filterStatus !== "Todos") && (
+        <p className="admin-search-count" aria-live="polite" role="status">
+          Mostrando {matchCount} de {totalCount} turnos
+        </p>
+      )}
+
+      {/* Bulk action bar */}
+      {someSelected && (
+        <div className="bulk-action-bar" role="toolbar" aria-label="Acciones en masa">
+          <span className="bulk-count">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}</span>
           <button
-            key={status}
             type="button"
-            className={`status-filter-chip ${filterStatus === status ? "is-active" : ""}`}
-            aria-pressed={filterStatus === status}
-            onClick={() => onFilterStatusChange(status)}
+            className="bulk-btn confirm"
+            onClick={() => handleBulkAction("Confirmado")}
+            disabled={bulkLoading}
+            title="Confirmar seleccionados"
           >
-            {status}
+            <FaCheckCircle aria-hidden="true" /> Confirmar
           </button>
-        ))}
-      </div>
-    </div>
+          <button
+            type="button"
+            className="bulk-btn finalize"
+            onClick={() => handleBulkAction("Finalizado")}
+            disabled={bulkLoading}
+            title="Finalizar seleccionados"
+          >
+            <FaFlag aria-hidden="true" /> Finalizar
+          </button>
+          <button
+            type="button"
+            className="bulk-btn cancel"
+            onClick={() => handleBulkAction("Cancelado")}
+            disabled={bulkLoading}
+            title="Cancelar seleccionados"
+          >
+            <FaTimesCircle aria-hidden="true" /> Cancelar
+          </button>
+          <button
+            type="button"
+            className="bulk-btn clear"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Limpiar selección
+          </button>
+        </div>
+      )}
 
-    {(searchTerm || filterStatus !== "Todos") && (
-      <p className="admin-search-count" aria-live="polite" role="status">
-        Mostrando {matchCount} de {totalCount} turnos
-      </p>
-    )}
-
-    {dataLoading ? (
-      <div className="admin-loading-state">
-        <FaSpinner className="spinner giant" />
-        <p>Sincronizando turnos...</p>
-      </div>
-    ) : (
-      <div className="admin-table-shell">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Estado</th>
-              <th>Código</th>
-              <th>Alumno</th>
-              <th>Horario</th>
-              <th>Contacto</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredBookings.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="empty-table-state">
-                  No se encontraron reservas con esos filtros.
-                </td>
-              </tr>
-            ) : (
-              filteredBookings.map((booking) => (
-                <tr
-                  key={booking._id}
-                  className={booking.status === "Cancelado" ? "row-cancelled" : ""}
-                >
-                  <td>
-                    <span className={`status-pill ${booking.status}`}>
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="code-mono">{booking.bookingCode}</span>
-                  </td>
-                  <td>
-                    <div className="table-student">
-                      <strong>{booking.studentName}</strong>
-                      <span>
-                        {responsibleRelationshipLabel(booking)} ·{" "}
-                        {booking.subject}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-date">
-                      <span>
-                        <FaCalendarAlt />
-                        {booking.timeSlot
-                          ? formatShortDate(toDate(booking.timeSlot))
-                          : "--"}
-                      </span>
-                      <span>
-                        <FaRegClock />
-                        {booking.timeSlot
-                          ? `${formatTime(toDate(booking.timeSlot))} hs`
-                          : "--"}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => onSendWhatsApp(booking)}
-                      className={`admin-whatsapp-btn ${sentMessages[booking._id] ? "sent" : ""}`}
-                      title="Enviar mensaje por WhatsApp"
+      {dataLoading ? (
+        <div className="admin-loading-state">
+          <FaSpinner className="spinner giant" />
+          <p>Sincronizando turnos...</p>
+        </div>
+      ) : (
+        <>
+          {/* ── Desktop table ── */}
+          <div className="admin-table-shell hide-mobile">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th className="th-check">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      aria-label="Seleccionar todos en esta página"
+                      title="Seleccionar todos"
+                    />
+                  </th>
+                  <th {...thProps("status", "estado")}>
+                    Estado <SortIcon active={sortKey === "status"} dir={sortDir} />
+                  </th>
+                  <th>Código</th>
+                  <th {...thProps("studentName", "alumno")}>
+                    Alumno <SortIcon active={sortKey === "studentName"} dir={sortDir} />
+                  </th>
+                  <th {...thProps("timeSlot", "fecha")}>
+                    Horario <SortIcon active={sortKey === "timeSlot"} dir={sortDir} />
+                  </th>
+                  <th {...thProps("subject", "materia")}>
+                    Materia <SortIcon active={sortKey === "subject"} dir={sortDir} />
+                  </th>
+                  <th>Contacto</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="empty-table-state">
+                      No se encontraron reservas con esos filtros.
+                    </td>
+                  </tr>
+                ) : (
+                  pageItems.map((booking) => (
+                    <tr
+                      key={booking._id}
+                      className={[
+                        booking.status === "Cancelado" ? "row-cancelled" : "",
+                        selectedIds.has(booking._id) ? "row-selected" : "",
+                      ].filter(Boolean).join(" ")}
                     >
-                      <FaWhatsapp aria-hidden="true" />
-                      {sentMessages[booking._id] ? "Enviado" : "WhatsApp"}
-                    </button>
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      {booking.status === "Pendiente" && (
+                      <td className="th-check">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(booking._id)}
+                          onChange={() => toggleOne(booking._id)}
+                          aria-label={`Seleccionar reserva de ${booking.studentName}`}
+                        />
+                      </td>
+                      <td>
+                        <span className={`status-pill ${booking.status}`}>
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="code-mono">{booking.bookingCode}</span>
+                      </td>
+                      <td>
+                        <div className="table-student">
+                          <strong>{booking.studentName}</strong>
+                          <span>{responsibleRelationshipLabel(booking)}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="table-date">
+                          <span>
+                            <FaCalendarAlt aria-hidden="true" />
+                            {booking.timeSlot ? formatShortDate(toDate(booking.timeSlot)) : "--"}
+                          </span>
+                          <span>
+                            <FaRegClock aria-hidden="true" />
+                            {booking.timeSlot ? `${formatTime(toDate(booking.timeSlot))} hs` : "--"}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="table-subject">{booking.subject || "--"}</span>
+                      </td>
+                      <td>
                         <button
                           type="button"
-                          className="icon-action success"
-                          title="Confirmar reserva"
-                          aria-label={`Confirmar reserva de ${booking.studentName}`}
-                          onClick={() =>
-                            onQuickStatusChange(booking._id, "Confirmado")
-                          }
+                          onClick={() => onSendWhatsApp(booking)}
+                          className={`admin-whatsapp-btn ${sentMessages[booking._id] ? "sent" : ""}`}
+                          title="Enviar mensaje por WhatsApp"
                         >
-                          <FaCheckCircle aria-hidden="true" />
+                          <FaWhatsapp aria-hidden="true" />
+                          {sentMessages[booking._id] ? "Enviado" : "WA"}
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="icon-action neutral"
-                        title="Ver ficha completa"
-                        aria-label={`Ver ficha de ${booking.studentName}`}
-                        onClick={() => onSelectBooking(booking)}
-                      >
-                        <FaEye aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-action info"
-                        title="Editar reserva"
-                        aria-label={`Editar reserva de ${booking.studentName}`}
-                        onClick={() => onEditBooking(booking)}
-                      >
-                        <FaEdit aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-action danger"
-                        title="Eliminar reserva"
-                        aria-label={`Eliminar reserva de ${booking.studentName}`}
-                        onClick={() => onDeleteBooking(booking._id)}
-                      >
-                        <FaTrashAlt aria-hidden="true" />
-                      </button>
+                      </td>
+                      <td>
+                        <div className="table-actions">
+                          {booking.status === "Pendiente" && (
+                            <button
+                              type="button"
+                              className="icon-action success"
+                              title="Confirmar reserva"
+                              aria-label={`Confirmar reserva de ${booking.studentName}`}
+                              onClick={() => onQuickStatusChange(booking._id, "Confirmado")}
+                            >
+                              <FaCheckCircle aria-hidden="true" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="icon-action neutral"
+                            title="Ver ficha completa"
+                            aria-label={`Ver ficha de ${booking.studentName}`}
+                            onClick={() => onSelectBooking(booking)}
+                          >
+                            <FaEye aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-action info"
+                            title="Editar reserva"
+                            aria-label={`Editar reserva de ${booking.studentName}`}
+                            onClick={() => onEditBooking(booking)}
+                          >
+                            <FaEdit aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-action danger"
+                            title="Eliminar reserva"
+                            aria-label={`Eliminar reserva de ${booking.studentName}`}
+                            onClick={() => onDeleteBooking(booking._id)}
+                          >
+                            <FaTrashAlt aria-hidden="true" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Mobile cards ── */}
+          <div className="booking-cards-list show-mobile">
+            {pageItems.length === 0 ? (
+              <p className="empty-copy">No se encontraron reservas con esos filtros.</p>
+            ) : (
+              pageItems.map((booking) => (
+                <div
+                  key={booking._id}
+                  className={`booking-card ${booking.status === "Cancelado" ? "row-cancelled" : ""}`}
+                >
+                  <div className="booking-card-head">
+                    <span className={`status-pill ${booking.status}`}>{booking.status}</span>
+                    <span className="code-mono">{booking.bookingCode}</span>
+                  </div>
+                  <div className="booking-card-body">
+                    <strong>{booking.studentName}</strong>
+                    <span>{booking.subject || "Sin materia"}</span>
+                    <div className="booking-card-time">
+                      <FaCalendarAlt aria-hidden="true" />
+                      {booking.timeSlot
+                        ? `${formatShortDate(toDate(booking.timeSlot))} · ${formatTime(toDate(booking.timeSlot))} hs`
+                        : "--"}
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                  <div className="booking-card-actions">
+                    {booking.status === "Pendiente" && (
+                      <button
+                        type="button"
+                        className="icon-action success"
+                        title="Confirmar"
+                        onClick={() => onQuickStatusChange(booking._id, "Confirmado")}
+                      >
+                        <FaCheckCircle aria-hidden="true" />
+                      </button>
+                    )}
+                    <button type="button" className="icon-action neutral" title="Ver" onClick={() => onSelectBooking(booking)}>
+                      <FaEye aria-hidden="true" />
+                    </button>
+                    <button type="button" className="icon-action info" title="Editar" onClick={() => onEditBooking(booking)}>
+                      <FaEdit aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className={`admin-whatsapp-btn compact ${sentMessages[booking._id] ? "sent" : ""}`}
+                      onClick={() => onSendWhatsApp(booking)}
+                      title="WhatsApp"
+                    >
+                      <FaWhatsapp aria-hidden="true" />
+                    </button>
+                    <button type="button" className="icon-action danger" title="Eliminar" onClick={() => onDeleteBooking(booking._id)}>
+                      <FaTrashAlt aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-    )}
-    {bookings.length > 0 && import.meta.env.DEV && (
-      <div className="admin-danger-zone">
-        <div>
-          <strong>Zona de resguardo</strong>
-          <p>
-            Solo para limpiar datos de prueba. Pide doble confirmación antes de
-            ejecutarse.
-          </p>
+          </div>
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <div className="pagination-bar" role="navigation" aria-label="Paginación">
+              <button
+                type="button"
+                className="page-btn"
+                onClick={goToPrev}
+                disabled={!hasPrev}
+                title="Página anterior"
+              >
+                <FaChevronLeft aria-hidden="true" />
+              </button>
+
+              <span className="page-info" aria-live="polite">
+                {startIndex}–{endIndex} de {sorted.length}
+              </span>
+
+              <div className="page-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => Math.abs(p - currentPage) <= 2 || p === 1 || p === totalPages)
+                  .reduce((acc, p, i, arr) => {
+                    if (i > 0 && p - arr[i - 1] > 1) acc.push("…");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    p === "…" ? (
+                      <span key={`ellipsis-${i}`} className="page-ellipsis">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`page-num ${p === currentPage ? "is-active" : ""}`}
+                        onClick={() => goToPage(p)}
+                        aria-current={p === currentPage ? "page" : undefined}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+              </div>
+
+              <button
+                type="button"
+                className="page-btn"
+                onClick={goToNext}
+                disabled={!hasNext}
+                title="Página siguiente"
+              >
+                <FaChevronRight aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {bookings.length > 0 && import.meta.env.DEV && (
+        <div className="admin-danger-zone">
+          <div>
+            <strong>Zona de resguardo</strong>
+            <p>Solo para limpiar datos de prueba. Pide doble confirmación.</p>
+          </div>
+          <button type="button" className="admin-danger-btn" onClick={onDeleteAll} disabled={dataLoading}>
+            <FaTrashAlt /> Limpiar base de prueba
+          </button>
         </div>
-        <button
-          type="button"
-          className="admin-danger-btn"
-          onClick={onDeleteAll}
-          disabled={dataLoading}
-        >
-          <FaTrashAlt />
-          Limpiar base de prueba
-        </button>
-      </div>
-    )}
-  </section>
-);
+      )}
+    </section>
+  );
+};
 
 export default BookingsView;

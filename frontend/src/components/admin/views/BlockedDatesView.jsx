@@ -5,12 +5,12 @@ import {
   addBlockedDate,
   removeBlockedDate,
 } from "../../../api/bookingApi";
+import "./SettingsView.css";
 
 const BlockedDatesView = ({ authConfig }) => {
   const [blockedDates, setBlockedDates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [newDate, setNewDate] = useState("");
   const [newReason, setNewReason] = useState("");
   const [saving, setSaving] = useState(false);
@@ -59,90 +59,93 @@ const BlockedDatesView = ({ authConfig }) => {
   };
 
   return (
-    <>
-      <section className="admin-content-grid">
-        <article className="admin-card">
-          <div className="admin-card-header">
-            <div>
-              <span className="card-kicker">Disponibilidad</span>
-              <h3>Bloquear fechas</h3>
-            </div>
+    <div className="settings-layout">
+      <article className="admin-card settings-card">
+        <div className="admin-card-header">
+          <div>
+            <span className="card-kicker">Disponibilidad</span>
+            <h3>
+              <FaBan aria-hidden="true" className="settings-card-icon" />
+              Bloquear fechas
+            </h3>
           </div>
+        </div>
 
-          <form onSubmit={handleAdd} style={{ marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "flex-end" }}>
-              <div>
-                <label htmlFor="blocked-date-input" style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.85rem", fontWeight: 600 }}>
-                  <FaCalendarAlt aria-hidden="true" /> Fecha
-                </label>
-                <input
-                  id="blocked-date-input"
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  min={new Date().toISOString().slice(0, 10)}
-                  required
-                  style={{ padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1.5px solid var(--color-border, #e2e8f0)", fontSize: "0.9rem" }}
-                />
-              </div>
-              <div style={{ flex: 1, minWidth: "160px" }}>
-                <label htmlFor="blocked-reason-input" style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.85rem", fontWeight: 600 }}>
-                  Motivo (opcional)
-                </label>
-                <input
-                  id="blocked-reason-input"
-                  type="text"
-                  value={newReason}
-                  onChange={(e) => setNewReason(e.target.value)}
-                  maxLength={500}
-                  placeholder="Ej: feriado, viaje, etc."
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1.5px solid var(--color-border, #e2e8f0)", fontSize: "0.9rem" }}
-                />
-              </div>
-              <button
-                type="submit"
-                className="admin-primary-btn slim"
-                disabled={saving || !newDate}
-              >
-                <FaBan aria-hidden="true" /> {saving ? "Bloqueando…" : "Bloquear día"}
-              </button>
+        <form onSubmit={handleAdd} className="blocked-dates-form">
+          <div className="blocked-dates-inputs">
+            <div className="settings-field-group">
+              <label htmlFor="blocked-date-input" className="settings-label">
+                <FaCalendarAlt aria-hidden="true" /> Fecha
+              </label>
+              <input
+                id="blocked-date-input"
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+                required
+                className="settings-input"
+              />
             </div>
-            {saveError && (
-              <p style={{ color: "var(--color-danger, #e53e3e)", marginTop: "0.5rem", fontSize: "0.85rem" }}>
-                {saveError}
-              </p>
-            )}
-          </form>
-
-          {loading ? (
-            <p className="empty-copy">Cargando…</p>
-          ) : error ? (
-            <p className="empty-copy" style={{ color: "var(--color-danger, #e53e3e)" }}>{error}</p>
-          ) : blockedDates.length === 0 ? (
-            <p className="empty-copy">No hay fechas bloqueadas actualmente.</p>
-          ) : (
-            <div className="admin-priority-stack">
-              {blockedDates.map((record) => (
-                <div key={record.date} className="priority-card info" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <strong>{record.date}</strong>
-                    {record.reason && <p style={{ margin: 0, fontSize: "0.85rem", opacity: 0.75 }}>{record.reason}</p>}
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-action danger"
-                    aria-label={`Desbloquear ${record.date}`}
-                    onClick={() => handleRemove(record.date)}
-                  >
-                    <FaTrashAlt aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
+            <div className="settings-field-group flex-1">
+              <label htmlFor="blocked-reason-input" className="settings-label">
+                Motivo (opcional)
+              </label>
+              <input
+                id="blocked-reason-input"
+                type="text"
+                value={newReason}
+                onChange={(e) => setNewReason(e.target.value)}
+                maxLength={500}
+                placeholder="Ej: feriado, viaje, etc."
+                className="settings-input"
+              />
             </div>
+            <button
+              type="submit"
+              className="admin-primary-btn slim settings-submit-btn"
+              disabled={saving || !newDate}
+            >
+              <FaBan aria-hidden="true" />
+              {saving ? "Bloqueando…" : "Bloquear día"}
+            </button>
+          </div>
+          {saveError && (
+            <p className="settings-error-msg" role="alert">{saveError}</p>
           )}
-        </article>
-      </section>
-    </>
+        </form>
+
+        {loading ? (
+          <p className="empty-copy">Cargando…</p>
+        ) : error ? (
+          <p className="empty-copy settings-error">{error}</p>
+        ) : blockedDates.length === 0 ? (
+          <p className="empty-copy">No hay fechas bloqueadas actualmente.</p>
+        ) : (
+          <div className="admin-priority-stack">
+            {blockedDates.map((record) => (
+              <div key={record.date} className="priority-card info blocked-date-row">
+                <div>
+                  <strong>{record.date}</strong>
+                  {record.reason && (
+                    <p className="blocked-date-reason">{record.reason}</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="inline-action danger"
+                  aria-label={`Desbloquear ${record.date}`}
+                  title="Desbloquear esta fecha"
+                  onClick={() => handleRemove(record.date)}
+                >
+                  <FaTrashAlt aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </article>
+    </div>
   );
 };
 

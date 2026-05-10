@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   getBookingStatusLabel as bookingStatusLabel,
 } from "../../utils/bookingFormatters";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 
 const BookingEditModal = ({
   booking,
@@ -15,11 +16,7 @@ const BookingEditModal = ({
   onStatusChange,
   onSave,
 }) => {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    dialogRef.current?.focus();
-  }, []);
+  const dialogRef = useFocusTrap(true);
 
   useEffect(() => {
     const handleKeyDown = (e) => { if (e.key === "Escape") onClose(); };

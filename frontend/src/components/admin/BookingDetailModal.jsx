@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import {
   FaCalendarAlt,
   FaChartLine,
@@ -19,11 +20,7 @@ import {
 } from "../../utils/bookingFormatters";
 
 const BookingDetailModal = ({ booking, onClose, onContactWhatsApp }) => {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    dialogRef.current?.focus();
-  }, []);
+  const dialogRef = useFocusTrap(true);
 
   useEffect(() => {
     const handleKeyDown = (e) => { if (e.key === "Escape") onClose(); };

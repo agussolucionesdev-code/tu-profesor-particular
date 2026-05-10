@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaBan,
@@ -10,8 +10,10 @@ import {
   FaCog,
   FaDollarSign,
   FaExclamationTriangle,
+  FaKeyboard,
   FaPlus,
   FaSignOutAlt,
+  FaTimes,
   FaUsers,
 } from "react-icons/fa";
 import { sendWhatsApp, getSentMessages } from "../utils/whatsappHelper";
@@ -20,6 +22,7 @@ import { useBookingsData } from "../hooks/useBookingsData";
 import { useBookingFilters } from "../hooks/useBookingFilters";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useBookingEditModal } from "../hooks/useBookingEditModal";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import AdminLoginScreen from "./admin/AdminLoginScreen";
 import BookingEditModal from "./admin/BookingEditModal";
 import BookingDetailModal from "./admin/BookingDetailModal";
@@ -30,6 +33,7 @@ import BookingsView from "./admin/views/BookingsView";
 import BlockedDatesView from "./admin/views/BlockedDatesView";
 import ScheduleSettingsView from "./admin/views/ScheduleSettingsView";
 import CalendarView from "./admin/views/CalendarView";
+import { SkeletonKPI } from "./admin/shared/Skeleton";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import "../styles/tokens.css";
 import "./AdminPanel.css";
@@ -101,20 +105,37 @@ const AdminPanel = () => {
   const [activeView, setActiveView] = useState("overview");
   const [viewBooking, setViewBooking] = useState(null);
   const [sentMessages, setSentMessages] = useState(getSentMessages);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const shortcutsRef = useFocusTrap(showShortcuts);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    const VIEW_KEYS = ["1", "2", "3", "4", "5", "6", "7"];
     const handleKeyDown = (e) => {
-      if (!isAuthenticated || e.ctrlKey || e.metaKey) return;
-      if (e.key === "n" || e.key === "N") {
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          window.open("/", "_blank");
-        }
+      // Skip if inside an input/textarea
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.ctrlKey || e.metaKey) return;
+
+      if (e.key === "?") {
+        e.preventDefault();
+        setShowShortcuts((v) => !v);
+        return;
+      }
+      if (e.key === "Escape" && showShortcuts) {
+        setShowShortcuts(false);
+        return;
+      }
+      const idx = VIEW_KEYS.indexOf(e.key);
+      if (idx !== -1 && idx < VIEW_OPTIONS.length) {
+        e.preventDefault();
+        setActiveView(VIEW_OPTIONS[idx].id);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, showShortcuts]);
 
   const handleSendWhatsApp = (booking) => {
     const updated = sendWhatsApp(booking);
@@ -222,6 +243,15 @@ const AdminPanel = () => {
           </div>
 
           <div className="admin-hero-actions">
+            <button
+              type="button"
+              className="admin-secondary-btn slim"
+              onClick={() => setShowShortcuts(true)}
+              title="Atajos de teclado (?)"
+            >
+              <FaKeyboard />
+              Atajos
+            </button>
             <Link to="/" className="admin-secondary-btn" target="_blank">
               <FaPlus />
               Nueva reserva
@@ -238,60 +268,71 @@ const AdminPanel = () => {
         </header>
 
         <section className="admin-kpi-grid">
-          <article className="admin-kpi-card">
-            <div className="kpi-icon emerald">
-              <FaCalendarCheck />
-            </div>
-            <div>
-              <span>Clases hoy</span>
-              <strong>{overviewData.todayBookings.length}</strong>
-              <small>
-                {overviewData.upcoming24h.length} en las próximas 24 hs
-              </small>
-            </div>
-          </article>
-          <article className="admin-kpi-card">
-            <div className="kpi-icon amber">
-              <FaExclamationTriangle />
-            </div>
-            <div>
-              <span>Pendientes</span>
-              <strong>{dashboard.stats.pending}</strong>
-              <small>
-                {overviewData.overduePending.length > 0
-                  ? `${overviewData.overduePending.length} vencidos`
-                  : "Sin vencidos"}
-              </small>
-            </div>
-          </article>
-          <article className="admin-kpi-card">
-            <div className="kpi-icon blue">
-              <FaUsers />
-            </div>
-            <div>
-              <span>Alumnos activos</span>
-              <strong>
-                {overviewData.students.filter((s) => s.nextBooking).length}
-              </strong>
-              <small>{overviewData.students.length} registrados</small>
-            </div>
-          </article>
-          <article className="admin-kpi-card">
-            <div className="kpi-icon success">
-              <FaDollarSign />
-            </div>
-            <div>
-              <span>Ingresos del mes</span>
-              <strong>
-                ${overviewData.monthRevenue.toLocaleString("es-AR")}
-              </strong>
-              <small>
-                {overviewData.lastMonthRevenue > 0
-                  ? `${overviewData.monthRevenue >= overviewData.lastMonthRevenue ? "+" : ""}${Math.round(((overviewData.monthRevenue - overviewData.lastMonthRevenue) / overviewData.lastMonthRevenue) * 100)}% vs mes anterior`
-                  : "Sin datos del mes anterior"}
-              </small>
-            </div>
-          </article>
+          {dataLoading ? (
+            <>
+              <SkeletonKPI />
+              <SkeletonKPI />
+              <SkeletonKPI />
+              <SkeletonKPI />
+            </>
+          ) : (
+            <>
+              <article className="admin-kpi-card">
+                <div className="kpi-icon emerald">
+                  <FaCalendarCheck />
+                </div>
+                <div>
+                  <span>Clases hoy</span>
+                  <strong>{overviewData.todayBookings.length}</strong>
+                  <small>
+                    {overviewData.upcoming24h.length} en las próximas 24 hs
+                  </small>
+                </div>
+              </article>
+              <article className="admin-kpi-card">
+                <div className="kpi-icon amber">
+                  <FaExclamationTriangle />
+                </div>
+                <div>
+                  <span>Pendientes</span>
+                  <strong>{dashboard.stats.pending}</strong>
+                  <small>
+                    {overviewData.overduePending.length > 0
+                      ? `${overviewData.overduePending.length} vencidos`
+                      : "Sin vencidos"}
+                  </small>
+                </div>
+              </article>
+              <article className="admin-kpi-card">
+                <div className="kpi-icon blue">
+                  <FaUsers />
+                </div>
+                <div>
+                  <span>Alumnos activos</span>
+                  <strong>
+                    {overviewData.students.filter((s) => s.nextBooking).length}
+                  </strong>
+                  <small>{overviewData.students.length} registrados</small>
+                </div>
+              </article>
+              <article className="admin-kpi-card">
+                <div className="kpi-icon success">
+                  <FaDollarSign />
+                </div>
+                <div>
+                  <span>Ingresos del mes</span>
+                  <strong>
+                    ${overviewData.monthRevenue.toLocaleString("es-AR")}
+                  </strong>
+                  <small>
+                    {overviewData.lastMonthRevenue > 0
+                      ? `${overviewData.monthRevenue >= overviewData.lastMonthRevenue ? "+" : ""}${Math.round(((overviewData.monthRevenue - overviewData.lastMonthRevenue) / overviewData.lastMonthRevenue) * 100)}% vs mes anterior`
+                      : "Sin datos del mes anterior"}
+                  </small>
+                </div>
+              </article>
+            </>
+          )}
         </section>
 
         {activeView === "overview" && (
@@ -379,6 +420,68 @@ const AdminPanel = () => {
           onClose={() => setViewBooking(null)}
           onContactWhatsApp={handleSendWhatsApp}
         />
+      )}
+
+      {showShortcuts && (
+        <div
+          className="admin-shortcuts-overlay"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div
+            ref={shortcutsRef}
+            className="admin-shortcuts-panel"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shortcuts-title"
+            tabIndex={-1}
+          >
+            <div className="shortcuts-header">
+              <div>
+                <FaKeyboard aria-hidden="true" />
+                <h3 id="shortcuts-title">Atajos de teclado</h3>
+              </div>
+              <button
+                type="button"
+                className="shortcuts-close-btn"
+                onClick={() => setShowShortcuts(false)}
+                aria-label="Cerrar"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="shortcuts-body">
+              <div className="shortcuts-section">
+                <h4>Vistas</h4>
+                <ul>
+                  {VIEW_OPTIONS.map((opt, i) => (
+                    <li key={opt.id}>
+                      <kbd>{i + 1}</kbd>
+                      <span>{opt.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="shortcuts-section">
+                <h4>General</h4>
+                <ul>
+                  <li>
+                    <kbd>?</kbd>
+                    <span>Mostrar / ocultar atajos</span>
+                  </li>
+                  <li>
+                    <kbd>Esc</kbd>
+                    <span>Cerrar panel o modal</span>
+                  </li>
+                  <li>
+                    <kbd>Ctrl+R</kbd>
+                    <span>Recargar turnos</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
