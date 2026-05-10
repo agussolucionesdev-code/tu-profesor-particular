@@ -110,11 +110,11 @@ export const normalizeCode = (value) =>
 
 export const looksLikeEmail = (value) => normalizeEmail(value).includes("@");
 
-export const looksLikePhone = (value) => normalizePhoneDigits(value).length >= 10;
+export const looksLikePhone = (value) => normalizePhoneDigits(value).length >= 7;
 
 export const phoneDigitsRegex = (value) => {
   const digits = normalizePhoneDigits(value);
-  if (digits.length < 10) return null;
+  if (digits.length < 7) return null;
   return new RegExp(digits.split("").join("\\D*"));
 };
 

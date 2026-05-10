@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { loginAdmin } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 
@@ -46,11 +46,11 @@ export const useAdminAuth = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     sessionStorage.removeItem("adminToken");
     setAuthToken("");
     setIsAuthenticated(false);
-  };
+  }, []);
 
   return {
     authToken,
