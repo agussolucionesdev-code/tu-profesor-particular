@@ -14,7 +14,6 @@ import {
   FaSignOutAlt,
   FaUsers,
 } from "react-icons/fa";
-import { normalizeText as norm } from "../utils/bookingFormatters";
 import { sendWhatsApp, getSentMessages } from "../utils/whatsappHelper";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 import { useBookingsData } from "../hooks/useBookingsData";
@@ -121,14 +120,6 @@ const AdminPanel = () => {
     const updated = sendWhatsApp(booking);
     if (updated) setSentMessages(updated);
   };
-
-  const filteredStudents = useMemo(() => {
-    const term = norm(searchTerm);
-    if (!term) return overviewData.students;
-    return overviewData.students.filter((student) =>
-      student.searchBlob.includes(term),
-    );
-  }, [overviewData.students, searchTerm]);
 
   if (!isAuthenticated) {
     return (
@@ -323,9 +314,10 @@ const AdminPanel = () => {
 
         {activeView === "students" && (
           <StudentsView
-            filteredStudents={filteredStudents}
+            students={overviewData.students}
             sortedBookings={sortedBookings}
             onSelectBooking={setViewBooking}
+            onSendWhatsApp={handleSendWhatsApp}
           />
         )}
 
