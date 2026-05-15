@@ -447,9 +447,9 @@ body {
 [data-theme="dark"] {
   --brand-shell-panel:        var(--color-surface-1);
   --brand-shell-panel-strong: var(--color-surface-2);
-  --brand-shell-border:       rgba(171, 195, 217, 0.14);
-  --brand-shell-shadow:       0 24px 60px rgba(0, 0, 0, 0.45);
-  --brand-shell-shadow-soft:  0 14px 30px rgba(0, 0, 0, 0.32);
+  --brand-shell-border:       rgba(255, 255, 255, 0.06);
+  --brand-shell-shadow:       0 4px 20px rgba(0, 0, 0, 0.5);
+  --brand-shell-shadow-soft:  0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] body {
@@ -480,8 +480,27 @@ body {
 [data-theme="dark"] .footer-grid-container,
 [data-theme="dark"] .bottom-panel-container {
   background: var(--color-surface-1);
-  border-color: rgba(171, 195, 217, 0.14);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Remove the light-mode white shimmer overlay from card tops in dark mode */
+[data-theme="dark"] .form-card-elevation::before,
+[data-theme="dark"] .client-portal-wrapper .portal-container::before,
+[data-theme="dark"] .admin-login-card::before,
+[data-theme="dark"] .admin-sidebar-shell::before,
+[data-theme="dark"] .admin-card::before,
+[data-theme="dark"] .admin-kpi-card::before {
+  content: none;
+}
+
+/* Subtitle / body text: bump up contrast in dark mode */
+[data-theme="dark"] .form-subtitle,
+[data-theme="dark"] .client-portal-wrapper .portal-subtitle,
+[data-theme="dark"] .admin-hero p,
+[data-theme="dark"] .admin-login-subtitle,
+[data-theme="dark"] .brand-philosophy .neuro-copy {
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .form-main-title,

@@ -621,12 +621,16 @@
 /* Header */
 [data-theme="dark"] .client-portal-wrapper .portal-header {
   background: var(--color-surface-1);
-  border-color: var(--border-soft);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 [data-theme="dark"] .client-portal-wrapper .portal-header-logo {
-  filter: brightness(1.15) drop-shadow(0 2px 8px rgba(114, 176, 122, 0.3));
+  background: var(--color-surface-2) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+  filter: brightness(1.1) saturate(1.05);
 }
 
 /* Search */

@@ -370,9 +370,9 @@
   --scrollbar-thumb-hover: #475569;
 
   /* ── Shadow overrides (dark) ─────────────────────────────────────────── */
-  --shadow-card:     0 10px 30px rgba(0, 0, 0, 0.45);
-  --shadow-elevated: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --shadow-brand:    0 18px 38px rgba(114, 176, 122, 0.32);
+  --shadow-card:     0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-brand:    0 4px 14px rgba(114, 176, 122, 0.18);
 
   /* ── Navbar (dark) ───────────────────────────────────────────────────── */
   --nav-bg-outer:       rgba(13, 20, 32, 0.95);
