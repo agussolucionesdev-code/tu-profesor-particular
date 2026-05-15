@@ -64,7 +64,9 @@
   --spacing-12: 48px;
 
   /* ── Border radius ──────────────────────────────────────────────────── */
+  --radius-xs:   4px;
   --radius-sm:   6px;
+  --radius-base: 8px;
   --radius-md:  10px;
   --radius-lg:  16px;
   --radius-xl:  24px;
@@ -84,12 +86,12 @@
   --shadow-brand:    0 12px 28px rgba(32, 64, 96, 0.22);
   --shadow-glow:     0 0 0 3px rgba(88, 152, 96, 0.2);
 
-  /* ── Transitions ────────────────────────────────────────────────────── */
-  --transition-fast:   150ms ease;
-  --transition-base:   250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow:   400ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-smooth: all 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  --transition-spring: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ── Transitions (aliases → motion-system.css is the source of truth) ── */
+  --transition-fast:   var(--motion-micro, 150ms ease);
+  --transition-base:   var(--motion-swift, 250ms cubic-bezier(0.4, 0, 0.2, 1));
+  --transition-slow:   var(--motion-ease, 400ms cubic-bezier(0.16, 1, 0.3, 1));
+  --transition-smooth: all var(--motion-smooth, 0.32s cubic-bezier(0.22, 1, 0.36, 1));
+  --transition-spring: all var(--motion-spring, 0.45s cubic-bezier(0.34, 1.56, 0.64, 1));
 
   /* ── Focus ──────────────────────────────────────────────────────────── */
   --focus-ring:       0 0 0 3px rgba(88, 152, 96, 0.4);

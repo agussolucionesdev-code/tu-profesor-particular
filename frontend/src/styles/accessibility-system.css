@@ -136,7 +136,7 @@ html[data-motion="reduced"] *::after {
   padding: 0.9rem 1.1rem;
   border-radius: 999px;
   background: #1d344d;
-  color: #ffffff;
+  color: var(--brand-white);
   font-weight: 800;
   text-decoration: none;
   transform: translateY(-180%);
@@ -324,7 +324,7 @@ main.main-content {
 }
 
 .portal-support-card svg {
-  color: #589860;
+  color: var(--brand-green);
   font-size: 1.12rem;
 }
 
@@ -401,7 +401,7 @@ main.main-content {
 }
 
 .admin-login-kicker {
-  color: #589860;
+  color: var(--brand-green);
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -440,7 +440,7 @@ main.main-content {
 }
 
 .admin-login-benefit svg {
-  color: #589860;
+  color: var(--brand-green);
   font-size: 1.15rem;
 }
 

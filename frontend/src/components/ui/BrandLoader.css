@@ -1,0 +1,79 @@
+/* ============================================================
+   BrandLoader — branded loading screen with logo pulse
+   ============================================================ */
+
+.brand-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60dvh;
+  padding: 2rem;
+  gap: 1.5rem;
+}
+
+.brand-loader-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  animation: brandPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes brandPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.brand-loader-bar {
+  width: 120px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--border-soft, #e2e8f0);
+  overflow: hidden;
+}
+
+.brand-loader-bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: 3px;
+  background: var(--brand-green, #589860);
+  animation: barSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes barSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(350%); }
+}
+
+.brand-loader-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-tertiary, #7791ac);
+  letter-spacing: 0.01em;
+}
+
+/* Dark mode */
+[data-theme="dark"] .brand-loader-bar {
+  background: var(--border-soft, #334155);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .brand-loader-logo {
+    animation: none;
+    opacity: 1;
+  }
+
+  .brand-loader-bar-fill {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}

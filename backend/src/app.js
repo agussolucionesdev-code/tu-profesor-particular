@@ -90,6 +90,25 @@ app.use(requestContextMiddleware);
 app.use(
   helmet({
     referrerPolicy: { policy: "no-referrer" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: [
+          "'self'",
+          ...configuredOrigins,
+          ...(isProduction ? [] : defaultDevOrigins),
+        ].filter(Boolean),
+      },
+    },
+    strictTransportSecurity: {
+      maxAge: 31_536_000,
+      includeSubDomains: true,
+      preload: true,
+    },
   }),
 );
 app.use(

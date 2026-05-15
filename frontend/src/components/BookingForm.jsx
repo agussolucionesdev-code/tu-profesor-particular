@@ -55,6 +55,7 @@ import {
   spellCodeForVoice,
   useNeuroToast,
 } from "../utils/neuroToast";
+import { usePageMeta } from "../hooks/useDocumentTitle";
 import "../styles/tokens.css";
 import "../index.css";
 import "./BookingForm.css";
@@ -82,6 +83,10 @@ const VOICE_TIP_KEY = "voice_guide_tip_dismissed";
 const VOICE_CHANGE_EVENT = "neuro-voice-muted-changed";
 
 const BookingForm = () => {
+  usePageMeta(
+    "Reservar clase",
+    "Reserva tu clase particular de matematica, fisica, quimica y mas. Confirmacion inmediata. Agustin Elias Sosa, Buenos Aires.",
+  );
   const sliderWindowRef = useRef(null);
   const slideRefs = useRef({});
 
@@ -988,7 +993,7 @@ const BookingForm = () => {
         </div>
 
         <div className="form-header-neuro">
-          <h2 className="form-main-title">Asegurá tu clase</h2>
+          <h1 className="form-main-title">Asegurá tu clase</h1>
           <p className="form-subtitle">
             Completá tus datos y elegí el momento ideal para aprender.
           </p>

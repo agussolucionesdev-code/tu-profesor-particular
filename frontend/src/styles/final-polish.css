@@ -107,7 +107,7 @@
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
   background: var(--brand-green, #589860) !important;
-  color: #ffffff !important;
+  color: var(--brand-white) !important;
   font-weight: 900 !important;
   border: 2px solid var(--brand-green-deep, #4a8452) !important;
   box-shadow: 0 4px 12px rgba(88, 152, 96, 0.35) !important;
@@ -116,9 +116,9 @@
 
 [data-theme="dark"] .react-datepicker__day--selected,
 [data-theme="dark"] .react-datepicker__day--keyboard-selected {
-  background: #72b07a !important;
-  border-color: #8bc392 !important;
-  color: #06140a !important;
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent-hover) !important;
+  color: var(--color-on-success) !important;
 }
 
 /* Hoy (custom): borde amarillo distintivo, no se confunde con seleccionado */
@@ -132,7 +132,7 @@
 
 [data-theme="dark"] .react-datepicker__day.custom-today {
   background: rgba(245, 158, 11, 0.14) !important;
-  color: #fbbf24 !important;
+  color: var(--color-warning-emphasis) !important;
 }
 
 /* Día deshabilitado (pasado): tachado liviano para clarificar */
@@ -209,7 +209,7 @@
     var(--brand-green, #589860),
     var(--brand-green-deep, #4a8452)
   ) !important;
-  color: #ffffff !important;
+  color: var(--brand-white) !important;
   border: 1.5px solid var(--brand-green-deep, #4a8452) !important;
   box-shadow: 0 8px 22px rgba(88, 152, 96, 0.32) !important;
   transform: translateY(-2px) !important;
@@ -241,7 +241,7 @@
 
 [data-theme="dark"] .slot-btn:not(.disabled):not(.selected):hover {
   background: rgba(114, 176, 122, 0.20) !important;
-  border-color: #72b07a !important;
+  border-color: var(--color-accent) !important;
 }
 
 [data-theme="dark"] .slot-btn.disabled {
@@ -251,9 +251,9 @@
 }
 
 [data-theme="dark"] .slot-btn.selected {
-  background: linear-gradient(135deg, #72b07a, #5e9a66) !important;
-  color: #06140a !important;
-  border-color: #8bc392 !important;
+  background: linear-gradient(135deg, var(--color-accent), #5e9a66) !important;
+  color: var(--color-on-success) !important;
+  border-color: var(--color-accent-hover) !important;
 }
 
 /* Focus ring claro en slots */
@@ -301,7 +301,7 @@ select:focus-visible {
    ===================================================================== */
 .btn-up-floating {
   background: var(--brand-navy);
-  color: #ffffff;
+  color: var(--brand-white);
 }
 
 [data-theme="dark"] .btn-up-floating {
@@ -417,15 +417,15 @@ a:focus-visible {
 
 [data-theme="dark"] .calendar-legend .legend-icon.today {
   background: rgba(245, 158, 11, 0.18);
-  border-color: #fbbf24;
+  border-color: var(--color-warning-emphasis);
 }
 
 [data-theme="dark"] .calendar-legend .legend-icon.available {
   background: rgba(114, 176, 122, 0.20);
-  border-color: #72b07a;
+  border-color: var(--color-accent);
 }
 
 [data-theme="dark"] .calendar-legend .legend-icon.selected {
-  background: #72b07a;
-  border-color: #8bc392;
+  background: var(--color-accent);
+  border-color: var(--color-accent-hover);
 }

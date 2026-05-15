@@ -201,7 +201,7 @@
   padding: 0.35rem 0.85rem;
   border-radius: 6px;
   background: var(--accent-primary, #3f8f57);
-  color: #fff;
+  color: var(--brand-white);
   font-size: 0.78rem;
   font-weight: 700;
   border: none;
@@ -1397,7 +1397,7 @@
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
   background: var(--brand-navy, #204060);
-  color: #fff;
+  color: var(--brand-white);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: capitalize;
@@ -1465,7 +1465,7 @@
 
 .btn-date-next.is-ready {
   background: var(--accent-primary, #589860);
-  color: #fff;
+  color: var(--brand-white);
   box-shadow: 0 4px 14px rgba(88, 152, 96, 0.22);
 }
 
@@ -1519,17 +1519,17 @@
 }
 
 [data-theme="dark"] .date-chip {
-  background: #72b07a;
-  color: #06140a;
+  background: var(--color-accent);
+  color: var(--color-on-success);
 }
 
 [data-theme="dark"] .btn-date-next.is-ready {
-  background: #72b07a;
-  color: #06140a;
+  background: var(--color-accent);
+  color: var(--color-on-success);
 }
 
 [data-theme="dark"] .ml-dot.ml-selected {
-  background: #72b07a;
+  background: var(--color-accent);
 }
 
 /* ── Responsive: calendar card ─────────────────────────────────────────── */
@@ -1664,7 +1664,7 @@
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
   background: var(--brand-navy, #204060);
-  color: #fff;
+  color: var(--brand-white);
   font-size: 0.78rem;
   font-weight: 700;
   border: none;
@@ -1726,7 +1726,7 @@
 
 .btn-time-next.is-ready {
   background: var(--accent-primary, #589860);
-  color: #fff;
+  color: var(--brand-white);
   box-shadow: 0 4px 14px rgba(88, 152, 96, 0.22);
 }
 
@@ -1761,13 +1761,13 @@
 }
 
 [data-theme="dark"] .time-chip {
-  background: #72b07a;
-  color: #06140a;
+  background: var(--color-accent);
+  color: var(--color-on-success);
 }
 
 [data-theme="dark"] .btn-time-next.is-ready {
-  background: #72b07a;
-  color: #06140a;
+  background: var(--color-accent);
+  color: var(--color-on-success);
 }
 
 [data-theme="dark"] .time-change-date-link {
@@ -1775,7 +1775,7 @@
 }
 
 [data-theme="dark"] .time-change-date-link:hover {
-  color: #72b07a;
+  color: var(--color-accent);
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
@@ -1995,7 +1995,7 @@
 .btn-chip-clear {
   background: #fee2e2;
   border: 1px solid #fca5a5;
-  color: #b4231f;
+  color: var(--error-color);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2011,9 +2011,9 @@
 }
 
 .btn-chip-clear:hover {
-  background: #b4231f;
+  background: var(--error-color);
   color: white;
-  border-color: #b4231f;
+  border-color: var(--error-color);
   transform: scale(1.05);
   box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
 }
@@ -2258,13 +2258,13 @@
 }
 
 .react-datepicker__day--disabled {
-  background: #e2e8f0 !important;
-  color: #64748b !important;
+  background: var(--brand-gray-200) !important;
+  color: var(--brand-gray-600) !important;
   cursor: not-allowed !important;
   border: 1px dashed #cbd5e1 !important;
   opacity: 0.8 !important;
   text-decoration: line-through !important;
-  text-decoration-color: #94a3b8 !important;
+  text-decoration-color: var(--brand-gray-400) !important;
 }
 
 /* Outside-month days */
@@ -2340,7 +2340,7 @@
 .neuro-calendar .react-datepicker__day.day-partial.react-datepicker__day--selected,
 .neuro-calendar .react-datepicker__day.day-full.react-datepicker__day--selected {
   background: var(--brand-navy, #204060) !important;
-  color: #ffffff !important;
+  color: var(--brand-white) !important;
   text-decoration: none !important;
   opacity: 1 !important;
 }
@@ -2378,9 +2378,9 @@
 
 [data-theme="dark"] .react-datepicker__day--selected,
 [data-theme="dark"] .react-datepicker__day--keyboard-selected {
-  background: #72b07a !important;
+  background: var(--color-accent) !important;
   border-color: #8bc392 !important;
-  color: #06140a !important;
+  color: var(--color-on-success) !important;
 }
 
 [data-theme="dark"] .react-datepicker__day.custom-today {
@@ -2619,7 +2619,7 @@
 
 .slot-btn.selected {
   background: linear-gradient(148deg, var(--bi-slot-sel-from) 0%, var(--bi-slot-sel-to) 100%);
-  color: #ffffff;
+  color: var(--brand-white);
   border: none;
   outline: 3px solid rgba(88, 152, 96, 0.35);
   outline-offset: 2px;
@@ -2644,7 +2644,7 @@
   height: 17px;
   border-radius: 50%;
   background: var(--bi-check-bg);
-  color: #ffffff;
+  color: var(--brand-white);
   animation: bi-check-pop 0.36s var(--bi-ease-spring) 0.12s both;
   pointer-events: none;
 }
@@ -2750,8 +2750,8 @@
 }
 
 .btn-disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
+  background: var(--brand-gray-200);
+  color: var(--brand-gray-400);
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
@@ -2761,8 +2761,8 @@
 .btn-disabled:hover {
   transform: none;
   box-shadow: none;
-  background: #e2e8f0;
-  color: #94a3b8;
+  background: var(--brand-gray-200);
+  color: var(--brand-gray-400);
 }
 
 /* Secondary button */
@@ -2824,7 +2824,7 @@
 
 .btn-stage-next.is-ready {
   background: linear-gradient(138deg, var(--bi-cta-from) 0%, var(--bi-cta-to) 100%);
-  color: #ffffff;
+  color: var(--brand-white);
   border: none;
   box-shadow:
     0 16px 36px rgba(15, 23, 42, 0.3),
@@ -3233,7 +3233,7 @@
 
 .field-flow-next {
   background: var(--accent-primary, #589860);
-  color: #fff;
+  color: var(--brand-white);
   border-radius: 12px;
   padding: 0.55rem 1.15rem;
   font-size: 0.82rem;
@@ -3892,7 +3892,7 @@
 /* Dark mode */
 [data-theme="dark"] .autocomplete-list {
   background: var(--surface-card);
-  border-color: #72b07a;
+  border-color: var(--color-accent);
 }
 
 [data-theme="dark"] .autocomplete-option.is-focused,
@@ -3901,7 +3901,7 @@
 }
 
 [data-theme="dark"] .autocomplete-match {
-  color: #72b07a;
+  color: var(--color-accent);
 }
 
 /* ── Verification Screen ────────────────────────────────────────── */
@@ -4066,7 +4066,7 @@
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #204060 0%, #2a5580 100%);
-  color: #fff;
+  color: var(--brand-white);
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.02em;

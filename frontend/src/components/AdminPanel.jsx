@@ -42,6 +42,7 @@ import "../styles/tokens.css";
 import "./AdminPanel.css";
 import "../styles/theme-polish.css";
 import "../styles/accessibility-system.css";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const VIEW_OPTIONS = [
   { id: "overview", label: "Resumen", icon: FaChartLine },
@@ -55,6 +56,7 @@ const VIEW_OPTIONS = [
 ];
 
 const AdminPanel = () => {
+  useDocumentTitle("Panel de administracion");
   const {
     authConfig,
     isAuthenticated,
@@ -194,7 +196,9 @@ const AdminPanel = () => {
 
         <div className="admin-sidebar-card">
           <span className="sidebar-kicker">Hoy</span>
-          <h3>{overviewData.todayBookings.length} clases activas</h3>
+          <p className="sidebar-stat-headline" aria-label={`${overviewData.todayBookings.length} clases activas hoy`}>
+            {overviewData.todayBookings.length} clases activas
+          </p>
           <p>{heroText}</p>
           <div className="sidebar-inline-stats">
             <div>
@@ -290,7 +294,11 @@ const AdminPanel = () => {
           </div>
         </header>
 
-        <section className="admin-kpi-grid">
+        <section
+          className="admin-kpi-grid"
+          aria-live="polite"
+          aria-label="Estadísticas del panel"
+        >
           {dataLoading ? (
             <>
               <SkeletonKPI />

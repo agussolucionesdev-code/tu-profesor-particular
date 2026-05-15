@@ -4,14 +4,11 @@ import { FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
 import {
   formatDateLong,
   formatTime,
-  getResponsibleRelationshipDisplay,
-  isAdultBooking,
 } from "../../utils/bookingFormatters";
 import "./CancelModal.css";
 
 const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
   const dialogRef = useRef(null);
-  const isAdult = isAdultBooking(cancelingBooking);
 
   useEffect(() => {
     dialogRef.current?.focus();
@@ -71,18 +68,6 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
             <dt>Alumno</dt>
             <dd>{cancelingBooking.studentName}</dd>
           </div>
-          {!isAdult && (
-            <>
-              <div className="cancel-row">
-                <dt>Adulto responsable</dt>
-                <dd>{cancelingBooking.responsibleName || "No informado"}</dd>
-              </div>
-              <div className="cancel-row">
-                <dt>Parentesco</dt>
-                <dd>{getResponsibleRelationshipDisplay(cancelingBooking)}</dd>
-              </div>
-            </>
-          )}
           <div className="cancel-row">
             <dt>Fecha</dt>
             <dd>{formatDateLong(cancelingBooking.timeSlot)}</dd>

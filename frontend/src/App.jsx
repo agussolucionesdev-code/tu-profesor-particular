@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
   useLocation,
 } from "react-router-dom";
 import AccessibilityControls from "./components/accessibility/AccessibilityControls";
@@ -11,6 +10,8 @@ import { UISettingsProvider } from "./components/accessibility/UISettingsContext
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./layouts/Navbar";
 import Footer from "./layouts/Footer";
+import BrandLoader from "./components/ui/BrandLoader";
+import JsonLd from "./components/seo/JsonLd";
 import { bootNeuroVoice } from "./utils/neuroToast";
 import "./styles/tokens.css";
 import "./index.css";
@@ -24,6 +25,7 @@ import "./styles/motion-system.css";
 const BookingForm = lazy(() => import("./components/BookingForm"));
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const ClientPortal = lazy(() => import("./components/ClientPortal"));
+const NotFoundPage = lazy(() => import("./components/errors/NotFoundPage"));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -46,6 +48,7 @@ const AppContent = () => {
 
   return (
     <>
+      <JsonLd />
       <a className="skip-link" href="#main-content">
         Saltar al contenido principal
       </a>
@@ -58,23 +61,13 @@ const AppContent = () => {
         }`}
         tabIndex="-1"
       >
-        <Suspense
-          fallback={
-            <div className="route-loader-shell" role="status" aria-live="polite">
-              <div className="route-loader-card">
-                <span className="route-loader-badge">Cargando</span>
-                <strong>Estamos preparando la experiencia</strong>
-                <p>Un momento y seguimos.</p>
-              </div>
-            </div>
-          }
-        >
+        <Suspense fallback={<BrandLoader />}>
           <Routes>
             <Route path="/" element={<BookingForm />} />
             <Route path="/reservar" element={<BookingForm />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/portal" element={<ClientPortal />} />
-            <Route path="*" element={<Navigate to="/reservar" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </main>

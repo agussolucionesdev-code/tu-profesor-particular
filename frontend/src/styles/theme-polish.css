@@ -113,13 +113,13 @@ body {
 
 .form-card-elevation {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
   box-shadow: var(--shadow-card);
 }
 
 [data-theme="dark"] .form-card-elevation {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
 }
 
 .premium-input,
@@ -145,7 +145,7 @@ body {
 .success-modal-actions,
 .success-code-panel-prominent {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
   box-shadow: var(--shadow-card);
 }
 
@@ -171,7 +171,7 @@ body {
 [data-theme="dark"] .success-side-column,
 [data-theme="dark"] .success-modal-actions,
 [data-theme="dark"] .success-code-panel-prominent {
-  background: var(--color-white);
+  background: var(--color-surface-1);
   border-color: var(--border-soft);
   box-shadow: var(--shadow-card);
 }
@@ -246,7 +246,7 @@ body {
 [data-theme="dark"] .stepper-nav-hint,
 [data-theme="dark"] .stepper-current-pill,
 [data-theme="dark"] .step-status-pill {
-  background: var(--color-white);
+  background: var(--color-surface-1);
   border-color: var(--border-soft);
 }
 
@@ -324,7 +324,7 @@ body {
 .btn-stage-next.is-locked,
 .duration-chip {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .booking-month-nav,
@@ -335,7 +335,7 @@ body {
 [data-theme="dark"] .btn-stage-next.is-locked,
 [data-theme="dark"] .duration-chip {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
   color: var(--color-text-main);
 }
 
@@ -413,7 +413,7 @@ body {
 .client-portal-wrapper .search-input,
 .client-portal-wrapper .btn-reschedule {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
 }
 
 .client-portal-wrapper .ticket-code,
@@ -629,7 +629,7 @@ body {
 .admin-secondary-btn,
 .code-mono {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .admin-input,
@@ -639,7 +639,7 @@ body {
 [data-theme="dark"] .admin-secondary-btn,
 [data-theme="dark"] .code-mono {
   border-color: var(--border-soft);
-  background: var(--color-white);
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .admin-nav-btn:not(.is-active),

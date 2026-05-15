@@ -104,3 +104,15 @@
 [data-theme="dark"] .notes-counter {
   color: var(--color-text, #e2e8f0);
 }
+
+[data-theme="dark"] .notes-save-btn {
+  background: var(--brand-green, #4a8452);
+}
+
+[data-theme="dark"] .notes-status-ok {
+  color: var(--color-success-emphasis, #34d399);
+}
+
+[data-theme="dark"] .notes-status-error {
+  color: var(--color-error-emphasis, #f87171);
+}

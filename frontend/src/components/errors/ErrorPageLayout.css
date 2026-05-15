@@ -1,0 +1,179 @@
+/* ============================================================
+   ErrorPageLayout — shared layout for all error/status pages
+   ============================================================ */
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  font-family: var(--font-primary, "Inter", system-ui, sans-serif);
+  background: var(--color-bg-light, #eef3f9);
+  color: var(--color-text-primary, #0d2238);
+}
+
+.error-page-illustration {
+  width: 220px;
+  height: 220px;
+  margin-bottom: 1.75rem;
+  color: var(--brand-navy, #204060);
+  opacity: 0.85;
+}
+
+.error-page-illustration svg {
+  width: 100%;
+  height: 100%;
+}
+
+.error-page-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--brand-navy, #204060);
+  line-height: 1.2;
+}
+
+.error-page-description {
+  margin: 0 0 2rem;
+  max-width: 420px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #4a627d);
+}
+
+.error-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.error-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.error-page-btn:active {
+  transform: scale(0.97);
+}
+
+.error-page-btn:focus-visible {
+  outline: 2px solid var(--brand-navy, #204060);
+  outline-offset: 2px;
+}
+
+.error-page-btn--primary {
+  border: none;
+  background: var(--brand-navy, #204060);
+  color: #fff;
+}
+
+.error-page-btn--primary:hover {
+  background: #183350;
+  box-shadow: 0 4px 16px rgba(32, 64, 96, 0.3);
+}
+
+.error-page-btn--secondary {
+  border: 1.5px solid var(--border-soft, #e2e8f0);
+  background: transparent;
+  color: var(--color-text-secondary, #4a627d);
+}
+
+.error-page-btn--secondary:hover {
+  background: var(--color-surface-2, #f1f5f9);
+  border-color: var(--brand-navy, #204060);
+  color: var(--brand-navy, #204060);
+}
+
+.error-page-code {
+  margin-top: 2.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary, #7791ac);
+  opacity: 0.7;
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] .error-page {
+  background: var(--color-bg-light, #0b1424);
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .error-page-illustration {
+  color: var(--brand-green, #589860);
+  opacity: 0.75;
+}
+
+[data-theme="dark"] .error-page-title {
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .error-page-description {
+  color: var(--color-text-secondary, #b5c2d2);
+}
+
+[data-theme="dark"] .error-page-btn--primary {
+  background: var(--brand-green, #589860);
+}
+
+[data-theme="dark"] .error-page-btn--primary:hover {
+  background: #4a8452;
+}
+
+[data-theme="dark"] .error-page-btn--secondary {
+  border-color: var(--border-soft, #334155);
+  color: var(--color-text-secondary, #b5c2d2);
+}
+
+[data-theme="dark"] .error-page-btn--secondary:hover {
+  background: var(--color-surface-2, #1e293b);
+  border-color: var(--brand-green, #589860);
+  color: var(--brand-green, #589860);
+}
+
+/* ── Mobile ── */
+@media (max-width: 479px) {
+  .error-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .error-page-illustration {
+    width: 160px;
+    height: 160px;
+  }
+
+  .error-page-title {
+    font-size: 1.4rem;
+  }
+
+  .error-page-description {
+    font-size: 0.9375rem;
+  }
+
+  .error-page-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .error-page-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

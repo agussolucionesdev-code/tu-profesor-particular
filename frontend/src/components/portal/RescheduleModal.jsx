@@ -1,29 +1,38 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import DatePicker from "react-datepicker";
-import { addMinutes, format, isSameDay, setHours, setMinutes } from "date-fns";
+import { addMinutes, format, isSameDay } from "date-fns";
 import es from "date-fns/locale/es";
-import { FaArrowRight, FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaTimes } from "react-icons/fa";
+import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaTimes } from "react-icons/fa";
 import {
   formatDateLong,
   formatTime,
   formatDurationOptionLabel,
   formatDurationVoiceLabel,
   getBookingApiMessage,
-  getResponsibleRelationshipDisplay,
-  isAdultBooking,
 } from "../../utils/bookingFormatters";
 import { primeVoicePlayback, speakAlert } from "../../utils/neuroToast";
 import { rescheduleBooking, fetchAvailability } from "../../api/bookingApi";
 import "./RescheduleModal.css";
 
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
-
 const DURATION_QUICK_BASE = [0.5, 1, 1.5, 2, 2.5, 3];
+
+const PERIODS = [
+  { id: "morning", label: "Mañana", from: 7, to: 13 },
+  { id: "afternoon", label: "Tarde", from: 13, to: 19 },
+  { id: "night", label: "Noche", from: 19, to: 22 },
+];
 
 const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
   const dialogRef = useRef(null);
-  const [newDate, setNewDate] = useState(new Date(editingBooking.timeSlot));
+
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const d = new Date(editingBooking.timeSlot);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const [selectedTime, setSelectedTime] = useState(new Date(editingBooking.timeSlot));
   const [newDuration, setNewDuration] = useState(editingBooking.duration);
   const [existingBookingsForBlock, setExistingBookingsForBlock] = useState([]);
 
@@ -64,15 +73,25 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
       });
   }, [editingBooking._id, showToast]);
 
-  // Derived values
+  // Derive full datetime from day + selected time slot
+  const newDate = useMemo(() => {
+    if (!selectedTime) return null;
+    const combined = new Date(selectedDay);
+    combined.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
+    return combined;
+  }, [selectedDay, selectedTime]);
+
   const currentSlotDate = new Date(editingBooking.timeSlot);
-  const currentEndDate = addMinutes(currentSlotDate, Number(editingBooking.duration || 1) * 60);
-  const newEndDate = new Date(newDate.getTime() + Number(newDuration || 0) * 60 * 60 * 1000);
+  const newEndDate = newDate
+    ? new Date(newDate.getTime() + Number(newDuration || 0) * 60 * 60 * 1000)
+    : null;
 
   const hasValidDuration = Number.isFinite(Number(newDuration)) && Number(newDuration) >= 0.5;
-  const hasRescheduleChanges =
-    currentSlotDate.getTime() !== newDate.getTime() ||
-    Number(editingBooking.duration) !== Number(newDuration);
+  const hasRescheduleChanges = !!(
+    newDate &&
+    (currentSlotDate.getTime() !== newDate.getTime() ||
+      Number(editingBooking.duration) !== Number(newDuration))
+  );
 
   const durationQuickOptions = Array.from(
     new Set([...DURATION_QUICK_BASE, Number(editingBooking.duration)]),
@@ -80,68 +99,82 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
     .filter((v) => Number.isFinite(v) && v >= 0.5 && v <= 3)
     .sort((a, b) => a - b);
 
-  const maxTime = setHours(setMinutes(new Date(), 0), 22);
-
-  const getExcludedTimes = (date) => {
-    const excluded = [];
+  // Generate 30-min slots for selected day, mark occupied/past
+  const slots = useMemo(() => {
+    const now = new Date();
+    const excluded = new Set();
     existingBookingsForBlock
-      .filter((b) => isSameDay(new Date(b.timeSlot), date))
+      .filter((b) => isSameDay(new Date(b.timeSlot), selectedDay))
       .forEach((b) => {
-        let current = new Date(b.timeSlot);
+        let cur = new Date(b.timeSlot);
         const end = new Date(b.endTime);
-        while (current < end) {
-          excluded.push(new Date(current));
-          current = addMinutes(current, 30);
+        while (cur < end) {
+          excluded.add(cur.getTime());
+          cur = addMinutes(cur, 30);
         }
       });
-    return excluded;
-  };
 
-  const calculateMinTime = (date) => {
-    const now = new Date();
-    const openingTime = setHours(setMinutes(date, 0), 7);
-    if (isSameDay(date, now)) {
-      const buffer = addMinutes(now, 60);
-      return buffer > openingTime ? buffer : openingTime;
+    const result = [];
+    for (let h = 7; h < 22; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const slot = new Date(selectedDay);
+        slot.setHours(h, m, 0, 0);
+        const isPast = isSameDay(selectedDay, now) && slot <= addMinutes(now, 60);
+        result.push({ time: slot, disabled: excluded.has(slot.getTime()) || isPast });
+      }
     }
-    return openingTime;
-  };
+    return result;
+  }, [selectedDay, existingBookingsForBlock]);
+
+  // Group slots by period, skip empty periods
+  const slotsByPeriod = useMemo(
+    () =>
+      PERIODS.map((p) => ({
+        ...p,
+        slots: slots.filter((s) => {
+          const h = s.time.getHours();
+          return h >= p.from && h < p.to;
+        }),
+      })).filter((p) => p.slots.length > 0),
+    [slots],
+  );
 
   const speakPortalGuidance = (guidance) => {
     if (!guidance) return;
-    const didStartVoice = primeVoicePlayback({ message: guidance, voiceOptions: PORTAL_VOICE_OPTIONS });
-    if (!didStartVoice) speakAlert(guidance, PORTAL_VOICE_OPTIONS);
+    const ok = primeVoicePlayback({ message: guidance, voiceOptions: PORTAL_VOICE_OPTIONS });
+    if (!ok) speakAlert(guidance, PORTAL_VOICE_OPTIONS);
   };
 
-  const handleRescheduleDateChange = (date) => {
+  const handleDayChange = (date) => {
     if (!date) return;
-    if (date.getTime() === newDate?.getTime?.()) {
-      setNewDate(new Date(editingBooking.timeSlot));
-      speakPortalGuidance(
-        `Volvimos al horario actual: ${format(new Date(editingBooking.timeSlot), "EEEE d 'de' MMMM 'a las' HH:mm", { locale: es })}.`,
-      );
-      return;
-    }
-    setNewDate(date);
+    const dayOnly = new Date(date);
+    dayOnly.setHours(0, 0, 0, 0);
+    setSelectedDay(dayOnly);
+    setSelectedTime(null);
     speakPortalGuidance(
-      `Nueva propuesta: ${format(date, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: es })}.`,
+      `Día seleccionado: ${format(dayOnly, "EEEE d 'de' MMMM", { locale: es })}. Ahora elegí el horario.`,
     );
   };
 
-  const handleDurationQuickToggle = (duration) => {
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time);
+    speakPortalGuidance(`Horario seleccionado: ${format(time, "HH:mm")}.`);
+  };
+
+  const handleDurationToggle = (duration) => {
     const currentDuration = Number(newDuration);
     const originalDuration = Number(editingBooking.duration);
-    const nextDuration =
+    const next =
       currentDuration === duration && originalDuration !== duration
         ? originalDuration || 1
         : duration;
-    setNewDuration(nextDuration);
-    speakPortalGuidance(`Duración propuesta: ${formatDurationVoiceLabel(nextDuration)}.`);
+    setNewDuration(next);
+    speakPortalGuidance(`Duración: ${formatDurationVoiceLabel(next)}.`);
   };
 
   const handleReschedule = async () => {
     primeVoicePlayback();
-    if (!newDate) return showToast("Seleccioná una fecha válida", "error");
+    if (!newDate) return showToast("Seleccioná un día y horario.", "error");
     const durationNumber = Number(newDuration);
     if (!Number.isFinite(durationNumber) || durationNumber < 0.5) {
       return showToast("La duración mínima es de 30 minutos.", "error");
@@ -163,7 +196,6 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
         const sent = n?.client?.sent ?? n?.clientEmailSent ?? false;
         const recipient = n?.client?.recipient || n?.clientRecipient || "";
         if (sent && recipient) return ` También enviamos el detalle a ${recipient}.`;
-        if (recipient) return " La reserva ya quedó actualizada.";
         return " Podés encontrarla desde Mis Turnos.";
       })();
       showToast(`Turno reprogramado con éxito.${followUp}`, "success", {
@@ -180,8 +212,6 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
       });
     }
   };
-
-  const adultBooking = isAdultBooking(editingBooking);
 
   return createPortal(
     <div className="reschedule-overlay" onClick={onClose} aria-hidden="false">
@@ -200,8 +230,12 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
             <FaCalendarAlt />
           </div>
           <div className="reschedule-header-text">
-            <h3 id="reschedule-title" className="reschedule-title">Reprogramar turno</h3>
-            <p className="reschedule-subtitle">#{editingBooking.bookingCode} · {editingBooking.studentName}</p>
+            <h3 id="reschedule-title" className="reschedule-title">
+              Reprogramar turno
+            </h3>
+            <p className="reschedule-subtitle">
+              #{editingBooking.bookingCode} · {editingBooking.studentName}
+            </p>
           </div>
           <button
             type="button"
@@ -213,46 +247,27 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
           </button>
         </div>
 
-        {/* Comparison strip */}
-        <div className="reschedule-comparison">
-          <div className="reschedule-slot reschedule-slot--current">
-            <span className="reschedule-slot-label">Actual</span>
-            <strong className="reschedule-slot-date">{formatDateLong(editingBooking.timeSlot)}</strong>
-            <span className="reschedule-slot-time">
-              {formatTime(editingBooking.timeSlot)} – {formatTime(editingBooking.endTime)} h
-            </span>
-          </div>
-          <div className="reschedule-arrow" aria-hidden="true">
-            <FaArrowRight />
-          </div>
-          <div className={`reschedule-slot reschedule-slot--new${hasRescheduleChanges ? " reschedule-slot--changed" : ""}`}>
-            <span className="reschedule-slot-label">Propuesta</span>
-            <strong className="reschedule-slot-date">{formatDateLong(newDate)}</strong>
-            <span className="reschedule-slot-time">
-              {formatTime(newDate)} – {formatTime(newEndDate)} h
-            </span>
-          </div>
+        {/* Current slot — single line */}
+        <div className="reschedule-current-line">
+          <span className="reschedule-current-label">Actual</span>
+          <span className="reschedule-current-info">
+            {formatDateLong(editingBooking.timeSlot)} · {formatTime(editingBooking.timeSlot)} –{" "}
+            {formatTime(editingBooking.endTime)} h
+          </span>
         </div>
 
-        {/* Body: 2-column grid */}
+        {/* Body: calendar left, slots + duration right */}
         <div className="reschedule-body">
-          {/* Left: calendar */}
+          {/* Left: day picker */}
           <section className="reschedule-calendar-col">
-            <label className="reschedule-col-label" id="new-date-label">
-              <FaCalendarAlt aria-hidden="true" /> Nuevo día y hora
-            </label>
+            <div className="reschedule-col-label" id="new-date-label">
+              <FaCalendarAlt aria-hidden="true" /> Nuevo día
+            </div>
             <DatePicker
-              selected={newDate}
-              onChange={handleRescheduleDateChange}
-              showTimeSelect
-              timeCaption="Hora"
-              timeIntervals={30}
-              minTime={calculateMinTime(newDate)}
-              maxTime={maxTime}
+              selected={selectedDay}
+              onChange={handleDayChange}
               minDate={new Date()}
-              excludeTimes={getExcludedTimes(newDate)}
-              dateFormat="dd 'de' MMMM - HH:mm 'h'"
-              formatWeekDay={(nameOfDay) => nameOfDay.slice(0, 2)}
+              locale="es"
               calendarClassName="reschedule-datepicker"
               renderCustomHeader={({
                 date,
@@ -283,20 +298,49 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
                   </button>
                 </div>
               )}
-              locale="es"
-              className="reschedule-datepicker-input"
               inline
               ariaLabelledBy="new-date-label"
             />
           </section>
 
-          {/* Right: duration + facts */}
+          {/* Right: slot grid + duration */}
           <section className="reschedule-right-col">
+            {/* Slot grid */}
+            <div className="reschedule-slots-section">
+              <div className="reschedule-col-label">
+                <FaClock aria-hidden="true" /> Horario disponible
+              </div>
+              {slotsByPeriod.map((period) => (
+                <div key={period.id} className="reschedule-period">
+                  <h4 className="reschedule-period-label">{period.label}</h4>
+                  <div className="reschedule-slots-grid">
+                    {period.slots.map((slot) => {
+                      const isSelected =
+                        selectedTime?.getTime() === slot.time.getTime();
+                      return (
+                        <button
+                          key={slot.time.getTime()}
+                          type="button"
+                          disabled={slot.disabled}
+                          className={`reschedule-slot-btn${slot.disabled ? " reschedule-slot-btn--disabled" : ""}${isSelected ? " reschedule-slot-btn--selected" : ""}`}
+                          onClick={() => handleTimeSelect(slot.time)}
+                          aria-pressed={isSelected}
+                          aria-label={`${format(slot.time, "HH:mm")} ${slot.disabled ? "no disponible" : isSelected ? "seleccionado" : "disponible"}`}
+                        >
+                          {format(slot.time, "HH:mm")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Duration */}
             <div className="reschedule-duration-section">
-              <label className="reschedule-col-label">
+              <div className="reschedule-col-label">
                 <FaClock aria-hidden="true" /> Duración
-              </label>
+              </div>
               <div
                 className="reschedule-duration-grid"
                 role="list"
@@ -310,7 +354,7 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
                       type="button"
                       role="listitem"
                       className={`reschedule-duration-btn${isSelected ? " reschedule-duration-btn--active" : ""}`}
-                      onClick={() => handleDurationQuickToggle(duration)}
+                      onClick={() => handleDurationToggle(duration)}
                       aria-pressed={isSelected}
                     >
                       {formatDurationOptionLabel(duration)}
@@ -318,54 +362,24 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
                   );
                 })}
               </div>
-              <div className="reschedule-duration-manual">
-                <input
-                  type="number"
-                  step="0.5"
-                  min="0.5"
-                  max="3"
-                  value={newDuration}
-                  onChange={(e) => setNewDuration(e.target.value)}
-                  className="reschedule-duration-input"
-                  aria-label="Duración en horas"
-                />
+              {newEndDate && (
                 <div className="reschedule-end-time">
                   <span>Finaliza</span>
                   <strong>{formatTime(newEndDate)} h</strong>
                 </div>
-              </div>
-            </div>
-
-            {/* Facts */}
-            <dl className="reschedule-facts">
-              <div className="reschedule-fact">
-                <dt>Alumno</dt>
-                <dd>{editingBooking.studentName}</dd>
-              </div>
-              {!adultBooking && (
-                <div className="reschedule-fact">
-                  <dt>Parentesco</dt>
-                  <dd>{getResponsibleRelationshipDisplay(editingBooking)}</dd>
-                </div>
               )}
-              <div className="reschedule-fact">
-                <dt>Duración actual</dt>
-                <dd>{formatDurationOptionLabel(editingBooking.duration)}</dd>
-              </div>
-              <div className="reschedule-fact">
-                <dt>Duración nueva</dt>
-                <dd>{formatDurationOptionLabel(newDuration)}</dd>
-              </div>
-            </dl>
+            </div>
           </section>
         </div>
 
         {/* Footer */}
         <div className="reschedule-footer">
           <p className="reschedule-footer-note">
-            {hasRescheduleChanges
-              ? "Propuesta lista para confirmar."
-              : "Cambiá fecha, hora o duración para habilitar la confirmación."}
+            {!selectedTime
+              ? "Elegí un horario para habilitar la confirmación."
+              : hasRescheduleChanges
+                ? "Propuesta lista para confirmar."
+                : "Cambiá fecha, hora o duración para habilitar la confirmación."}
           </p>
           <div className="reschedule-footer-actions">
             <button type="button" className="reschedule-btn-cancel" onClick={onClose}>
