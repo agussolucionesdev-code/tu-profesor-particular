@@ -385,8 +385,8 @@
   --nav-muted:          #b9c7d3;
   --nav-icon-bg:        rgba(128, 201, 138, 0.18);
   --nav-icon-color:     #a5e3ad;
-  --nav-shadow-rest:    0 14px 36px rgba(0, 0, 0, 0.38);
-  --nav-shadow-lift:    0 22px 52px rgba(0, 0, 0, 0.48);
+  --nav-shadow-rest:    0 2px 8px rgba(0, 0, 0, 0.3);
+  --nav-shadow-lift:    0 4px 16px rgba(0, 0, 0, 0.4);
   --nav-inner-light:    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --grad-brand:         linear-gradient(135deg, #80c98a 0%, #589860 100%);
   --grad-navy:          linear-gradient(135deg, #2a4f72 0%, #183858 100%);
