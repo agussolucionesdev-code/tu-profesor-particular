@@ -22,15 +22,15 @@
 [data-theme="dark"] {
   --bg-footer-base: var(--color-bg-light);
   --bg-footer-panel: var(--color-surface-soft);
-  --bg-card-hover: var(--color-white);
+  --bg-card-hover: var(--color-surface-2);
   --ft-primary: var(--color-accent);
   --ft-primary-dark: var(--color-primary-dark);
   --ft-primary-glow: var(--nav-accent-glow);
   --text-pure: var(--color-text-main);
   --text-body: var(--color-text-muted);
   --text-muted: var(--color-text-soft);
-  --border-light: var(--border-soft);
-  --border-strong: var(--border-strong);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
 }
 .footer-elite {
   background-color: var(--bg-footer-base);
@@ -547,4 +547,21 @@
 
 .copyright-sub {
   font-size: 0.82rem;
+}
+
+/* =========================================
+   DARK MODE — Contact cards
+   ========================================= */
+[data-theme="dark"] .contact-card {
+  border-color: transparent;
+}
+
+[data-theme="dark"] .contact-card:hover {
+  background: var(--color-surface-2);
+  border-color: var(--border-soft);
+}
+
+[data-theme="dark"] .contact-icon {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
 }

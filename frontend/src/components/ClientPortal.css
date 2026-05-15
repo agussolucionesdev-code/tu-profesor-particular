@@ -620,27 +620,31 @@
 
 /* Header */
 [data-theme="dark"] .client-portal-wrapper .portal-header {
-  background: rgba(14, 27, 44, 0.96);
-  border-color: rgba(148, 163, 184, 0.14);
+  background: var(--color-surface-1);
+  border-color: var(--border-soft);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .client-portal-wrapper .portal-header-logo {
+  filter: brightness(1.15) drop-shadow(0 2px 8px rgba(114, 176, 122, 0.3));
 }
 
 /* Search */
 [data-theme="dark"] .client-portal-wrapper .search-container {
-  background: rgba(15, 23, 42, 0.96);
-  border-color: rgba(148, 163, 184, 0.14);
+  background: var(--color-surface-1);
+  border-color: var(--border-soft);
 }
 
 [data-theme="dark"] .client-portal-wrapper .search-input {
-  background: rgba(17, 32, 50, 0.96);
+  background: var(--color-surface-2);
   color: #edf4fb;
 }
 
 [data-theme="dark"] .client-portal-wrapper .btn-search {
-  background: linear-gradient(135deg, #112032, #1d344d);
+  background: var(--brand-navy);
 }
 [data-theme="dark"] .client-portal-wrapper .btn-search:hover {
-  background: linear-gradient(135deg, #0d1a28, #183858);
+  background: #183858;
 }
 
 /* Results summary */
@@ -730,7 +734,63 @@
 }
 
 /* ---------------------------------------------------------------------------
-   17. Responsive — 768px
+   17. WhatsApp CTA pill
+   --------------------------------------------------------------------------- */
+.portal-help-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem auto 0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  color: #166534;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.portal-help-line svg {
+  font-size: 1.1rem;
+  color: #25d366;
+  flex-shrink: 0;
+}
+
+.portal-help-line strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.portal-help-line:hover {
+  background: rgba(37, 211, 102, 0.14);
+  border-color: rgba(37, 211, 102, 0.35);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.12);
+  text-decoration: none;
+}
+
+[data-theme="dark"] .portal-help-line {
+  background: rgba(37, 211, 102, 0.07);
+  border-color: rgba(37, 211, 102, 0.18);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .portal-help-line svg {
+  color: #34d399;
+}
+
+[data-theme="dark"] .portal-help-line:hover {
+  background: rgba(37, 211, 102, 0.12);
+  border-color: rgba(37, 211, 102, 0.3);
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.1);
+}
+
+/* ---------------------------------------------------------------------------
+   18. Responsive — 768px
    --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .client-portal-wrapper {

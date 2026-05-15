@@ -375,7 +375,7 @@
   --shadow-brand:    0 18px 38px rgba(114, 176, 122, 0.32);
 
   /* ── Navbar (dark) ───────────────────────────────────────────────────── */
-  --nav-bg-outer:       linear-gradient(180deg, rgba(10, 17, 25, 0.92) 0%, rgba(15, 27, 40, 0.78) 100%);
+  --nav-bg-outer:       rgba(13, 20, 32, 0.95);
   --nav-glass:          rgba(23, 34, 45, 0.78);
   --nav-glass-strong:   #1c2a3a;
   --nav-border:         rgba(216, 226, 234, 0.16);

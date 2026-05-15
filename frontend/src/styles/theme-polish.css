@@ -177,24 +177,18 @@ body {
 }
 
 [data-theme="dark"] .adult-mode-copy {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.96));
-  border-color: rgba(171, 195, 217, 0.16);
+  background: var(--color-surface-1);
+  border-color: var(--border-soft);
 }
 
 [data-theme="dark"] .neuro-toggle-wrapper {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.14), transparent 32%),
-    linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.96));
-  border-color: rgba(171, 195, 217, 0.16);
+  background: var(--color-surface-1);
+  border-color: var(--border-soft);
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
 }
 
 [data-theme="dark"] .neuro-toggle-wrapper.active-box {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.2), transparent 30%),
-    linear-gradient(180deg, rgba(15, 34, 28, 0.96), rgba(13, 26, 41, 0.95));
+  background: var(--color-surface-2);
   border-color: rgba(114, 176, 122, 0.26);
 }
 
@@ -261,8 +255,8 @@ body {
 [data-theme="dark"] .stepper-nav-hint,
 [data-theme="dark"] .stepper-current-pill,
 [data-theme="dark"] .step-status-pill {
-  background: linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.95));
-  border-color: var(--polish-border-soft);
+  background: var(--color-surface-2);
+  border-color: var(--border-soft);
 }
 
 [data-theme="dark"] .stepper-head-copy p,
@@ -277,25 +271,21 @@ body {
 }
 
 [data-theme="dark"] .stepper-item.is-current {
-  background:
-    radial-gradient(circle at top right, rgba(171, 195, 217, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(15, 31, 49, 0.98), rgba(17, 32, 50, 0.96));
-  border-color: var(--polish-border-strong);
+  background: var(--color-surface-2);
+  border-color: var(--border-md);
 }
 
 [data-theme="dark"] .stepper-item.is-completed {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.16), transparent 34%),
-    linear-gradient(180deg, rgba(15, 34, 28, 0.98), rgba(13, 26, 41, 0.96));
+  background: var(--color-surface-1);
   border-color: rgba(114, 176, 122, 0.24);
 }
 
 [data-theme="dark"] .stepper-item.is-upcoming {
-  background: linear-gradient(180deg, rgba(13, 26, 41, 0.96), rgba(10, 20, 33, 0.96));
+  background: var(--color-surface-0);
 }
 
 [data-theme="dark"] .stepper-item.is-locked {
-  background: linear-gradient(180deg, rgba(9, 19, 31, 0.92), rgba(11, 21, 33, 0.95));
+  background: var(--color-surface-0);
   border-color: rgba(142, 160, 178, 0.16);
 }
 
@@ -349,9 +339,7 @@ body {
 [data-theme="dark"] .calendar-zoom-picker-shell,
 [data-theme="dark"] .slot-stage-shell .slot-section,
 [data-theme="dark"] .time-slots-card .slot-section {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.08), transparent 34%),
-    linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.95));
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .calendar-selection-banner strong,
@@ -373,8 +361,8 @@ body {
 [data-theme="dark"] .duration-chip.selected,
 [data-theme="dark"] .btn-portal-primary,
 [data-theme="dark"] .btn-copy-code.prominent {
-  background: linear-gradient(135deg, #aac1d8, #72b07a);
-  color: #08111b;
+  background: var(--color-accent);
+  color: #ffffff;
   border-color: transparent;
 }
 
@@ -508,17 +496,15 @@ body {
 [data-theme="dark"] .client-portal-wrapper .ticket-footer,
 [data-theme="dark"] .client-portal-wrapper .contact-signature,
 [data-theme="dark"] .client-portal-wrapper .portal-toast {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.08), transparent 34%),
-    linear-gradient(180deg, var(--polish-surface-0), var(--polish-surface-1));
-  border-color: var(--polish-border-soft);
+  background: var(--color-surface-1);
+  border-color: var(--border-soft);
 }
 
 [data-theme="dark"] .client-portal-wrapper .ticket-code,
 [data-theme="dark"] .client-portal-wrapper .value-tertiary,
 [data-theme="dark"] .client-portal-wrapper .search-input,
 [data-theme="dark"] .client-portal-wrapper .btn-reschedule {
-  background: linear-gradient(180deg, var(--polish-surface-1), var(--polish-surface-2));
+  background: var(--color-surface-2);
   color: #edf4fb;
 }
 
@@ -557,18 +543,19 @@ body {
 }
 
 [data-theme="dark"] .client-portal-wrapper .btn-cancel {
-  background: linear-gradient(180deg, rgba(87, 29, 29, 0.38), rgba(69, 16, 16, 0.46));
+  background: rgba(127, 29, 29, 0.25);
   border-color: rgba(248, 113, 113, 0.24);
   color: #fecaca;
 }
 
 [data-theme="dark"] .client-portal-wrapper .btn-delete-forever {
-  background: linear-gradient(135deg, #aac1d8, #72b07a);
-  color: #07111d;
+  background: var(--color-surface-2);
+  border-color: var(--border-soft);
+  color: #b7c7d5;
 }
 
 [data-theme="dark"] .client-portal-wrapper .btn-search {
-  background: linear-gradient(135deg, #1d344d, #2b5478 62%, #589860) !important;
+  background: var(--brand-navy) !important;
   border-color: rgba(114, 176, 122, 0.22) !important;
   color: #edf4fb !important;
   box-shadow:
@@ -577,15 +564,14 @@ body {
 }
 
 [data-theme="dark"] .client-portal-wrapper .date-box.new {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.16), transparent 38%),
-    linear-gradient(180deg, rgba(15, 34, 28, 0.96), rgba(13, 26, 41, 0.94));
+  background: rgba(20, 42, 30, 0.7);
   border-color: rgba(114, 176, 122, 0.22);
 }
 
 [data-theme="dark"] .client-portal-wrapper .arrow-box {
-  background: linear-gradient(135deg, #aac1d8, #72b07a);
-  color: #08111b;
+  background: var(--color-surface-2);
+  color: var(--color-accent);
+  border-color: rgba(114, 176, 122, 0.2);
 }
 
 [data-theme="dark"] .client-portal-wrapper .teacher-contact-email {
@@ -814,15 +800,13 @@ body {
 
 [data-theme="dark"] .journey-compass,
 [data-theme="dark"] .neuro-stepper {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.1), transparent 28%),
-    linear-gradient(180deg, rgba(10, 20, 33, 0.98), rgba(13, 26, 41, 0.96));
-  border-color: rgba(171, 195, 217, 0.16);
+  background: var(--color-surface-0);
+  border-color: var(--border-soft);
 }
 
 [data-theme="dark"] .journey-meter,
 [data-theme="dark"] .stepper-nav-hint {
-  background: linear-gradient(180deg, rgba(17, 32, 50, 0.96), rgba(13, 26, 41, 0.94));
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .stepper-progress-fill {
@@ -831,12 +815,12 @@ body {
 
 [data-theme="dark"] .stepper-item.is-locked .step-circle,
 [data-theme="dark"] .stepper-item.is-upcoming .step-circle {
-  background: linear-gradient(180deg, rgba(14, 28, 43, 0.98), rgba(11, 22, 35, 0.96));
+  background: var(--color-surface-2);
   color: #9fb2c4;
 }
 
 [data-theme="dark"] .stepper-item.is-locked {
-  background: linear-gradient(180deg, rgba(9, 18, 29, 0.96), rgba(11, 21, 33, 0.98));
+  background: var(--color-surface-0);
 }
 
 [data-theme="dark"] .navbar-brand-logo {
@@ -844,9 +828,7 @@ body {
   padding: 0.34rem 0.95rem !important;
   border-radius: 26px !important;
   border: 1px solid rgba(114, 176, 122, 0.36) !important;
-  background:
-    radial-gradient(circle at 12% 50%, rgba(114, 176, 122, 0.26), transparent 34%),
-    linear-gradient(135deg, rgba(249, 252, 249, 0.98), rgba(223, 235, 228, 0.94)) !important;
+  background: rgba(236, 244, 236, 0.96) !important;
   box-shadow:
     0 18px 42px rgba(0, 0, 0, 0.34),
     inset 0 0 0 1px rgba(255, 255, 255, 0.62) !important;
@@ -854,16 +836,7 @@ body {
 }
 
 [data-theme="dark"] .navbar-brand-logo::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  display: block;
-  border-radius: inherit;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.78), transparent 34%),
-    radial-gradient(circle at 88% 45%, rgba(24, 56, 88, 0.13), transparent 42%);
-  mix-blend-mode: multiply;
-  pointer-events: none;
+  content: none;
 }
 
 [data-theme="dark"] .logo-img-horizontal {
@@ -883,9 +856,7 @@ body {
 }
 
 [data-theme="dark"] .admin-login-shell {
-  background:
-    radial-gradient(circle at top, rgba(114, 176, 122, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(7, 17, 29, 0.98), rgba(9, 20, 33, 0.98));
+  background: var(--color-surface-0);
 }
 
 .admin-login-card {
@@ -914,9 +885,7 @@ body {
 }
 
 [data-theme="dark"] .footer-elite {
-  background:
-    radial-gradient(circle at top, rgba(114, 176, 122, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(7, 17, 29, 0.98), rgba(10, 20, 33, 0.98));
+  background: var(--color-surface-0);
 }
 
 .footer-link-item,
@@ -979,7 +948,7 @@ body {
 }
 
 [data-theme="dark"] .journey-meter {
-  background: linear-gradient(145deg, #112032, #1d344d 60%, #2d5d65) !important;
+  background: var(--color-surface-1) !important;
   color: #edf4fb;
 }
 

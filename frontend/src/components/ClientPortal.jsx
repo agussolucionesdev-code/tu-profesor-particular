@@ -314,17 +314,16 @@ const ClientPortal = () => {
           ))}
         </div>
 
-        <div className="portal-help-line">
+        <a
+          className="portal-help-line"
+          href="https://wa.me/5491164236675?text=Hola%20Agustin,%20necesito%20ayuda%20con%20un%20turno."
+          target="_blank"
+          rel="noreferrer"
+        >
           <FaWhatsapp aria-hidden="true" />
           <span>¿Necesitás ayuda?</span>
-          <a
-            href="https://wa.me/5491164236675?text=Hola%20Agustin,%20necesito%20ayuda%20con%20un%20turno."
-            target="_blank"
-            rel="noreferrer"
-          >
-            Escribinos por WhatsApp
-          </a>
-        </div>
+          <strong>Escribinos por WhatsApp</strong>
+        </a>
       </div>
 
       {editingBooking && (
