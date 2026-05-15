@@ -445,16 +445,11 @@ body {
 }
 
 [data-theme="dark"] body {
-  background:
-    radial-gradient(circle at top left, rgba(114, 176, 122, 0.12), transparent 24%),
-    radial-gradient(circle at top right, rgba(171, 195, 217, 0.1), transparent 26%),
-    linear-gradient(180deg, #07111d 0%, #091525 54%, #07111d 100%);
+  background: #0b1424;
 }
 
 [data-theme="dark"] .main-content::before {
-  background:
-    radial-gradient(circle at 14% 18%, rgba(114, 176, 122, 0.1), transparent 18%),
-    radial-gradient(circle at 86% 10%, rgba(171, 195, 217, 0.08), transparent 20%);
+  background: none;
 }
 
 [data-theme="dark"] .route-loader-card,
@@ -476,8 +471,7 @@ body {
 [data-theme="dark"] .admin-kpi-card,
 [data-theme="dark"] .footer-grid-container,
 [data-theme="dark"] .bottom-panel-container {
-  background:
-    linear-gradient(180deg, rgba(13, 26, 41, 0.96), rgba(17, 32, 50, 0.94));
+  background: var(--color-surface-1);
   border-color: rgba(171, 195, 217, 0.14);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.28);
 }
@@ -492,5 +486,5 @@ body {
 }
 
 [data-theme="dark"] .journey-meter {
-  background: linear-gradient(135deg, rgba(114, 176, 122, 0.18), rgba(13, 26, 41, 0.96));
+  background: var(--color-surface-1);
 }

@@ -8,7 +8,7 @@ body {
 }
 
 [data-theme="dark"] body {
-  background-color: var(--color-bg-light);
+  background: #0b1424;
 }
 
 .nav-link-btn,
