@@ -444,6 +444,14 @@ body {
   }
 }
 
+[data-theme="dark"] {
+  --brand-shell-panel:        var(--color-surface-1);
+  --brand-shell-panel-strong: var(--color-surface-2);
+  --brand-shell-border:       rgba(171, 195, 217, 0.14);
+  --brand-shell-shadow:       0 24px 60px rgba(0, 0, 0, 0.45);
+  --brand-shell-shadow-soft:  0 14px 30px rgba(0, 0, 0, 0.32);
+}
+
 [data-theme="dark"] body {
   background: #0b1424;
 }
