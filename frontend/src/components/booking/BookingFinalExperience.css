@@ -1856,9 +1856,7 @@
 [data-theme="dark"] .duration-selector-premium,
 [data-theme="dark"] .booking-summary-card-expanded,
 [data-theme="dark"] .success-modal-card-wide {
-  background-image:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(13, 26, 41, 0.98), rgba(17, 32, 50, 0.96));
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .confirmation-stage-badge strong,
@@ -1904,9 +1902,7 @@
 [data-theme="dark"] .summary-management-note-rich,
 [data-theme="dark"] .success-step-item {
   border-color: rgba(171, 195, 217, 0.14);
-  background:
-    radial-gradient(circle at top right, rgba(171, 195, 217, 0.08), transparent 34%),
-    linear-gradient(180deg, rgba(17, 32, 50, 0.96), rgba(13, 26, 41, 0.94));
+  background: var(--color-surface-2);
 }
 
 [data-theme="dark"] .confirmation-hero-fact svg,
@@ -1948,15 +1944,13 @@
 }
 
 [data-theme="dark"] .duration-chip.selected {
-  background: linear-gradient(135deg, #204060, #72b07a 90%);
-  color: #07111d;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 [data-theme="dark"] .duration-summary-card {
   border-color: rgba(171, 195, 217, 0.14);
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(17, 32, 50, 0.96), rgba(13, 26, 41, 0.94));
+  background: var(--color-surface-1);
 }
 
 [data-theme="dark"] .duration-summary-card p {
@@ -1964,9 +1958,8 @@
 }
 
 [data-theme="dark"] .duration-summary-card.is-ready {
-  background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.2), transparent 28%),
-    linear-gradient(155deg, #183858, #204060 60%, #2b5478);
+  background: var(--color-surface-2);
+  border-color: rgba(114, 176, 122, 0.26);
 }
 
 [data-theme="dark"] .duration-summary-meta span,
@@ -1980,7 +1973,7 @@
 [data-theme="dark"] .success-hero-band,
 [data-theme="dark"] .btn-copy-code.prominent,
 [data-theme="dark"] .btn-portal-primary {
-  background: linear-gradient(135deg, #112032, #1d344d 60%, #204060);
+  background: var(--brand-navy);
 }
 
 [data-theme="dark"] .success-brand-lockup,
