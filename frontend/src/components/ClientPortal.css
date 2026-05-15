@@ -627,10 +627,10 @@
 }
 
 [data-theme="dark"] .client-portal-wrapper .portal-header-logo {
-  background: var(--color-surface-2) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(216, 238, 220, 0.88) !important;
+  border-color: rgba(114, 176, 122, 0.25) !important;
   box-shadow: none !important;
-  filter: brightness(1.1) saturate(1.05);
+  filter: none;
 }
 
 /* Search */

@@ -160,8 +160,8 @@
 }
 
 [data-theme="dark"] .brand-mark {
-  background: var(--color-surface-2);
-  border-color: rgba(128, 201, 138, 0.25);
+  background: rgba(216, 238, 220, 0.88);
+  border-color: rgba(114, 176, 122, 0.30);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
@@ -185,10 +185,6 @@
 
 .navbar-brand:hover .brand-mark-img {
   transform: scale(1.06);
-}
-
-[data-theme="dark"] .brand-mark-img {
-  filter: brightness(1.15) saturate(1.1);
 }
 
 /* halo pulsante detrás del ícono */
