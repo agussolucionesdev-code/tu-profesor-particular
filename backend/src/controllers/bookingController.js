@@ -9,6 +9,7 @@ import {
   resetBookingSheet,
   updateBookingInSheet,
 } from "../services/sheetsService.js";
+import { sendPushToAdmin } from "../services/pushService.js";
 import {
   availabilityQuerySchema,
   cancelSchema,
@@ -27,7 +28,14 @@ import {
   validateSlot,
 } from "../utils/bookingRules.js";
 
-const activeStatusFilter = { status: { $ne: "Cancelado" } };
+const activeStatusFilter = { status: { $nin: ["Cancelado", "Finalizado"] } };
+
+const STATUS_TRANSITIONS = {
+  Pendiente: ["Confirmado", "Cancelado"],
+  Confirmado: ["Finalizado", "Cancelado"],
+  Finalizado: [],
+  Cancelado: [],
+};
 const MAX_AVAILABILITY_RANGE_DAYS = Number(
   process.env.MAX_AVAILABILITY_RANGE_DAYS || 120,
 );
@@ -194,14 +202,15 @@ export const createBooking = async (req, res, next) => {
     const startTime = parseDateTimeInput(payload.timeSlot);
     const duration = Number(payload.duration);
 
-    const [openingHour, closingHour, advanceNoticeMinutes, requireManual] = await Promise.all([
+    const [openingHour, closingHour, advanceNoticeMinutes, requireManual, slotDurationMinutes] = await Promise.all([
       getSetting("schedule.openingHour"),
       getSetting("schedule.closingHour"),
       getSetting("schedule.advanceNoticeMinutes"),
       getSetting("booking.requireManualConfirmation"),
+      getSetting("schedule.slotDurationMinutes"),
     ]);
 
-    const slotError = validateSlot(startTime, duration, openingHour, closingHour, advanceNoticeMinutes);
+    const slotError = validateSlot(startTime, duration, openingHour, closingHour, advanceNoticeMinutes, slotDurationMinutes ?? 30);
     if (slotError) {
       return badRequest(res, slotError);
     }
@@ -253,6 +262,11 @@ export const createBooking = async (req, res, next) => {
     Promise.allSettled([
       appendBookingToSheet(newBooking),
       sendBookingNotifications({ booking: newBooking, event: "created" }),
+      sendPushToAdmin({
+        title: "Nueva reserva",
+        body: `${newBooking.studentName} · ${newBooking.subject}`,
+        url: "/admin",
+      }),
     ]).catch((err) => console.error("[createBooking side-effects]", err.message));
   } catch (error) {
     if (error?.code === 11000) {
@@ -334,6 +348,26 @@ export const getAllBookings = async (req, res, next) => {
   try {
     setNoStore(res);
 
+    const page = Math.max(1, parseInt(req.query.page, 10) || 0);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 0));
+
+    if (page > 0 && limit > 0) {
+      const skip = (page - 1) * limit;
+      const [bookings, total] = await Promise.all([
+        Booking.find().sort({ timeSlot: -1 }).skip(skip).limit(limit).lean(),
+        Booking.countDocuments(),
+      ]);
+      return res.status(200).json({
+        success: true,
+        count: bookings.length,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+        data: bookings,
+        requestId: req.requestId,
+      });
+    }
+
     const bookings = await Booking.find().sort({ timeSlot: -1 }).lean();
 
     res.status(200).json({
@@ -352,6 +386,53 @@ export const getAllBookings = async (req, res, next) => {
       message: "Error interno del servidor.",
       requestId: req.requestId,
     });
+  }
+};
+
+export const getBookingStats = async (req, res, next) => {
+  try {
+    setNoStore(res);
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    const [statusCounts, monthRevenue, lastMonthRevenue] = await Promise.all([
+      Booking.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Booking.aggregate([
+        { $match: { status: "Finalizado", timeSlot: { $gte: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ["$price", 0] } } } },
+      ]),
+      Booking.aggregate([
+        { $match: { status: "Finalizado", timeSlot: { $gte: startOfLastMonth, $lte: endOfLastMonth } } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ["$price", 0] } } } },
+      ]),
+    ]);
+
+    const stats = { total: 0, confirmed: 0, pending: 0, cancelled: 0, finished: 0 };
+    for (const row of statusCounts) {
+      stats.total += row.count;
+      if (row._id === "Confirmado") stats.confirmed = row.count;
+      else if (row._id === "Pendiente") stats.pending = row.count;
+      else if (row._id === "Cancelado") stats.cancelled = row.count;
+      else if (row._id === "Finalizado") stats.finished = row.count;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stats,
+        monthRevenue: monthRevenue[0]?.total ?? 0,
+        lastMonthRevenue: lastMonthRevenue[0]?.total ?? 0,
+      },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({ success: false, message: "Error interno.", requestId: req.requestId });
   }
 };
 
@@ -413,6 +494,21 @@ export const updateBooking = async (req, res, next) => {
 
     const updateData = { ...parsed.data };
 
+    // Validate status transition before touching the DB
+    if (updateData.status !== undefined) {
+      const current = await Booking.findById(req.params.id).select("status").lean();
+      if (!current) return notFound(res, "Reserva no encontrada.");
+
+      const allowed = STATUS_TRANSITIONS[current.status] ?? [];
+      if (!allowed.includes(updateData.status)) {
+        return res.status(422).json({
+          success: false,
+          message: `Transición de estado no permitida: ${current.status} → ${updateData.status}.`,
+          requestId: req.requestId,
+        });
+      }
+    }
+
     if (updateData.timeSlot !== undefined) {
       const existing = await Booking.findById(req.params.id).select("duration").lean();
       if (!existing) {
@@ -436,7 +532,17 @@ export const updateBooking = async (req, res, next) => {
       updateData.endTime = endTime;
     }
 
-    const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, updateData, {
+    const NOTE_FIELDS = ["notes", "studentEvolution", "emotionalState"];
+    const historyPush = NOTE_FIELDS
+      .filter((f) => updateData[f] !== undefined)
+      .map((f) => ({ field: f, text: updateData[f], savedAt: new Date() }));
+
+    const mongoUpdate = { $set: updateData };
+    if (historyPush.length > 0) {
+      mongoUpdate.$push = { notesHistory: { $each: historyPush } };
+    }
+
+    const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, mongoUpdate, {
       new: true,
       runValidators: true,
     });
@@ -446,6 +552,13 @@ export const updateBooking = async (req, res, next) => {
     }
 
     await updateBookingInSheet(updatedBooking);
+
+    // Fire email side-effects for relevant transitions (non-blocking)
+    if (updateData.status === "Cancelado") {
+      sendBookingNotifications({ booking: updatedBooking, event: "cancelled" }).catch(
+        (err) => console.error("[status-transition email cancelled]", err),
+      );
+    }
 
     setNoStore(res);
     res.status(200).json({
@@ -673,6 +786,56 @@ export const cancelBookingClient = async (req, res, next) => {
       updateBookingInSheet(booking),
       sendBookingNotifications({ booking, event: "cancelled" }),
     ]).catch((err) => console.error("[cancelBooking side-effects]", err.message));
+  } catch (error) {
+    if (typeof next === "function") {
+      return next(error);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const confirmAttendanceClient = async (req, res, next) => {
+  try {
+    const parsed = cancelSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return badRequest(res, "Código de reserva inválido.", parsed.error.flatten());
+    }
+
+    const booking = await Booking.findOne({
+      bookingCode: normalizeCode(parsed.data.bookingCode),
+    });
+
+    if (!booking) {
+      return notFound(res, "No encontrado.");
+    }
+
+    if (booking.status !== "Pendiente") {
+      return badRequest(res, "Solo se pueden confirmar turnos que están en estado Pendiente.");
+    }
+
+    if (!isManageableByClient(booking)) {
+      return badRequest(res, "Este turno ya no se puede modificar.");
+    }
+
+    booking.status = "Confirmado";
+    await booking.save();
+
+    setNoStore(res);
+    res.status(200).json({
+      success: true,
+      message: "Asistencia confirmada. ¡Nos vemos en la clase!",
+      data: publicBooking(booking),
+      requestId: req.requestId,
+    });
+
+    Promise.allSettled([
+      updateBookingInSheet(booking),
+    ]).catch((err) => console.error("[confirmAttendance side-effects]", err.message));
   } catch (error) {
     if (typeof next === "function") {
       return next(error);

@@ -6,6 +6,7 @@ import {
   formatDate,
   formatResponsibleRelationshipLabel,
 } from "../utils/bookingRules.js";
+import { getSetting } from "../controllers/settingsController.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -326,7 +327,7 @@ const signatureBlock = () => {
               <tr>
                 <td style="padding:3px 0;color:${BRAND.muted};font-size:13px;font-family:Arial,Helvetica,sans-serif;">
                   <span style="display:inline-block;width:62px;color:${BRAND.soft};">Estudio</span>
-                  <a href="${escapeHtml(TEACHER_MAPS_URL)}" style="color:${BRAND.navy};text-decoration:none;font-weight:700;">${escapeHtml(TEACHER_ADDRESS)}</a>
+                  <a href="${escapeHtml(mapsUrl)}" style="color:${BRAND.navy};text-decoration:none;font-weight:700;">${escapeHtml(address)}</a>
                 </td>
               </tr>
             </table>
@@ -397,11 +398,11 @@ const addressBlock = () => `
             </td>
             <td valign="top" style="padding-left:12px;">
               <p style="margin:0;color:${BRAND.navyDeep};font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:800;font-family:Arial,Helvetica,sans-serif;">Lugar de la clase</p>
-              <p style="margin:4px 0 0;color:${BRAND.text};font-size:15px;font-weight:800;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(TEACHER_ADDRESS)}</p>
+              <p style="margin:4px 0 0;color:${BRAND.text};font-size:15px;font-weight:800;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(address)}</p>
               <p style="margin:4px 0 0;color:${BRAND.muted};font-size:12px;line-height:1.5;font-family:Arial,Helvetica,sans-serif;">Tocá el botón para abrir Google Maps con la ubicación exacta.</p>
             </td>
             <td valign="middle" align="right" style="white-space:nowrap;">
-              <a href="${escapeHtml(TEACHER_MAPS_URL)}" class="tpp-address-cta" style="display:inline-block;background:${BRAND.navy};color:#ffffff;text-decoration:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;font-family:Arial,Helvetica,sans-serif;">Cómo llegar</a>
+              <a href="${escapeHtml(mapsUrl)}" class="tpp-address-cta" style="display:inline-block;background:${BRAND.navy};color:#ffffff;text-decoration:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;font-family:Arial,Helvetica,sans-serif;">Cómo llegar</a>
             </td>
           </tr>
         </table>
@@ -424,7 +425,11 @@ export const buildBookingEmailHtml = ({
   event = "created",
   dateStr,
   previousDateStr,
+  teacherAddress,
+  teacherMapsUrl,
 } = {}) => {
+  const address = teacherAddress || TEACHER_ADDRESS;
+  const mapsUrl = teacherMapsUrl || TEACHER_MAPS_URL;
   const theme = getTheme(event);
   const safe = buildSafeBooking(booking, dateStr, previousDateStr);
   const cancelled = event === "cancelled";
@@ -510,7 +515,11 @@ export const buildBookingEmailText = ({
   event = "created",
   dateStr,
   previousDateStr,
+  teacherAddress,
+  teacherMapsUrl,
 } = {}) => {
+  const address = teacherAddress || TEACHER_ADDRESS;
+  const mapsUrl = teacherMapsUrl || TEACHER_MAPS_URL;
   const theme = getTheme(event);
   const safe = buildSafeBooking(booking, dateStr, previousDateStr);
 
@@ -541,7 +550,7 @@ export const buildBookingEmailText = ({
   );
 
   if (theme.showAddress) {
-    lines.push(`Lugar: ${TEACHER_ADDRESS}`, `Mapa: ${TEACHER_MAPS_URL}`, "");
+    lines.push(`Lugar: ${address}`, `Mapa: ${mapsUrl}`, "");
   }
 
   lines.push(
@@ -670,8 +679,8 @@ export const sendBookingEmail = async (
       from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: `${theme.clientTitle}: ${booking.subject || "Clase particular"} - ${dateStr}`,
-      html: buildBookingEmailHtml({ booking, event, dateStr, previousDateStr }),
-      text: buildBookingEmailText({ booking, event, dateStr, previousDateStr }),
+      html: buildBookingEmailHtml({ booking, event, dateStr, previousDateStr, teacherAddress: extraData.teacherAddress, teacherMapsUrl: extraData.teacherMapsUrl }),
+      text: buildBookingEmailText({ booking, event, dateStr, previousDateStr, teacherAddress: extraData.teacherAddress, teacherMapsUrl: extraData.teacherMapsUrl }),
       attachments: buildMailAttachments(),
     });
 
@@ -689,6 +698,11 @@ export const sendBookingNotifications = async ({
 } = {}) => {
   const formattedDate = formatDate(booking.timeSlot);
   const previousDateStr = previousTimeSlot ? formatDate(previousTimeSlot) : "";
+
+  const [teacherAddress, teacherMapsUrl] = await Promise.all([
+    getSetting("teacher.address"),
+    getSetting("teacher.mapsUrl"),
+  ]);
 
   const clientEmailSent = booking.email
     ? await sendBookingEmail(
@@ -709,6 +723,8 @@ export const sendBookingNotifications = async ({
           duration: booking.duration,
           event,
           previousDateStr,
+          teacherAddress,
+          teacherMapsUrl,
         },
       )
     : false;

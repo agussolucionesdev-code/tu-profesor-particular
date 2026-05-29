@@ -1,4 +1,5 @@
 import Booking from "../models/Booking.js";
+import AppSettings from "../models/AppSettings.js";
 import { sendReminderNotification } from "../config/mailer.js";
 
 // Find bookings whose timeSlot falls 20–28 hours from now.
@@ -50,6 +51,18 @@ export const processReminders = async () => {
     }
   }
 
+  const summary = { processed: bookings.length, sent, failed, date: new Date().toISOString() };
   console.log(`REMINDERS: done — sent: ${sent}, skipped/failed: ${failed}`);
-  return { processed: bookings.length, sent, failed };
+
+  try {
+    await AppSettings.findOneAndUpdate(
+      { key: "cron.lastReminderRun" },
+      { key: "cron.lastReminderRun", value: summary },
+      { upsert: true },
+    );
+  } catch (err) {
+    console.error("REMINDERS: could not persist run log:", err.message);
+  }
+
+  return summary;
 };

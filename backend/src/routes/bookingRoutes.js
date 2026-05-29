@@ -4,11 +4,13 @@ import {
   getAvailability,
   getBookingByCode,
   getAllBookings,
+  getBookingStats,
   deleteBooking,
   updateBooking,
   deleteAllBookings,
   rescheduleBooking,
   cancelBookingClient,
+  confirmAttendanceClient,
   updateStudentNotes,
 } from "../controllers/bookingController.js";
 import { requireAdmin } from "../middleware/authMiddleware.js";
@@ -23,20 +25,14 @@ router.post("/reserve", publicMutationLimiter, createBooking);
 router.get("/availability", getAvailability);
 router.post("/reschedule", publicMutationLimiter, rescheduleBooking);
 router.post("/cancel", publicMutationLimiter, cancelBookingClient);
+router.post("/confirm-attendance", publicMutationLimiter, confirmAttendanceClient);
 router.put("/:code/notes", publicMutationLimiter, updateStudentNotes);
 
-const rejectInProduction = (req, res) => {
-  res
-    .status(403)
-    .json({ success: false, message: "Not available in production." });
-};
-
+router.get("/stats", requireAdmin, getBookingStats);
 router.get("/", requireAdmin, getAllBookings);
-router.delete(
-  "/all",
-  requireAdmin,
-  process.env.NODE_ENV === "production" ? rejectInProduction : deleteAllBookings,
-);
+if (process.env.NODE_ENV !== "production") {
+  router.delete("/all", requireAdmin, deleteAllBookings);
+}
 router.delete("/:id", requireAdmin, deleteBooking);
 router.put("/:id", requireAdmin, updateBooking);
 

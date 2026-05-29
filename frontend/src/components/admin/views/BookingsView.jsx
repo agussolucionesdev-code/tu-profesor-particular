@@ -6,6 +6,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaChevronUp,
+  FaDownload,
   FaEdit,
   FaEye,
   FaFilter,
@@ -17,6 +18,8 @@ import {
   FaTrashAlt,
   FaWhatsapp,
 } from "react-icons/fa";
+import { exportBookingsToCSV } from "../../../utils/csvExport";
+import ConfirmDialog from "../../ui/ConfirmDialog";
 import {
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
@@ -57,6 +60,8 @@ const BookingsView = ({
   const [sortDir, setSortDir] = useState("asc");
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } or "all"
+  const [deleteError, setDeleteError] = useState("");
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -128,6 +133,20 @@ const BookingsView = ({
     });
   };
 
+  const handleConfirmedDelete = async () => {
+    setDeleteError("");
+    try {
+      if (confirmDelete === "all") {
+        await onDeleteAll();
+      } else {
+        await onDeleteBooking(confirmDelete.id);
+      }
+      setConfirmDelete(null);
+    } catch (err) {
+      setDeleteError(err.message || "No se pudo completar la acción.");
+    }
+  };
+
   const handleBulkAction = async (newStatus) => {
     setBulkLoading(true);
     try {
@@ -152,6 +171,15 @@ const BookingsView = ({
           <span className="card-kicker">Gestor</span>
           <h3>Control detallado de turnos</h3>
         </div>
+        <button
+          type="button"
+          className="admin-secondary-btn slim"
+          title="Exportar turnos visibles a CSV"
+          onClick={() => exportBookingsToCSV(sorted, "turnos.csv")}
+          disabled={sorted.length === 0}
+        >
+          <FaDownload aria-hidden="true" /> CSV
+        </button>
       </div>
 
       <div className="admin-toolbar">
@@ -162,7 +190,7 @@ const BookingsView = ({
             type="search"
             placeholder="Buscar alumno, código, responsable o contacto..."
             value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
+            onChange={(e) => { setSelectedIds(new Set()); onSearchTermChange(e.target.value); }}
             autoComplete="off"
           />
         </label>
@@ -174,7 +202,7 @@ const BookingsView = ({
               type="button"
               className={`status-filter-chip ${filterStatus === s ? "is-active" : ""}`}
               aria-pressed={filterStatus === s}
-              onClick={() => onFilterStatusChange(s)}
+              onClick={() => { setSelectedIds(new Set()); onFilterStatusChange(s); }}
             >
               {s}
             </button>
@@ -367,7 +395,7 @@ const BookingsView = ({
                             className="icon-action danger"
                             title="Eliminar reserva"
                             aria-label={`Eliminar reserva de ${booking.studentName}`}
-                            onClick={() => onDeleteBooking(booking._id)}
+                            onClick={() => setConfirmDelete({ id: booking._id, name: booking.studentName })}
                           >
                             <FaTrashAlt aria-hidden="true" />
                           </button>
@@ -429,7 +457,7 @@ const BookingsView = ({
                     >
                       <FaWhatsapp aria-hidden="true" />
                     </button>
-                    <button type="button" className="icon-action danger" title="Eliminar" onClick={() => onDeleteBooking(booking._id)}>
+                    <button type="button" className="icon-action danger" title="Eliminar" onClick={() => setConfirmDelete({ id: booking._id, name: booking.studentName })}>
                       <FaTrashAlt aria-hidden="true" />
                     </button>
                   </div>
@@ -500,10 +528,39 @@ const BookingsView = ({
             <strong>Zona de resguardo</strong>
             <p>Solo para limpiar datos de prueba. Pide doble confirmación.</p>
           </div>
-          <button type="button" className="admin-danger-btn" onClick={onDeleteAll} disabled={dataLoading}>
+          <button type="button" className="admin-danger-btn" onClick={() => setConfirmDelete("all")} disabled={dataLoading}>
             <FaTrashAlt /> Limpiar base de prueba
           </button>
         </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={confirmDelete !== null && confirmDelete !== "all"}
+        title="Eliminar reserva"
+        message={`¿Eliminás la reserva de ${confirmDelete?.name ?? "este alumno"}? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        danger
+        onConfirm={handleConfirmedDelete}
+        onCancel={() => { setConfirmDelete(null); setDeleteError(""); }}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDelete === "all"}
+        title="Limpiar base de reservas"
+        message={`Se eliminarán permanentemente todos los ${bookings.length} turnos. Usá esto solo para datos de prueba.`}
+        confirmLabel="Eliminar todo"
+        cancelLabel="Cancelar"
+        danger
+        typeToConfirm="ELIMINAR"
+        onConfirm={handleConfirmedDelete}
+        onCancel={() => { setConfirmDelete(null); setDeleteError(""); }}
+      />
+
+      {deleteError && (
+        <p role="alert" style={{ color: "var(--color-error-deep)", padding: "0.5rem 1rem", fontSize: "0.85rem" }}>
+          {deleteError}
+        </p>
       )}
     </section>
   );

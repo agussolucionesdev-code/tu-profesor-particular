@@ -5,6 +5,7 @@ import {
   addBlockedDate,
   removeBlockedDate,
 } from "../../../api/bookingApi";
+import ConfirmDialog from "../../ui/ConfirmDialog";
 import "./SettingsView.css";
 
 const BlockedDatesView = ({ authConfig }) => {
@@ -12,9 +13,12 @@ const BlockedDatesView = ({ authConfig }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newDate, setNewDate] = useState("");
+  const [newDateEnd, setNewDateEnd] = useState("");
   const [newReason, setNewReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [dateToUnblock, setDateToUnblock] = useState(null);
+  const [removeError, setRemoveError] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -31,34 +35,52 @@ const BlockedDatesView = ({ authConfig }) => {
 
   useEffect(() => { load(); }, []);
 
+  const getDatesInRange = (from, to) => {
+    const dates = [];
+    const current = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+    while (current <= end) {
+      dates.push(current.toISOString().slice(0, 10));
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!newDate) return;
     setSaving(true);
     setSaveError("");
     try {
-      await addBlockedDate({ date: newDate, reason: newReason }, authConfig);
+      const dates = newDateEnd && newDateEnd >= newDate
+        ? getDatesInRange(newDate, newDateEnd)
+        : [newDate];
+      await Promise.all(dates.map((d) => addBlockedDate({ date: d, reason: newReason }, authConfig)));
       setNewDate("");
+      setNewDateEnd("");
       setNewReason("");
       await load();
     } catch (err) {
-      setSaveError(err?.response?.data?.message || "Error al bloquear la fecha.");
+      setSaveError(err?.response?.data?.message || "Error al bloquear las fechas.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleRemove = async (date) => {
-    if (!window.confirm(`¿Desbloquear el ${date}?`)) return;
+  const handleRemove = async () => {
+    if (!dateToUnblock) return;
+    setRemoveError("");
     try {
-      await removeBlockedDate(date, authConfig);
-      setBlockedDates((prev) => prev.filter((r) => r.date !== date));
+      await removeBlockedDate(dateToUnblock, authConfig);
+      setBlockedDates((prev) => prev.filter((r) => r.date !== dateToUnblock));
+      setDateToUnblock(null);
     } catch {
-      alert("No se pudo desbloquear la fecha.");
+      setRemoveError("No se pudo desbloquear la fecha. Intentá de nuevo.");
     }
   };
 
   return (
+    <>
     <div className="settings-layout">
       <article className="admin-card settings-card">
         <div className="admin-card-header">
@@ -75,15 +97,28 @@ const BlockedDatesView = ({ authConfig }) => {
           <div className="blocked-dates-inputs">
             <div className="settings-field-group">
               <label htmlFor="blocked-date-input" className="settings-label">
-                <FaCalendarAlt aria-hidden="true" /> Fecha
+                <FaCalendarAlt aria-hidden="true" /> Desde
               </label>
               <input
                 id="blocked-date-input"
                 type="date"
                 value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
+                onChange={(e) => { setNewDate(e.target.value); if (newDateEnd && e.target.value > newDateEnd) setNewDateEnd(""); }}
                 min={new Date().toISOString().slice(0, 10)}
                 required
+                className="settings-input"
+              />
+            </div>
+            <div className="settings-field-group">
+              <label htmlFor="blocked-date-end-input" className="settings-label">
+                Hasta <small>(opcional)</small>
+              </label>
+              <input
+                id="blocked-date-end-input"
+                type="date"
+                value={newDateEnd}
+                onChange={(e) => setNewDateEnd(e.target.value)}
+                min={newDate || new Date().toISOString().slice(0, 10)}
                 className="settings-input"
               />
             </div>
@@ -107,7 +142,7 @@ const BlockedDatesView = ({ authConfig }) => {
               disabled={saving || !newDate}
             >
               <FaBan aria-hidden="true" />
-              {saving ? "Bloqueando…" : "Bloquear día"}
+              {saving ? "Bloqueando…" : newDateEnd && newDateEnd > newDate ? "Bloquear rango" : "Bloquear día"}
             </button>
           </div>
           {saveError && (
@@ -136,7 +171,7 @@ const BlockedDatesView = ({ authConfig }) => {
                   className="inline-action danger"
                   aria-label={`Desbloquear ${record.date}`}
                   title="Desbloquear esta fecha"
-                  onClick={() => handleRemove(record.date)}
+                  onClick={() => setDateToUnblock(record.date)}
                 >
                   <FaTrashAlt aria-hidden="true" />
                 </button>
@@ -146,6 +181,23 @@ const BlockedDatesView = ({ authConfig }) => {
         )}
       </article>
     </div>
+
+      <ConfirmDialog
+        isOpen={dateToUnblock !== null}
+        title="Desbloquear fecha"
+        message={`¿Desbloquear el ${dateToUnblock}? Quedará disponible para nuevas reservas.`}
+        confirmLabel="Desbloquear"
+        cancelLabel="Cancelar"
+        onConfirm={handleRemove}
+        onCancel={() => { setDateToUnblock(null); setRemoveError(""); }}
+      />
+
+      {removeError && (
+        <p role="alert" style={{ color: "var(--color-error-deep)", padding: "0.5rem 1rem", fontSize: "0.85rem" }}>
+          {removeError}
+        </p>
+      )}
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import {
   FaArrowRight,
   FaArrowLeft,
   FaTimes,
+  FaExclamationCircle,
 } from "react-icons/fa";
 
 const DateSelectionStep = ({
@@ -11,6 +12,7 @@ const DateSelectionStep = ({
   selectedDayOnly,
   selectedDayLabel,
   availableSlotCount,
+  hasAnyAvailability = true,
   handleDateSelect,
   clearDateSelection,
   handleProceedToTimeStep,
@@ -42,7 +44,7 @@ const DateSelectionStep = ({
         </div>
 
         {/* ── Calendar card ── */}
-        <div className="calendar-card">
+        <div className="calendar-card" role="region" aria-label="Calendario de disponibilidad de turnos">
           <DatePicker
             selected={formData.timeSlot}
             onChange={() => {}}
@@ -58,6 +60,36 @@ const DateSelectionStep = ({
             renderCustomHeader={renderCalendarHeader(1)}
           />
         </div>
+
+        {/* ── Keyboard hint ── */}
+        <p className="calendar-keyboard-hint" aria-live="off">
+          Usá las flechas del teclado para navegar entre días. <kbd>Enter</kbd> para seleccionar.
+        </p>
+
+        {/* ── Sin disponibilidad en el período completo ── */}
+        {!hasAnyAvailability && (
+          <div className="calendar-no-availability" role="alert">
+            <FaExclamationCircle aria-hidden="true" />
+            <span>
+              No hay turnos disponibles en los próximos 90 días. Probá avanzar al mes siguiente o{" "}
+              <a href="https://wa.me/5491164236675" target="_blank" rel="noopener noreferrer">
+                contactá al profesor por WhatsApp
+              </a>
+              .
+            </span>
+          </div>
+        )}
+
+        {/* ── Sin disponibilidad en el día seleccionado ── */}
+        {selectedDayOnly && availableSlotCount === 0 && (
+          <p className="calendar-no-slots-note" role="alert">
+            No hay horarios libres para este día. Probá con otra fecha o{" "}
+            <a href="https://wa.me/5491164236675" target="_blank" rel="noopener noreferrer">
+              contactá al profesor
+            </a>
+            .
+          </p>
+        )}
 
         {/* ── Chip + CTA ── */}
         <div className="calendar-actions-row" role="status" aria-live="polite">

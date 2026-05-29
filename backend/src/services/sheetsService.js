@@ -4,6 +4,32 @@ import {
   formatDate,
   formatResponsibleRelationshipLabel,
 } from "../utils/bookingRules.js";
+import AppSettings from "../models/AppSettings.js";
+
+const SHEETS_STATUS_KEY = "sheets.syncStatus";
+
+const recordSheetSuccess = async () => {
+  try {
+    await AppSettings.findOneAndUpdate(
+      { key: SHEETS_STATUS_KEY },
+      { key: SHEETS_STATUS_KEY, value: { lastSuccess: new Date().toISOString(), lastError: null, errorCount: 0 } },
+      { upsert: true },
+    );
+  } catch { /* non-critical */ }
+};
+
+const recordSheetError = async (message) => {
+  try {
+    const existing = await AppSettings.findOne({ key: SHEETS_STATUS_KEY }).lean();
+    const prev = existing?.value ?? {};
+    const errorCount = (prev.errorCount || 0) + 1;
+    await AppSettings.findOneAndUpdate(
+      { key: SHEETS_STATUS_KEY },
+      { key: SHEETS_STATUS_KEY, value: { ...prev, lastError: message, lastErrorAt: new Date().toISOString(), errorCount } },
+      { upsert: true },
+    );
+  } catch { /* non-critical */ }
+};
 
 export const BOOKING_SHEET_HEADERS = [
   "Codigo",
@@ -107,9 +133,11 @@ export const appendBookingToSheet = async (booking) => {
     const sheet = await getSheet();
     if (!sheet) return false;
     await sheet.addRow(bookingToSheetRow(booking));
+    await recordSheetSuccess();
     return true;
   } catch (error) {
     console.error("Google Sheets append error:", error.message);
+    await recordSheetError(error.message);
     return false;
   }
 };
@@ -123,14 +151,15 @@ export const updateBookingInSheet = async (booking) => {
     const row = rows.find((item) => item.get("Codigo") === booking.bookingCode);
     if (!row) {
       await sheet.addRow(bookingToSheetRow(booking));
-      return true;
+    } else {
+      row.assign(bookingToSheetRow(booking));
+      await row.save();
     }
-
-    row.assign(bookingToSheetRow(booking));
-    await row.save();
+    await recordSheetSuccess();
     return true;
   } catch (error) {
     console.error("Google Sheets update error:", error.message);
+    await recordSheetError(error.message);
     return false;
   }
 };

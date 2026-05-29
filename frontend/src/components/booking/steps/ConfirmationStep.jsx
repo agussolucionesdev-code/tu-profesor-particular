@@ -28,12 +28,16 @@ const ConfirmationStep = ({
   goToPrev,
   loading,
   loadingPhase,
+  submitSlow,
+  submitError,
+  onRetry,
   pricePerHour,
 }) => {
   const estimatedPrice =
     pricePerHour > 0 && formData.duration >= 0.5
       ? pricePerHour * formData.duration
       : null;
+  const showPriceCoordinate = pricePerHour === 0 && formData.duration >= 0.5;
 
   return (
     <>
@@ -58,6 +62,11 @@ const ConfirmationStep = ({
           {estimatedPrice !== null && (
             <div className="confirm-fact accent">
               <strong>${estimatedPrice.toLocaleString("es-AR")}</strong>
+            </div>
+          )}
+          {showPriceCoordinate && (
+            <div className="confirm-fact">
+              <span>Precio: A coordinar</span>
             </div>
           )}
         </div>
@@ -199,10 +208,26 @@ const ConfirmationStep = ({
                 </div>
               ))}
             </div>
+            {submitSlow && (
+              <p className="booking-loading-slow" role="alert">
+                Esto está tardando más de lo esperado. No cierres la ventana — tu lugar está siendo reservado.
+              </p>
+            )}
             <p className="booking-loading-note">
               No cierres esta ventana — tardamos unos segundos en asegurar tu
               lugar.
             </p>
+          </div>
+        ) : submitError ? (
+          <div className="booking-submit-error" role="alert">
+            <p className="booking-submit-error-msg">{submitError}</p>
+            <button
+              type="button"
+              className="btn-neuro-primary"
+              onClick={onRetry}
+            >
+              Reintentar
+            </button>
           </div>
         ) : (
           <button

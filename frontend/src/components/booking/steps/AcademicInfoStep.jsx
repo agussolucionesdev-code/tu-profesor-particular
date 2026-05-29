@@ -6,7 +6,7 @@ import {
   FaCheckCircle,
   FaLightbulb,
 } from "react-icons/fa";
-import { getSubjectSuggestions } from "../../../constants/bookingWizard";
+import { getSubjectSuggestions as importedGetSubjectSuggestions } from "../../../constants/bookingWizard";
 import useFieldFlow from "../../../hooks/useFieldFlow";
 import FieldBlock from "../shared/FieldBlock";
 import SelectField from "../shared/SelectField";
@@ -50,9 +50,12 @@ const AcademicInfoStep = ({
   canProceedToStep2,
   textareaRef,
   getYearGradeOptions,
+  subjectsByLevelOverride,
   goToNext,
   onBackToPersonal,
 }) => {
+  const getSubjectSuggestions = (level) =>
+    subjectsByLevelOverride ? (subjectsByLevelOverride[level] ?? []) : importedGetSubjectSuggestions(level);
   // ── Hook de flujo: resetea cuando la sección se vuelve visible ───────────
   const {
     activeIndex,
@@ -115,6 +118,9 @@ const AcademicInfoStep = ({
   const makeSelectHandler = useCallback(
     (fieldKey) => (e) => {
       handleChange(e);
+      if (fieldKey === "educationLevel") {
+        handleChange({ target: { name: "yearGrade", value: "" } });
+      }
       if (selectTimeoutRef.current) clearTimeout(selectTimeoutRef.current);
       if (e.target.value) {
         selectTimeoutRef.current = setTimeout(() => {

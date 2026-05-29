@@ -13,6 +13,7 @@ import { es } from "date-fns/locale";
 import {
   FaChevronLeft,
   FaChevronRight,
+  FaExclamationTriangle,
   FaRegCalendarAlt,
 } from "react-icons/fa";
 import { toSafeDate as toDate } from "../../../utils/bookingFormatters";
@@ -37,6 +38,15 @@ const getBookingHeight = (booking) => {
   return Math.max(dur * HOUR_HEIGHT, HOUR_HEIGHT / 2);
 };
 
+const isOutOfHours = (booking) => {
+  if (!booking.start) return false;
+  const startH = booking.start.getHours() + booking.start.getMinutes() / 60;
+  const endH = booking.end
+    ? booking.end.getHours() + booking.end.getMinutes() / 60
+    : startH + (Number(booking.duration) || 1);
+  return startH < OPENING_HOUR || endH > CLOSING_HOUR;
+};
+
 const statusClass = (status) => {
   const map = {
     Pendiente: "cal-pending",
@@ -48,21 +58,38 @@ const statusClass = (status) => {
 };
 
 /* ─── Booking block ─── */
-const BookingBlock = ({ booking, onClick }) => (
-  <button
-    type="button"
-    className={`cal-booking-block ${statusClass(booking.status)}`}
-    style={{
-      top: `${getBookingTop(booking)}px`,
-      height: `${getBookingHeight(booking)}px`,
-    }}
-    onClick={() => onClick(booking)}
-    title={`${booking.studentName} · ${booking.subject} · ${booking.status}`}
-  >
-    <strong className="cal-block-name">{booking.studentName}</strong>
-    <span className="cal-block-subject">{booking.subject}</span>
-  </button>
-);
+const BookingBlock = ({ booking, onClick }) => {
+  const startStr = booking.start
+    ? format(booking.start, "HH:mm", { locale: es })
+    : "";
+  const dateStr = booking.start
+    ? format(booking.start, "EEEE d 'de' MMMM", { locale: es })
+    : "";
+  const ariaLabel = [
+    `Turno de ${booking.studentName}`,
+    booking.subject,
+    dateStr && `el ${dateStr}`,
+    startStr && `a las ${startStr} h`,
+    `Estado: ${booking.status}`,
+  ].filter(Boolean).join(", ");
+
+  return (
+    <button
+      type="button"
+      className={`cal-booking-block ${statusClass(booking.status)}`}
+      style={{
+        top: `${getBookingTop(booking)}px`,
+        height: `${getBookingHeight(booking)}px`,
+      }}
+      onClick={() => onClick(booking)}
+      aria-label={ariaLabel}
+      title={`${booking.studentName} · ${booking.subject} · ${booking.status}`}
+    >
+      <strong className="cal-block-name">{booking.studentName}</strong>
+      <span className="cal-block-subject">{booking.subject}</span>
+    </button>
+  );
+};
 
 /* ─── Week view ─── */
 const CalendarWeekView = ({ weekStart, bookings, onSelectBooking }) => {
@@ -230,6 +257,13 @@ const CalendarView = ({ sortedBookings, onSelectBooking }) => {
   }, []);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const weekEnd = addDays(weekStart, 6);
+
+  const outOfHoursBookings = enriched.filter((b) => {
+    if (!b.start) return false;
+    if (isMobile) return isSameDay(b.start, currentDate) && isOutOfHours(b);
+    return b.start >= weekStart && b.start <= weekEnd && isOutOfHours(b);
+  });
 
   const goToPrevious = () =>
     setCurrentDate((d) => (isMobile ? subDays(d, 1) : subWeeks(d, 1)));
@@ -284,6 +318,24 @@ const CalendarView = ({ sortedBookings, onSelectBooking }) => {
           </span>
         ))}
       </div>
+
+      {outOfHoursBookings.length > 0 && (
+        <div className="cal-out-of-hours-warning" role="alert">
+          <FaExclamationTriangle aria-hidden="true" />
+          <span>
+            {outOfHoursBookings.length === 1
+              ? "Hay 1 turno fuera del horario visible (07:00–22:00)"
+              : `Hay ${outOfHoursBookings.length} turnos fuera del horario visible (07:00–22:00)`}
+            :{" "}
+            {outOfHoursBookings.map((b) => (
+              <strong key={b._id}>
+                {b.studentName} {b.start ? format(b.start, "EEE d HH:mm", { locale: es }) : ""}
+              </strong>
+            )).reduce((acc, el, i) => (i === 0 ? [el] : [...acc, ", ", el]), [])}
+            . Revisá la configuración de horario.
+          </span>
+        </div>
+      )}
 
       <div className="cal-scroll-wrapper">
         {isMobile ? (

@@ -5,6 +5,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaChevronUp,
+  FaDownload,
   FaEye,
   FaFilter,
   FaRegClock,
@@ -12,6 +13,7 @@ import {
   FaSpinner,
   FaWhatsapp,
 } from "react-icons/fa";
+import { exportBookingsToCSV } from "../../../utils/csvExport";
 import {
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
@@ -125,6 +127,15 @@ const HistoryView = ({
           <h3>Historial de turnos</h3>
           <p className="card-subtitle">Clases pasadas, finalizadas y canceladas</p>
         </div>
+        <button
+          type="button"
+          className="admin-secondary-btn slim"
+          title="Exportar historial a CSV"
+          onClick={() => exportBookingsToCSV(sorted, "historial-turnos.csv")}
+          disabled={sorted.length === 0}
+        >
+          <FaDownload aria-hidden="true" /> CSV
+        </button>
       </div>
 
       <div className="admin-toolbar">

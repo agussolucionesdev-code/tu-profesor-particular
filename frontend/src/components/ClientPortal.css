@@ -241,6 +241,15 @@
   margin-bottom: -1.5rem;
 }
 
+.portal-history-section { margin-top: 1.5rem; display: grid; gap: 0.75rem; }
+.portal-history-toggle { background: none; border: 1px dashed rgba(32, 64, 96, 0.3); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; transition: background 0.18s; width: 100%; text-align: center; }
+.portal-history-toggle:hover { background: rgba(32, 64, 96, 0.04); }
+.ticket-wrapper--history { opacity: 0.7; }
+.ticket-wrapper--history:hover { opacity: 1; transition: opacity 0.2s; }
+.tickets-grid--history { margin-top: 0.5rem; }
+[data-theme="dark"] .portal-history-toggle { border-color: rgba(148, 163, 184, 0.25); color: var(--brand-gray-400); }
+[data-theme="dark"] .portal-history-toggle:hover { background: rgba(255,255,255,0.04); }
+
 /* ---------------------------------------------------------------------------
    12. Ticket card
    --------------------------------------------------------------------------- */
@@ -499,6 +508,18 @@
 .client-portal-wrapper .btn-cancel:hover {
   background: var(--cp-danger);
   border-color: var(--cp-danger);
+  color: var(--brand-white);
+}
+
+/* Confirm attendance = green outline */
+.client-portal-wrapper .btn-confirm-attendance {
+  background: rgba(88, 152, 96, 0.06);
+  border-color: rgba(88, 152, 96, 0.4);
+  color: var(--cp-success, #3d8a47);
+}
+.client-portal-wrapper .btn-confirm-attendance:hover {
+  background: var(--cp-success, #3d8a47);
+  border-color: var(--cp-success, #3d8a47);
   color: var(--brand-white);
 }
 

@@ -59,6 +59,20 @@ export const useDashboardStats = (sortedBookings) => {
         b.start < dashboard.now,
     );
 
+    const tomorrowStart = new Date(dashboard.today);
+    tomorrowStart.setDate(dashboard.today.getDate() + 1);
+    const tomorrowEnd = new Date(tomorrowStart);
+    tomorrowEnd.setHours(23, 59, 59, 999);
+
+    const tomorrowWithoutEmail = dashboard.enriched.filter(
+      (b) =>
+        b.start &&
+        b.start >= tomorrowStart &&
+        b.start <= tomorrowEnd &&
+        b.status !== "Cancelado" &&
+        !b.email,
+    );
+
     const weekFlow = Array.from({ length: 7 }, (_, index) => {
       const date = new Date(dashboard.today);
       date.setDate(dashboard.today.getDate() + index);
@@ -192,6 +206,7 @@ export const useDashboardStats = (sortedBookings) => {
       upcomingBookings,
       upcoming24h,
       overduePending,
+      tomorrowWithoutEmail,
       weekFlow,
       topSubjects,
       students,

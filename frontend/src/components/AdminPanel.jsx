@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaBan,
@@ -9,6 +9,7 @@ import {
   FaClipboardList,
   FaCog,
   FaDollarSign,
+  FaEllipsisH,
   FaExclamationTriangle,
   FaHistory,
   FaKeyboard,
@@ -18,6 +19,7 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import { sendWhatsApp, getSentMessages } from "../utils/whatsappHelper";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 import { toSafeDate as toDate } from "../utils/bookingFormatters";
 import { useAdminAuth } from "../hooks/useAdminAuth";
 import { useBookingsData } from "../hooks/useBookingsData";
@@ -28,14 +30,14 @@ import { useFocusTrap } from "../hooks/useFocusTrap";
 import AdminLoginScreen from "./admin/AdminLoginScreen";
 import BookingEditModal from "./admin/BookingEditModal";
 import BookingDetailModal from "./admin/BookingDetailModal";
-import OverviewView from "./admin/views/OverviewView";
-import AgendaView from "./admin/views/AgendaView";
-import StudentsView from "./admin/views/StudentsView";
-import BookingsView from "./admin/views/BookingsView";
-import BlockedDatesView from "./admin/views/BlockedDatesView";
-import ScheduleSettingsView from "./admin/views/ScheduleSettingsView";
-import CalendarView from "./admin/views/CalendarView";
-import HistoryView from "./admin/views/HistoryView";
+const OverviewView = lazy(() => import("./admin/views/OverviewView"));
+const AgendaView = lazy(() => import("./admin/views/AgendaView"));
+const StudentsView = lazy(() => import("./admin/views/StudentsView"));
+const BookingsView = lazy(() => import("./admin/views/BookingsView"));
+const BlockedDatesView = lazy(() => import("./admin/views/BlockedDatesView"));
+const ScheduleSettingsView = lazy(() => import("./admin/views/ScheduleSettingsView"));
+const CalendarView = lazy(() => import("./admin/views/CalendarView"));
+const HistoryView = lazy(() => import("./admin/views/HistoryView"));
 import { SkeletonKPI } from "./admin/shared/Skeleton";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
 import "../styles/tokens.css";
@@ -127,10 +129,14 @@ const AdminPanel = () => {
     handleStatusChange,
   } = useBookingEditModal(updateBookingFields);
 
+  usePushNotifications(isAuthenticated ? authConfig : null);
+
   const [activeView, setActiveView] = useState("overview");
   const [viewBooking, setViewBooking] = useState(null);
   const [sentMessages, setSentMessages] = useState(getSentMessages);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showMoreNav, setShowMoreNav] = useState(false);
+  const moreNavRef = useRef(null);
 
   const shortcutsRef = useFocusTrap(showShortcuts);
 
@@ -162,6 +168,17 @@ const AdminPanel = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isAuthenticated, showShortcuts]);
 
+  useEffect(() => {
+    if (!showMoreNav) return;
+    const handler = (e) => {
+      if (moreNavRef.current && !moreNavRef.current.contains(e.target)) {
+        setShowMoreNav(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMoreNav]);
+
   const handleSendWhatsApp = (booking) => {
     const updated = sendWhatsApp(booking);
     if (updated) setSentMessages(updated);
@@ -183,6 +200,7 @@ const AdminPanel = () => {
 
   return (
     <div className="admin-shell">
+      <a href="#admin-main-content" className="skip-link">Saltar al contenido principal</a>
       <aside className="admin-sidebar-shell">
         <div className="admin-brand-panel">
           <div className="admin-brand-badge admin-brand-badge--logo">
@@ -261,7 +279,7 @@ const AdminPanel = () => {
         </button>
       </aside>
 
-      <main className="admin-main-shell">
+      <main id="admin-main-content" className="admin-main-shell" tabIndex={-1}>
         <header className="admin-hero">
           <div>
             <span className="admin-eyebrow">Hola, Agustín</span>
@@ -366,79 +384,141 @@ const AdminPanel = () => {
           )}
         </section>
 
-        {activeView === "overview" && (
-          <OverviewView
-            overviewData={overviewData}
-            dashboard={dashboard}
-            onSelectBooking={setViewBooking}
-            onSendWhatsApp={handleSendWhatsApp}
-            onQuickStatusChange={handleQuickStatusChange}
-          />
-        )}
+        <Suspense fallback={<div className="admin-view-loading" aria-live="polite">Cargando vista…</div>}>
+          {activeView === "overview" && (
+            <OverviewView
+              overviewData={overviewData}
+              dashboard={dashboard}
+              onSelectBooking={setViewBooking}
+              onSendWhatsApp={handleSendWhatsApp}
+              onQuickStatusChange={handleQuickStatusChange}
+            />
+          )}
 
-        {activeView === "agenda" && (
-          <AgendaView
-            overviewData={overviewData}
-            onSendWhatsApp={handleSendWhatsApp}
-            onQuickStatusChange={handleQuickStatusChange}
-          />
-        )}
+          {activeView === "agenda" && (
+            <AgendaView
+              overviewData={overviewData}
+              onSendWhatsApp={handleSendWhatsApp}
+              onQuickStatusChange={handleQuickStatusChange}
+            />
+          )}
 
-        {activeView === "students" && (
-          <StudentsView
-            students={overviewData.students}
-            sortedBookings={sortedBookings}
-            onSelectBooking={setViewBooking}
-            onSendWhatsApp={handleSendWhatsApp}
-          />
-        )}
+          {activeView === "students" && (
+            <StudentsView
+              students={overviewData.students}
+              sortedBookings={sortedBookings}
+              onSelectBooking={setViewBooking}
+              onSendWhatsApp={handleSendWhatsApp}
+            />
+          )}
 
-        {activeView === "bookings" && (
-          <BookingsView
-            searchTerm={searchTerm}
-            filterStatus={filterStatus}
-            filteredBookings={filteredBookings}
-            bookings={bookings}
-            sentMessages={sentMessages}
-            dataLoading={dataLoading}
-            matchCount={matchCount}
-            totalCount={totalCount}
-            onSearchTermChange={setSearchTerm}
-            onFilterStatusChange={setFilterStatus}
-            onSendWhatsApp={handleSendWhatsApp}
-            onSelectBooking={setViewBooking}
-            onEditBooking={openEditBooking}
-            onDeleteBooking={deleteBooking}
-            onDeleteAll={deleteAllBookings}
-            onQuickStatusChange={handleQuickStatusChange}
-          />
-        )}
+          {activeView === "bookings" && (
+            <BookingsView
+              searchTerm={searchTerm}
+              filterStatus={filterStatus}
+              filteredBookings={filteredBookings}
+              bookings={bookings}
+              sentMessages={sentMessages}
+              dataLoading={dataLoading}
+              matchCount={matchCount}
+              totalCount={totalCount}
+              onSearchTermChange={setSearchTerm}
+              onFilterStatusChange={setFilterStatus}
+              onSendWhatsApp={handleSendWhatsApp}
+              onSelectBooking={setViewBooking}
+              onEditBooking={openEditBooking}
+              onDeleteBooking={deleteBooking}
+              onDeleteAll={deleteAllBookings}
+              onQuickStatusChange={handleQuickStatusChange}
+            />
+          )}
 
-        {activeView === "history" && (
-          <HistoryView
-            historyBookings={historyBookings}
-            sentMessages={sentMessages}
-            dataLoading={dataLoading}
-            onSendWhatsApp={handleSendWhatsApp}
-            onSelectBooking={setViewBooking}
-          />
-        )}
+          {activeView === "history" && (
+            <HistoryView
+              historyBookings={historyBookings}
+              sentMessages={sentMessages}
+              dataLoading={dataLoading}
+              onSendWhatsApp={handleSendWhatsApp}
+              onSelectBooking={setViewBooking}
+            />
+          )}
 
-        {activeView === "calendar" && (
-          <CalendarView
-            sortedBookings={sortedBookings}
-            onSelectBooking={setViewBooking}
-          />
-        )}
+          {activeView === "calendar" && (
+            <CalendarView
+              sortedBookings={sortedBookings}
+              onSelectBooking={setViewBooking}
+            />
+          )}
 
-        {activeView === "availability" && (
-          <BlockedDatesView authConfig={authConfig} />
-        )}
+          {activeView === "availability" && (
+            <BlockedDatesView authConfig={authConfig} />
+          )}
 
-        {activeView === "settings" && (
-          <ScheduleSettingsView authConfig={authConfig} />
-        )}
+          {activeView === "settings" && (
+            <ScheduleSettingsView authConfig={authConfig} />
+          )}
+        </Suspense>
       </main>
+
+      {/* ── Mobile bottom navigation ── */}
+      <nav className="admin-bottom-nav" aria-label="Navegación principal">
+        {[
+          { id: "overview", label: "Resumen", icon: FaChartLine },
+          { id: "agenda", label: "Agenda", icon: FaCalendarCheck },
+          { id: "bookings", label: "Turnos", icon: FaClipboardList },
+          { id: "settings", label: "Ajustes", icon: FaCog },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`bottom-nav-btn${activeView === item.id ? " is-active" : ""}`}
+              aria-pressed={activeView === item.id}
+              onClick={() => { setActiveView(item.id); setShowMoreNav(false); }}
+            >
+              <Icon aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+        <div className="bottom-nav-more-wrapper" ref={moreNavRef}>
+          {showMoreNav && (
+            <div className="bottom-nav-more-drawer" role="menu" aria-label="Más vistas">
+              {[
+                { id: "calendar", label: "Calendario", icon: FaCalendarAlt },
+                { id: "students", label: "Alumnos", icon: FaUsers },
+                { id: "history", label: "Historial", icon: FaHistory },
+                { id: "availability", label: "Disponibilidad", icon: FaBan },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`bottom-nav-drawer-btn${activeView === item.id ? " is-active" : ""}`}
+                    role="menuitem"
+                    onClick={() => { setActiveView(item.id); setShowMoreNav(false); }}
+                  >
+                    <Icon aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <button
+            type="button"
+            className={`bottom-nav-btn${showMoreNav ? " is-active" : ""}`}
+            aria-expanded={showMoreNav}
+            aria-haspopup="menu"
+            onClick={() => setShowMoreNav((v) => !v)}
+          >
+            <FaEllipsisH aria-hidden="true" />
+            <span>Más</span>
+          </button>
+        </div>
+      </nav>
 
       {selectedBooking && (
         <BookingEditModal

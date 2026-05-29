@@ -18,6 +18,9 @@ export const rescheduleBooking = (data) =>
 export const cancelBooking = (data) =>
   apiClient.post("/api/bookings/cancel", data);
 
+export const confirmAttendance = (bookingCode) =>
+  apiClient.post("/api/bookings/confirm-attendance", { bookingCode });
+
 /**
  * Admin-only endpoints — require Authorization header via authConfig
  * authConfig shape: { headers: { Authorization: "Bearer <token>" } }

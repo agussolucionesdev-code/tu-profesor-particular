@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import {
   normalizeText as norm,
   getBookingStatusBucket as bookingStatusBucket,
@@ -7,9 +7,10 @@ import {
 export const useBookingFilters = (sortedBookings) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("Todos");
+  const deferredSearch = useDeferredValue(searchTerm);
 
   const filteredBookings = useMemo(() => {
-    const term = norm(searchTerm);
+    const term = norm(deferredSearch);
     return sortedBookings.filter((booking) => {
       const blob = norm(
         [
@@ -27,7 +28,7 @@ export const useBookingFilters = (sortedBookings) => {
         booking.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [filterStatus, searchTerm, sortedBookings]);
+  }, [filterStatus, deferredSearch, sortedBookings]);
 
   return {
     searchTerm,

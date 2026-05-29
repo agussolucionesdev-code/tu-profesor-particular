@@ -4,6 +4,8 @@ import {
   FaClock,
   FaCog,
   FaDollarSign,
+  FaGraduationCap,
+  FaMapMarkerAlt,
   FaSave,
   FaToggleOff,
   FaToggleOn,
@@ -77,12 +79,68 @@ const SECTIONS = [
       },
     ],
   },
+  {
+    id: "teacher",
+    icon: FaMapMarkerAlt,
+    kicker: "Ubicación",
+    title: "Datos del lugar de clase",
+    fields: [
+      {
+        key: "teacher.address",
+        label: "Dirección",
+        hint: "Se muestra en los emails de confirmación.",
+        type: "text",
+        maxLength: 200,
+      },
+      {
+        key: "teacher.mapsUrl",
+        label: "URL de Google Maps",
+        hint: "Enlace que se incluye en el email para que el alumno llegue.",
+        type: "text",
+        maxLength: 500,
+      },
+    ],
+  },
+  {
+    id: "subjects",
+    icon: FaGraduationCap,
+    kicker: "Materias",
+    title: "Lista de materias",
+    fields: [
+      {
+        key: "booking.subjectsByLevel",
+        label: "Materias por nivel (JSON)",
+        hint: "Objeto JSON con claves: Primaria, Secundaria, Secundaria Tecnica, Terciario, Universitario. Dejar vacío para usar el listado predeterminado.",
+        type: "textarea",
+        rows: 10,
+      },
+    ],
+  },
 ];
 
 const ALL_KEYS = SECTIONS.flatMap((s) => [
   ...s.fields.map((f) => f.key),
   ...(s.toggles || []).map((t) => t.key),
 ]);
+
+// key → "number" | "text" | "textarea" | "boolean"
+const FIELD_TYPE_MAP = Object.fromEntries([
+  ...SECTIONS.flatMap((s) => s.fields.map((f) => [f.key, f.type || "number"])),
+  ...SECTIONS.flatMap((s) => (s.toggles || []).map((t) => [t.key, "boolean"])),
+]);
+
+const prepareValue = (key, val) => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "object" || val === null) return val; // already parsed
+  const type = FIELD_TYPE_MAP[key] || "number";
+  if (type === "textarea") {
+    try { return JSON.parse(val); } catch { return val; }
+  }
+  if (type === "text") return val;
+  // number
+  const n = Number(val);
+  return Number.isNaN(n) ? val : n;
+};
 
 const ScheduleSettingsView = ({ authConfig }) => {
   const [values, setValues] = useState({});
@@ -91,6 +149,8 @@ const ScheduleSettingsView = ({ authConfig }) => {
   const [error, setError] = useState("");
   const [savingAll, setSavingAll] = useState(false);
   const [saveStatus, setSaveStatus] = useState({}); // key → "ok"|"error"|null
+  const [saveAllError, setSaveAllError] = useState("");
+  const [sheetsStatus, setSheetsStatus] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -100,9 +160,13 @@ const ScheduleSettingsView = ({ authConfig }) => {
         const res = await fetchAdminSettings(authConfig);
         const data = res.data.data || {};
         const vals = {};
-        ALL_KEYS.forEach((key) => { vals[key] = data[key] ?? ""; });
+        ALL_KEYS.forEach((key) => {
+          const v = data[key];
+          vals[key] = v !== null && v !== undefined && typeof v === "object" ? JSON.stringify(v, null, 2) : (v ?? "");
+        });
         setValues(vals);
         setOriginal(vals);
+        if (data["sheets.syncStatus"]) setSheetsStatus(data["sheets.syncStatus"]);
       } catch {
         setError("No se pudieron cargar los ajustes.");
       } finally {
@@ -125,11 +189,10 @@ const ScheduleSettingsView = ({ authConfig }) => {
   const saveSingle = async (key, val) => {
     setSaveStatus((p) => ({ ...p, [key]: null }));
     try {
-      const parsed = typeof val === "boolean" ? val : Number(val);
-      await updateSetting(key, parsed, authConfig);
+      await updateSetting(key, prepareValue(key, val), authConfig);
       setOriginal((p) => ({ ...p, [key]: val }));
       setSaveStatus((p) => ({ ...p, [key]: "ok" }));
-      setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: null })), 2500);
+      setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: null })), 5000);
     } catch {
       setSaveStatus((p) => ({ ...p, [key]: "error" }));
     }
@@ -137,13 +200,24 @@ const ScheduleSettingsView = ({ authConfig }) => {
 
   const saveAll = async () => {
     setSavingAll(true);
+    setSaveAllError("");
     const results = await Promise.allSettled(
       dirty.map((key) => saveSingle(key, values[key])),
     );
     setSavingAll(false);
     const anyError = results.some((r) => r.status === "rejected");
-    if (anyError) alert("Algunos ajustes no se pudieron guardar.");
+    if (anyError) setSaveAllError("Algunos ajustes no se pudieron guardar. Revisá tu conexión e intentá de nuevo.");
   };
+
+  useEffect(() => {
+    if (!hasDirty) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasDirty]);
 
   if (loading) return <p className="empty-copy settings-loading">Cargando ajustes…</p>;
   if (error) return <p className="empty-copy settings-error">{error}</p>;
@@ -163,6 +237,19 @@ const ScheduleSettingsView = ({ authConfig }) => {
             <FaSave aria-hidden="true" />
             {savingAll ? "Guardando…" : "Guardar todo"}
           </button>
+        </div>
+      )}
+      {saveAllError && (
+        <p className="settings-error-msg" role="alert">{saveAllError}</p>
+      )}
+
+      {sheetsStatus && sheetsStatus.errorCount > 3 && (
+        <div className="settings-sheets-warning" role="alert">
+          <strong>Respaldo a Google Sheets con errores</strong>
+          <span>
+            {sheetsStatus.errorCount} fallas consecutivas. Último error: {sheetsStatus.lastError || "desconocido"}.
+            Revisá las credenciales del service account.
+          </span>
         </div>
       )}
 
@@ -195,17 +282,39 @@ const ScheduleSettingsView = ({ authConfig }) => {
                       </label>
                       <small className="settings-hint">{field.hint}</small>
                     </div>
-                    <div className="settings-field-control">
-                      <input
-                        id={`field-${field.key}`}
-                        type="number"
-                        min={field.min}
-                        max={field.max}
-                        value={values[field.key] ?? ""}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        className="settings-input"
-                        aria-label={field.label}
-                      />
+                    <div className={`settings-field-control${field.type === "textarea" ? " is-textarea" : ""}`}>
+                      {field.type === "textarea" ? (
+                        <textarea
+                          id={`field-${field.key}`}
+                          rows={field.rows || 6}
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          className="settings-input settings-textarea"
+                          aria-label={field.label}
+                          spellCheck={false}
+                        />
+                      ) : field.type === "text" ? (
+                        <input
+                          id={`field-${field.key}`}
+                          type="text"
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          className="settings-input"
+                          aria-label={field.label}
+                          maxLength={field.maxLength}
+                        />
+                      ) : (
+                        <input
+                          id={`field-${field.key}`}
+                          type="number"
+                          min={field.min}
+                          max={field.max}
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          className="settings-input"
+                          aria-label={field.label}
+                        />
+                      )}
                       <button
                         type="button"
                         className="admin-primary-btn slim settings-save-btn"

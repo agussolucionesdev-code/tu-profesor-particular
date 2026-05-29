@@ -377,6 +377,15 @@ const PersonalInfoStep = ({
                       className={`neuro-toggle ${isAdult ? "active" : ""}`}
                     ></div>
                   </button>
+                  <span
+                    role="status"
+                    aria-live="polite"
+                    className="sr-only"
+                  >
+                    {isAdult
+                      ? "Modo adulto activado. No se pedirán datos de responsable."
+                      : "Modo menor activado. Se pedirán datos del adulto responsable."}
+                  </span>
                 </FieldBlock>
               )}
 
@@ -549,8 +558,8 @@ const PersonalInfoStep = ({
                   }
                   helperText={
                     isAdult
-                      ? "Si lo completás, también te enviamos el resumen por correo."
-                      : "Si lo dejás, el adulto responsable también recibe respaldo por correo."
+                      ? "Recomendado: te enviamos el comprobante de reserva por correo y podés usarlo para gestionar tu turno."
+                      : "Recomendado: si lo cargás, enviamos el comprobante al responsable por email."
                   }
                   isActive
                   isCompleted={

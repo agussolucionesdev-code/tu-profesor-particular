@@ -17,7 +17,7 @@ import StudentNotesPanel from "./portal/StudentNotesPanel";
 import RescheduleModal from "./portal/RescheduleModal";
 import CancelModal from "./portal/CancelModal";
 import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
-import { lookupBookings, cancelBooking } from "../api/bookingApi";
+import { lookupBookings, cancelBooking, confirmAttendance } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 import {
   isVoiceMuted,
@@ -38,6 +38,8 @@ const ClientPortal = () => {
   );
   const [code, setCode] = useState("");
   const [bookingsList, setBookingsList] = useState([]);
+  const [allResults, setAllResults] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -100,6 +102,7 @@ const ClientPortal = () => {
       }
 
       const activeResults = results.filter(isBookingActive);
+      setAllResults(results);
       setBookingsList(activeResults);
 
       if (results.length > 0 && activeResults.length === 0) {
@@ -186,12 +189,33 @@ const ClientPortal = () => {
     }
   };
 
+  const handleConfirmAttendance = async (booking) => {
+    primeVoicePlayback();
+    try {
+      await confirmAttendance(booking.bookingCode);
+      handleSearch(null, { silent: true });
+      showToast("Asistencia confirmada. ¡Nos vemos en clase!", "success", {
+        title: "Confirmación registrada",
+        speak: "Listo. Tu asistencia quedó confirmada.",
+        voiceOptions: PORTAL_VOICE_OPTIONS,
+      });
+    } catch (error) {
+      console.error(error);
+      showToast(getBookingApiMessage(error), "error", {
+        title: "No se pudo confirmar",
+        speak: "No pude confirmar tu asistencia. Revisá la conexión e intentá nuevamente.",
+        voiceOptions: PORTAL_VOICE_OPTIONS,
+      });
+    }
+  };
+
   const handleDeleteForever = (id) => {
     setBookingsList((prev) => prev.filter((booking) => booking._id !== id));
     showToast("Registro ocultado de tu vista.", "success");
   };
 
   const activeVisibleBookings = bookingsList.filter(isBookingActive);
+  const historicalBookings = allResults.filter((b) => !isBookingActive(b));
   const portalToastMeta = {
     success: {
       icon: <FaCheckCircle aria-hidden="true" />,
@@ -308,17 +332,41 @@ const ClientPortal = () => {
                 onEdit={startEdit}
                 onCancel={openCancelModal}
                 onDelete={handleDeleteForever}
+                onConfirmAttendance={handleConfirmAttendance}
               />
               <StudentNotesPanel booking={booking} />
             </div>
           ))}
         </div>
 
+        {hasSearched && !loading && historicalBookings.length > 0 && (
+          <div className="portal-history-section">
+            <button
+              type="button"
+              className="portal-history-toggle"
+              onClick={() => setShowHistory((v) => !v)}
+              aria-expanded={showHistory}
+            >
+              {showHistory ? "Ocultar historial" : `Ver historial (${historicalBookings.length} turno${historicalBookings.length !== 1 ? "s" : ""})`}
+            </button>
+
+            {showHistory && (
+              <div className="tickets-grid tickets-grid--history">
+                {historicalBookings.map((booking) => (
+                  <div key={booking._id} className="ticket-wrapper ticket-wrapper--history">
+                    <BookingTicket booking={booking} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <a
           className="portal-help-line"
           href="https://wa.me/5491164236675?text=Hola%20Agustin,%20necesito%20ayuda%20con%20un%20turno."
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
           <FaWhatsapp aria-hidden="true" />
           <span>¿Necesitás ayuda?</span>

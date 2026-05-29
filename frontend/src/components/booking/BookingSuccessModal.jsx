@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   FaCalendarAlt,
+  FaCalendarPlus,
   FaCheckCircle,
   FaClock,
   FaCopy,
@@ -14,6 +15,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { downloadIcs } from "../../utils/icsExport";
 
 const getDeliveryAlert = (successData) => {
   const emailRecipient = successData?.notifications?.client?.recipient;
@@ -50,6 +52,13 @@ const BookingSuccessModal = ({
   onClose,
 }) => {
   const dialogRef = useRef(null);
+  const [copyAnnouncement, setCopyAnnouncement] = useState("");
+
+  const handleCopyCode = () => {
+    onCopyCode?.();
+    setCopyAnnouncement("Código copiado al portapapeles");
+    setTimeout(() => setCopyAnnouncement(""), 2000);
+  };
 
   // Focus trap + body scroll lock
   useEffect(() => {
@@ -140,10 +149,17 @@ const BookingSuccessModal = ({
           <button
             type="button"
             className="success-copy-btn"
-            onClick={onCopyCode}
+            onClick={handleCopyCode}
           >
             <FaCopy aria-hidden="true" /> Copiar código
           </button>
+          <span
+            role="status"
+            aria-live="polite"
+            className="sr-only"
+          >
+            {copyAnnouncement}
+          </span>
         </div>
 
         {/* Details */}
@@ -171,10 +187,34 @@ const BookingSuccessModal = ({
             href={`https://wa.me/5491164236675?text=${encodeURIComponent(whatsappConfirmText)}`}
             className="success-btn-whatsapp"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
+            aria-label="Enviar comprobante por WhatsApp (abre la app)"
           >
             <FaWhatsapp aria-hidden="true" /> Enviar comprobante
+            <span className="success-btn-external-hint"> (WhatsApp)</span>
           </a>
+          {successData?.rawTimeSlot && (
+            <button
+              type="button"
+              className="success-btn-calendar"
+              onClick={() =>
+                downloadIcs(
+                  {
+                    bookingCode: successData.bookingCode,
+                    studentName: successData.cleanStudentName,
+                    subject: successData.subject,
+                    educationLevel: successData.educationLevel,
+                    timeSlot: successData.rawTimeSlot,
+                    endTime: successData.rawEndTime,
+                    duration: successData.actualDuration,
+                  },
+                  `turno-${successData.bookingCode}.ics`,
+                )
+              }
+            >
+              <FaCalendarPlus aria-hidden="true" /> Agregar al calendario
+            </button>
+          )}
           <button
             type="button"
             className="success-btn-dismiss"

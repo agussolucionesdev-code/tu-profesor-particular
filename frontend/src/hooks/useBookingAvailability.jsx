@@ -130,6 +130,14 @@ export const useBookingAvailability = (selectedDate, showToast) => {
   const renderDayContents = useCallback(
     (day, date) => {
       const dayKey = format(startOfDay(date), "yyyy-MM-dd");
+      if (blockedDates.includes(dayKey)) {
+        return (
+          <>
+            {day}
+            <span className="sr-only">, bloqueado</span>
+          </>
+        );
+      }
       const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
       const statusLabel =
         occupied === 0
@@ -144,7 +152,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         </>
       );
     },
-    [dayAvailabilityMap],
+    [dayAvailabilityMap, blockedDates],
   );
 
   const maxAllowedDuration = useMemo(() => {
@@ -204,6 +212,19 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     [blockedDates],
   );
 
+  const hasAnyAvailability = useMemo(() => {
+    const today = startOfDay(new Date());
+    const horizon = new Date(today);
+    horizon.setDate(horizon.getDate() + 90);
+    for (let d = new Date(today); d <= horizon; d.setDate(d.getDate() + 1)) {
+      const dayKey = format(d, "yyyy-MM-dd");
+      if (blockedDates.includes(dayKey)) continue;
+      const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
+      if (occupied < TOTAL_DAY_SLOTS) return true;
+    }
+    return false;
+  }, [blockedDates, dayAvailabilityMap]);
+
   return {
     existingBookings,
     blockedDates,
@@ -212,6 +233,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     getDayClassName,
     renderDayContents,
     isDateAvailable,
+    hasAnyAvailability,
     maxAllowedDuration,
     durationOptions,
     availableSlotCount,

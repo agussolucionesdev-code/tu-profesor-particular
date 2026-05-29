@@ -1,3 +1,34 @@
+// ── Web Push ──────────────────────────────────────────────────────────────────
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload;
+  try { payload = event.data.json(); } catch { payload = { title: "Nuevo turno", body: event.data.text() }; }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "Nueva reserva", {
+      body: payload.body || "",
+      icon: "/logo-icon.png",
+      badge: "/logo-icon.png",
+      data: { url: payload.url || "/admin" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes("/admin") && "focus" in client) return client.focus();
+      }
+      return clients.openWindow(event.notification.data?.url || "/admin");
+    }),
+  );
+});
+
+// ── Offline caching ───────────────────────────────────────────────────────────
+
 const CACHE_NAME = "tpp-v1";
 const OFFLINE_URL = "/offline.html";
 

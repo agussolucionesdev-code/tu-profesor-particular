@@ -11,7 +11,9 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
   const dialogRef = useRef(null);
 
   useEffect(() => {
+    const trigger = document.activeElement;
     dialogRef.current?.focus();
+    return () => { trigger?.focus?.(); };
   }, []);
 
   useEffect(() => {

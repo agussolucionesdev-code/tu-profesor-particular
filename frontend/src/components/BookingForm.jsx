@@ -100,17 +100,23 @@ const BookingForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState(0);
+  const [submitSlow, setSubmitSlow] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [successData, setSuccessData] = useState(null);
   const [pricePerHour, setPricePerHour] = useState(0);
+  const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
   const [stepOneSection, setStepOneSection] = useState("personal");
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
 
   useEffect(() => {
     fetchPublicSettings()
       .then((res) => {
-        const price = Number(res.data?.data?.["booking.pricePerHour"] ?? 0);
+        const data = res.data?.data ?? {};
+        const price = Number(data["booking.pricePerHour"] ?? 0);
         if (price > 0) setPricePerHour(price);
+        const subjects = data["booking.subjectsByLevel"];
+        if (subjects && typeof subjects === "object") setSubjectsByLevelOverride(subjects);
       })
       .catch(() => {});
   }, []);
@@ -184,6 +190,7 @@ const BookingForm = () => {
     getDayClassName,
     renderDayContents,
     isDateAvailable,
+    hasAnyAvailability,
     maxAllowedDuration,
     durationOptions,
     availableSlotCount,
@@ -205,8 +212,6 @@ const BookingForm = () => {
   const prevUnlockedAcademicRef = useRef(false);
   const prevUnlockedCommentsRef = useRef(false);
 
-  const playStepSound = () => {};
-  const playUnlockSound = () => {};
 
   useEffect(() => {
     if (!isPersonalInfoComplete) {
@@ -454,7 +459,6 @@ const BookingForm = () => {
   // Scroll into view when a new progressive-disclosure section unlocks
   useEffect(() => {
     if (hasUnlockedAcademic && !prevUnlockedAcademicRef.current) {
-      playUnlockSound();
       window.setTimeout(() => {
         const panel = slideRefs.current[1];
         const anchor = panel?.querySelectorAll(".progressive-disclosure-grid.is-active")?.[0];
@@ -470,7 +474,6 @@ const BookingForm = () => {
 
   useEffect(() => {
     if (hasUnlockedComments && !prevUnlockedCommentsRef.current) {
-      playUnlockSound();
       window.setTimeout(() => {
         const panel = slideRefs.current[1];
         const sections = panel?.querySelectorAll(".progressive-disclosure-grid.is-active");
@@ -580,7 +583,6 @@ const BookingForm = () => {
       handleChange({ target: { name: "duration", value: 1 } });
     }
 
-    playStepSound();
     smoothScrollToStep(targetStep);
     speakWarmGuidance(STEP_VOICE_GUIDANCE[targetStep]);
   };
@@ -654,14 +656,12 @@ const BookingForm = () => {
 
     if (formData.timeSlot && isSameDay(date, formData.timeSlot)) {
       setFormData((prev) => ({ ...prev, timeSlot: null }));
-      playStepSound();
       scrollToStepIssue(2, ".calendar-card, .section-title");
       speakWarmGuidance(
         "Fecha quitada. Elegí otro día disponible cuando quieras; seguimos con los horarios libres sin perder lo que ya completaste.",
       );
     } else {
       setFormData((prev) => ({ ...prev, timeSlot: startOfDay(date) }));
-      playUnlockSound();
       if (isCalendarExpanded) {
         setIsCalendarExpanded(false);
       }
@@ -676,7 +676,6 @@ const BookingForm = () => {
 
   const clearDateSelection = () => {
     setFormData((prev) => ({ ...prev, timeSlot: null }));
-    playStepSound();
     scrollToStepIssue(2, ".calendar-card, .section-title");
     speakWarmGuidance(
       "Fecha quitada. Cuando quieras, elegí otra fecha disponible y seguimos con calma.",
@@ -692,14 +691,12 @@ const BookingForm = () => {
         ...prev,
         timeSlot: prev.timeSlot ? startOfDay(prev.timeSlot) : null,
       }));
-      playStepSound();
       smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
       speakWarmGuidance(
         "Horario quitado. Elegí otro bloque libre y seguimos sin apuro.",
       );
     } else {
       setFormData((prev) => ({ ...prev, timeSlot: timeObj }));
-      playUnlockSound();
       smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
       speakWarmGuidance(
         `Horario elegido: a las ${format(timeObj, "HH:mm")}. Perfecto. Ahora revisamos el resumen y ajustamos la duración ideal.`,
@@ -712,7 +709,6 @@ const BookingForm = () => {
       ...prev,
       timeSlot: prev.timeSlot ? startOfDay(prev.timeSlot) : null,
     }));
-    playStepSound();
     smoothScrollToStep(3, { selector: ".time-step-content", delay: 80 });
     speakWarmGuidance(
       "Horario quitado. Podés tocar cualquier bloque libre para elegir uno nuevo.",
@@ -759,11 +755,14 @@ const BookingForm = () => {
     e.preventDefault();
     primeVoicePlayback();
     setLoading(true);
+    setSubmitError("");
+    setSubmitSlow(false);
     setLoadingPhase(0);
     const phaseTimers = [];
     phaseTimers.push(window.setTimeout(() => setLoadingPhase(1), 1800));
     phaseTimers.push(window.setTimeout(() => setLoadingPhase(2), 3500));
     phaseTimers.push(window.setTimeout(() => setLoadingPhase(3), 5500));
+    const slowTimer = window.setTimeout(() => setSubmitSlow(true), 8000);
     try {
       const dateObj = formData.timeSlot;
       const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${dateObj.getFullYear()} ${String(dateObj.getHours()).padStart(2, "0")}:${String(dateObj.getMinutes()).padStart(2, "0")}`;
@@ -820,6 +819,8 @@ const BookingForm = () => {
       ];
       setSuccessData({
         bookingCode,
+        rawTimeSlot: dateObj.toISOString(),
+        rawEndTime: end.toISOString(),
         day: format(dateObj, "EEEE d 'de' MMMM 'de' yyyy", { locale: es }),
         startTime: format(dateObj, "HH:mm"),
         endTime: format(end, "HH:mm"),
@@ -849,10 +850,14 @@ const BookingForm = () => {
       );
     } catch (error) {
       console.error("Error al reservar:", error);
-      showToast(getBookingApiMessage(error), "error");
+      const msg = getBookingApiMessage(error);
+      showToast(msg, "error");
+      setSubmitError(msg);
     } finally {
+      window.clearTimeout(slowTimer);
       phaseTimers.forEach((t) => window.clearTimeout(t));
       setLoadingPhase(0);
+      setSubmitSlow(false);
       setLoading(false);
     }
   };
@@ -1131,6 +1136,7 @@ const BookingForm = () => {
                 canProceedToStep2={canProceedToStep2}
                 textareaRef={textareaRef}
                 getYearGradeOptions={getYearGradeOptions}
+                subjectsByLevelOverride={subjectsByLevelOverride}
                 goToNext={goToNext}
                 onBackToPersonal={() => setStepOneSection("personal")}
               />
@@ -1151,6 +1157,7 @@ const BookingForm = () => {
                 selectedDayOnly={selectedDayOnly}
                 selectedDayLabel={selectedDayLabel}
                 availableSlotCount={availableSlotCount}
+                hasAnyAvailability={hasAnyAvailability}
                 handleDateSelect={handleDateSelect}
                 clearDateSelection={clearDateSelection}
                 handleProceedToTimeStep={handleProceedToTimeStep}
@@ -1218,6 +1225,9 @@ const BookingForm = () => {
                 goToPrev={goToPrev}
                 loading={loading}
                 loadingPhase={loadingPhase}
+                submitSlow={submitSlow}
+                submitError={submitError}
+                onRetry={(e) => { setSubmitError(""); handleSubmit(e); }}
                 pricePerHour={pricePerHour}
               />
             </div>

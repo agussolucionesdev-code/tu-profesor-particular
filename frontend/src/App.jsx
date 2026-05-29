@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,7 +12,9 @@ import Navbar from "./layouts/Navbar";
 import Footer from "./layouts/Footer";
 import BrandLoader from "./components/ui/BrandLoader";
 import JsonLd from "./components/seo/JsonLd";
+import MaintenancePage from "./components/errors/MaintenancePage";
 import { bootNeuroVoice } from "./utils/neuroToast";
+import { API_BASE } from "./api/apiClient";
 import "./styles/tokens.css";
 import "./index.css";
 import "./styles/accessibility-system.css";
@@ -22,6 +24,7 @@ import "./styles/booking-interactions.css";
 import "./styles/brand-identity-refresh.css";
 import "./styles/motion-system.css";
 
+const HomePage = lazy(() => import("./pages/HomePage"));
 const BookingForm = lazy(() => import("./components/BookingForm"));
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const ClientPortal = lazy(() => import("./components/ClientPortal"));
@@ -40,11 +43,33 @@ const ScrollToTop = () => {
 const AppContent = () => {
   const { pathname } = useLocation();
   const isAdminRoute = pathname === "/admin";
-  const isBookingExperience = pathname === "/" || pathname === "/reservar" || pathname === "/portal";
+  const isBookingExperience = pathname === "/reservar" || pathname === "/portal";
+  const [backendStatus, setBackendStatus] = useState("loading");
 
   useEffect(() => {
     bootNeuroVoice();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+
+    fetch(`${API_BASE}/health`, { signal: controller.signal })
+      .then((res) => {
+        if (res.ok) setBackendStatus("ok");
+        else setBackendStatus("down");
+      })
+      .catch(() => setBackendStatus("down"))
+      .finally(() => clearTimeout(timeout));
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+
+  if (backendStatus === "loading") return <BrandLoader />;
+  if (backendStatus === "down") return <MaintenancePage />;
 
   return (
     <>
@@ -63,7 +88,7 @@ const AppContent = () => {
       >
         <Suspense fallback={<BrandLoader />}>
           <Routes>
-            <Route path="/" element={<BookingForm />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/reservar" element={<BookingForm />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/portal" element={<ClientPortal />} />

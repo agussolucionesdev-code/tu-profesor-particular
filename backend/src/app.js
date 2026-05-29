@@ -8,6 +8,7 @@ import bookingRoutes from "./routes/bookingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import blockedDatesRoutes from "./routes/blockedDatesRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import pushRoutes from "./routes/pushRoutes.js";
 import { globalApiLimiter } from "./middleware/rateLimiters.js";
 import { requestContextMiddleware } from "./middleware/requestContext.js";
 
@@ -137,6 +138,9 @@ app.use(globalApiLimiter);
 app.use(express.json({ limit: MAX_JSON_BODY_SIZE, strict: true }));
 app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 
+// PERF: To prevent Render free-tier cold starts (30-60 s), configure an
+// external uptime monitor (e.g. UptimeRobot — https://uptimerobot.com) to
+// ping GET /health every 14 minutes. This keeps the dyno warm at zero cost.
 app.get("/health", (req, res) => {
   const dbHealth = getDbHealth();
   const dbMeta = getDbConnectionMeta();
@@ -164,6 +168,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/blocked-dates", blockedDatesRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/push", pushRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

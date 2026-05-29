@@ -94,6 +94,27 @@
   border-radius: 99px;
 }
 
+/* ── Out-of-hours warning ── */
+.cal-out-of-hours-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  background: rgba(220, 38, 38, 0.06);
+  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+  font-size: 0.82rem;
+  color: var(--color-error-deep, #dc2626);
+  line-height: 1.5;
+}
+
+.cal-out-of-hours-warning svg { flex-shrink: 0; margin-top: 0.15rem; }
+
+[data-theme="dark"] .cal-out-of-hours-warning {
+  background: rgba(127, 29, 29, 0.15);
+  border-color: rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+}
+
 /* ── Scroll wrapper ── */
 .cal-scroll-wrapper {
   overflow-y: auto;

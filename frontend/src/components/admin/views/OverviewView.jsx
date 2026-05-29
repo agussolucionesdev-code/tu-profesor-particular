@@ -305,6 +305,16 @@ const OverviewView = ({
               <span className="card-kicker">Próximas 24 horas</span>
               <h3>Lo que viene</h3>
             </div>
+            {overviewData.tomorrowWithoutEmail?.length > 0 && (
+              <span
+                className="overview-no-email-badge"
+                title={`${overviewData.tomorrowWithoutEmail.length} turno${overviewData.tomorrowWithoutEmail.length !== 1 ? "s" : ""} de mañana sin email — el recordatorio automático no se enviará`}
+                role="img"
+                aria-label={`${overviewData.tomorrowWithoutEmail.length} turnos de mañana sin email registrado`}
+              >
+                📭 {overviewData.tomorrowWithoutEmail.length} sin email
+              </span>
+            )}
           </div>
           <div className="timeline-list">
             {overviewData.upcoming24h.length === 0 ? (

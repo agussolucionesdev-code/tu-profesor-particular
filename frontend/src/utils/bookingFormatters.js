@@ -1,3 +1,6 @@
+export const displayValue = (v, fallback = "—") =>
+  v === null || v === undefined || String(v).trim() === "" ? fallback : String(v);
+
 export const formatCurrencyARS = (value) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",

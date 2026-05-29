@@ -1,4 +1,5 @@
 import {
+  FaCalendarPlus,
   FaCheckCircle,
   FaTrashAlt,
   FaWhatsapp,
@@ -8,6 +9,7 @@ import {
   formatShortDateLabel as formatShortDate,
   formatTimeLabel as formatTime,
 } from "../../../utils/bookingFormatters";
+import { downloadIcs } from "../../../utils/icsExport";
 
 const AgendaView = ({
   overviewData,
@@ -16,11 +18,21 @@ const AgendaView = ({
 }) => (
   <section className="admin-content-grid two-columns">
     <article className="admin-card">
-      <div className="admin-card-header">
+      <div className="admin-card-header spread">
         <div>
           <span className="card-kicker">Próximas 24 horas</span>
           <h3>Seguimiento inmediato</h3>
         </div>
+        {overviewData.upcoming24h.length > 0 && (
+          <button
+            type="button"
+            className="admin-secondary-btn slim"
+            onClick={() => downloadIcs(overviewData.upcoming24h, "agenda-24h.ics")}
+            title="Exportar agenda de las próximas 24 h a iCal"
+          >
+            <FaCalendarPlus aria-hidden="true" /> .ics
+          </button>
+        )}
       </div>
       <div className="timeline-list">
         {overviewData.upcoming24h.length === 0 ? (

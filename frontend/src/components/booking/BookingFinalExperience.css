@@ -515,6 +515,41 @@
   color: var(--accent-primary, #589860);
 }
 
+.success-btn-external-hint {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.success-btn-calendar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-accent, #72b07a);
+  background: transparent;
+  color: var(--color-accent, #72b07a);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+  text-decoration: none;
+}
+.success-btn-calendar:hover {
+  background: var(--color-accent, #72b07a);
+  color: var(--color-on-success, #fff);
+}
+[data-theme="dark"] .success-btn-calendar {
+  border-color: rgba(114, 176, 122, 0.35);
+  color: #9fd0a4;
+}
+[data-theme="dark"] .success-btn-calendar:hover {
+  background: rgba(114, 176, 122, 0.15);
+  color: #c6e8c9;
+}
+
 .success-btn-dismiss {
   background: none;
   border: none;

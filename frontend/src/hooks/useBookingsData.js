@@ -63,7 +63,7 @@ export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) =
           ),
         );
       } catch {
-        alert("No se pudo actualizar el estado.");
+        console.error("No se pudo actualizar el estado del turno:", id);
       }
     },
     [authConfig],
@@ -83,12 +83,12 @@ export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) =
 
   const handleDeleteBooking = useCallback(
     async (id) => {
-      if (!window.confirm("¿Estás seguro de eliminar esta reserva?")) return;
       try {
         await apiDeleteBooking(id, authConfig);
         setBookings((current) => current.filter((booking) => booking._id !== id));
       } catch {
-        alert("Error al eliminar la reserva.");
+        console.error("Error al eliminar la reserva:", id);
+        throw new Error("No se pudo eliminar la reserva.");
       }
     },
     [authConfig],
@@ -96,16 +96,13 @@ export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) =
 
   const handleDeleteAll = useCallback(
     async () => {
-      if (!window.confirm("Estás por borrar toda la base de reservas. ¿Continuar?"))
-        return;
-      const confirmation = prompt("Escribe ELIMINAR para confirmar:");
-      if (confirmation !== "ELIMINAR") return;
       setDataLoading(true);
       try {
         await apiDeleteAllBookings(authConfig);
         setBookings([]);
       } catch {
-        alert("No se pudo limpiar la base.");
+        console.error("No se pudo limpiar la base de reservas.");
+        throw new Error("No se pudo limpiar la base.");
       } finally {
         setDataLoading(false);
       }

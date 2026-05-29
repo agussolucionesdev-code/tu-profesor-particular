@@ -111,7 +111,12 @@ const StudentsView = ({
               <article key={student.key} className="student-card">
                 <div className="student-card-top">
                   <div className="student-card-name-group">
-                    <div className={`student-activity-dot ${activity}`} title={ACTIVITY_LABELS[activity]} />
+                    <div
+                      className={`student-activity-dot ${activity}`}
+                      title={ACTIVITY_LABELS[activity]}
+                      role="img"
+                      aria-label={`Actividad: ${ACTIVITY_LABELS[activity]}`}
+                    />
                     <div>
                       <strong>{student.studentName}</strong>
                       <span>{student.responsibleSummary}</span>

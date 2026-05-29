@@ -197,7 +197,7 @@ export const validateContact = ({ email, phone }) => {
   return null;
 };
 
-export const validateSlot = (startTime, duration, openingHour = 7, closingHour = 22, advanceNoticeMinutes = 60) => {
+export const validateSlot = (startTime, duration, openingHour = 7, closingHour = 22, advanceNoticeMinutes = 60, slotMinutes = 30) => {
   if (!startTime || Number.isNaN(startTime.getTime())) {
     return "La fecha y hora del turno no es válida.";
   }
@@ -206,12 +206,14 @@ export const validateSlot = (startTime, duration, openingHour = 7, closingHour =
     return "La duración debe estar entre 0.5 y 10 horas.";
   }
 
-  if ((duration * 60) % 30 !== 0) {
-    return "La duración debe respetar intervalos de 30 minutos.";
+  if ((duration * 60) % slotMinutes !== 0) {
+    return `La duración debe respetar intervalos de ${slotMinutes} minutos.`;
   }
 
-  if (![0, 30].includes(startTime.getMinutes())) {
-    return "Los turnos deben comenzar en intervalos de 30 minutos.";
+  const validMinutes = [];
+  for (let m = 0; m < 60; m += slotMinutes) validMinutes.push(m);
+  if (!validMinutes.includes(startTime.getMinutes())) {
+    return `Los turnos deben comenzar en intervalos de ${slotMinutes} minutos.`;
   }
 
   const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);

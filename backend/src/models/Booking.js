@@ -91,6 +91,17 @@ const bookingSchema = new mongoose.Schema(
     studentNotes: { type: String, trim: true, default: "", maxlength: 500 },
     studentEvolution: { type: String, trim: true, default: "", maxlength: 5000 },
     emotionalState: { type: String, trim: true, default: "", maxlength: 1000 },
+    notesHistory: {
+      type: [
+        {
+          field: { type: String, enum: ["notes", "studentEvolution", "emotionalState"] },
+          text: { type: String, maxlength: 5000 },
+          savedAt: { type: Date, default: Date.now },
+          _id: false,
+        },
+      ],
+      default: [],
+    },
 
     bookingCode: {
       type: String,

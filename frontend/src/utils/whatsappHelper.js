@@ -4,11 +4,23 @@ import {
   toSafeDate as toDate,
 } from "./bookingFormatters";
 
-const SESSION_KEY = "admin_whatsapp_sent";
+const STORAGE_KEY = "admin_whatsapp_sent";
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 const loadSent = () => {
   try {
-    return JSON.parse(sessionStorage.getItem(SESSION_KEY) || "{}");
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const entries = JSON.parse(raw);
+    const now = Date.now();
+    const fresh = {};
+    for (const [id, ts] of Object.entries(entries)) {
+      if (now - ts < TTL_MS) fresh[id] = ts;
+    }
+    if (Object.keys(fresh).length !== Object.keys(entries).length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+    }
+    return fresh;
   } catch {
     return {};
   }
@@ -16,17 +28,23 @@ const loadSent = () => {
 
 const persistSent = (state) => {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     /* quota — ignore */
   }
 };
 
-export const getSentMessages = () => loadSent();
+export const getSentMessages = () => {
+  const raw = loadSent();
+  const result = {};
+  for (const id of Object.keys(raw)) result[id] = true;
+  return result;
+};
+
+export const getSentTimestamp = (id) => loadSent()[id] ?? null;
 
 export const sendWhatsApp = (booking) => {
   if (!booking.phone) {
-    alert("Este registro no tiene un teléfono válido para WhatsApp.");
     return null;
   }
 
@@ -45,7 +63,11 @@ export const sendWhatsApp = (booking) => {
     "_blank",
   );
 
-  const updated = { ...loadSent(), [booking._id]: true };
+  const prev = loadSent();
+  const updated = { ...prev, [booking._id]: Date.now() };
   persistSent(updated);
-  return updated;
+
+  const result = {};
+  for (const id of Object.keys(updated)) result[id] = true;
+  return result;
 };

@@ -109,6 +109,12 @@
 
 .settings-save-btn { padding: 0.45rem 0.6rem !important; }
 
+.settings-textarea { width: 100%; min-width: 0; resize: vertical; font-family: monospace; font-size: 0.8rem; line-height: 1.5; }
+input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
+.settings-field-control.is-textarea { align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; }
+.settings-field-control.is-textarea .settings-textarea { flex: 1; min-width: 240px; }
+.settings-field-control.is-textarea .admin-primary-btn { align-self: flex-start; }
+
 .settings-status {
   font-size: 0.88rem;
   font-weight: 700;
@@ -177,6 +183,22 @@
   justify-content: space-between;
   align-items: center;
 }
+
+.settings-sheets-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--color-error-deep, #dc2626);
+}
+
+.settings-sheets-warning strong { font-size: 0.88rem; }
+.settings-sheets-warning span { opacity: 0.85; }
+[data-theme="dark"] .settings-sheets-warning { background: rgba(127, 29, 29, 0.18); border-color: rgba(248, 113, 113, 0.25); }
 
 .blocked-date-reason {
   margin: 0;

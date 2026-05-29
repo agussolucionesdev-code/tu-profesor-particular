@@ -23,6 +23,11 @@ const BookingDetailModal = ({ booking, onClose, onContactWhatsApp }) => {
   const dialogRef = useFocusTrap(true);
 
   useEffect(() => {
+    const trigger = document.activeElement;
+    return () => { trigger?.focus?.(); };
+  }, []);
+
+  useEffect(() => {
     const handleKeyDown = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
