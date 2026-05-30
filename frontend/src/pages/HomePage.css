@@ -334,6 +334,122 @@
 .hp-section-desc--light { color: rgba(255,255,255,0.65); }
 
 /* ══════════════════════════════════════════════════════
+   SOBRE MÍ
+══════════════════════════════════════════════════════ */
+.hp-about {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+/* — foto — */
+.hp-about-photo-col {
+  display: flex;
+  justify-content: center;
+}
+
+.hp-about-photo-frame {
+  position: relative;
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.hp-about-photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: -12px -12px 12px 12px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--hp-green) 0%, var(--hp-navy-mid) 100%);
+  opacity: 0.18;
+  z-index: 0;
+}
+
+.hp-about-photo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(13,39,72,0.2);
+  display: block;
+}
+
+.hp-about-photo-deco {
+  position: absolute;
+  bottom: -16px;
+  right: -16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--hp-green) 0%, var(--hp-green-lt) 100%);
+  z-index: 0;
+  opacity: 0.15;
+}
+
+/* — texto — */
+.hp-about-copy-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.hp-about-text {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--hp-muted);
+  margin: 0;
+}
+.hp-about-text em {
+  font-style: italic;
+  color: var(--hp-navy);
+  font-weight: 600;
+}
+
+.hp-about-tags {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hp-about-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hp-navy);
+  background: rgba(26,58,107,0.07);
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(26,58,107,0.12);
+}
+.hp-about-tag svg { color: var(--hp-green); font-size: 11px; }
+
+/* dark mode */
+[data-theme="dark"] .hp-about-text    { color: var(--hp-muted); }
+[data-theme="dark"] .hp-about-text em { color: #8ab8e0; }
+[data-theme="dark"] .hp-about-tag     { color: #8ab8e0; background: rgba(138,184,224,0.08); border-color: rgba(138,184,224,0.15); }
+
+/* responsive */
+@media (max-width: 860px) {
+  .hp-about {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+  .hp-about-photo-frame { width: min(280px, 70vw); margin: 0 auto; }
+  .hp-about-copy-col { align-items: center; }
+  .hp-about-tags { justify-content: center; }
+}
+
+/* ══════════════════════════════════════════════════════
    MATERIAS
 ══════════════════════════════════════════════════════ */
 .hp-subjects {

@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
+import agustinPhoto from "../assets/images/agustin-sosa.jpg";
 import "./HomePage.css";
 
 /* ─────────────────────── datos ─────────────────────── */
@@ -168,6 +169,61 @@ const HomePage = () => {
               <span className="hp-stat-label">{s.label}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          SOBRE MÍ
+      ══════════════════════════════════════════ */}
+      <section className="hp-section hp-section--soft" aria-labelledby="hp-about-title">
+        <div className="hp-section-inner hp-about">
+          <div className="hp-about-photo-col">
+            <div className="hp-about-photo-frame">
+              <img
+                src={agustinPhoto}
+                alt="Agustín Elías Sosa, profesor particular"
+                className="hp-about-photo"
+              />
+              <span className="hp-about-photo-deco" aria-hidden="true" />
+            </div>
+          </div>
+          <div className="hp-about-copy-col">
+            <span className="hp-kicker">Quién te enseña</span>
+            <h2 id="hp-about-title" className="hp-section-title">
+              Hola, soy Agustín
+            </h2>
+            <p className="hp-about-text">
+              Soy profesor particular con más de 5 años de experiencia acompañando
+              estudiantes de todos los niveles — desde primaria hasta la universidad.
+              Me especializo en matemática, física, química y programación.
+            </p>
+            <p className="hp-about-text">
+              Mi método es simple: entiendo cómo aprendés <em>vos</em>, no cómo
+              enseña el libro. Cada clase arranca de donde estás y avanza a tu ritmo.
+              Sin presiones, sin juicios. Con mucho ejercicio y ejemplos reales.
+            </p>
+            <ul className="hp-about-tags" aria-label="Características">
+              {[
+                "Clases 1 a 1",
+                "Seguimiento personalizado",
+                "Horario flexible",
+                "Temperley, Buenos Aires",
+              ].map((t) => (
+                <li key={t} className="hp-about-tag">
+                  <FaCheckCircle aria-hidden="true" /> {t}
+                </li>
+              ))}
+            </ul>
+            <a
+              href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn%2C%20quiero%20consultar%20sobre%20clases%20particulares."
+              className="hp-btn-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaWhatsapp aria-hidden="true" />
+              Escribime por WhatsApp
+            </a>
+          </div>
         </div>
       </section>
 
