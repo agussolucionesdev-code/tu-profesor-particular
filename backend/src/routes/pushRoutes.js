@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { requireAdmin } from "../middleware/authMiddleware.js";
 import { getVapidPublicKey, saveAdminPushSubscription } from "../services/pushService.js";
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.get("/vapid-public-key", (_req, res) => {
   res.json({ success: true, publicKey: key });
 });
 
-router.post("/subscribe", authMiddleware, async (req, res, next) => {
+router.post("/subscribe", requireAdmin, async (req, res, next) => {
   try {
     const { subscription } = req.body;
     if (!subscription?.endpoint) {
