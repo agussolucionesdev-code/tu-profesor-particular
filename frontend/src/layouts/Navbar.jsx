@@ -193,10 +193,6 @@ const Navbar = () => {
             <span className="brand-mark-sparkle brand-mark-sparkle--three" />
           </span>
           <span className="brand-copy">
-            <span className="brand-eyebrow">
-              <span className="brand-eyebrow-dot" aria-hidden="true" />
-              Clases particulares
-            </span>
             <span className="brand-title">
               Tu Profesor <span className="brand-title-accent">Particular</span>
             </span>
