@@ -8,7 +8,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
-import logoFull from "../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "../components/ui/ThemeLogo";
 import "./HomePage.css";
 
 const SUBJECTS = [
@@ -33,12 +33,7 @@ const HomePage = () => {
       {/* ── Hero ── */}
       <section className="home-hero">
         <div className="home-hero-inner">
-          <img
-            src={logoFull}
-            alt=""
-            aria-hidden="true"
-            className="home-hero-logo"
-          />
+          <ThemeLogo variant="tagline" imgClassName="home-hero-logo" alt="Tu Profesor Particular" />
           <div className="home-hero-copy">
             <p className="home-hero-kicker">Clases particulares</p>
             <h1 className="home-hero-title">

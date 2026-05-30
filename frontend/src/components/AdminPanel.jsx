@@ -39,7 +39,7 @@ const ScheduleSettingsView = lazy(() => import("./admin/views/ScheduleSettingsVi
 const CalendarView = lazy(() => import("./admin/views/CalendarView"));
 const HistoryView = lazy(() => import("./admin/views/HistoryView"));
 import { SkeletonKPI } from "./admin/shared/Skeleton";
-import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "./ui/ThemeLogo";
 import "../styles/tokens.css";
 import "./AdminPanel.css";
 import "../styles/theme-polish.css";
@@ -204,7 +204,7 @@ const AdminPanel = () => {
       <aside className="admin-sidebar-shell">
         <div className="admin-brand-panel">
           <div className="admin-brand-badge admin-brand-badge--logo">
-            <img src={logoIcon} alt="" aria-hidden="true" />
+            <ThemeLogo variant="monogram" imgClassName="admin-brand-logo-img" alt="" aria-hidden="true" />
           </div>
           <div>
             <strong>Agustín Sosa</strong>

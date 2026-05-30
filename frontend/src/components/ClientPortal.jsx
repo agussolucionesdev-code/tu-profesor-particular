@@ -16,7 +16,7 @@ import BookingTicket from "./BookingTicket";
 import StudentNotesPanel from "./portal/StudentNotesPanel";
 import RescheduleModal from "./portal/RescheduleModal";
 import CancelModal from "./portal/CancelModal";
-import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "./ui/ThemeLogo";
 import { lookupBookings, cancelBooking, confirmAttendance } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 import {
@@ -257,12 +257,7 @@ const ClientPortal = () => {
 
       <div className="portal-container">
         <div className="portal-header">
-          <img
-            src={logoIcon}
-            alt=""
-            aria-hidden="true"
-            className="portal-header-logo"
-          />
+          <ThemeLogo variant="full" imgClassName="portal-header-logo" alt="Tu Profesor Particular" />
           <h1 className="portal-title">Mis Turnos</h1>
           <p className="portal-subtitle">
             Buscá tu turno con el código, email o teléfono.

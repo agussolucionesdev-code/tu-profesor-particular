@@ -84,18 +84,16 @@
 }
 
 .admin-brand-badge--logo {
-  background: var(--color-surface-1);
-  padding: 6px;
-  border: 1px solid var(--border-soft);
+  background: transparent;
+  padding: 0;
+  border: none;
+  overflow: hidden;
 }
-.admin-brand-badge--logo img {
+.admin-brand-badge--logo .admin-brand-logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-[data-theme="dark"] .admin-brand-badge--logo {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--border-strong);
+  border-radius: 6px;
 }
 
 .admin-login-mark,

@@ -472,3 +472,17 @@
     --nav-t-slow:        0ms;
   }
 }
+
+
+/* ── ThemeLogo — light/dark swap ─────────────────────────────────────────── */
+.theme-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-logo__dark  { display: none; }
+.theme-logo__light { display: block; }
+
+[data-theme="dark"] .theme-logo__light { display: none; }
+[data-theme="dark"] .theme-logo__dark  { display: block; }

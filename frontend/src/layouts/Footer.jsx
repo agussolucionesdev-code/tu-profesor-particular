@@ -16,7 +16,7 @@ import {
   FaUserLock,
   FaWhatsapp,
 } from "react-icons/fa";
-import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "../components/ui/ThemeLogo";
 import Reveal from "../components/ui/Reveal";
 import useInView from "../hooks/useInView";
 import "./Footer.css";
@@ -90,11 +90,7 @@ const Footer = () => {
           <Reveal direction="left" delay={0} className="footer-brand-col">
             <div className="footer-header-brand">
               <div className="logo-premium-wrapper">
-                <img
-                  src={logoIcon}
-                  alt="Logo de Agustín Elías Sosa"
-                  className="logo-img-transparent"
-                />
+                <ThemeLogo variant="monogram" imgClassName="logo-img-transparent" alt="Tu Profesor Particular" />
               </div>
 
               <div className="brand-titles">

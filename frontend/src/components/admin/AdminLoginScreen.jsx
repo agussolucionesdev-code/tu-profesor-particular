@@ -1,5 +1,5 @@
 import { FaExclamationCircle, FaLock, FaSpinner } from "react-icons/fa";
-import logoIcon from "../../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "../ui/ThemeLogo";
 
 const AdminLoginScreen = ({
   username,
@@ -14,11 +14,7 @@ const AdminLoginScreen = ({
     <div className="admin-login-shell admin-login-shell--minimal">
       <div className="admin-login-card admin-login-card--centered">
         <div className="admin-login-brand">
-          <img
-            src={logoIcon}
-            alt="Tu Profesor Particular"
-            className="admin-login-logo"
-          />
+          <ThemeLogo variant="full" imgClassName="admin-login-logo" alt="Tu Profesor Particular" />
           <span className="admin-login-eyebrow">Panel del profesor</span>
           <h2>Acceso privado</h2>
           <p className="admin-login-subtitle">

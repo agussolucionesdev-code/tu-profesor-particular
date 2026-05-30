@@ -13,7 +13,7 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
-import logoIcon from "../assets/images/logo-icon-sin-fondo.png";
+import ThemeLogo from "../components/ui/ThemeLogo";
 import {
   isVoiceMuted,
   primeVoicePlayback,
@@ -187,7 +187,7 @@ const Navbar = () => {
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-mark-orbit" />
             <span className="brand-mark-glow" />
-            <img src={logoIcon} alt="" className="brand-mark-img" />
+            <ThemeLogo variant="monogram" imgClassName="brand-mark-img" alt="" />
             <span className="brand-mark-sparkle brand-mark-sparkle--one" />
             <span className="brand-mark-sparkle brand-mark-sparkle--two" />
             <span className="brand-mark-sparkle brand-mark-sparkle--three" />
