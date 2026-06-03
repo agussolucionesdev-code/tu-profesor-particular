@@ -14,40 +14,33 @@ import {
   FaMedal,
   FaRegClock,
   FaRegLightbulb,
-  FaStar,
+  FaRocket,
+  FaShieldAlt,
   FaUserCheck,
   FaUserGraduate,
   FaWhatsapp,
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
-import agustinPhoto from "../assets/images/agustin-sosa.jpg";
 import "./HomePage.css";
 
-/* ── datos ────────────────────────────────────────── */
+/* ── datos ─────────────────────────────────────────── */
 
 const SUBJECTS = [
-  { icon: FaCalculator, label: "Matemática",   desc: "Desde aritmética hasta cálculo avanzado" },
-  { icon: FaFlask,      label: "Física",       desc: "Mecánica, electromagnetismo, óptica" },
-  { icon: FaFlask,      label: "Química",      desc: "General, orgánica e inorgánica" },
-  { icon: FaCalculator, label: "Álgebra",      desc: "Lineal, vectorial y abstracta" },
-  { icon: FaCalculator, label: "Estadística",  desc: "Descriptiva, probabilidad, inferencia" },
-  { icon: FaLaptopCode, label: "Programación", desc: "Lógica, Python, algoritmos y más" },
+  { icon: FaCalculator, label: "Matemática",   color: "#2a5298", delay: "0s"    },
+  { icon: FaFlask,      label: "Física",        color: "#1a6b4a", delay: "0.15s" },
+  { icon: FaFlask,      label: "Química",       color: "#6b1a3a", delay: "0.3s"  },
+  { icon: FaCalculator, label: "Álgebra",       color: "#2a5298", delay: "0.45s" },
+  { icon: FaCalculator, label: "Estadística",   color: "#4a2a7a", delay: "0.6s"  },
+  { icon: FaLaptopCode, label: "Programación",  color: "#1a4a6b", delay: "0.75s" },
 ];
 
 const LEVELS = [
-  "Primaria",
-  "Secundaria",
-  "Secundaria Técnica",
-  "Terciario / Superior",
-  "Universitario",
-];
-
-const STATS = [
-  { value: "+5",   label: "años enseñando",      icon: FaStar },
-  { value: "6",    label: "materias cubiertas",   icon: FaGraduationCap },
-  { value: "5",    label: "niveles educativos",   icon: FaMedal },
-  { value: "100%", label: "personalizado",        icon: FaUserCheck },
+  { label: "Primaria",             emoji: "✏️" },
+  { label: "Secundaria",           emoji: "📐" },
+  { label: "Secundaria Técnica",   emoji: "🔧" },
+  { label: "Terciario / Superior", emoji: "📚" },
+  { label: "Universitario",        emoji: "🎓" },
 ];
 
 const STEPS = [
@@ -55,350 +48,286 @@ const STEPS = [
     num: "01",
     icon: FaUserGraduate,
     title: "Completá tu perfil",
-    desc: "Nombre, nivel educativo, materia y contexto. Menos de 2 minutos desde cualquier dispositivo.",
-    detail: "Sin registro. Sin contraseña.",
+    desc: "Nombre, nivel y materia. Menos de 2 minutos desde cualquier dispositivo.",
+    tag: "Sin registro previo",
   },
   {
     num: "02",
     icon: FaRegClock,
     title: "Elegí día y horario",
-    desc: "Calendario en tiempo real. Solo ves los turnos disponibles — nada que ya esté ocupado.",
-    detail: "Horarios de lun. a sáb.",
+    desc: "Calendario en tiempo real. Solo ves los turnos disponibles.",
+    tag: "Lun. a Sáb.",
   },
   {
     num: "03",
     icon: FaClipboardList,
-    title: "Confirmá tu turno",
-    desc: "Recibís un código único para gestionar, reprogramar o cancelar cuando necesites.",
-    detail: "Comprobante por email (opcional).",
+    title: "Confirmá tu reserva",
+    desc: "Recibís un código único para gestionar, reprogramar o cancelar.",
+    tag: "Comprobante por email",
   },
   {
     num: "04",
     icon: FaClipboardCheck,
-    title: "¡Nos vemos!",
-    desc: "Llega con tus dudas. Si algo cambia antes de la clase, entrá al portal con tu código.",
-    detail: "Jujuy 414, Temperley.",
+    title: "¡Clase confirmada!",
+    desc: "Llegá con tus dudas. Todo lo gestionás desde el portal del alumno.",
+    tag: "Jujuy 414, Temperley",
   },
 ];
 
-const BENEFITS = [
+const REASONS = [
   {
-    icon: FaRegLightbulb,
-    title: "A tu medida, siempre",
-    desc: "Cada clase se diseña desde donde estás, no desde donde deberías estar. Sin recetas genéricas.",
+    icon: FaRocket,
+    title: "Reserva en 3 minutos",
+    desc: "Sin llamadas. Sin formularios interminables. Elegís, confirmás y listo.",
   },
   {
     icon: FaRegClock,
-    title: "Horario real y flexible",
-    desc: "Elegís el día y la hora que te queda bien. Podés reprogramar desde el portal sin llamar.",
+    title: "Horario totalmente flexible",
+    desc: "Elegís el día y la hora. Podés reprogramar desde el portal sin hablar con nadie.",
+  },
+  {
+    icon: FaUserCheck,
+    title: "Clases 100% personalizadas",
+    desc: "Cada clase arranca desde donde estás hoy. Sin contenido genérico ni ritmo impuesto.",
+  },
+  {
+    icon: FaShieldAlt,
+    title: "Sin compromiso",
+    desc: "Sin pagos por adelantado. Sin contratos. Reservás, venís y decidís si seguís.",
   },
   {
     icon: FaMedal,
-    title: "Seguimiento clase a clase",
-    desc: "Registramos tu evolución. Sabemos exactamente en qué punto estás y hacia dónde vamos.",
+    title: "Seguimiento real",
+    desc: "Cada clase queda registrada. Siempre sabemos en qué punto estás y qué viene.",
   },
   {
-    icon: FaGraduationCap,
-    title: "Para cualquier nivel",
-    desc: "Desde las primeras sumas hasta los finales universitarios más exigentes. Con el lenguaje correcto para cada etapa.",
+    icon: FaRegLightbulb,
+    title: "Todos los niveles",
+    desc: "Desde primaria hasta la universidad. Con el lenguaje y los ejemplos que corresponden.",
   },
 ];
 
-/* ── componente ───────────────────────────────────── */
+/* ── componente ────────────────────────────────────── */
 
 const HomePage = () => {
   usePageMeta(
-    "Agustín Sosa · Clases particulares de Matemática, Física y más — Temperley",
-    "Profesor particular de matemática, física, química y programación. Reservá tu turno online en minutos. Temperley, Buenos Aires.",
+    "Tu Profesor Particular · Reservá tu clase online — Matemática, Física y más",
+    "Reservá tu clase particular de matemática, física, química y programación en 3 minutos. Sin registro. Sin pagos por adelantado. Temperley, Buenos Aires.",
   );
 
   return (
     <div className="hp">
 
       {/* ── Banner web principal ── */}
-      <div className="hp-web-banner" role="banner">
-        <span className="hp-web-banner-dot" aria-hidden="true" />
-        <span>Mi web completa llegará pronto en</span>
-        <a
-          href="https://tuprofesorparticular.com.ar"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hp-web-banner-link"
-        >
-          tuprofesorparticular.com.ar
-          <FaExternalLinkAlt aria-hidden="true" />
-        </a>
-      </div>
+      <a
+        href="https://tuprofesorparticular.com.ar"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hp-web-banner"
+        aria-label="Visitá la web completa de Tu Profesor Particular"
+      >
+        <span className="hp-web-banner-pulse" aria-hidden="true" />
+        <span className="hp-web-banner-text">
+          🌐 <strong>Próximamente:</strong> mi web completa en{" "}
+          <span className="hp-web-banner-url">tuprofesorparticular.com.ar</span>
+        </span>
+        <span className="hp-web-banner-cta">
+          Ver más <FaExternalLinkAlt aria-hidden="true" />
+        </span>
+      </a>
 
       {/* ════════════════════════════════════════
-          HERO — split layout
+          HERO
       ════════════════════════════════════════ */}
-      <section className="hp-hero" aria-label="Presentación">
+      <section className="hp-hero" aria-label="Inicio">
         <div className="hp-hero-bg" aria-hidden="true">
-          <span className="hp-hero-blob hp-hero-blob--1" />
-          <span className="hp-hero-blob hp-hero-blob--2" />
-          <span className="hp-hero-blob hp-hero-blob--3" />
-          <span className="hp-hero-grid" />
+          <span className="hp-blob hp-blob--1" />
+          <span className="hp-blob hp-blob--2" />
+          <span className="hp-blob hp-blob--3" />
+          <span className="hp-grid" />
         </div>
 
         <div className="hp-hero-inner">
-
-          {/* columna izquierda — texto */}
-          <div className="hp-hero-copy">
-            <div className="hp-hero-logo-badge">
-              <ThemeLogo variant="monogram" imgClassName="hp-hero-monogram" alt="Tu Profesor Particular" />
-            </div>
-
-            <p className="hp-hero-kicker">
-              Profesor particular · Temperley, Buenos Aires
-            </p>
-
-            <h1 className="hp-hero-headline">
-              Aprendé con quien<br />
-              <span className="hp-hero-accent">realmente te acompaña</span>
-            </h1>
-
-            <p className="hp-hero-desc">
-              Matemática, Física, Química, Álgebra, Estadística y Programación
-              para todos los niveles. Clases personalizadas, a tu ritmo, con seguimiento real.
-            </p>
-
-            <div className="hp-hero-trust">
-              {["Sin registro previo", "100% online", "Gratis reservar"].map((t) => (
-                <span key={t} className="hp-trust-chip">
-                  <FaCheckCircle aria-hidden="true" /> {t}
-                </span>
-              ))}
-            </div>
-
-            <div className="hp-hero-actions">
-              <Link to="/reservar" className="hp-btn-primary hp-btn-xl">
-                <FaCalendarCheck aria-hidden="true" />
-                Reservar mi turno
-                <FaArrowRight className="hp-btn-arrow" aria-hidden="true" />
-              </Link>
-              <a
-                href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn%2C%20quiero%20consultar%20sobre%20clases%20particulares."
-                className="hp-btn-ghost hp-btn-xl"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaWhatsapp aria-hidden="true" />
-                Escribir por WhatsApp
-              </a>
-            </div>
+          <div className="hp-hero-logo" aria-hidden="true">
+            <ThemeLogo variant="full" imgClassName="hp-logo-img" alt="Tu Profesor Particular" />
           </div>
 
-          {/* columna derecha — foto */}
-          <div className="hp-hero-photo-col">
-            <div className="hp-photo-frame">
-              {/* decoraciones detrás */}
-              <span className="hp-photo-ring hp-photo-ring--1" aria-hidden="true" />
-              <span className="hp-photo-ring hp-photo-ring--2" aria-hidden="true" />
-
-              <img
-                src={agustinPhoto}
-                alt="Agustín Elías Sosa, profesor particular"
-                className="hp-photo-img"
-              />
-
-              {/* floating badge — experiencia */}
-              <div className="hp-photo-badge hp-photo-badge--exp" aria-hidden="true">
-                <FaStar className="hp-badge-icon" />
-                <div>
-                  <strong>+5 años</strong>
-                  <span>de experiencia</span>
-                </div>
-              </div>
-
-              {/* floating badge — disponibilidad */}
-              <div className="hp-photo-badge hp-photo-badge--avail" aria-hidden="true">
-                <span className="hp-avail-dot" />
-                Disponible para nuevos alumnos
-              </div>
-
-              {/* floating badge — materias */}
-              <div className="hp-photo-badge hp-photo-badge--subjects" aria-hidden="true">
-                <FaGraduationCap className="hp-badge-icon" />
-                <span>Matemática · Física · Química</span>
-              </div>
-            </div>
+          <div className="hp-hero-badge">
+            <span className="hp-hero-badge-dot" aria-hidden="true" />
+            Sistema de reservas online · Temperley, Buenos Aires
           </div>
 
-        </div>
-      </section>
+          <h1 className="hp-hero-h1">
+            Reservá tu clase<br />
+            <span className="hp-h1-accent">en&nbsp;3&nbsp;minutos</span>
+          </h1>
 
-      {/* ════════════════════════════════════════
-          STATS
-      ════════════════════════════════════════ */}
-      <section className="hp-stats" aria-label="Números destacados">
-        <div className="hp-stats-inner">
-          {STATS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div key={s.label} className="hp-stat">
-                <Icon className="hp-stat-icon" aria-hidden="true" />
-                <span className="hp-stat-value">{s.value}</span>
-                <span className="hp-stat-label">{s.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+          <p className="hp-hero-sub">
+            Matemática · Física · Química · Álgebra · Estadística · Programación<br />
+            Sin llamadas. Sin registro previo. Desde cualquier dispositivo.
+          </p>
 
-      {/* ════════════════════════════════════════
-          SOBRE MÍ
-      ════════════════════════════════════════ */}
-      <section className="hp-section" aria-labelledby="hp-about-title">
-        <div className="hp-section-inner hp-about">
-          <div className="hp-about-copy">
-            <span className="hp-kicker">Quién te enseña</span>
-            <h2 id="hp-about-title" className="hp-section-title">
-              Hola, soy Agustín 👋
-            </h2>
-            <p className="hp-about-text">
-              Soy profesor particular con más de 5 años ayudando estudiantes
-              de todos los niveles a entender lo que en el aula nunca quedó claro.
-              Me especializo en matemática, física, química y programación.
-            </p>
-            <p className="hp-about-text">
-              Mi método es simple: <strong>entiendo cómo aprendés vos</strong>, no cómo
-              enseña el libro. Cada clase arranca de donde estás hoy y avanza a tu ritmo,
-              con ejemplos reales y mucha práctica dirigida.
-            </p>
-            <ul className="hp-about-tags">
-              {["Clases 1 a 1", "Seguimiento continuo", "Horario flexible", "Temperley, GBA"].map((t) => (
-                <li key={t} className="hp-about-tag">
-                  <FaCheckCircle aria-hidden="true" /> {t}
-                </li>
-              ))}
-            </ul>
+          <div className="hp-hero-chips" aria-label="Ventajas">
+            {[
+              { icon: FaCheckCircle, text: "Gratis reservar" },
+              { icon: FaCheckCircle, text: "Sin registro" },
+              { icon: FaCheckCircle, text: "Reprogramá cuando quieras" },
+            ].map((c) => (
+              <span key={c.text} className="hp-chip">
+                <c.icon aria-hidden="true" /> {c.text}
+              </span>
+            ))}
+          </div>
+
+          <div className="hp-hero-ctas">
+            <Link to="/reservar" className="hp-cta-main">
+              <FaCalendarCheck aria-hidden="true" />
+              Reservar mi clase ahora
+              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+            </Link>
             <a
-              href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn%2C%20quiero%20consultar%20sobre%20clases%20particulares."
-              className="hp-btn-navy"
+              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20particulares."
+              className="hp-cta-ghost"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaWhatsapp aria-hidden="true" />
-              Consultame directamente
+              Hablemos
             </a>
           </div>
-          <div className="hp-about-photo-wrap">
-            <div className="hp-about-photo-frame">
-              <img
-                src={agustinPhoto}
-                alt="Agustín Sosa, profesor particular de matemática y ciencias"
-                className="hp-about-photo"
-              />
-              <span className="hp-about-accent-ring" aria-hidden="true" />
-            </div>
-            <div className="hp-about-location">
-              <FaMapMarkerAlt aria-hidden="true" />
-              Jujuy 414, Temperley · Buenos Aires
-            </div>
+
+          {/* mini preview de pasos en el hero */}
+          <div className="hp-hero-steps-preview" aria-hidden="true">
+            {["Completá tus datos", "Elegí día y hora", "¡Confirmado!"].map((s, i) => (
+              <div key={s} className="hp-preview-step">
+                <span className="hp-preview-num">{i + 1}</span>
+                <span className="hp-preview-label">{s}</span>
+                {i < 2 && <FaArrowRight className="hp-preview-arrow" />}
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* scroll indicator */}
+        <div className="hp-scroll-hint" aria-hidden="true">
+          <span className="hp-scroll-line" />
         </div>
       </section>
 
       {/* ════════════════════════════════════════
-          MATERIAS
+          CÓMO RESERVAR — 3D cards
       ════════════════════════════════════════ */}
-      <section className="hp-section hp-section--soft" aria-labelledby="hp-subjects-title">
-        <div className="hp-section-inner">
-          <div className="hp-section-head">
-            <span className="hp-kicker">¿Qué materia necesitás?</span>
-            <h2 id="hp-subjects-title" className="hp-section-title">Áreas de enseñanza</h2>
-            <p className="hp-section-desc">
-              Trabajamos desde los conceptos base hasta los contenidos más avanzados,
-              con ejercitación dirigida y ejemplos del mundo real.
-            </p>
-          </div>
-          <ul className="hp-subjects" role="list">
-            {SUBJECTS.map((s) => {
-              const Icon = s.icon;
-              return (
-                <li key={s.label} className="hp-subject-card">
-                  <span className="hp-subject-icon-wrap" aria-hidden="true">
-                    <Icon />
-                  </span>
-                  <strong className="hp-subject-name">{s.label}</strong>
-                  <span className="hp-subject-desc">{s.desc}</span>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="hp-subjects-cta">
-            <Link to="/reservar" className="hp-btn-primary">
-              <FaCalendarCheck aria-hidden="true" />
-              Reservar mi clase
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════
-          CÓMO FUNCIONA
-      ════════════════════════════════════════ */}
-      <section className="hp-section hp-section--navy" aria-labelledby="hp-steps-title">
+      <section className="hp-section hp-section--dark" aria-labelledby="hp-steps-title">
         <div className="hp-section-inner">
           <div className="hp-section-head hp-section-head--center">
             <span className="hp-kicker hp-kicker--green">Simple y rápido</span>
-            <h2 id="hp-steps-title" className="hp-section-title hp-section-title--light">
-              Reservar tu turno en 4 pasos
+            <h2 id="hp-steps-title" className="hp-section-h2 hp-section-h2--light">
+              ¿Cómo se reserva un turno?
             </h2>
-            <p className="hp-section-desc hp-section-desc--light">
-              Todo desde el celular o la computadora. Sin llamadas. Sin papeles. En menos de 3 minutos.
+            <p className="hp-section-p hp-section-p--light">
+              Todo online. Todo desde el celular. En menos de 3 minutos estás confirmado.
             </p>
           </div>
 
-          <ol className="hp-steps" aria-label="Cómo reservar">
-            {STEPS.map((step, i) => {
+          <ol className="hp-steps-grid" aria-label="Pasos para reservar">
+            {STEPS.map((step) => {
               const Icon = step.icon;
               return (
-                <li key={step.num} className="hp-step">
-                  <div className="hp-step-head">
-                    <span className="hp-step-num">{step.num}</span>
-                    <span className="hp-step-icon"><Icon /></span>
+                <li key={step.num} className="hp-step-card">
+                  <div className="hp-step-card-inner">
+                    <div className="hp-step-num-wrap">
+                      <span className="hp-step-num">{step.num}</span>
+                    </div>
+                    <div className="hp-step-icon-wrap">
+                      <Icon aria-hidden="true" />
+                    </div>
+                    <strong className="hp-step-title">{step.title}</strong>
+                    <p className="hp-step-desc">{step.desc}</p>
+                    <span className="hp-step-tag">{step.tag}</span>
                   </div>
-                  <strong className="hp-step-title">{step.title}</strong>
-                  <p className="hp-step-desc">{step.desc}</p>
-                  <span className="hp-step-detail">{step.detail}</span>
-                  {i < STEPS.length - 1 && <span className="hp-step-line" aria-hidden="true" />}
+                  <div className="hp-step-glow" aria-hidden="true" />
                 </li>
               );
             })}
           </ol>
 
           <div className="hp-steps-cta">
-            <Link to="/reservar" className="hp-btn-green hp-btn-xl">
+            <Link to="/reservar" className="hp-cta-main hp-cta-xl">
               <FaCalendarCheck aria-hidden="true" />
               Empezar ahora — es gratis
-              <FaArrowRight className="hp-btn-arrow" aria-hidden="true" />
+              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
-            <p className="hp-steps-note">Sin registro. Sin pagos por adelantado.</p>
+            <p className="hp-steps-note">Sin tarjeta. Sin contrato. Sin compromiso.</p>
           </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════
-          BENEFICIOS
+          MATERIAS — floating 3D cards
       ════════════════════════════════════════ */}
-      <section className="hp-section" aria-labelledby="hp-benefits-title">
+      <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
-          <div className="hp-section-head">
-            <span className="hp-kicker">¿Por qué con Agustín?</span>
-            <h2 id="hp-benefits-title" className="hp-section-title">Lo que no encontrás en el aula</h2>
+          <div className="hp-section-head hp-section-head--center">
+            <span className="hp-kicker">¿Qué materia necesitás?</span>
+            <h2 id="hp-subjects-title" className="hp-section-h2">
+              Áreas de enseñanza
+            </h2>
+            <p className="hp-section-p">
+              Desde los conceptos más básicos hasta los contenidos universitarios
+              más exigentes, con ejercitación dirigida y ejemplos reales.
+            </p>
           </div>
-          <ul className="hp-benefits" role="list">
-            {BENEFITS.map((b) => {
-              const Icon = b.icon;
+
+          <ul className="hp-subjects-grid" role="list">
+            {SUBJECTS.map((s) => {
+              const Icon = s.icon;
               return (
-                <li key={b.title} className="hp-benefit-card">
-                  <span className="hp-benefit-icon"><Icon /></span>
-                  <div>
-                    <strong className="hp-benefit-title">{b.title}</strong>
-                    <p className="hp-benefit-desc">{b.desc}</p>
+                <li
+                  key={s.label}
+                  className="hp-subject-card"
+                  style={{ "--float-delay": s.delay, "--icon-color": s.color }}
+                >
+                  <div className="hp-subject-icon">
+                    <Icon aria-hidden="true" />
                   </div>
+                  <strong className="hp-subject-name">{s.label}</strong>
+                  <div className="hp-subject-shine" aria-hidden="true" />
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hp-section-cta-center">
+            <Link to="/reservar" className="hp-cta-main">
+              <FaCalendarCheck aria-hidden="true" />
+              Reservar para esta materia
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════
+          POR QUÉ ELEGIRNOS
+      ════════════════════════════════════════ */}
+      <section className="hp-section hp-section--soft" aria-labelledby="hp-reasons-title">
+        <div className="hp-section-inner">
+          <div className="hp-section-head hp-section-head--center">
+            <span className="hp-kicker">¿Por qué elegirnos?</span>
+            <h2 id="hp-reasons-title" className="hp-section-h2">
+              Todo pensado para que aprendas
+            </h2>
+          </div>
+
+          <ul className="hp-reasons-grid" role="list">
+            {REASONS.map((r) => {
+              const Icon = r.icon;
+              return (
+                <li key={r.title} className="hp-reason-card">
+                  <span className="hp-reason-icon">
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <strong className="hp-reason-title">{r.title}</strong>
+                  <p className="hp-reason-desc">{r.desc}</p>
                 </li>
               );
             })}
@@ -407,74 +336,99 @@ const HomePage = () => {
       </section>
 
       {/* ════════════════════════════════════════
-          NIVELES
+          NIVELES EDUCATIVOS
       ════════════════════════════════════════ */}
-      <section className="hp-section hp-section--soft" aria-labelledby="hp-levels-title">
+      <section className="hp-section" aria-labelledby="hp-levels-title">
         <div className="hp-section-inner hp-section-inner--center">
           <span className="hp-kicker">Para todos</span>
-          <h2 id="hp-levels-title" className="hp-section-title">Niveles educativos</h2>
-          <p className="hp-section-desc" style={{ margin: "0 auto 32px" }}>
+          <h2 id="hp-levels-title" className="hp-section-h2">Niveles que trabajamos</h2>
+          <p className="hp-section-p" style={{margin:"0 auto 40px"}}>
             Desde las primeras operaciones hasta los finales universitarios más exigentes.
           </p>
           <ul className="hp-levels" role="list">
             {LEVELS.map((l) => (
-              <li key={l} className="hp-level-pill">
-                <FaGraduationCap aria-hidden="true" /> {l}
+              <li key={l.label} className="hp-level-card">
+                <span className="hp-level-emoji" aria-hidden="true">{l.emoji}</span>
+                <span className="hp-level-label">{l.label}</span>
               </li>
             ))}
           </ul>
+          <div style={{marginTop:"44px"}}>
+            <Link to="/reservar" className="hp-cta-main">
+              <FaCalendarCheck aria-hidden="true" />
+              Reservar ahora
+              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ════════════════════════════════════════
-          CTA FINAL
+          CTA FINAL + web principal
       ════════════════════════════════════════ */}
-      <section className="hp-cta-final" aria-label="Llamada a la acción">
+      <section className="hp-cta-section" aria-label="Reservá tu turno">
         <div className="hp-cta-bg" aria-hidden="true">
-          <span className="hp-cta-blob hp-cta-blob--1" />
-          <span className="hp-cta-blob hp-cta-blob--2" />
-          <span className="hp-hero-grid" />
+          <span className="hp-blob hp-blob--1" />
+          <span className="hp-blob hp-blob--2" />
+          <span className="hp-grid" />
         </div>
+
         <div className="hp-cta-inner">
-          <ThemeLogo variant="monogram" imgClassName="hp-cta-logo" alt="" />
-          <h2 className="hp-cta-title">
-            ¿Listo para dar el primer paso?
+          <ThemeLogo variant="monogram" imgClassName="hp-cta-monogram" alt="" aria-hidden="true" />
+
+          <h2 className="hp-cta-h2">
+            ¿Listo para reservar<br />tu primera clase?
           </h2>
-          <p className="hp-cta-desc">
-            Reservá en 3 minutos. Sin registro. Sin pagos adelantados.<br />
-            Con tu código gestionás todo desde el portal del alumno.
+          <p className="hp-cta-p">
+            Sin registro. Sin pagos por adelantado.<br />
+            En 3 minutos estás confirmado.
           </p>
+
           <div className="hp-cta-actions">
-            <Link to="/reservar" className="hp-btn-green hp-btn-xl">
+            <Link to="/reservar" className="hp-cta-main hp-cta-xl">
               <FaCalendarCheck aria-hidden="true" />
-              Reservar mi turno ahora
-              <FaArrowRight className="hp-btn-arrow" aria-hidden="true" />
+              Reservar mi turno
+              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <a
-              href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn%2C%20quiero%20consultar%20sobre%20clases%20particulares."
-              className="hp-btn-ghost hp-btn-xl"
+              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20particulares."
+              className="hp-cta-ghost hp-cta-xl"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaWhatsapp aria-hidden="true" />
-              Hablar con Agustín
+              Hablemos
             </a>
           </div>
-          <div className="hp-cta-footer">
-            <span className="hp-cta-location">
-              <FaMapMarkerAlt aria-hidden="true" /> Jujuy 414, Temperley · Buenos Aires
-            </span>
-            <a
-              href="https://tuprofesorparticular.com.ar"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hp-cta-web-link"
-            >
-              <FaExternalLinkAlt aria-hidden="true" />
-              tuprofesorparticular.com.ar — mi web completa
-            </a>
-          </div>
+
+          <p className="hp-cta-location">
+            <FaMapMarkerAlt aria-hidden="true" /> Jujuy 414, Temperley · Buenos Aires
+          </p>
         </div>
+
+        {/* Web principal — destacada */}
+        <a
+          href="https://tuprofesorparticular.com.ar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hp-web-section"
+          aria-label="Visitá la web completa de Tu Profesor Particular"
+        >
+          <div className="hp-web-section-inner">
+            <ThemeLogo variant="monogram" imgClassName="hp-web-logo" alt="" aria-hidden="true" />
+            <div className="hp-web-copy">
+              <strong>¿Querés saber más antes de reservar?</strong>
+              <span>Visitá mi web completa con toda la información, materias, metodología y más.</span>
+              <span className="hp-web-url">
+                tuprofesorparticular.com.ar
+                <FaExternalLinkAlt aria-hidden="true" />
+              </span>
+            </div>
+            <span className="hp-web-arrow-btn" aria-hidden="true">
+              Visitar <FaArrowRight />
+            </span>
+          </div>
+        </a>
       </section>
 
     </div>
