@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
+  FaAtom,
+  FaBolt,
   FaCalculator,
   FaCalendarCheck,
   FaCheckCircle,
@@ -8,8 +10,8 @@ import {
   FaClipboardList,
   FaExternalLinkAlt,
   FaFlask,
+  FaGlobeAmericas,
   FaGraduationCap,
-  FaLaptopCode,
   FaMapMarkerAlt,
   FaMedal,
   FaRegClock,
@@ -27,12 +29,46 @@ import "./HomePage.css";
 /* ── datos ─────────────────────────────────────────── */
 
 const SUBJECTS = [
-  { icon: FaCalculator, label: "Matemática",   color: "#2a5298", delay: "0s"    },
-  { icon: FaFlask,      label: "Física",        color: "#1a6b4a", delay: "0.15s" },
-  { icon: FaFlask,      label: "Química",       color: "#6b1a3a", delay: "0.3s"  },
-  { icon: FaCalculator, label: "Álgebra",       color: "#2a5298", delay: "0.45s" },
-  { icon: FaCalculator, label: "Estadística",   color: "#4a2a7a", delay: "0.6s"  },
-  { icon: FaLaptopCode, label: "Programación",  color: "#1a4a6b", delay: "0.75s" },
+  {
+    icon:  FaCalculator,
+    label: "Matemáticas",
+    desc:  "Aritmética, álgebra, cálculo diferencial e integral, estadística y más.",
+    color: "#1a3a6b",
+    gradient: "linear-gradient(135deg,#1a3a6b,#2a5298)",
+    delay: "0s",
+  },
+  {
+    icon:  FaBolt,
+    label: "Física",
+    desc:  "Mecánica clásica, dinámica, cinemática, termodinámica y electromagnetismo.",
+    color: "#b45309",
+    gradient: "linear-gradient(135deg,#92400e,#d97706)",
+    delay: "0.4s",
+  },
+  {
+    icon:  FaAtom,
+    label: "Fisicoquímica",
+    desc:  "Enlace químico, equilibrio, cinética, termodinámica y electroquímica.",
+    color: "#5b21b6",
+    gradient: "linear-gradient(135deg,#4c1d95,#7c3aed)",
+    delay: "0.8s",
+  },
+  {
+    icon:  FaFlask,
+    label: "Química",
+    desc:  "Química general, orgánica, inorgánica, analítica y estequiometría.",
+    color: "#065f46",
+    gradient: "linear-gradient(135deg,#064e3b,#059669)",
+    delay: "1.2s",
+  },
+  {
+    icon:  FaGlobeAmericas,
+    label: "Inglés",
+    desc:  "Gramática, comprensión lectora, conversación, preparación para exámenes.",
+    color: "#1e3a5f",
+    gradient: "linear-gradient(135deg,#0c2340,#1a4a7a)",
+    delay: "1.6s",
+  },
 ];
 
 const LEVELS = [
@@ -263,46 +299,81 @@ const HomePage = () => {
       </section>
 
       {/* ════════════════════════════════════════
-          MATERIAS — floating 3D cards
+          MATERIAS — flip 3D cards
       ════════════════════════════════════════ */}
       <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
           <div className="hp-section-head hp-section-head--center">
             <span className="hp-kicker">¿Qué materia necesitás?</span>
             <h2 id="hp-subjects-title" className="hp-section-h2">
-              Áreas de enseñanza
+              Materias principales
             </h2>
             <p className="hp-section-p">
-              Desde los conceptos más básicos hasta los contenidos universitarios
-              más exigentes, con ejercitación dirigida y ejemplos reales.
+              Pasá el mouse sobre cada tarjeta para ver el detalle.
+              Desde los conceptos base hasta los contenidos universitarios más exigentes.
             </p>
           </div>
 
-          <ul className="hp-subjects-grid" role="list">
+          <ul className="hp-subjects-grid" role="list" aria-label="Materias principales">
             {SUBJECTS.map((s) => {
               const Icon = s.icon;
               return (
                 <li
                   key={s.label}
                   className="hp-subject-card"
-                  style={{ "--float-delay": s.delay, "--icon-color": s.color }}
+                  style={{
+                    "--float-delay":    s.delay,
+                    "--subject-grad":   s.gradient,
+                    "--subject-color":  s.color,
+                  }}
                 >
-                  <div className="hp-subject-icon">
-                    <Icon aria-hidden="true" />
+                  {/* cara delantera */}
+                  <div className="hp-subject-front" aria-hidden="false">
+                    <div className="hp-subject-icon-wrap">
+                      <Icon aria-hidden="true" />
+                      <span className="hp-subject-icon-ring" aria-hidden="true" />
+                    </div>
+                    <strong className="hp-subject-name">{s.label}</strong>
+                    <span className="hp-subject-hint">Ver detalle →</span>
                   </div>
-                  <strong className="hp-subject-name">{s.label}</strong>
-                  <div className="hp-subject-shine" aria-hidden="true" />
+
+                  {/* cara trasera */}
+                  <div className="hp-subject-back" aria-hidden="true">
+                    <Icon className="hp-subject-back-icon" aria-hidden="true" />
+                    <strong className="hp-subject-back-name">{s.label}</strong>
+                    <p className="hp-subject-back-desc">{s.desc}</p>
+                    <Link to="/reservar" className="hp-subject-back-btn" tabIndex={-1}>
+                      Reservar <FaArrowRight aria-hidden="true" />
+                    </Link>
+                  </div>
                 </li>
               );
             })}
           </ul>
 
-          <div className="hp-section-cta-center">
-            <Link to="/reservar" className="hp-cta-main">
-              <FaCalendarCheck aria-hidden="true" />
-              Reservar para esta materia
-            </Link>
+          {/* Banner "más materias" */}
+          <div className="hp-more-subjects">
+            <div className="hp-more-subjects-inner">
+              <span className="hp-more-subjects-icon" aria-hidden="true">📚</span>
+              <div className="hp-more-subjects-copy">
+                <strong>¿No encontrás tu materia?</strong>
+                <span>
+                  También doy muchas otras — Álgebra, Estadística, Programación,
+                  Cálculo, Análisis Matemático y más. <em>Consultame y te cuento.</em>
+                </span>
+              </div>
+              <a
+                href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20de%20una%20materia%20que%20no%20vi%20en%20la%20web."
+                className="hp-more-subjects-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaWhatsapp aria-hidden="true" />
+                Hablemos
+              </a>
+            </div>
           </div>
+
         </div>
       </section>
 
