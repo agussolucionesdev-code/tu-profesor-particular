@@ -26,8 +26,11 @@ const INITIAL_FORM_DATA = {
 const regexName = /^[A-Za-zÀ-ÿ\u00f1\u00d1\s']{3,60}$/;
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export const useBookingWizard = (showToast) => {
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+export const useBookingWizard = (showToast, initialOverrides = {}) => {
+  const [formData, setFormData] = useState(() => ({
+    ...INITIAL_FORM_DATA,
+    ...initialOverrides,
+  }));
   const [isAdult, setIsAdult] = useState(false);
   const [hasAttemptedNext, setHasAttemptedNext] = useState(false);
 

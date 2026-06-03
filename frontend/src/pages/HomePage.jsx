@@ -32,49 +32,63 @@ const SUBJECTS = [
   {
     icon:     FaCalculator,
     label:    "Matemáticas",
-    pain:     "Álgebra que no cierra, cálculo imposible, trigonometría que se estudia sin entender.",
-    desc:     "Trabajamos álgebra, funciones, límites, derivadas e integrales desde la intuición — no desde la memoria. Porque si no entendés el por qué, memorizar no alcanza.",
+    tagline:  "No sos malo en matemáticas.",
+    hook:     "Nunca te las explicaron bien.",
     color:    "#1a3a6b",
     gradient: "linear-gradient(135deg,#1a3a6b,#2a5298)",
+    param:    "Matemáticas",
     delay:    "0s",
   },
   {
     icon:     FaBolt,
     label:    "Física",
-    pain:     "\"La física me parece un idioma que nunca voy a aprender.\"",
-    desc:     "Cinemática, dinámica, electromagnetismo y termodinámica. Más que fórmulas: desarrollás la intuición para resolver problemas que nunca viste antes.",
+    tagline:  "La física tiene lógica interna.",
+    hook:     "Cuando la encontrás, todo encaja solo.",
     color:    "#b45309",
     gradient: "linear-gradient(135deg,#92400e,#d97706)",
+    param:    "Física",
     delay:    "0.4s",
   },
   {
     icon:     FaAtom,
     label:    "Fisicoquímica",
-    pain:     "¿No sabés si te cuesta más la física o la química? Exactamente ese es el punto.",
-    desc:     "Estequiometría, equilibrio químico, termodinámica y electroquímica integradas. Identificamos dónde te perdiste y reconstruimos desde ahí, sin saltar pasos.",
+    tagline:  "El filtro más duro de cualquier carrera.",
+    hook:     "Con la guía correcta, se vuelve la más lógica.",
     color:    "#5b21b6",
     gradient: "linear-gradient(135deg,#4c1d95,#7c3aed)",
+    param:    "Fisicoquímica",
     delay:    "0.8s",
   },
   {
     icon:     FaFlask,
     label:    "Química",
-    pain:     "Aprobaste memorizando — y en el ingreso universitario todo se derrumbó.",
-    desc:     "Nomenclatura, reacciones, balanceo, química orgánica e inorgánica. Sin atajos de memoria: con comprensión real que te sirve para el siguiente nivel.",
+    tagline:  "Basta de memorizar sin entender.",
+    hook:     "La química tiene reglas — y tienen sentido.",
     color:    "#065f46",
     gradient: "linear-gradient(135deg,#064e3b,#059669)",
+    param:    "Química",
     delay:    "1.2s",
   },
   {
     icon:     FaGlobeAmericas,
     label:    "Inglés",
-    pain:     "Leés y entendés algo. Pero cuando tenés que hablar o escribir, la mente se queda en blanco.",
-    desc:     "Gramática, comprensión lectora académica, conversación y preparación para Cambridge, TOEFL o exámenes universitarios. El miedo a hablar se trabaja — no se espera.",
+    tagline:  "No es talento. Es método.",
+    hook:     "Y el miedo a hablar se trabaja, no se espera.",
     color:    "#1e3a5f",
     gradient: "linear-gradient(135deg,#0c2340,#1a4a7a)",
+    param:    "Inglés",
     delay:    "1.6s",
   },
 ];
+
+// Mapa nivel homepage → valor del formulario
+const LEVEL_FORM_MAP = {
+  "Primaria":             "Primaria",
+  "Secundaria":           "Secundaria",
+  "Secundaria Técnica":   "Secundaria Tecnica",
+  "Terciario / Superior": "Terciario",
+  "Universitario":        "Universitario",
+};
 
 const LEVELS = [
   { label: "Primaria",             emoji: "✏️" },
@@ -339,16 +353,23 @@ const HomePage = () => {
                       <span className="hp-subject-icon-ring" aria-hidden="true" />
                     </div>
                     <strong className="hp-subject-name">{s.label}</strong>
-                    <span className="hp-subject-hint">Ver detalle →</span>
+                    <span className="hp-subject-hint">Tocá para ver más</span>
                   </div>
 
                   {/* cara trasera */}
                   <div className="hp-subject-back" aria-hidden="true">
                     <Icon className="hp-subject-back-icon" aria-hidden="true" />
-                    <em className="hp-subject-back-pain">{s.pain}</em>
-                    <p className="hp-subject-back-desc">{s.desc}</p>
-                    <Link to="/reservar" className="hp-subject-back-btn" tabIndex={-1}>
-                      Reservar esta clase <FaArrowRight aria-hidden="true" />
+                    <div className="hp-subject-back-copy">
+                      <strong className="hp-subject-back-tagline">{s.tagline}</strong>
+                      <span className="hp-subject-back-hook">{s.hook}</span>
+                    </div>
+                    <Link
+                      to={`/reservar?materia=${encodeURIComponent(s.param)}`}
+                      className="hp-subject-back-btn"
+                      tabIndex={-1}
+                    >
+                      <FaCalendarCheck aria-hidden="true" />
+                      Reservar clase de {s.label}
                     </Link>
                   </div>
                 </li>
@@ -361,20 +382,21 @@ const HomePage = () => {
             <div className="hp-more-subjects-inner">
               <span className="hp-more-subjects-icon" aria-hidden="true">📚</span>
               <div className="hp-more-subjects-copy">
-                <strong>¿No encontrás tu materia? Igual podemos ayudarte.</strong>
+                <strong>Doy muchas más materias.</strong>
                 <span>
-                  Álgebra, Estadística, Análisis Matemático, Cálculo, Programación y muchas más.
-                  Si tu materia no aparece acá, <em>escribinos y te contamos.</em>
+                  Estas son las principales, pero no son todas.
+                  Si la tuya no aparece acá, escribime —
+                  <em> lo vemos juntos y te digo si puedo ayudarte.</em>
                 </span>
               </div>
               <a
-                href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20de%20una%20materia%20que%20no%20vi%20en%20la%20web."
+                href="https://wa.me/5491164236675?text=Hola%2C%20necesito%20ayuda%20con%20una%20materia%20que%20no%20veo%20en%20la%20web.%20%C2%BFMe%20pod%C3%A9s%20ayudar%3F"
                 className="hp-more-subjects-btn"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <FaWhatsapp aria-hidden="true" />
-                Hablemos
+                Consultame
               </a>
             </div>
           </div>
@@ -421,24 +443,27 @@ const HomePage = () => {
         <div className="hp-section-inner hp-section-inner--center">
           <span className="hp-kicker">Sin importar dónde estés</span>
           <h2 id="hp-levels-title" className="hp-section-h2">Todos los niveles</h2>
-          <p className="hp-section-p" style={{margin:"0 auto 40px"}}>
-            No hay nivel "demasiado básico" ni "demasiado avanzado". Cada etapa tiene sus propias trabas — y en cada una sabemos cómo destrabarlas.
+          <p className="hp-section-p" style={{margin:"0 auto 12px"}}>
+            No hay nivel "demasiado básico" ni "demasiado avanzado". Elegí el tuyo y el formulario de reserva ya lo va a tener marcado.
+          </p>
+          <p className="hp-levels-hint">
+            ↓ Tocá tu nivel para reservar directamente
           </p>
           <ul className="hp-levels" role="list">
             {LEVELS.map((l) => (
-              <li key={l.label} className="hp-level-card">
-                <span className="hp-level-emoji" aria-hidden="true">{l.emoji}</span>
-                <span className="hp-level-label">{l.label}</span>
+              <li key={l.label}>
+                <Link
+                  to={`/reservar?nivel=${encodeURIComponent(LEVEL_FORM_MAP[l.label])}`}
+                  className="hp-level-card"
+                  aria-label={`Reservar clase de nivel ${l.label}`}
+                >
+                  <span className="hp-level-emoji" aria-hidden="true">{l.emoji}</span>
+                  <span className="hp-level-label">{l.label}</span>
+                  <span className="hp-level-cta">Reservar →</span>
+                </Link>
               </li>
             ))}
           </ul>
-          <div style={{marginTop:"44px"}}>
-            <Link to="/reservar" className="hp-cta-main">
-              <FaCalendarCheck aria-hidden="true" />
-              Reservar ahora
-              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-            </Link>
-          </div>
         </div>
       </section>
 

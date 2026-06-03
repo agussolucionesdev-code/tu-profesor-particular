@@ -4,7 +4,7 @@ import {
   useRef,
   useCallback,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import DatePicker, { registerLocale } from "react-datepicker";
 import {
   addMinutes,
@@ -109,6 +109,17 @@ const BookingForm = () => {
   const [stepOneSection, setStepOneSection] = useState("personal");
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
 
+  // ── Pre-fill desde URL params (ej: /reservar?materia=Matemáticas&nivel=Secundaria)
+  const [searchParams] = useSearchParams();
+  const prefilledOverrides = (() => {
+    const overrides = {};
+    const materia = searchParams.get("materia");
+    const nivel   = searchParams.get("nivel");
+    if (materia) overrides.subject        = decodeURIComponent(materia);
+    if (nivel)   overrides.educationLevel = decodeURIComponent(nivel);
+    return overrides;
+  })();
+
   useEffect(() => {
     fetchPublicSettings()
       .then((res) => {
@@ -182,7 +193,7 @@ const BookingForm = () => {
     toggleAdultMode,
     resetForm,
     getFieldStateClass,
-  } = useBookingWizard(showToast);
+  } = useBookingWizard(showToast, prefilledOverrides);
 
   const {
     availableSlots,
