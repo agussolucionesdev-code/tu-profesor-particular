@@ -489,6 +489,17 @@
 }
 
 /* cara trasera — contenido */
+.hp-subject-back-pain {
+  font-style: italic;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.55);
+  line-height: 1.5;
+  border-left: 2px solid rgba(255,255,255,.25);
+  padding-left: 10px;
+  margin: 0;
+}
+
 .hp-subject-back-icon {
   font-size: 28px; color: rgba(255,255,255,.35);
   position: absolute; top: 18px; right: 18px;
@@ -670,6 +681,10 @@
   margin-bottom: 28px;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
   animation: float-up 4s ease-in-out infinite;
+}
+
+.hp-cta-h2-accent {
+  color: var(--green-lt);
 }
 
 .hp-cta-h2 {

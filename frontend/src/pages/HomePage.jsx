@@ -30,44 +30,49 @@ import "./HomePage.css";
 
 const SUBJECTS = [
   {
-    icon:  FaCalculator,
-    label: "Matemáticas",
-    desc:  "Aritmética, álgebra, cálculo diferencial e integral, estadística y más.",
-    color: "#1a3a6b",
+    icon:     FaCalculator,
+    label:    "Matemáticas",
+    pain:     "Álgebra que no cierra, cálculo imposible, trigonometría que se estudia sin entender.",
+    desc:     "Trabajamos álgebra, funciones, límites, derivadas e integrales desde la intuición — no desde la memoria. Porque si no entendés el por qué, memorizar no alcanza.",
+    color:    "#1a3a6b",
     gradient: "linear-gradient(135deg,#1a3a6b,#2a5298)",
-    delay: "0s",
+    delay:    "0s",
   },
   {
-    icon:  FaBolt,
-    label: "Física",
-    desc:  "Mecánica clásica, dinámica, cinemática, termodinámica y electromagnetismo.",
-    color: "#b45309",
+    icon:     FaBolt,
+    label:    "Física",
+    pain:     "\"La física me parece un idioma que nunca voy a aprender.\"",
+    desc:     "Cinemática, dinámica, electromagnetismo y termodinámica. Más que fórmulas: desarrollás la intuición para resolver problemas que nunca viste antes.",
+    color:    "#b45309",
     gradient: "linear-gradient(135deg,#92400e,#d97706)",
-    delay: "0.4s",
+    delay:    "0.4s",
   },
   {
-    icon:  FaAtom,
-    label: "Fisicoquímica",
-    desc:  "Enlace químico, equilibrio, cinética, termodinámica y electroquímica.",
-    color: "#5b21b6",
+    icon:     FaAtom,
+    label:    "Fisicoquímica",
+    pain:     "¿No sabés si te cuesta más la física o la química? Exactamente ese es el punto.",
+    desc:     "Estequiometría, equilibrio químico, termodinámica y electroquímica integradas. Identificamos dónde te perdiste y reconstruimos desde ahí, sin saltar pasos.",
+    color:    "#5b21b6",
     gradient: "linear-gradient(135deg,#4c1d95,#7c3aed)",
-    delay: "0.8s",
+    delay:    "0.8s",
   },
   {
-    icon:  FaFlask,
-    label: "Química",
-    desc:  "Química general, orgánica, inorgánica, analítica y estequiometría.",
-    color: "#065f46",
+    icon:     FaFlask,
+    label:    "Química",
+    pain:     "Aprobaste memorizando — y en el ingreso universitario todo se derrumbó.",
+    desc:     "Nomenclatura, reacciones, balanceo, química orgánica e inorgánica. Sin atajos de memoria: con comprensión real que te sirve para el siguiente nivel.",
+    color:    "#065f46",
     gradient: "linear-gradient(135deg,#064e3b,#059669)",
-    delay: "1.2s",
+    delay:    "1.2s",
   },
   {
-    icon:  FaGlobeAmericas,
-    label: "Inglés",
-    desc:  "Gramática, comprensión lectora, conversación, preparación para exámenes.",
-    color: "#1e3a5f",
+    icon:     FaGlobeAmericas,
+    label:    "Inglés",
+    pain:     "Leés y entendés algo. Pero cuando tenés que hablar o escribir, la mente se queda en blanco.",
+    desc:     "Gramática, comprensión lectora académica, conversación y preparación para Cambridge, TOEFL o exámenes universitarios. El miedo a hablar se trabaja — no se espera.",
+    color:    "#1e3a5f",
     gradient: "linear-gradient(135deg,#0c2340,#1a4a7a)",
-    delay: "1.6s",
+    delay:    "1.6s",
   },
 ];
 
@@ -83,63 +88,63 @@ const STEPS = [
   {
     num: "01",
     icon: FaUserGraduate,
-    title: "Completá tu perfil",
-    desc: "Nombre, nivel y materia. Menos de 2 minutos desde cualquier dispositivo.",
-    tag: "Sin registro previo",
+    title: "Contanos tu situación",
+    desc: "Materia, nivel y contexto. Sin formularios eternos — en 2 minutos tenemos todo lo que necesitamos.",
+    tag: "Sin registro. Sin contraseña.",
   },
   {
     num: "02",
     icon: FaRegClock,
-    title: "Elegí día y horario",
-    desc: "Calendario en tiempo real. Solo ves los turnos disponibles.",
-    tag: "Lun. a Sáb.",
+    title: "Elegí el día y la hora",
+    desc: "Calendario en tiempo real. Solo aparecen los turnos disponibles — nada que ya esté ocupado.",
+    tag: "Lun. a Sáb., horario amplio.",
   },
   {
     num: "03",
     icon: FaClipboardList,
-    title: "Confirmá tu reserva",
-    desc: "Recibís un código único para gestionar, reprogramar o cancelar.",
-    tag: "Comprobante por email",
+    title: "Confirmá y guardá tu código",
+    desc: "Recibís un código único. Con él podés reprogramar, cancelar o consultar el estado desde el portal — sin llamar.",
+    tag: "Comprobante por email opcional.",
   },
   {
     num: "04",
     icon: FaClipboardCheck,
-    title: "¡Clase confirmada!",
-    desc: "Llegá con tus dudas. Todo lo gestionás desde el portal del alumno.",
-    tag: "Jujuy 414, Temperley",
+    title: "Llegá con tus dudas",
+    desc: "La primera clase es de diagnóstico. Entendemos dónde estás parado y trazamos el camino desde ahí.",
+    tag: "Jujuy 414, Temperley.",
   },
 ];
 
 const REASONS = [
   {
     icon: FaRocket,
-    title: "Reserva en 3 minutos",
-    desc: "Sin llamadas. Sin formularios interminables. Elegís, confirmás y listo.",
+    title: "No perdés más tiempo solo",
+    desc: "Estudiar sin entender la base no sirve. Cada hora que invertís sin dirección es una hora perdida. Una clase bien enfocada vale más que una semana de estudio a ciegas.",
   },
   {
     icon: FaRegClock,
-    title: "Horario totalmente flexible",
-    desc: "Elegís el día y la hora. Podés reprogramar desde el portal sin hablar con nadie.",
+    title: "Sin horarios rígidos",
+    desc: "Elegís cuándo. Podés reprogramar cuando algo cambia — sin culpa, sin llamadas, sin complicaciones. Todo desde el portal con tu código.",
   },
   {
     icon: FaUserCheck,
-    title: "Clases 100% personalizadas",
-    desc: "Cada clase arranca desde donde estás hoy. Sin contenido genérico ni ritmo impuesto.",
+    title: "Desde donde vos estás, no desde donde deberías",
+    desc: "No hay un \"deberías saber esto ya\". Arrancamos desde tu punto actual, sin juicios y sin saltar pasos que después te van a cobrar caro.",
   },
   {
     icon: FaShieldAlt,
-    title: "Sin compromiso",
-    desc: "Sin pagos por adelantado. Sin contratos. Reservás, venís y decidís si seguís.",
+    title: "Cero riesgo para empezar",
+    desc: "Sin pagos por adelantado. Sin contratos. La primera clase es de diagnóstico: si no sentís que avanzaste, no volvés. Así de simple.",
   },
   {
     icon: FaMedal,
-    title: "Seguimiento real",
-    desc: "Cada clase queda registrada. Siempre sabemos en qué punto estás y qué viene.",
+    title: "Progreso que se nota clase a clase",
+    desc: "Cada sesión queda registrada. Sabemos exactamente en qué punto estás, qué mejoró y qué viene. El avance deja de ser una sensación y se vuelve algo concreto.",
   },
   {
     icon: FaRegLightbulb,
-    title: "Todos los niveles",
-    desc: "Desde primaria hasta la universidad. Con el lenguaje y los ejemplos que corresponden.",
+    title: "Entendés de verdad, no de memoria",
+    desc: "Memorizar te lleva al parcial. Entender te lleva al final, al ingreso y más allá. La diferencia está en cómo se explica — no en cuánto se repite.",
   },
 ];
 
@@ -147,8 +152,8 @@ const REASONS = [
 
 const HomePage = () => {
   usePageMeta(
-    "Tu Profesor Particular · Reservá tu clase online — Matemática, Física y más",
-    "Reservá tu clase particular de matemática, física, química y programación en 3 minutos. Sin registro. Sin pagos por adelantado. Temperley, Buenos Aires.",
+    "Tu Profesor Particular · Entendé de verdad, no de memoria — Clases online en Temperley",
+    "¿Estudiás pero el resultado no cambia? Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro. Sin pagos por adelantado. Reservá en 3 minutos.",
   );
 
   return (
@@ -190,24 +195,24 @@ const HomePage = () => {
 
           <div className="hp-hero-badge">
             <span className="hp-hero-badge-dot" aria-hidden="true" />
-            Sistema de reservas online · Temperley, Buenos Aires
+            Clases particulares · Temperley, Buenos Aires
           </div>
 
           <h1 className="hp-hero-h1">
-            Reservá tu clase<br />
-            <span className="hp-h1-accent">en&nbsp;3&nbsp;minutos</span>
+            Entendé de verdad,<br />
+            <span className="hp-h1-accent">no&nbsp;de&nbsp;memoria</span>
           </h1>
 
           <p className="hp-hero-sub">
-            Matemática · Física · Química · Álgebra · Estadística · Programación<br />
-            Sin llamadas. Sin registro previo. Desde cualquier dispositivo.
+            ¿Estudiás y el resultado no cambia? Acá encontrás la clase que te faltaba.<br />
+            Matemáticas · Física · Fisicoquímica · Química · Inglés
           </p>
 
-          <div className="hp-hero-chips" aria-label="Ventajas">
+          <div className="hp-hero-chips" aria-label="Garantías">
             {[
-              { icon: FaCheckCircle, text: "Gratis reservar" },
-              { icon: FaCheckCircle, text: "Sin registro" },
-              { icon: FaCheckCircle, text: "Reprogramá cuando quieras" },
+              { icon: FaCheckCircle, text: "Sin pagos por adelantado" },
+              { icon: FaCheckCircle, text: "Primera clase de diagnóstico" },
+              { icon: FaCheckCircle, text: "Reservá en 3 minutos" },
             ].map((c) => (
               <span key={c.text} className="hp-chip">
                 <c.icon aria-hidden="true" /> {c.text}
@@ -218,23 +223,23 @@ const HomePage = () => {
           <div className="hp-hero-ctas">
             <Link to="/reservar" className="hp-cta-main">
               <FaCalendarCheck aria-hidden="true" />
-              Reservar mi clase ahora
+              Reservar mi clase — es gratis
               <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <a
-              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20particulares."
+              href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
               className="hp-cta-ghost"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaWhatsapp aria-hidden="true" />
-              Hablemos
+              Consultar antes
             </a>
           </div>
 
           {/* mini preview de pasos en el hero */}
           <div className="hp-hero-steps-preview" aria-hidden="true">
-            {["Completá tus datos", "Elegí día y hora", "¡Confirmado!"].map((s, i) => (
+            {["Contás tu situación", "Elegís día y hora", "Llegás con tus dudas"].map((s, i) => (
               <div key={s} className="hp-preview-step">
                 <span className="hp-preview-num">{i + 1}</span>
                 <span className="hp-preview-label">{s}</span>
@@ -256,12 +261,12 @@ const HomePage = () => {
       <section className="hp-section hp-section--dark" aria-labelledby="hp-steps-title">
         <div className="hp-section-inner">
           <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker hp-kicker--green">Simple y rápido</span>
+            <span className="hp-kicker hp-kicker--green">Simple, rápido, sin fricción</span>
             <h2 id="hp-steps-title" className="hp-section-h2 hp-section-h2--light">
-              ¿Cómo se reserva un turno?
+              Reservar es lo más fácil
             </h2>
             <p className="hp-section-p hp-section-p--light">
-              Todo online. Todo desde el celular. En menos de 3 minutos estás confirmado.
+              Porque la barrera para empezar tiene que ser cero. Todo online, desde el celular, en 3 minutos.
             </p>
           </div>
 
@@ -304,13 +309,13 @@ const HomePage = () => {
       <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
           <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker">¿Qué materia necesitás?</span>
+            <span className="hp-kicker">Reconocés tu situación acá</span>
             <h2 id="hp-subjects-title" className="hp-section-h2">
               Materias principales
             </h2>
             <p className="hp-section-p">
-              Pasá el mouse sobre cada tarjeta para ver el detalle.
-              Desde los conceptos base hasta los contenidos universitarios más exigentes.
+              Pasá el mouse sobre cada tarjeta. Describimos exactamente los temas que más complican —
+              y cómo los trabajamos para que dejen de serlo.
             </p>
           </div>
 
@@ -340,10 +345,10 @@ const HomePage = () => {
                   {/* cara trasera */}
                   <div className="hp-subject-back" aria-hidden="true">
                     <Icon className="hp-subject-back-icon" aria-hidden="true" />
-                    <strong className="hp-subject-back-name">{s.label}</strong>
+                    <em className="hp-subject-back-pain">{s.pain}</em>
                     <p className="hp-subject-back-desc">{s.desc}</p>
                     <Link to="/reservar" className="hp-subject-back-btn" tabIndex={-1}>
-                      Reservar <FaArrowRight aria-hidden="true" />
+                      Reservar esta clase <FaArrowRight aria-hidden="true" />
                     </Link>
                   </div>
                 </li>
@@ -356,10 +361,10 @@ const HomePage = () => {
             <div className="hp-more-subjects-inner">
               <span className="hp-more-subjects-icon" aria-hidden="true">📚</span>
               <div className="hp-more-subjects-copy">
-                <strong>¿No encontrás tu materia?</strong>
+                <strong>¿No encontrás tu materia? Igual podemos ayudarte.</strong>
                 <span>
-                  También doy muchas otras — Álgebra, Estadística, Programación,
-                  Cálculo, Análisis Matemático y más. <em>Consultame y te cuento.</em>
+                  Álgebra, Estadística, Análisis Matemático, Cálculo, Programación y muchas más.
+                  Si tu materia no aparece acá, <em>escribinos y te contamos.</em>
                 </span>
               </div>
               <a
@@ -383,10 +388,13 @@ const HomePage = () => {
       <section className="hp-section hp-section--soft" aria-labelledby="hp-reasons-title">
         <div className="hp-section-inner">
           <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker">¿Por qué elegirnos?</span>
+            <span className="hp-kicker">Lo que hace la diferencia</span>
             <h2 id="hp-reasons-title" className="hp-section-h2">
-              Todo pensado para que aprendas
+              Por qué esto funciona cuando lo otro no
             </h2>
+            <p className="hp-section-p" style={{margin:"0 auto"}}>
+              Estudiar más no siempre es la solución. A veces alcanza con una sola clase bien enfocada para que todo lo que veías borroso de repente tenga sentido.
+            </p>
           </div>
 
           <ul className="hp-reasons-grid" role="list">
@@ -411,10 +419,10 @@ const HomePage = () => {
       ════════════════════════════════════════ */}
       <section className="hp-section" aria-labelledby="hp-levels-title">
         <div className="hp-section-inner hp-section-inner--center">
-          <span className="hp-kicker">Para todos</span>
-          <h2 id="hp-levels-title" className="hp-section-h2">Niveles que trabajamos</h2>
+          <span className="hp-kicker">Sin importar dónde estés</span>
+          <h2 id="hp-levels-title" className="hp-section-h2">Todos los niveles</h2>
           <p className="hp-section-p" style={{margin:"0 auto 40px"}}>
-            Desde las primeras operaciones hasta los finales universitarios más exigentes.
+            No hay nivel "demasiado básico" ni "demasiado avanzado". Cada etapa tiene sus propias trabas — y en cada una sabemos cómo destrabarlas.
           </p>
           <ul className="hp-levels" role="list">
             {LEVELS.map((l) => (
@@ -448,27 +456,28 @@ const HomePage = () => {
           <ThemeLogo variant="monogram" imgClassName="hp-cta-monogram" alt="" aria-hidden="true" />
 
           <h2 className="hp-cta-h2">
-            ¿Listo para reservar<br />tu primera clase?
+            El parcial no espera.<br />
+            <span className="hp-cta-h2-accent">Empezá hoy.</span>
           </h2>
           <p className="hp-cta-p">
-            Sin registro. Sin pagos por adelantado.<br />
-            En 3 minutos estás confirmado.
+            La primera clase es de diagnóstico: entendemos dónde estás y qué necesitás.<br />
+            Sin pagos por adelantado. Sin compromiso. Solo una hora que puede cambiar todo.
           </p>
 
           <div className="hp-cta-actions">
             <Link to="/reservar" className="hp-cta-main hp-cta-xl">
               <FaCalendarCheck aria-hidden="true" />
-              Reservar mi turno
+              Reservar mi primera clase
               <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <a
-              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20sobre%20clases%20particulares."
+              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20antes%20de%20reservar."
               className="hp-cta-ghost hp-cta-xl"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaWhatsapp aria-hidden="true" />
-              Hablemos
+              Consultar primero
             </a>
           </div>
 
