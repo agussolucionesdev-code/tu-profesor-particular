@@ -797,6 +797,7 @@ const BookingForm = () => {
 
       const end = addMinutes(dateObj, Number(formData.duration) * 60);
       const bookingCode = response.data.data.bookingCode;
+      const managementUrl = response.data.data.managementUrl;
       const managementMethods = [
         {
           label: "Código",
@@ -841,6 +842,7 @@ const BookingForm = () => {
         educationLevel: confirmationEducationLabel || formData.educationLevel,
         notifications: response.data.notifications || null,
         managementMethods,
+        managementUrl,
       });
       setShowModal(true);
       speakAlert(
@@ -891,6 +893,21 @@ const BookingForm = () => {
             "No pude copiar el código de forma automática. Podés seleccionarlo manualmente desde el comprobante.",
         },
       );
+    }
+  };
+
+  const copyManagementLink = async () => {
+    if (!successData?.managementUrl) return;
+    primeVoicePlayback();
+    try {
+      await navigator.clipboard.writeText(successData.managementUrl);
+      showToast("Enlace seguro copiado. Guardalo en un lugar privado.", "success", {
+        title: "Enlace listo",
+      });
+    } catch {
+      showToast("No pude copiar el enlace. Usá el email de confirmación.", "warning", {
+        title: "Copia manual",
+      });
     }
   };
 
@@ -1252,6 +1269,7 @@ const BookingForm = () => {
         successData={successData}
         whatsappConfirmText={whatsappConfirmText}
         onCopyCode={copyBookingCode}
+        onCopyManagementLink={copyManagementLink}
         onClose={resetFormAfterSuccess}
       />
 

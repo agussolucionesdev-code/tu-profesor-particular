@@ -15,11 +15,31 @@ export const lookupBookings = (identifier) =>
 export const requestManagementLink = (data) =>
   apiClient.post("/api/bookings/manage/request-link", data);
 
-export const rescheduleBooking = (data) =>
-  apiClient.post("/api/bookings/reschedule", data);
+const managementConfig = (managementToken) => ({
+  headers: { "X-Booking-Manage-Token": managementToken },
+});
 
-export const cancelBooking = (data) =>
-  apiClient.post("/api/bookings/cancel", data);
+// A bearer link token is sent exclusively in this request header. Never put
+// it in a URL, Axios defaults, browser storage, or telemetry.
+export const getManagedBooking = (managementToken) =>
+  apiClient.get("/api/bookings/manage", managementConfig(managementToken));
+
+export const revokeManagementAccess = (managementToken) =>
+  apiClient.post("/api/bookings/manage/revoke", {}, managementConfig(managementToken));
+
+export const rescheduleBooking = (data, managementToken) =>
+  apiClient.post(
+    "/api/bookings/reschedule",
+    data,
+    managementToken ? managementConfig(managementToken) : undefined,
+  );
+
+export const cancelBooking = (data, managementToken) =>
+  apiClient.post(
+    "/api/bookings/cancel",
+    data,
+    managementToken ? managementConfig(managementToken) : undefined,
+  );
 
 export const confirmAttendance = (bookingCode) =>
   apiClient.post("/api/bookings/confirm-attendance", { bookingCode });

@@ -24,7 +24,7 @@ const PERIODS = [
   { id: "night", label: "Noche", from: 19, to: 22 },
 ];
 
-const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
+const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, showToast }) => {
   const dialogRef = useRef(null);
 
   const [selectedDay, setSelectedDay] = useState(() => {
@@ -186,11 +186,14 @@ const RescheduleModal = ({ editingBooking, onClose, onSuccess, showToast }) => {
     const minutes = String(newDate.getMinutes()).padStart(2, "0");
     const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
     try {
-      const response = await rescheduleBooking({
-        bookingCode: editingBooking.bookingCode,
-        newTimeSlot: formattedDate,
-        newDuration: durationNumber,
-      });
+      const response = await rescheduleBooking(
+        {
+          bookingCode: editingBooking.bookingCode,
+          newTimeSlot: formattedDate,
+          newDuration: durationNumber,
+        },
+        managementToken,
+      );
       const followUp = (() => {
         const n = response.data.notifications;
         const sent = n?.client?.sent ?? n?.clientEmailSent ?? false;

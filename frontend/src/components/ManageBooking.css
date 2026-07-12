@@ -1,0 +1,41 @@
+.manage-page-state {
+  max-width: 42rem;
+  margin: 9rem auto 4rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-primary, #1e293b);
+}
+
+.manage-page-state--invalid {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  border: 1px solid var(--border-soft, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--surface-card, #fff);
+}
+
+.manage-page-state--invalid svg,
+.manage-booking-lock { color: var(--accent-primary, #589860); }
+
+.manage-booking-container > .ticket-card { max-width: 48rem; margin: 0 auto 1rem; }
+
+.manage-booking-security {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 48rem;
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-card);
+  background: var(--cp-surface);
+}
+
+.manage-booking-security p { margin: 0; }
+.manage-booking-security button { border: 1px solid var(--cp-border); border-radius: .5rem; padding: .65rem .9rem; background: transparent; color: var(--cp-text-main); font: inherit; cursor: pointer; }
+
+@media (max-width: 600px) {
+  .manage-booking-security { align-items: flex-start; flex-direction: column; }
+}

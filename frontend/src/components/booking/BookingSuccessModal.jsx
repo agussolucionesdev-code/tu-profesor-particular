@@ -49,6 +49,7 @@ const BookingSuccessModal = ({
   successData,
   whatsappConfirmText,
   onCopyCode,
+  onCopyManagementLink,
   onClose,
 }) => {
   const dialogRef = useRef(null);
@@ -178,11 +179,37 @@ const BookingSuccessModal = ({
           <span>{alert.text}</span>
         </div>
 
+        {successData?.managementUrl && (
+          <div className="success-management-link" role="group" aria-label="Enlace seguro de gestión">
+            <strong>Enlace seguro de gestión</strong>
+            <p>
+              Guardalo: te permite reprogramar o cancelar este turno sin volver a ingresar datos.
+            </p>
+            <button
+              type="button"
+              className="success-copy-btn"
+              onClick={onCopyManagementLink}
+            >
+              <FaCopy aria-hidden="true" /> Copiar enlace seguro
+            </button>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="success-actions">
-          <Link to="/portal" className="success-btn-primary" onClick={onClose}>
-            <FaSearch aria-hidden="true" /> Ir a Mis Turnos
-          </Link>
+          {successData?.managementUrl ? (
+            <button
+              type="button"
+              className="success-btn-primary"
+              onClick={() => window.location.assign(successData.managementUrl)}
+            >
+              <FaSearch aria-hidden="true" /> Gestionar este turno
+            </button>
+          ) : (
+            <Link to="/portal" className="success-btn-primary" onClick={onClose}>
+              <FaSearch aria-hidden="true" /> Ir a Mis Turnos
+            </Link>
+          )}
           <a
             href={`https://wa.me/5491164236675?text=${encodeURIComponent(whatsappConfirmText)}`}
             className="success-btn-whatsapp"

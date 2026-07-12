@@ -28,6 +28,7 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const BookingForm = lazy(() => import("./components/BookingForm"));
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const ClientPortal = lazy(() => import("./components/ClientPortal"));
+const ManageBooking = lazy(() => import("./components/ManageBooking"));
 const NotFoundPage = lazy(() => import("./components/errors/NotFoundPage"));
 
 const ScrollToTop = () => {
@@ -56,7 +57,7 @@ const AppContent = () => {
   const { pathname } = useLocation();
   const isAdminRoute = pathname === "/admin";
   const isLandingRoute = pathname === "/";
-  const isBookingExperience = pathname === "/reservar" || pathname === "/portal";
+  const isBookingExperience = pathname === "/reservar" || pathname === "/portal" || pathname === "/m";
   const [backendStatus, setBackendStatus] = useState("loading");
 
   useEffect(() => {
@@ -105,6 +106,7 @@ const AppContent = () => {
             <Route path="/reservar" element={<BookingForm />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/portal" element={<ClientPortal />} />
+            <Route path="/m" element={<ManageBooking />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
