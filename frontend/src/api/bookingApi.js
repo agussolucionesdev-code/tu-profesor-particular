@@ -12,6 +12,9 @@ export const createBooking = (data) =>
 export const lookupBookings = (identifier) =>
   apiClient.get(`/api/bookings/${encodeURIComponent(identifier)}`);
 
+export const requestManagementLink = (data) =>
+  apiClient.post("/api/bookings/manage/request-link", data);
+
 export const rescheduleBooking = (data) =>
   apiClient.post("/api/bookings/reschedule", data);
 
