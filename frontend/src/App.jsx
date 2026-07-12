@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -32,9 +32,21 @@ const NotFoundPage = lazy(() => import("./components/errors/NotFoundPage"));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
+  const previousPathRef = useRef(pathname);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    if (previousPathRef.current === pathname) return undefined;
+    previousPathRef.current = pathname;
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.document.getElementById("main-content")?.focus({
+        preventScroll: true,
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, [pathname]);
 
   return null;
@@ -43,6 +55,7 @@ const ScrollToTop = () => {
 const AppContent = () => {
   const { pathname } = useLocation();
   const isAdminRoute = pathname === "/admin";
+  const isLandingRoute = pathname === "/";
   const isBookingExperience = pathname === "/reservar" || pathname === "/portal";
   const [backendStatus, setBackendStatus] = useState("loading");
 
@@ -68,8 +81,8 @@ const AppContent = () => {
     };
   }, []);
 
-  if (backendStatus === "loading") return <BrandLoader />;
-  if (backendStatus === "down") return <MaintenancePage />;
+  if (!isLandingRoute && backendStatus === "loading") return <BrandLoader />;
+  if (!isLandingRoute && backendStatus === "down") return <MaintenancePage />;
 
   return (
     <>
@@ -97,7 +110,7 @@ const AppContent = () => {
         </Suspense>
       </main>
       {!isAdminRoute && <Footer />}
-      <AccessibilityControls />
+      <AccessibilityControls isAdminRoute={isAdminRoute} />
     </>
   );
 };

@@ -25,6 +25,19 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete, onConfirmAttendanc
   const timeEnd = formatTime(endTimeObj);
   const displayStatus = getBookingStatusLabel(booking.status);
   const isAdult = isAdultBooking(booking);
+  const isReadOnly =
+    displayStatus === "Finalizado" ||
+    displayStatus === "Cancelado" ||
+    endTimeObj <= new Date();
+  const canConfirmAttendance =
+    !isReadOnly &&
+    booking.status === "Pendiente" &&
+    typeof onConfirmAttendance === "function";
+  const canReschedule = !isReadOnly && typeof onEdit === "function";
+  const canCancel = !isReadOnly && typeof onCancel === "function";
+  const canHide = !isReadOnly && typeof onDelete === "function";
+  const hasActions =
+    canConfirmAttendance || canReschedule || canCancel || canHide;
 
   return (
     <div className={`ticket-card ${displayStatus}`}>
@@ -65,33 +78,19 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete, onConfirmAttendanc
         </div>
       </div>
 
-      <div className="ticket-footer">
-        {displayStatus === "Cancelado" ? (
-          <>
-            <p className="cancelled-note">
-              Este turno fue cancelado. Podés ocultarlo o reservar uno nuevo.
-            </p>
+      {hasActions && (
+        <div className="ticket-footer">
+          {canConfirmAttendance && (
             <button
               type="button"
-              onClick={() => onDelete(booking._id)}
-              className="btn-action btn-delete-forever"
-              aria-label={`Ocultar turno de ${booking.studentName}`}
+              onClick={() => onConfirmAttendance(booking)}
+              className="btn-action btn-confirm-attendance"
+              aria-label={`Confirmar asistencia al turno de ${booking.studentName}`}
             >
-              <FaTrashAlt aria-hidden="true" /> Ocultar
+              <FaCheckCircle aria-hidden="true" /> Confirmar asistencia
             </button>
-          </>
-        ) : (
-          <>
-            {booking.status === "Pendiente" && onConfirmAttendance && (
-              <button
-                type="button"
-                onClick={() => onConfirmAttendance(booking)}
-                className="btn-action btn-confirm-attendance"
-                aria-label={`Confirmar asistencia al turno de ${booking.studentName}`}
-              >
-                <FaCheckCircle aria-hidden="true" /> Confirmar asistencia
-              </button>
-            )}
+          )}
+          {canReschedule && (
             <button
               type="button"
               onClick={() => onEdit(booking)}
@@ -100,6 +99,8 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete, onConfirmAttendanc
             >
               <FaEdit aria-hidden="true" /> Reprogramar
             </button>
+          )}
+          {canCancel && (
             <button
               type="button"
               onClick={() => onCancel(booking)}
@@ -108,9 +109,19 @@ const BookingTicket = ({ booking, onEdit, onCancel, onDelete, onConfirmAttendanc
             >
               <FaTimesCircle aria-hidden="true" /> Cancelar
             </button>
-          </>
-        )}
-      </div>
+          )}
+          {canHide && (
+            <button
+              type="button"
+              onClick={() => onDelete(booking.bookingCode)}
+              className="btn-action btn-delete-forever"
+              aria-label={`Ocultar turno de ${booking.studentName}`}
+            >
+              <FaTrashAlt aria-hidden="true" /> Ocultar
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

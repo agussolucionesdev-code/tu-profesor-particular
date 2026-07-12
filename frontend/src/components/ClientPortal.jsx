@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   FaCalendarCheck,
   FaCheckCircle,
-  FaExclamationTriangle,
   FaHourglassHalf,
   FaInfoCircle,
   FaTimesCircle,
@@ -13,18 +12,13 @@ import "./ClientPortal.css";
 import "../styles/theme-polish.css";
 import "../styles/accessibility-system.css";
 import BookingTicket from "./BookingTicket";
-import StudentNotesPanel from "./portal/StudentNotesPanel";
-import RescheduleModal from "./portal/RescheduleModal";
-import CancelModal from "./portal/CancelModal";
 import ThemeLogo from "./ui/ThemeLogo";
-import { lookupBookings, cancelBooking, confirmAttendance } from "../api/bookingApi";
+import { lookupBookings, requestManagementLink } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 import {
   isVoiceMuted,
   primeVoicePlayback,
   speakAlert,
-  spellCodeForVoice,
-  useNeuroToast,
 } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import PortalSkeleton from "./portal/PortalSkeleton";
@@ -34,18 +28,19 @@ const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
 const ClientPortal = () => {
   usePageMeta(
     "Mis turnos",
-    "Consultá, reprogramá o cancelá tus clases particulares con Agustin Elias Sosa. Ingresa tu codigo de reserva, email o telefono.",
+    "Consultá tus clases particulares con Agustin Elias Sosa usando tu código de reserva.",
   );
   const [code, setCode] = useState("");
   const [bookingsList, setBookingsList] = useState([]);
   const [allResults, setAllResults] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const { toast, showToast } = useNeuroToast({ duration: 4000 });
-  const [editingBooking, setEditingBooking] = useState(null);
-  const [cancelingBooking, setCancelingBooking] = useState(null);
+  const [recoveryCode, setRecoveryCode] = useState("");
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryMessage, setRecoveryMessage] = useState("");
 
   const isBookingActive = (booking) => {
     const endTime = new Date(booking.endTime);
@@ -56,21 +51,16 @@ const ClientPortal = () => {
   const looksLikeBookingCode = (value) =>
     /^[A-Z0-9]{6,12}$/i.test(String(value || "").trim());
 
-  const speakPortalGuidance = (guidance) => {
-    if (!guidance) return;
-    const didStartVoice = primeVoicePlayback({
-      message: guidance,
-      voiceOptions: PORTAL_VOICE_OPTIONS,
-    });
-    if (!didStartVoice) speakAlert(guidance, PORTAL_VOICE_OPTIONS);
-  };
-
   useEffect(() => {
     if (!message) return;
     if (typeof window !== "undefined" && !isVoiceMuted()) {
-      speakAlert(message, PORTAL_VOICE_OPTIONS);
+      speakAlert(message.text, PORTAL_VOICE_OPTIONS);
     }
   }, [message]);
+
+  const setPortalMessage = (text, type = "info") => {
+    setMessage({ text, type });
+  };
 
   const handleSearch = async (e, options = {}) => {
     if (e) e.preventDefault();
@@ -79,15 +69,21 @@ const ClientPortal = () => {
     if (!silent) primeVoicePlayback();
 
     if (!code.trim()) {
-      setMessage("Ingresá tu código, email o número de teléfono para buscar tus turnos.");
+      setPortalMessage("Ingresá tu código de reserva exacto para buscar tu turno.", "error");
       return;
     }
 
     const trimmedCode = code.trim();
-    const searchedByCode = looksLikeBookingCode(trimmedCode);
+    if (!looksLikeBookingCode(trimmedCode)) {
+      setPortalMessage(
+        "Ingresá un código de reserva válido, de 6 a 12 letras o números.",
+        "error",
+      );
+      return;
+    }
 
     setLoading(true);
-    setMessage("");
+    setMessage(null);
     setBookingsList([]);
     setHasSearched(true);
 
@@ -106,14 +102,14 @@ const ClientPortal = () => {
       setBookingsList(activeResults);
 
       if (results.length > 0 && activeResults.length === 0) {
-        setMessage(
-          searchedByCode
-            ? "Ese turno ya no está activo. Puede haber sido cancelado, reprogramado o ya haber pasado."
-            : "Encontramos historial, pero no hay turnos activos para gestionar.",
+        setPortalMessage(
+          "Ese turno ya no está activo. Puede haber sido cancelado, reprogramado o ya haber pasado.",
+          "info",
         );
       } else if (activeResults.length === 0) {
-        setMessage(
-          "No encontramos reservas activas con ese dato. Revisá el código o probá con el email o teléfono que cargaste al reservar.",
+        setPortalMessage(
+          "No encontramos una reserva activa con ese código. Revisá que lo hayas ingresado completo.",
+          "info",
         );
       } else if (!silent) {
         speakAlert(
@@ -125,154 +121,67 @@ const ClientPortal = () => {
       }
     } catch (error) {
       console.error(error);
-      setMessage(getBookingApiMessage(error));
+      setPortalMessage(getBookingApiMessage(error), "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const startEdit = (booking) => {
-    primeVoicePlayback();
-    setEditingBooking(booking);
-    speakPortalGuidance(
-      `Abrimos la reprogramación del turno de ${booking.studentName}. Elegí una nueva propuesta con calma.`,
-    );
-  };
-
-  const openCancelModal = (booking) => {
-    setCancelingBooking(booking);
-    speakPortalGuidance(
-      `Confirmación para cancelar el turno código ${spellCodeForVoice(booking.bookingCode)}.`,
-    );
-  };
-
-  const confirmCancel = async () => {
-    if (!cancelingBooking) return;
-    primeVoicePlayback();
-
-    const codeToCancel = cancelingBooking.bookingCode;
+  const handleRecoveryRequest = async (event) => {
+    event.preventDefault();
+    setRecoveryLoading(true);
+    setRecoveryMessage("");
 
     try {
-      const response = await cancelBooking({ bookingCode: codeToCancel });
-      const notifications = response.data.notifications;
-      const clientSent =
-        notifications?.client?.sent ?? notifications?.clientEmailSent ?? false;
-      const clientRecipient =
-        notifications?.client?.recipient || notifications?.clientRecipient || "";
-      const followUp = clientSent && clientRecipient
-        ? ` También enviamos el detalle a ${clientRecipient}.`
-        : "";
-
-      setCancelingBooking(null);
-      const updatedBookings = bookingsList.filter(
-        (booking) => booking.bookingCode !== codeToCancel,
-      );
-      setBookingsList(updatedBookings);
-      setMessage(
-        updatedBookings.length > 0
-          ? "El turno cancelado ya no aparece entre tus reservas activas."
-          : "El turno se canceló correctamente.",
-      );
-
-      showToast(`Turno cancelado.${followUp}`, "success", {
-        title: "Cancelación confirmada",
-        speak: "Listo. El turno fue cancelado y el horario volvió a quedar disponible.",
-        voiceOptions: PORTAL_VOICE_OPTIONS,
+      await requestManagementLink({
+        bookingCode: recoveryCode.trim().toUpperCase(),
+        email: recoveryEmail.trim(),
       });
-    } catch (error) {
-      console.error(error);
-      showToast(getBookingApiMessage(error), "error", {
-        title: "No se pudo cancelar",
-        speak: "No pude cancelar el turno. Revisá la conexión e intentá nuevamente.",
-        voiceOptions: PORTAL_VOICE_OPTIONS,
-      });
+    } catch {
+      // Keep the result deliberately indistinguishable to prevent enumeration.
+    } finally {
+      setRecoveryLoading(false);
+      setRecoveryMessage(
+        "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
+      );
     }
   };
-
-  const handleConfirmAttendance = async (booking) => {
-    primeVoicePlayback();
-    try {
-      await confirmAttendance(booking.bookingCode);
-      handleSearch(null, { silent: true });
-      showToast("Asistencia confirmada. ¡Nos vemos en clase!", "success", {
-        title: "Confirmación registrada",
-        speak: "Listo. Tu asistencia quedó confirmada.",
-        voiceOptions: PORTAL_VOICE_OPTIONS,
-      });
-    } catch (error) {
-      console.error(error);
-      showToast(getBookingApiMessage(error), "error", {
-        title: "No se pudo confirmar",
-        speak: "No pude confirmar tu asistencia. Revisá la conexión e intentá nuevamente.",
-        voiceOptions: PORTAL_VOICE_OPTIONS,
-      });
-    }
-  };
-
-  const handleDeleteForever = (id) => {
-    setBookingsList((prev) => prev.filter((booking) => booking._id !== id));
-    showToast("Registro ocultado de tu vista.", "success");
-  };
-
   const activeVisibleBookings = bookingsList.filter(isBookingActive);
   const historicalBookings = allResults.filter((b) => !isBookingActive(b));
-  const portalToastMeta = {
+  const portalMessageMeta = {
     success: {
       icon: <FaCheckCircle aria-hidden="true" />,
-      title: "Movimiento confirmado",
-    },
-    warning: {
-      icon: <FaExclamationTriangle aria-hidden="true" />,
-      title: "Atención",
-    },
-    error: {
-      icon: <FaTimesCircle aria-hidden="true" />,
-      title: "No pude completarlo",
+      role: "status",
     },
     info: {
       icon: <FaInfoCircle aria-hidden="true" />,
-      title: "Información útil",
+      role: "status",
     },
-  }[toast.type || "info"];
-
+    error: {
+      icon: <FaTimesCircle aria-hidden="true" />,
+      role: "alert",
+    },
+  }[message?.type || "info"];
   return (
     <div className="client-portal-wrapper">
-      {toast.show && (
-        <div
-          className={`portal-toast ${toast.type}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className={`portal-toast-icon ${toast.type || "info"}`}>
-            {portalToastMeta.icon}
-          </div>
-          <div className="portal-toast-copy">
-            <strong>{toast.title || portalToastMeta.title}</strong>
-            <span>{toast.message}</span>
-            {toast.detail ? <small>{toast.detail}</small> : null}
-          </div>
-        </div>
-      )}
-
       <div className="portal-container">
         <div className="portal-header">
           <ThemeLogo variant="full" imgClassName="portal-header-logo" alt="Tu Profesor Particular" />
           <h1 className="portal-title">Mis Turnos</h1>
           <p className="portal-subtitle">
-            Buscá tu turno con el código, email o teléfono.
+            Buscá tu turno con el código de reserva exacto.
           </p>
         </div>
 
         <form onSubmit={handleSearch} className="search-container">
           <label htmlFor="portal-search-input" className="sr-only">
-            Código de reserva, email o teléfono
+            Código de reserva exacto
           </label>
           <input
             id="portal-search-input"
             type="search"
             className="search-input"
-            placeholder="Código, email o teléfono"
+            placeholder="Ejemplo: ABC123"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             autoComplete="off"
@@ -290,8 +199,44 @@ const ClientPortal = () => {
         </form>
 
         <p id="portal-search-help" className="search-helper">
-          Si reservaste para un menor, también podés buscar con el dato del adulto responsable.
+          Por seguridad, temporalmente solo podés consultar con el código de reserva exacto. Lo encontrás en tu confirmación.
         </p>
+        <section className="portal-recovery-card" aria-labelledby="portal-recovery-title">
+          <h2 id="portal-recovery-title">Recuperar acceso seguro</h2>
+          <p>
+            Te enviamos un enlace privado para reprogramar o cancelar. La
+            respuesta nunca confirma si una reserva existe.
+          </p>
+          <form className="portal-recovery-form" onSubmit={handleRecoveryRequest}>
+            <label htmlFor="recovery-booking-code">Código para recuperar acceso</label>
+            <input
+              id="recovery-booking-code"
+              value={recoveryCode}
+              onChange={(event) => setRecoveryCode(event.target.value)}
+              autoComplete="off"
+              minLength={6}
+              maxLength={12}
+              required
+            />
+            <label htmlFor="recovery-email">Email usado al reservar</label>
+            <input
+              id="recovery-email"
+              type="email"
+              value={recoveryEmail}
+              onChange={(event) => setRecoveryEmail(event.target.value)}
+              autoComplete="email"
+              required
+            />
+            <button type="submit" disabled={recoveryLoading}>
+              {recoveryLoading ? "Enviando…" : "Enviar enlace seguro"}
+            </button>
+          </form>
+          {recoveryMessage && (
+            <p className="portal-recovery-status" role="status" aria-live="polite">
+              {recoveryMessage}
+            </p>
+          )}
+        </section>
 
         {hasSearched && activeVisibleBookings.length > 0 && (
           <div className="portal-results-summary" role="status">
@@ -305,8 +250,13 @@ const ClientPortal = () => {
         )}
 
         {message && (
-          <div className="message-error" role="alert">
-            <FaTimesCircle aria-hidden="true" /> {message}
+          <div
+            className={`portal-message portal-message--${message.type}`}
+            role={portalMessageMeta.role}
+            aria-live={message.type === "error" ? "assertive" : "polite"}
+            aria-atomic="true"
+          >
+            {portalMessageMeta.icon} {message.text}
           </div>
         )}
 
@@ -321,15 +271,10 @@ const ClientPortal = () => {
 
         <div className="tickets-grid">
           {bookingsList.map((booking) => (
-            <div key={booking._id} className="ticket-wrapper">
-              <BookingTicket
-                booking={booking}
-                onEdit={startEdit}
-                onCancel={openCancelModal}
-                onDelete={handleDeleteForever}
-                onConfirmAttendance={handleConfirmAttendance}
-              />
-              <StudentNotesPanel booking={booking} />
+            <div key={booking.bookingCode} className="ticket-wrapper">
+
+              <BookingTicket booking={booking} />
+
             </div>
           ))}
         </div>
@@ -348,7 +293,7 @@ const ClientPortal = () => {
             {showHistory && (
               <div className="tickets-grid tickets-grid--history">
                 {historicalBookings.map((booking) => (
-                  <div key={booking._id} className="ticket-wrapper ticket-wrapper--history">
+                  <div key={booking.bookingCode} className="ticket-wrapper ticket-wrapper--history">
                     <BookingTicket booking={booking} />
                   </div>
                 ))}
@@ -369,25 +314,6 @@ const ClientPortal = () => {
         </a>
       </div>
 
-      {editingBooking && (
-        <RescheduleModal
-          editingBooking={editingBooking}
-          onClose={() => setEditingBooking(null)}
-          onSuccess={() => {
-            setEditingBooking(null);
-            handleSearch(null, { silent: true });
-          }}
-          showToast={showToast}
-        />
-      )}
-
-      {cancelingBooking && (
-        <CancelModal
-          cancelingBooking={cancelingBooking}
-          onClose={() => setCancelingBooking(null)}
-          onConfirm={confirmCancel}
-        />
-      )}
     </div>
   );
 };

@@ -43,7 +43,7 @@ const countActivePreferences = (preferences) =>
     preferences.calmUi,
   ].filter(Boolean).length;
 
-const AccessibilityControls = () => {
+const AccessibilityControls = ({ isAdminRoute = false }) => {
   const {
     preferences,
     updatePreference,
@@ -128,7 +128,7 @@ const AccessibilityControls = () => {
 
   return (
     <div
-      className="a11y-shell"
+      className={`a11y-shell${isAdminRoute ? " is-admin-route" : ""}`}
       ref={shellRef}
       style={{ "--a11y-footer-lift": `${footerLift}px` }}
     >

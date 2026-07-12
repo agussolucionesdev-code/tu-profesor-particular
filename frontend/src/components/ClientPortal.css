@@ -190,7 +190,7 @@
 /* ---------------------------------------------------------------------------
    9. Error / info message
    --------------------------------------------------------------------------- */
-.client-portal-wrapper .message-error {
+.client-portal-wrapper .portal-message {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -198,13 +198,102 @@
   margin-bottom: 1.5rem;
   padding: 1rem;
   border-radius: var(--cp-radius-card);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.client-portal-wrapper .portal-message--error {
   border: 1px solid #fecaca;
   border-left: 5px solid var(--cp-danger);
   background: #fef2f2;
   color: var(--cp-danger);
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: center;
+}
+
+.client-portal-wrapper .portal-message--info {
+  border: 1px solid rgba(48, 105, 152, 0.28);
+  border-left: 5px solid var(--cp-primary);
+  background: rgba(219, 234, 254, 0.72);
+  color: #1e4f78;
+}
+
+.client-portal-wrapper .portal-message--success {
+  border: 1px solid rgba(88, 152, 96, 0.32);
+  border-left: 5px solid var(--cp-success, #3d8a47);
+  background: rgba(220, 252, 231, 0.72);
+  color: #25652d;
+}
+
+.portal-recovery-card {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0 1.5rem;
+  padding: 1.2rem;
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-card);
+  background: var(--cp-surface);
+}
+
+.portal-recovery-card h2,
+.portal-recovery-card p {
+  margin: 0;
+}
+
+.portal-recovery-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.portal-recovery-form label {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.portal-recovery-form input,
+.portal-recovery-form button {
+  min-height: 2.9rem;
+  border-radius: 0.8rem;
+  font: inherit;
+}
+
+.portal-recovery-form input {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text-main);
+}
+
+.portal-recovery-form button {
+  padding: 0.7rem 1rem;
+  border: 0;
+  background: var(--cp-primary);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.portal-recovery-form label:nth-of-type(1) { grid-column: 1; }
+.portal-recovery-form label:nth-of-type(2) { grid-column: 2; }
+.portal-recovery-form input:nth-of-type(1) { grid-column: 1; }
+.portal-recovery-form input:nth-of-type(2) { grid-column: 2; }
+
+.portal-recovery-status {
+  color: var(--cp-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .portal-recovery-form {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-recovery-form label,
+  .portal-recovery-form input,
+  .portal-recovery-form button {
+    grid-column: 1 !important;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -680,9 +769,21 @@
 }
 
 /* Error */
-[data-theme="dark"] .client-portal-wrapper .message-error {
+[data-theme="dark"] .client-portal-wrapper .portal-message--error {
   background: rgba(207, 79, 79, 0.1);
   border-color: rgba(207, 79, 79, 0.3);
+}
+
+[data-theme="dark"] .client-portal-wrapper .portal-message--info {
+  background: rgba(48, 105, 152, 0.18);
+  border-color: rgba(171, 195, 217, 0.3);
+  color: #b8d8f0;
+}
+
+[data-theme="dark"] .client-portal-wrapper .portal-message--success {
+  background: rgba(88, 152, 96, 0.16);
+  border-color: rgba(114, 176, 122, 0.3);
+  color: #a8dbae;
 }
 
 /* Ticket card */

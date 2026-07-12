@@ -113,6 +113,16 @@ const bookingSchema = new mongoose.Schema(
       set: normalizeCode,
     },
 
+    managementTokenHash: {
+      type: String,
+      select: false,
+      minlength: 64,
+      maxlength: 64,
+    },
+    managementTokenExpiresAt: { type: Date, default: null },
+    managementTokenRevokedAt: { type: Date, default: null },
+    managementLinkLastSentAt: { type: Date, default: null, select: false },
+
     status: {
       type: String,
       enum: BOOKING_STATUS,
@@ -172,6 +182,10 @@ bookingSchema.index({ timeSlot: 1, status: 1 });
 bookingSchema.index({ status: 1, timeSlot: 1, endTime: 1 }); // for hasConflict + getAvailability
 bookingSchema.index({ email: 1 });
 bookingSchema.index({ phone: 1 });
+bookingSchema.index(
+  { managementTokenHash: 1 },
+  { unique: true, sparse: true },
+);
 
 bookingSchema.set("toJSON", {
   transform(_doc, ret) {

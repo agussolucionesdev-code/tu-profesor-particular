@@ -10,18 +10,21 @@ import {
   updateBookingInSheet,
 } from "../services/sheetsService.js";
 import { sendPushToAdmin } from "../services/pushService.js";
+import { sendManagementLinkEmail } from "../config/mailer.js";
+import {
+  hashManagementToken,
+  issueManagementToken,
+  MANAGEMENT_TOKEN_PATTERN,
+} from "../services/managementTokenService.js";
 import {
   availabilityQuerySchema,
   cancelSchema,
   createBookingSchema,
   getDefaultAvailabilityRange,
-  looksLikeEmail,
-  looksLikePhone,
   normalizeCode,
   normalizeEmail,
   normalizePhone,
   parseDateTimeInput,
-  phoneDigitsRegex,
   rescheduleSchema,
   updateBookingSchema,
   validateContact,
@@ -41,17 +44,31 @@ const MAX_AVAILABILITY_RANGE_DAYS = Number(
 );
 const MAX_AVAILABILITY_RANGE_MS =
   MAX_AVAILABILITY_RANGE_DAYS * 24 * 60 * 60 * 1000;
+const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
+const MANAGEMENT_LINK_COOLDOWN_MS = 5 * 60 * 1000;
+const INVALID_MANAGEMENT_LINK_MESSAGE = "El enlace de gestión no es válido o venció.";
 
 const publicBooking = (booking) => ({
-  _id: booking._id,
   bookingCode: booking.bookingCode,
+  studentName: booking.studentName,
+  subject: booking.subject,
+  timeSlot: booking.timeSlot,
+  endTime: booking.endTime,
+  duration: booking.duration,
+  status: booking.status,
+});
+
+// This is intentionally separate from the unauthenticated public DTO. The
+// bearer link may reveal only the information a family needs to manage its own
+// booking; teacher-only notes and token metadata never leave the API.
+const managedBooking = (booking) => ({
+  bookingCode: booking.bookingCode,
+  studentName: booking.studentName,
   responsibleName: booking.responsibleName,
   responsibleRelationship: booking.responsibleRelationship,
   responsibleRelationshipOther: booking.responsibleRelationshipOther,
-  studentName: booking.studentName,
-  tutorName: booking.tutorName,
-  phone: booking.phone,
   email: booking.email,
+  phone: booking.phone,
   school: booking.school,
   educationLevel: booking.educationLevel,
   yearGrade: booking.yearGrade,
@@ -61,9 +78,6 @@ const publicBooking = (booking) => ({
   endTime: booking.endTime,
   duration: booking.duration,
   status: booking.status,
-  studentNotes: booking.studentNotes,
-  createdAt: booking.createdAt,
-  updatedAt: booking.updatedAt,
 });
 
 const setNoStore = (res) => {
@@ -87,6 +101,62 @@ const notFound = (res, message) =>
     requestId: res.req.requestId,
   });
 
+const unauthorizedManagementLink = (res) =>
+  res.status(401).json({
+    success: false,
+    message: INVALID_MANAGEMENT_LINK_MESSAGE,
+    requestId: res.req.requestId,
+  });
+
+const forbiddenManagementBooking = (res) =>
+  res.status(403).json({
+    success: false,
+    message: "Este enlace no autoriza cambios sobre esa reserva.",
+    requestId: res.req.requestId,
+  });
+
+const getManagementToken = (req) => String(
+  req.get("X-Booking-Manage-Token") || "",
+).trim();
+
+const findManagedBooking = async (req) => {
+  const token = getManagementToken(req);
+  if (!MANAGEMENT_TOKEN_PATTERN.test(token)) return null;
+
+  const managementTokenHash = hashManagementToken(token);
+  if (!managementTokenHash) return null;
+
+  const booking = await Booking.findOne({ managementTokenHash })
+    .select("+managementTokenHash")
+    .exec();
+
+  if (
+    !booking ||
+    booking.managementTokenRevokedAt ||
+    !booking.managementTokenExpiresAt ||
+    new Date(booking.managementTokenExpiresAt).getTime() <= Date.now()
+  ) {
+    return null;
+  }
+
+  return booking;
+};
+
+const managementBookingForCode = async (req, res, bookingCode) => {
+  const booking = await findManagedBooking(req);
+  if (!booking) {
+    unauthorizedManagementLink(res);
+    return null;
+  }
+
+  if (booking.bookingCode !== bookingCode) {
+    forbiddenManagementBooking(res);
+    return null;
+  }
+
+  return booking;
+};
+
 const hasConflict = async (startTime, endTime, excludeId = null) => {
   const criteria = {
     ...activeStatusFilter,
@@ -99,51 +169,6 @@ const hasConflict = async (startTime, endTime, excludeId = null) => {
   }
 
   return Booking.exists(trustedFilter(criteria));
-};
-
-const buildClientLookupCriteria = (identifier) => {
-  const trimmed = String(identifier ?? "").trim();
-  const email = normalizeEmail(trimmed);
-  const phoneRegex = phoneDigitsRegex(trimmed);
-  const code = normalizeCode(trimmed);
-
-  if (looksLikeEmail(trimmed)) {
-    return { email };
-  }
-
-  if (looksLikePhone(trimmed) && phoneRegex) {
-    return { phone: phoneRegex };
-  }
-
-  return { bookingCode: code };
-};
-
-const getLookupMode = (identifier) => {
-  const trimmed = String(identifier ?? "").trim();
-
-  if (looksLikeEmail(trimmed)) {
-    return "email";
-  }
-
-  if (looksLikePhone(trimmed)) {
-    return "phone";
-  }
-
-  return "code";
-};
-
-const buildHistoryCriteria = (booking, fallbackIdentifier) => {
-  const phoneRegex = phoneDigitsRegex(booking.phone);
-
-  if (booking.phone && phoneRegex) {
-    return { phone: phoneRegex };
-  }
-
-  if (booking.email) {
-    return { email: booking.email };
-  }
-
-  return buildClientLookupCriteria(fallbackIdentifier);
 };
 
 const isManageableByClient = (booking) =>
@@ -230,7 +255,7 @@ export const createBooking = async (req, res, next) => {
 
     const bookingStatus = requireManual ? "Pendiente" : "Confirmado";
 
-    const newBooking = await Booking.create({
+    const newBooking = new Booking({
       responsibleName: payload.responsibleName,
       responsibleRelationship: payload.responsibleRelationship,
       responsibleRelationshipOther: payload.responsibleRelationshipOther,
@@ -249,19 +274,28 @@ export const createBooking = async (req, res, next) => {
       notes: "",
       status: bookingStatus,
     });
+    const { managementToken, managementUrl } = issueManagementToken(newBooking);
+    await newBooking.save();
 
     // Respond immediately after DB insert — side effects run in background
     res.status(201).json({
       success: true,
       message: "Reserva confirmada con exito.",
-      data: publicBooking(newBooking),
+      data: {
+        ...publicBooking(newBooking),
+        managementToken,
+        managementUrl,
+      },
       notifications: null,
       requestId: req.requestId,
     });
 
     Promise.allSettled([
       appendBookingToSheet(newBooking),
-      sendBookingNotifications({ booking: newBooking, event: "created" }),
+      sendBookingNotifications({
+        booking: { ...newBooking.toObject(), managementUrl },
+        event: "created",
+      }),
       sendPushToAdmin({
         title: "Nueva reserva",
         body: `${newBooking.studentName} · ${newBooking.subject}`,
@@ -438,34 +472,20 @@ export const getBookingStats = async (req, res, next) => {
 
 export const getBookingByCode = async (req, res, next) => {
   try {
-    const identifier = String(req.params.code ?? "").trim();
-    const isValidLookup =
-      normalizeCode(identifier).length >= 6 ||
-      looksLikeEmail(identifier) ||
-      looksLikePhone(identifier);
-
-    if (!isValidLookup) {
-      return badRequest(res, "Ingresa un codigo, email o telefono valido.");
+    const bookingCode = normalizeCode(req.params.code);
+    if (!BOOKING_CODE_PATTERN.test(bookingCode)) {
+      return badRequest(res, "Ingresá un código de reserva válido.");
     }
 
-    const lookupMode = getLookupMode(identifier);
-    const keyBooking = await Booking.findOne(buildClientLookupCriteria(identifier)).lean();
-
-    if (!keyBooking) {
+    const booking = await Booking.findOne({ bookingCode }).lean();
+    if (!booking) {
       return notFound(res, "No encontramos ninguna reserva.");
     }
-
-    const searchCriteria =
-      lookupMode === "code"
-        ? { bookingCode: keyBooking.bookingCode }
-        : buildHistoryCriteria(keyBooking, identifier);
-
-    const history = await Booking.find(searchCriteria).sort({ timeSlot: -1 }).lean();
 
     setNoStore(res);
     res.status(200).json({
       success: true,
-      data: history.map(publicBooking),
+      data: [publicBooking(booking)],
       requestId: req.requestId,
     });
   } catch (error) {
@@ -635,6 +655,101 @@ export const deleteAllBookings = async (req, res, next) => {
   }
 };
 
+export const requestManagementLink = async (req, res, next) => {
+  const acceptedResponse = () =>
+    res.status(202).json({
+      success: true,
+      message:
+        "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
+    });
+
+  try {
+    const bookingCode = normalizeCode(req.body?.bookingCode);
+    const email = normalizeEmail(req.body?.email);
+
+    // Always return the same response. This endpoint must not become an
+    // account/booking enumeration oracle.
+    if (!BOOKING_CODE_PATTERN.test(bookingCode) || !email) {
+      return acceptedResponse();
+    }
+
+    const booking = await Booking.findOne({ bookingCode, email })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .exec();
+    if (!booking) return acceptedResponse();
+
+    const sentRecently =
+      booking.managementLinkLastSentAt &&
+      Date.now() - new Date(booking.managementLinkLastSentAt).getTime() <
+        MANAGEMENT_LINK_COOLDOWN_MS;
+    if (sentRecently) return acceptedResponse();
+
+    const previousTokenState = {
+      managementTokenHash: booking.managementTokenHash,
+      managementTokenExpiresAt: booking.managementTokenExpiresAt,
+      managementTokenRevokedAt: booking.managementTokenRevokedAt,
+      managementLinkLastSentAt: booking.managementLinkLastSentAt,
+    };
+    const { managementUrl } = issueManagementToken(booking);
+    booking.managementLinkLastSentAt = new Date();
+    await booking.save();
+
+    const delivered = await sendManagementLinkEmail({ booking, managementUrl });
+    if (!delivered) {
+      booking.managementTokenHash = previousTokenState.managementTokenHash;
+      booking.managementTokenExpiresAt = previousTokenState.managementTokenExpiresAt;
+      booking.managementTokenRevokedAt = previousTokenState.managementTokenRevokedAt;
+      booking.managementLinkLastSentAt = previousTokenState.managementLinkLastSentAt;
+      await booking.save();
+    }
+
+    return acceptedResponse();
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return acceptedResponse();
+  }
+};
+
+export const getManagedBooking = async (req, res, next) => {
+  try {
+    const booking = await findManagedBooking(req);
+    if (!booking) return unauthorizedManagementLink(res);
+
+    setNoStore(res);
+    return res.status(200).json({
+      success: true,
+      data: managedBooking(booking),
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const revokeManagementAccess = async (req, res, next) => {
+  try {
+    const booking = await findManagedBooking(req);
+    if (!booking) return unauthorizedManagementLink(res);
+
+    booking.managementTokenRevokedAt = new Date();
+    await booking.save();
+    setNoStore(res);
+    return res.status(204).send();
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
 export const rescheduleBooking = async (req, res, next) => {
   try {
     const parsed = rescheduleSchema.safeParse(req.body);
@@ -643,11 +758,8 @@ export const rescheduleBooking = async (req, res, next) => {
     }
 
     const cleanCode = normalizeCode(parsed.data.bookingCode);
-    const booking = await Booking.findOne({ bookingCode: cleanCode });
-
-    if (!booking) {
-      return notFound(res, "Codigo no encontrado.");
-    }
+    const booking = await managementBookingForCode(req, res, cleanCode);
+    if (!booking) return undefined;
 
     if (!isManageableByClient(booking)) {
       return badRequest(
@@ -718,13 +830,14 @@ export const updateStudentNotes = async (req, res, next) => {
       return badRequest(res, "Las notas no pueden superar los 500 caracteres.");
     }
 
-    const booking = await Booking.findOne({ bookingCode: code });
-    if (!booking) {
-      return notFound(res, "Reserva no encontrada.");
-    }
+    const booking = await managementBookingForCode(req, res, code);
+    if (!booking) return undefined;
 
-    if (booking.status === "Cancelado" || booking.status === "Finalizado") {
-      return badRequest(res, "No se pueden actualizar notas en reservas canceladas o finalizadas.");
+    if (!isManageableByClient(booking)) {
+      return badRequest(
+        res,
+        "Solo se pueden actualizar notas de turnos activos que todavía no finalizaron.",
+      );
     }
 
     booking.studentNotes = studentNotes.trim();
@@ -756,13 +869,9 @@ export const cancelBookingClient = async (req, res, next) => {
       return badRequest(res, "Codigo de cancelacion invalido.", parsed.error.flatten());
     }
 
-    const booking = await Booking.findOne({
-      bookingCode: normalizeCode(parsed.data.bookingCode),
-    });
-
-    if (!booking) {
-      return notFound(res, "No encontrado.");
-    }
+    const bookingCode = normalizeCode(parsed.data.bookingCode);
+    const booking = await managementBookingForCode(req, res, bookingCode);
+    if (!booking) return undefined;
 
     if (!isManageableByClient(booking)) {
       return badRequest(
@@ -806,13 +915,9 @@ export const confirmAttendanceClient = async (req, res, next) => {
       return badRequest(res, "Código de reserva inválido.", parsed.error.flatten());
     }
 
-    const booking = await Booking.findOne({
-      bookingCode: normalizeCode(parsed.data.bookingCode),
-    });
-
-    if (!booking) {
-      return notFound(res, "No encontrado.");
-    }
+    const bookingCode = normalizeCode(parsed.data.bookingCode);
+    const booking = await managementBookingForCode(req, res, bookingCode);
+    if (!booking) return undefined;
 
     if (booking.status !== "Pendiente") {
       return badRequest(res, "Solo se pueden confirmar turnos que están en estado Pendiente.");

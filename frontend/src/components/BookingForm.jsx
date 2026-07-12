@@ -422,7 +422,6 @@ const BookingForm = () => {
     };
   }, [isCalendarExpanded]);
 
-  const currentStepInfo = WIZARD_STEPS.find((step) => step.id === currentStep);
   const getSlidePanelA11y = (stepId) => {
     const isActive = currentStep === stepId;
     return {
@@ -613,11 +612,6 @@ const BookingForm = () => {
   const goToPrev = () => {
     if (isFirstStep) return;
     goToStep(currentStep - 1);
-  };
-
-  const openCalendarExpanded = () => {
-    if (!isDesktopCalendarViewport) return;
-    setIsCalendarExpanded(true);
   };
 
   const closeCalendarExpanded = () => {
@@ -1042,24 +1036,31 @@ const BookingForm = () => {
           )}
         </div>
 
-        <nav
+        <div
           className="neuro-stepper neuro-stepper-compact"
-          role="progressbar"
-          aria-label="Progreso de reserva"
-          aria-valuemin="1"
-          aria-valuemax={WIZARD_STEPS.length}
-          aria-valuenow={currentStep}
         >
-          <div className="stepper-progress-rail" aria-hidden="true">
+          <div
+            className="stepper-progress-rail"
+            role="progressbar"
+            aria-label="Progreso de reserva"
+            aria-valuemin="1"
+            aria-valuemax={WIZARD_STEPS.length}
+            aria-valuenow={currentStep}
+            aria-valuetext={`Paso ${currentStep} de ${WIZARD_STEPS.length}: ${WIZARD_STEPS.find((step) => step.id === currentStep)?.label}`}
+          >
             <div className="stepper-progress-bar">
               <div
                 className="stepper-progress-fill"
+                aria-hidden="true"
                 style={{ width: `${stepProgressWidth}%` }}
               ></div>
             </div>
           </div>
 
-          <div className="stepper-grid stepper-grid-horizontal">
+          <nav
+            className="stepper-grid stepper-grid-horizontal"
+            aria-label="Etapas de la reserva"
+          >
             {WIZARD_STEPS.map((step) => {
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;
@@ -1098,8 +1099,8 @@ const BookingForm = () => {
                 </button>
               );
             })}
-          </div>
-        </nav>
+          </nav>
+        </div>
 
         <div
           ref={sliderWindowRef}

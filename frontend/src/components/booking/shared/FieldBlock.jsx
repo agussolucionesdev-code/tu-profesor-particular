@@ -1,4 +1,36 @@
+import { Children, cloneElement, isValidElement } from "react";
 import { FaCheckCircle, FaArrowRight, FaArrowLeft } from "react-icons/fa";
+
+const enhanceFieldControl = (children, fieldKey, required, errorText) =>
+  Children.map(children, (child) => {
+    if (!isValidElement(child)) return child;
+
+    if (child.props.id === fieldKey) {
+      const describedBy = [
+        child.props["aria-describedby"],
+        errorText ? `${fieldKey}-error` : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return cloneElement(child, {
+        required: required || undefined,
+        "aria-required": required ? "true" : undefined,
+        "aria-describedby": describedBy || undefined,
+      });
+    }
+
+    if (!child.props.children) return child;
+
+    return cloneElement(child, {
+      children: enhanceFieldControl(
+        child.props.children,
+        fieldKey,
+        required,
+        errorText,
+      ),
+    });
+  });
 
 /**
  * @component FieldBlock
@@ -59,14 +91,14 @@ const FieldBlock = ({
         </span>
       )}
       {errorText && (
-        <span className="error-text" role="alert">
+        <span id={`${fieldKey}-error`} className="error-text" role="alert">
           {errorText}
         </span>
       )}
     </div>
 
     <div className={`field-flow-input-shell${isActive ? " focused" : ""}`}>
-      {children}
+      {enhanceFieldControl(children, fieldKey, required, errorText)}
     </div>
 
     {helperText && isActive && (

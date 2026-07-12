@@ -130,7 +130,12 @@ app.use(
       return callback(corsError);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Request-Id",
+      "X-Booking-Manage-Token",
+    ],
     maxAge: 60 * 60 * 12,
   }),
 );

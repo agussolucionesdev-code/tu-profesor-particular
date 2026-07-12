@@ -77,9 +77,6 @@ const getFrontendUrl = () =>
     "",
   );
 
-const getManagementUrl = (code) =>
-  `${getFrontendUrl()}/portal?code=${encodeURIComponent(code || "")}`;
-
 const getContactPhone = () =>
   String(process.env.CONTACT_PHONE || "+54 9 11 6423-6675").trim();
 
@@ -214,7 +211,9 @@ const buildSafeBooking = (booking = {}, dateStr = "", previousDateStr = "") => {
     duration: escapeHtml(
       booking.duration != null ? `${booking.duration} hs` : "",
     ),
-    managementUrl: escapeHtml(getManagementUrl(code)),
+    managementUrl: booking.managementUrl
+      ? escapeHtml(booking.managementUrl)
+      : "",
     contactPhone: escapeHtml(getContactPhone()),
     whatsappSelfUrl: escapeHtml(getWhatsappSelfUrl()),
   };
@@ -287,7 +286,10 @@ const brandHeader = (theme) => `
 const getTeacherEmail = () =>
   String(process.env.TEACHER_EMAIL || process.env.EMAIL_USER || "agustinsosa.profe@gmail.com").trim();
 
-const signatureBlock = () => {
+const signatureBlock = ({
+  address = TEACHER_ADDRESS,
+  mapsUrl = TEACHER_MAPS_URL,
+} = {}) => {
   const email = getTeacherEmail();
   const phone = getContactPhone();
   const web = getFrontendUrl();
@@ -387,7 +389,7 @@ const buildScheduleChangeBlock = (safe, theme) => {
     </table>`;
 };
 
-const addressBlock = () => `
+const addressBlock = ({ address, mapsUrl }) => `
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 4px;border:1px solid ${BRAND.borderSoft};border-radius:14px;overflow:hidden;background:linear-gradient(135deg, ${BRAND.navySoft} 0%, #ffffff 100%);">
     <tr>
       <td style="padding:16px 18px;">
@@ -439,6 +441,7 @@ export const buildBookingEmailHtml = ({
   const ctaBg = cancelled
     ? `linear-gradient(135deg, ${BRAND.navy} 0%, ${BRAND.green} 100%)`
     : `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDeep} 100%)`;
+  const showClientCta = cancelled || Boolean(safe.managementUrl);
 
   const nivelValue = `${safe.educationLevel}${safe.yearGrade ? ` · ${safe.yearGrade}` : ""}`;
 
@@ -478,7 +481,7 @@ export const buildBookingEmailHtml = ({
             </tr>
             ${
               theme.showAddress
-                ? `<tr><td class="tpp-pad" style="padding:16px 28px 0;">${addressBlock()}</td></tr>`
+                ? `<tr><td class="tpp-pad" style="padding:16px 28px 0;">${addressBlock({ address, mapsUrl })}</td></tr>`
                 : ""
             }
             <tr>
@@ -490,16 +493,20 @@ export const buildBookingEmailHtml = ({
                 </div>
               </td>
             </tr>
-            <tr>
+            ${
+              showClientCta
+                ? `<tr>
               <td class="tpp-cta-row" style="padding:10px 28px 18px;">
-                <p class="tpp-intro" style="margin:16px 0 18px;color:${BRAND.muted};font-size:14px;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">Podés revisar el turno, reprogramarlo o cancelarlo desde <strong style="color:${BRAND.text};">Mis Turnos</strong>. Si necesitás ayuda, escribime y lo vemos con calma.</p>
+                <p class="tpp-intro" style="margin:16px 0 18px;color:${BRAND.muted};font-size:14px;line-height:1.65;font-family:Arial,Helvetica,sans-serif;">Podés revisar el turno desde <strong style="color:${BRAND.text};">Mis Turnos</strong>. Si necesitás ayuda, escribime y lo vemos con calma.</p>
                 <p style="text-align:center;margin:0 0 6px;">
                   <a href="${ctaHref}" class="tpp-cta" style="display:inline-block;background:${ctaBg};color:#ffffff;text-decoration:none;border-radius:12px;padding:14px 26px;font-weight:800;font-size:15px;letter-spacing:.01em;box-shadow:0 10px 22px rgba(20,46,77,0.22);font-family:Arial,Helvetica,sans-serif;">${escapeHtml(theme.clientCtaLabel)}</a>
                 </p>
-                <p class="tpp-link-fallback" style="margin:16px 0 0;text-align:center;color:${BRAND.soft};font-size:12px;font-family:Arial,Helvetica,sans-serif;">o copiá este enlace: <span style="color:${BRAND.navy};">${safe.managementUrl}</span></p>
+                ${safe.managementUrl ? `<p class="tpp-link-fallback" style="margin:16px 0 0;text-align:center;color:${BRAND.soft};font-size:12px;font-family:Arial,Helvetica,sans-serif;">o copiá este enlace: <span style="color:${BRAND.navy};">${safe.managementUrl}</span></p>` : ""}
               </td>
-            </tr>
-            ${signatureBlock()}
+            </tr>`
+                : ""
+            }
+            ${signatureBlock({ address, mapsUrl })}
             ${footerBand(theme)}
           </table>
           <p class="tpp-meta" style="margin:14px 0 0;color:${BRAND.soft};font-size:11px;font-family:Arial,Helvetica,sans-serif;">© ${new Date().getFullYear()} ${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.teacher)}</p>
@@ -553,15 +560,48 @@ export const buildBookingEmailText = ({
     lines.push(`Lugar: ${address}`, `Mapa: ${mapsUrl}`, "");
   }
 
+  if (safe.managementUrl) {
+    lines.push(`Mis Turnos: ${safe.managementUrl}`, "");
+  }
+
   lines.push(
-    `Mis Turnos: ${getManagementUrl(safe.rawCode)}`,
-    "",
     `${BRAND.teacher} — ${BRAND.name}`,
     `WhatsApp: ${getContactPhone()}`,
   );
 
   return lines.join("\n");
 };
+
+export const buildManagementLinkEmailHtml = ({ booking, managementUrl }) => `<!doctype html>
+<html lang="es-AR">
+  ${documentHead("Tu enlace seguro para gestionar el turno")}
+  <body style="margin:0;padding:24px;background:${BRAND.page};font-family:Arial,Helvetica,sans-serif;color:${BRAND.text};">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:${BRAND.surface};border:1px solid ${BRAND.border};border-radius:16px;overflow:hidden;">
+          ${brandHeader(EVENT_THEMES.created)}
+          <tr><td style="padding:28px;">
+            <h1 style="margin:0 0 12px;color:${BRAND.navyDeep};font-size:24px;">Tu enlace seguro</h1>
+            <p style="color:${BRAND.muted};line-height:1.6;">Hola ${escapeHtml(booking?.studentName || "")}. Usá este enlace para gestionar el turno <strong>${escapeHtml(booking?.bookingCode || "")}</strong>.</p>
+            <p style="margin:24px 0;text-align:center;"><a href="${escapeHtml(managementUrl)}" style="display:inline-block;padding:14px 22px;background:${BRAND.green};color:#fff;text-decoration:none;border-radius:10px;font-weight:800;">Gestionar mi turno</a></p>
+            <p style="color:${BRAND.soft};font-size:12px;word-break:break-all;">${escapeHtml(managementUrl)}</p>
+            <p style="color:${BRAND.muted};font-size:13px;">No compartas este enlace: permite administrar tu reserva.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+
+export const buildManagementLinkEmailText = ({ booking, managementUrl }) =>
+  [
+    "Tu enlace seguro para gestionar el turno",
+    "",
+    `Turno: ${booking?.bookingCode || ""}`,
+    `Enlace: ${managementUrl}`,
+    "",
+    "No compartas este enlace: permite administrar tu reserva.",
+  ].join("\n");
 
 const buildOwnerEmailHtml = ({ booking, event, dateStr, previousDateStr }) => {
   const theme = getTheme(event);
@@ -691,10 +731,31 @@ export const sendBookingEmail = async (
   }
 };
 
+export const sendManagementLinkEmail = async ({ booking, managementUrl }) => {
+  if (!booking?.email || !managementUrl || !canSendEmail()) {
+    return false;
+  }
+
+  try {
+    await getTransporter().sendMail({
+      from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+      to: booking.email,
+      subject: "Tu enlace seguro para gestionar el turno",
+      html: buildManagementLinkEmailHtml({ booking, managementUrl }),
+      text: buildManagementLinkEmailText({ booking, managementUrl }),
+      attachments: buildMailAttachments(),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const sendBookingNotifications = async ({
   booking,
   event = "created",
   previousTimeSlot,
+  managementUrl,
 } = {}) => {
   const formattedDate = formatDate(booking.timeSlot);
   const previousDateStr = previousTimeSlot ? formatDate(previousTimeSlot) : "";
@@ -721,6 +782,7 @@ export const sendBookingNotifications = async ({
           phone: booking.phone,
           academicSituation: booking.academicSituation,
           duration: booking.duration,
+          managementUrl,
           event,
           previousDateStr,
           teacherAddress,

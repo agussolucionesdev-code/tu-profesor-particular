@@ -12,6 +12,9 @@ import {
   cancelBookingClient,
   confirmAttendanceClient,
   updateStudentNotes,
+  requestManagementLink,
+  getManagedBooking,
+  revokeManagementAccess,
 } from "../controllers/bookingController.js";
 import { requireAdmin } from "../middleware/authMiddleware.js";
 import {
@@ -23,6 +26,11 @@ const router = express.Router();
 
 router.post("/reserve", publicMutationLimiter, createBooking);
 router.get("/availability", getAvailability);
+// Management routes must precede /:code so bearer tokens never become a
+// route parameter (and therefore never reach access logs).
+router.post("/manage/request-link", publicMutationLimiter, requestManagementLink);
+router.get("/manage", publicMutationLimiter, getManagedBooking);
+router.post("/manage/revoke", publicMutationLimiter, revokeManagementAccess);
 router.post("/reschedule", publicMutationLimiter, rescheduleBooking);
 router.post("/cancel", publicMutationLimiter, cancelBookingClient);
 router.post("/confirm-attendance", publicMutationLimiter, confirmAttendanceClient);

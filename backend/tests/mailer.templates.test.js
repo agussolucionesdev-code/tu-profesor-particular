@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildBookingEmailHtml,
   buildBookingEmailText,
+  buildManagementLinkEmailHtml,
+  buildManagementLinkEmailText,
 } from "../src/config/mailer.js";
 
 const booking = {
@@ -21,9 +23,31 @@ const booking = {
 };
 
 describe("booking email templates", () => {
+  it.each(["created", "rescheduled", "cancelled", "reminder"])(
+    "builds the %s HTML template with explicit teacher location data",
+    (event) => {
+      const html = buildBookingEmailHtml({
+        booking,
+        event,
+        dateStr: "20/04/2026, 10:00",
+        previousDateStr:
+          event === "rescheduled" ? "19/04/2026, 09:00" : "",
+        teacherAddress: "Dirección de prueba 123",
+        teacherMapsUrl: "https://maps.example.com/test",
+      });
+
+      expect(html).toContain("Dirección de prueba 123");
+      expect(html).toContain("https://maps.example.com/test");
+      expect(html).toContain("ABC123");
+    },
+  );
+
   it("renders a warm client confirmation with code and management CTA", () => {
     const html = buildBookingEmailHtml({
-      booking,
+      booking: {
+        ...booking,
+        managementUrl: `https://frontend.example.com/m#token=${"c".repeat(43)}`,
+      },
       event: "created",
       dateStr: "20/04/2026, 10:00",
     });
@@ -51,5 +75,36 @@ describe("booking email templates", () => {
     expect(cancelled).toContain("Tu turno fue cancelado");
     expect(rescheduled).toContain("ABC123");
     expect(cancelled).toContain("ABC123");
+  });
+
+  it.each(["created", "rescheduled"])(
+    "uses the secure management URL in %s client emails",
+    (event) => {
+      const managementUrl = `https://frontend.example.com/m#token=${"a".repeat(43)}`;
+      const html = buildBookingEmailHtml({
+        booking: { ...booking, managementUrl },
+        event,
+        dateStr: "20/04/2026, 10:00",
+      });
+      const text = buildBookingEmailText({
+        booking: { ...booking, managementUrl },
+        event,
+        dateStr: "20/04/2026, 10:00",
+      });
+
+      expect(html).toContain(managementUrl);
+      expect(text).toContain(managementUrl);
+    },
+  );
+
+  it("builds a generic management-link email without exposing private booking data", () => {
+    const managementUrl = `https://frontend.example.com/m#token=${"b".repeat(43)}`;
+    const html = buildManagementLinkEmailHtml({ booking, managementUrl });
+    const text = buildManagementLinkEmailText({ booking, managementUrl });
+
+    expect(html).toContain(managementUrl);
+    expect(text).toContain(managementUrl);
+    expect(html).toContain("ABC123");
+    expect(html).not.toContain(booking.academicSituation);
   });
 });

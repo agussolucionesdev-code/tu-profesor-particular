@@ -1,8 +1,18 @@
-import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, afterAll, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
+
+const sendManagementLinkEmailMock = vi.hoisted(() => vi.fn());
+vi.mock("../src/config/mailer.js", async () => {
+  const actual = await vi.importActual("../src/config/mailer.js");
+  return {
+    ...actual,
+    sendManagementLinkEmail: sendManagementLinkEmailMock,
+  };
+});
 
 let app;
 let mongoServer;
@@ -62,6 +72,8 @@ const createAdminAndLogin = async () => {
 
 beforeAll(async () => {
   process.env.JWT_SECRET = "test-secret";
+  process.env.PUBLIC_MUTATION_RATE_LIMIT_MAX = "1000";
+  process.env.FRONTEND_URL = "https://frontend.example.com";
   mongoServer = await MongoMemoryServer.create({
     instance: {
       launchTimeout: getMemoryLaunchTimeout(),
@@ -75,6 +87,7 @@ beforeAll(async () => {
 }, Math.max(30000, getMemoryLaunchTimeout() + 15000));
 
 beforeEach(async () => {
+  sendManagementLinkEmailMock.mockReset().mockResolvedValue(true);
   await Booking.deleteMany({});
   await User.deleteMany({});
 });
@@ -92,8 +105,32 @@ describe("booking flows", () => {
       .expect(201);
 
     expect(created.body.data.bookingCode).toMatch(/^[A-Z0-9]{6}$/);
-    expect(created.body.data.email).toBe("familia@example.com");
-    expect(created.body.data.responsibleRelationship).toBe("madre");
+    expect(created.body.data.managementToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(created.body.data.managementUrl).toBe(
+      `https://frontend.example.com/m#token=${created.body.data.managementToken}`,
+    );
+    expect(created.body.data).not.toHaveProperty("email");
+    expect(created.body.data).not.toHaveProperty("responsibleRelationship");
+
+    const storedByDefault = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+    expect(storedByDefault).not.toHaveProperty("managementTokenHash");
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    })
+      .select("+managementTokenHash")
+      .lean();
+    expect(stored).not.toHaveProperty("managementToken");
+    expect(stored.managementTokenHash).toBe(
+      crypto
+        .createHash("sha256")
+        .update(created.body.data.managementToken)
+        .digest("hex"),
+    );
+    expect(new Date(stored.managementTokenExpiresAt).getTime()).toBe(
+      new Date(stored.endTime).getTime() + 30 * 24 * 60 * 60 * 1000,
+    );
 
     const availability = await request(app)
       .get("/api/bookings/availability")
@@ -106,7 +143,7 @@ describe("booking flows", () => {
     expect(availability.body.data[0]).not.toHaveProperty("phone");
   });
 
-  it("lets clients find active turns by code, email or WhatsApp", async () => {
+  it("only lets clients find one turn by its exact code and returns a minimal DTO", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload())
@@ -118,16 +155,27 @@ describe("booking flows", () => {
       .get(`/api/bookings/${bookingCode}`)
       .expect(200);
     expect(byCode.body.data[0].bookingCode).toBe(bookingCode);
+    expect(Object.keys(byCode.body.data[0]).sort()).toEqual(
+      [
+        "bookingCode",
+        "duration",
+        "endTime",
+        "status",
+        "studentName",
+        "subject",
+        "timeSlot",
+      ].sort(),
+    );
 
     const byEmail = await request(app)
       .get("/api/bookings/familia@example.com")
-      .expect(200);
-    expect(byEmail.body.data[0].bookingCode).toBe(bookingCode);
+      .expect(400);
+    expect(byEmail.body).not.toHaveProperty("data");
 
     const byPhone = await request(app)
       .get("/api/bookings/1122223333")
-      .expect(200);
-    expect(byPhone.body.data[0].bookingCode).toBe(bookingCode);
+      .expect(400);
+    expect(byPhone.body).not.toHaveProperty("data");
   });
 
   it("allows loopback dev origins and blocks unknown origins with 403", async () => {
@@ -135,11 +183,17 @@ describe("booking flows", () => {
       .options("/api/bookings/reserve")
       .set("Origin", "http://localhost:4173")
       .set("Access-Control-Request-Method", "POST")
-      .set("Access-Control-Request-Headers", "content-type")
+      .set(
+        "Access-Control-Request-Headers",
+        "content-type,x-booking-manage-token",
+      )
       .expect(204);
 
     expect(allowedPreflight.headers["access-control-allow-origin"]).toBe(
       "http://localhost:4173",
+    );
+    expect(allowedPreflight.headers["access-control-allow-headers"]).toContain(
+      "X-Booking-Manage-Token",
     );
 
     const deniedPreflight = await request(app)
@@ -252,10 +306,12 @@ describe("booking flows", () => {
       .expect(201);
 
     const bookingCode = created.body.data.bookingCode;
+    const managementToken = created.body.data.managementToken;
     const newDate = tomorrowAt(12);
 
     const rescheduled = await request(app)
       .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", managementToken)
       .send({
         bookingCode,
         newTimeSlot: formatForApi(newDate),
@@ -267,9 +323,319 @@ describe("booking flows", () => {
 
     const cancelled = await request(app)
       .post("/api/bookings/cancel")
+      .set("X-Booking-Manage-Token", managementToken)
       .send({ bookingCode })
       .expect(200);
 
     expect(cancelled.body.data.status).toBe("Cancelado");
+  });
+
+  it.each(["Cancelado", "Finalizado"])(
+    "rejects every public mutation when a booking is %s",
+    async (status) => {
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload())
+        .expect(201);
+      const bookingCode = created.body.data.bookingCode;
+      const managementToken = created.body.data.managementToken;
+      await Booking.updateOne({ bookingCode }, { $set: { status } });
+
+      await request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", managementToken)
+        .send({
+          bookingCode,
+          newTimeSlot: formatForApi(tomorrowAt(12)),
+          newDuration: 1,
+        })
+        .expect(400);
+      await request(app)
+        .post("/api/bookings/cancel")
+        .set("X-Booking-Manage-Token", managementToken)
+        .send({ bookingCode })
+        .expect(400);
+      await request(app)
+        .post("/api/bookings/confirm-attendance")
+        .set("X-Booking-Manage-Token", managementToken)
+        .send({ bookingCode })
+        .expect(400);
+      await request(app)
+        .put(`/api/bookings/${bookingCode}/notes`)
+        .set("X-Booking-Manage-Token", managementToken)
+        .send({ studentNotes: "No debe persistirse" })
+        .expect(400);
+
+      const persisted = await Booking.findOne({ bookingCode }).lean();
+      expect(persisted.status).toBe(status);
+      expect(persisted.studentNotes).toBe("");
+    },
+  );
+
+  it("rejects every public mutation after an active booking has expired", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const bookingCode = created.body.data.bookingCode;
+    const managementToken = created.body.data.managementToken;
+    const pastStart = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const pastEnd = new Date(Date.now() - 60 * 60 * 1000);
+    await Booking.updateOne(
+      { bookingCode },
+      {
+        $set: {
+          status: "Pendiente",
+          timeSlot: pastStart,
+          endTime: pastEnd,
+        },
+      },
+    );
+
+    await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", managementToken)
+      .send({
+        bookingCode,
+        newTimeSlot: formatForApi(tomorrowAt(12)),
+        newDuration: 1,
+      })
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/cancel")
+      .set("X-Booking-Manage-Token", managementToken)
+      .send({ bookingCode })
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/confirm-attendance")
+      .set("X-Booking-Manage-Token", managementToken)
+      .send({ bookingCode })
+      .expect(400);
+    await request(app)
+      .put(`/api/bookings/${bookingCode}/notes`)
+      .set("X-Booking-Manage-Token", managementToken)
+      .send({ studentNotes: "No debe persistirse" })
+      .expect(400);
+
+    const persisted = await Booking.findOne({ bookingCode }).lean();
+    expect(persisted.status).toBe("Pendiente");
+    expect(persisted.studentNotes).toBe("");
+  });
+
+  it("returns the same 202 response for every management-link request and only rotates on a match", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const bookingCode = created.body.data.bookingCode;
+    const initial = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+
+    const wrongEmail = await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "wrong@example.com" })
+      .expect(202);
+    const afterWrongEmail = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+    expect(afterWrongEmail.managementTokenHash).toBe(initial.managementTokenHash);
+    expect(sendManagementLinkEmailMock).not.toHaveBeenCalled();
+
+    const missingBooking = await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode: "ABC234", email: "familia@example.com" })
+      .expect(202);
+    expect(missingBooking.body).toEqual(wrongEmail.body);
+
+    const matched = await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "familia@example.com" })
+      .expect(202);
+    const afterMatch = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+    expect(matched.body).toEqual(wrongEmail.body);
+    expect(afterMatch.managementTokenHash).not.toBe(initial.managementTokenHash);
+    expect(afterMatch.managementTokenRevokedAt).toBeNull();
+    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
+    const sentUrl = sendManagementLinkEmailMock.mock.calls[0][0].managementUrl;
+    expect(sentUrl).toMatch(
+      /^https:\/\/frontend\.example\.com\/m#token=[A-Za-z0-9_-]{43}$/,
+    );
+
+    await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "familia@example.com" })
+      .expect(202);
+    const afterCooldown = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+    expect(afterCooldown.managementTokenHash).toBe(afterMatch.managementTokenHash);
+    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("restores the previous token when management-link email delivery fails", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const bookingCode = created.body.data.bookingCode;
+    const initial = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+    sendManagementLinkEmailMock.mockResolvedValueOnce(false);
+
+    await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "familia@example.com" })
+      .expect(202);
+
+    const afterFailure = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkLastSentAt")
+      .lean();
+    expect(afterFailure.managementTokenHash).toBe(initial.managementTokenHash);
+    expect(afterFailure.managementTokenExpiresAt).toEqual(
+      initial.managementTokenExpiresAt,
+    );
+  });
+
+  it("provisions a management token for a matching legacy booking", async () => {
+    const start = tomorrowAt(16);
+    const legacy = await Booking.create({
+      ...validBookingPayload(),
+      timeSlot: start,
+      endTime: new Date(start.getTime() + 60 * 60 * 1000),
+      status: "Confirmado",
+    });
+    const before = await Booking.findById(legacy._id)
+      .select("+managementTokenHash")
+      .lean();
+    expect(before.managementTokenHash).toBeUndefined();
+
+    await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({
+        bookingCode: legacy.bookingCode,
+        email: "familia@example.com",
+      })
+      .expect(202);
+
+    const after = await Booking.findById(legacy._id)
+      .select("+managementTokenHash")
+      .lean();
+    expect(after.managementTokenHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("authorizes management reads without exposing private or token fields", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const { bookingCode, managementToken } = created.body.data;
+    await Booking.updateOne(
+      { bookingCode },
+      {
+        $set: {
+          notes: "Nota privada",
+          studentEvolution: "Evolución privada",
+          emotionalState: "Estado privado",
+        },
+      },
+    );
+
+    const managed = await request(app)
+      .get("/api/bookings/manage")
+      .set("X-Booking-Manage-Token", managementToken)
+      .expect(200);
+
+    expect(managed.body.data.bookingCode).toBe(bookingCode);
+    expect(managed.body.data.email).toBe("familia@example.com");
+    for (const field of [
+      "notes",
+      "studentEvolution",
+      "emotionalState",
+      "notesHistory",
+      "managementTokenHash",
+      "managementTokenExpiresAt",
+      "managementTokenRevokedAt",
+      "price",
+      "_id",
+    ]) {
+      expect(managed.body.data).not.toHaveProperty(field);
+    }
+  });
+
+  it("uniformly rejects invalid, expired, and revoked management tokens", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const { bookingCode, managementToken } = created.body.data;
+
+    const invalid = await request(app)
+      .get("/api/bookings/manage")
+      .set("X-Booking-Manage-Token", "a".repeat(64))
+      .expect(401);
+
+    await Booking.updateOne(
+      { bookingCode },
+      { $set: { managementTokenExpiresAt: new Date(Date.now() - 1000) } },
+    );
+    const expired = await request(app)
+      .get("/api/bookings/manage")
+      .set("X-Booking-Manage-Token", managementToken)
+      .expect(401);
+    expect(expired.body.message).toBe(invalid.body.message);
+
+    await Booking.updateOne(
+      { bookingCode },
+      {
+        $set: {
+          managementTokenExpiresAt: new Date(Date.now() + 60_000),
+          managementTokenRevokedAt: null,
+        },
+      },
+    );
+    await request(app)
+      .post("/api/bookings/manage/revoke")
+      .set("X-Booking-Manage-Token", managementToken)
+      .expect(204);
+    const revoked = await request(app)
+      .get("/api/bookings/manage")
+      .set("X-Booking-Manage-Token", managementToken)
+      .expect(401);
+    expect(revoked.body.message).toBe(invalid.body.message);
+  });
+
+  it("requires the management token for mutations and prevents cross-booking use", async () => {
+    const first = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const second = await request(app)
+      .post("/api/bookings/reserve")
+      .send(
+        validBookingPayload({
+          studentName: "Lucia Perez",
+          email: "lucia@example.com",
+          timeSlot: formatForApi(tomorrowAt(14)),
+        }),
+      )
+      .expect(201);
+
+    await request(app)
+      .post("/api/bookings/cancel")
+      .send({ bookingCode: first.body.data.bookingCode })
+      .expect(401);
+    await request(app)
+      .post("/api/bookings/cancel")
+      .set("X-Booking-Manage-Token", first.body.data.managementToken)
+      .send({ bookingCode: second.body.data.bookingCode })
+      .expect(403);
+
+    const persisted = await Booking.find({}).lean();
+    expect(persisted.every((booking) => booking.status !== "Cancelado")).toBe(true);
   });
 });

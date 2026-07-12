@@ -30,7 +30,9 @@ const SelectField = ({
   disabled = false,
   isValid = false,
   stateClass = "",
+  required = false,
   "aria-invalid": ariaInvalid,
+  "aria-required": ariaRequired,
   "aria-describedby": ariaDescribedBy,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -163,6 +165,7 @@ const SelectField = ({
             : undefined
         }
         aria-invalid={ariaInvalid}
+        aria-required={ariaRequired || required || undefined}
         aria-describedby={ariaDescribedBy}
         disabled={disabled}
         className={`custom-select-trigger${value ? " has-value" : ""}`}
