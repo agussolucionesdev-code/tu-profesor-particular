@@ -61,7 +61,7 @@ const deleteManyWithRetry = async ({ filter, operation, bookingId = null }) => {
 
 const isStaleBookingSlot = async (slot) => {
   const owner = await Booking.findById(slot.booking)
-    .select("status timeSlot endTime deletedAt slotMutationLockExpiresAt")
+    .select("status timeSlot endTime bufferBeforeMinutes bufferAfterMinutes deletedAt slotMutationLockExpiresAt")
     .lean();
 
   if (!owner) {
@@ -81,8 +81,10 @@ const isStaleBookingSlot = async (slot) => {
   if (owner.deletedAt || ["Cancelado", "Finalizado"].includes(owner.status)) return true;
 
   const slotStart = new Date(slot.slotStart).getTime();
-  const authoritativeStart = new Date(owner.timeSlot).getTime();
-  const authoritativeEnd = new Date(owner.endTime).getTime();
+  const authoritativeStart = new Date(owner.timeSlot).getTime()
+    - Number(owner.bufferBeforeMinutes || 0) * 60 * 1000;
+  const authoritativeEnd = new Date(owner.endTime).getTime()
+    + Number(owner.bufferAfterMinutes || 0) * 60 * 1000;
 
   return (
     !Number.isFinite(authoritativeStart) ||

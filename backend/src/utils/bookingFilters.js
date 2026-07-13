@@ -2,6 +2,11 @@
 // the additive soft-delete field does not exist yet.
 export const ACTIVE_BOOKING_FILTER = Object.freeze({ deletedAt: null });
 
+export const SLOT_OWNING_BOOKING_FILTER = Object.freeze({
+  ...ACTIVE_BOOKING_FILTER,
+  status: { $nin: ["Cancelado", "Finalizado"] },
+});
+
 export const TRASHED_BOOKING_FILTER = Object.freeze({
   deletedAt: { $type: "date" },
 });

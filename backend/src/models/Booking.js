@@ -86,6 +86,10 @@ const bookingSchema = new mongoose.Schema(
     timeSlot: { type: Date, required: true, index: true },
     endTime: { type: Date, required: true, index: true },
     duration: { type: Number, required: true, default: 1, min: 0.5, max: 10 },
+    // Frozen scheduling buffers keep historical slot claims stable even when
+    // the global availability policy changes later.
+    bufferBeforeMinutes: { type: Number, default: 0, min: 0, max: 240 },
+    bufferAfterMinutes: { type: Number, default: 0, min: 0, max: 240 },
 
     price: { type: Number, default: 0, min: 0, max: 99999999 },
     notes: { type: String, trim: true, default: "", maxlength: 2000 },

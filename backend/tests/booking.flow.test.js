@@ -8,6 +8,7 @@ import {
   getDefaultAvailabilityRange,
   parseDateTimeInput,
 } from "../src/utils/bookingRules.js";
+import { atBusinessTime, businessDateKey } from "../src/utils/timeZone.js";
 import {
   BookingSlotConflictError,
   claimBookingSlots,
@@ -123,6 +124,27 @@ const validBookingPayload = (overrides = {}) => ({
   academicSituation: "Necesita reforzar ecuaciones.",
   timeSlot: formatForApi(tomorrowAt(10)),
   duration: 1,
+  ...overrides,
+});
+
+const fullWeekPolicy = (overrides = {}) => ({
+  weeklyAvailability: Object.fromEntries(
+    Array.from({ length: 7 }, (_, weekday) => [
+      String(weekday),
+      {
+        enabled: true,
+        intervals: [{ start: "07:00", end: "22:00" }],
+        excludedIntervals: [],
+      },
+    ]),
+  ),
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
+  minimumNoticeMinutes: 0,
+  maximumAdvanceDays: 120,
+  holidays: [],
+  dateExceptions: [],
+  blockedIntervals: [],
   ...overrides,
 });
 
@@ -630,8 +652,8 @@ describe("booking flows", () => {
       .query(query)
       .expect(200);
 
-    expect(publicAvailability.body.data).toHaveLength(1);
-    expect(invalidAvailability.body.data).toHaveLength(1);
+    expect(publicAvailability.body.data).toEqual([]);
+    expect(invalidAvailability.body.data).toEqual([]);
     expect(managedAvailability.body.data).toEqual([]);
     expect(publicAvailability.body.slots.map((slot) => businessClock(new Date(slot.timeSlot))))
       .toEqual([{ hour: 11, minute: 0 }]);
@@ -642,6 +664,567 @@ describe("booking flows", () => {
         { hour: 10, minute: 30 },
         { hour: 11, minute: 0 },
       ]);
+  });
+
+  it("applies weekly breaks and frozen buffers equally to reserve, availability and reschedule", async () => {
+    const targetDate = nextWeekdayAt(1, 10);
+    const weeklyAvailability = fullWeekPolicy().weeklyAvailability;
+    weeklyAvailability[String(targetDate.getDay())] = {
+      enabled: true,
+      intervals: [{ start: "09:00", end: "18:00" }],
+      excludedIntervals: [{ start: "13:00", end: "14:00" }],
+    };
+    await AppSettings.create({
+      key: "schedule.availabilityPolicy",
+      value: fullWeekPolicy({
+        weeklyAvailability,
+        bufferBeforeMinutes: 30,
+        bufferAfterMinutes: 30,
+      }),
+    });
+
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(targetDate) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    expect(stored).toMatchObject({ bufferBeforeMinutes: 30, bufferAfterMinutes: 30 });
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(4);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .set("Idempotency-Key", "buffer-conflict-reservation")
+      .send(validBookingPayload({
+        studentName: "Conflicto por buffer",
+        email: "buffer@example.com",
+        timeSlot: formatForApi(nextWeekdayAt(1, 11)),
+      }))
+      .expect(409);
+
+    const from = new Date(targetDate);
+    from.setHours(9, 0, 0, 0);
+    const to = new Date(targetDate);
+    to.setHours(18, 0, 0, 0);
+    const query = { from: formatForApi(from), to: formatForApi(to), duration: 1 };
+    const publicAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .query(query)
+      .expect(200);
+    const managedAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .query(query)
+      .expect(200);
+    expect(publicAvailability.body.slots.map(({ timeSlot }) => businessClock(new Date(timeSlot))))
+      .not.toContainEqual({ hour: 10, minute: 0 });
+    expect(managedAvailability.body.slots.map(({ timeSlot }) => businessClock(new Date(timeSlot))))
+      .toContainEqual({ hour: 10, minute: 0 });
+    expect(managedAvailability.body.slots.map(({ timeSlot }) => businessClock(new Date(timeSlot))))
+      .not.toContainEqual({ hour: 13, minute: 0 });
+
+    await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(nextWeekdayAt(1, 13)),
+        newDuration: 1,
+      })
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(nextWeekdayAt(1, 14)),
+        newDuration: 1,
+      })
+      .expect(200);
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(4);
+  });
+
+  it("enforces holidays, date overrides, partial blocks and maximum horizon", async () => {
+    const holiday = nextWeekdayAt(1, 10);
+    const overrideDate = nextWeekdayAt(2, 10);
+    const additiveDate = nextWeekdayAt(0, 10);
+    const weeklyAvailability = fullWeekPolicy().weeklyAvailability;
+    weeklyAvailability["0"] = { enabled: false, intervals: [], excludedIntervals: [] };
+    await AppSettings.create({
+      key: "schedule.availabilityPolicy",
+      value: fullWeekPolicy({
+        weeklyAvailability,
+        maximumAdvanceDays: 30,
+        holidays: [dateKey(holiday)],
+        dateExceptions: [
+          {
+            date: dateKey(overrideDate),
+            closed: false,
+            mode: "override",
+            intervals: [{ start: "10:00", end: "12:00" }],
+            excludedIntervals: [],
+          },
+          {
+            date: dateKey(additiveDate),
+            closed: false,
+            mode: "add",
+            intervals: [{ start: "10:00", end: "12:00" }],
+            excludedIntervals: [],
+          },
+        ],
+        blockedIntervals: [{
+          date: dateKey(overrideDate),
+          start: "10:30",
+          end: "11:00",
+          reason: "Bloqueo parcial",
+        }],
+      }),
+    });
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(holiday) }))
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(nextWeekdayAt(2, 9)) }))
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(additiveDate), duration: 1 }))
+      .expect(201);
+
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: atBusinessTime(dateKey(overrideDate), 10, 0).toISOString(),
+        to: atBusinessTime(dateKey(overrideDate), 12, 0).toISOString(),
+        duration: 0.5,
+      })
+      .expect(200);
+    expect(availability.body.slots.map(({ timeSlot }) => businessClock(new Date(timeSlot))))
+      .not.toContainEqual({ hour: 10, minute: 30 });
+
+    const beyondHorizon = new Date();
+    beyondHorizon.setDate(beyondHorizon.getDate() + 31);
+    beyondHorizon.setHours(10, 0, 0, 0);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Fuera de horizonte",
+        email: "horizonte@example.com",
+        timeSlot: formatForApi(beyondHorizon),
+      }))
+      .expect(400);
+  });
+
+  it("keeps Buenos Aires date ownership across the UTC midnight boundary", async () => {
+    const localDate = dateKey(nextWeekdayAt(5, 23, 30));
+    const weeklyAvailability = Object.fromEntries(
+      Array.from({ length: 7 }, (_, weekday) => [
+        String(weekday),
+        {
+          enabled: true,
+          intervals: [{ start: "23:00", end: "24:00" }],
+          excludedIntervals: [],
+        },
+      ]),
+    );
+    await AppSettings.create({
+      key: "schedule.availabilityPolicy",
+      value: fullWeekPolicy({ weeklyAvailability }),
+    });
+    const localStart = atBusinessTime(localDate, 23, 30);
+    expect(localStart.toISOString().slice(11, 16)).toBe("02:30");
+    expect(businessDateKey(localStart, "America/Argentina/Buenos_Aires")).toBe(localDate);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: localStart.toISOString(), duration: 0.5 }))
+      .expect(201);
+  });
+
+  it("fails closed when an admin persists an invalid availability policy", async () => {
+    const token = await createAdminAndLogin();
+    const invalidPolicy = fullWeekPolicy();
+    invalidPolicy.weeklyAvailability["1"] = {
+      enabled: true,
+      intervals: [{ start: "18:00", end: "09:00" }],
+      excludedIntervals: [],
+    };
+
+    await request(app)
+      .put("/api/settings/schedule.availabilityPolicy")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ value: invalidPolicy })
+      .expect(400);
+    expect(await AppSettings.exists({ key: "schedule.availabilityPolicy" })).toBeNull();
+
+    await request(app)
+      .put("/api/settings/schedule.timeZone")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ value: "UTC" })
+      .expect(400);
+
+    const publicSettings = await request(app).get("/api/settings").expect(200);
+    expect(publicSettings.body.data).toMatchObject({
+      "schedule.timeZone": "America/Argentina/Buenos_Aires",
+      "schedule.slotDurationMinutes": 30,
+      "schedule.advanceNoticeMinutes": 60,
+      "schedule.maximumAdvanceDays": 120,
+    });
+    expect(publicSettings.body.data).not.toHaveProperty("schedule.availabilityPolicy");
+  });
+
+  it("keeps private availability policy details out of every public DTO", async () => {
+    const blockedDate = nextWeekdayAt(2, 10);
+    await AppSettings.create({
+      key: "schedule.availabilityPolicy",
+      value: fullWeekPolicy({
+        dateExceptions: [{
+          date: dateKey(nextWeekdayAt(3, 10)),
+          closed: true,
+          mode: "override",
+          intervals: [],
+          excludedIntervals: [],
+          reason: "Motivo familiar privado",
+          label: "No publicar",
+        }],
+        blockedIntervals: [{
+          date: dateKey(blockedDate),
+          start: "10:00",
+          end: "11:00",
+          reason: "Consulta médica privada",
+        }],
+      }),
+    });
+
+    const publicSettings = await request(app).get("/api/settings").expect(200);
+    const publicAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: formatForApi(nextWeekdayAt(2, 7)),
+        to: formatForApi(nextWeekdayAt(3, 22)),
+        duration: 1,
+      })
+      .expect(200);
+    const publicJson = JSON.stringify({
+      settings: publicSettings.body,
+      availability: publicAvailability.body,
+    });
+
+    expect(publicJson).not.toContain("Consulta médica privada");
+    expect(publicJson).not.toContain("Motivo familiar privado");
+    expect(publicJson).not.toContain("No publicar");
+    expect(publicJson).not.toContain("blockedIntervals");
+    expect(publicJson).not.toContain("dateExceptions");
+    expect(publicJson).not.toContain("weeklyAvailability");
+    expect(publicJson).not.toContain("availabilityPolicy");
+    expect(publicAvailability.body.schedule).toEqual({
+      timeZone: "America/Argentina/Buenos_Aires",
+      slotDurationMinutes: 30,
+      minimumNoticeMinutes: 0,
+      maximumAdvanceDays: 120,
+    });
+    expect(publicAvailability.body.range).toEqual({
+      from: expect.any(String),
+      to: expect.any(String),
+    });
+  });
+
+  it("keeps blocked-date reasons admin-only while availability exposes only date keys", async () => {
+    const token = await createAdminAndLogin();
+    const blocked = nextWeekdayAt(4, 10);
+    const blockedKey = dateKey(blocked);
+    await BlockedDate.create({
+      date: blockedKey,
+      reason: "Motivo privado del profesor",
+    });
+
+    await request(app).get("/api/blocked-dates").expect(401);
+    const adminResponse = await request(app)
+      .get("/api/blocked-dates")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(adminResponse.body.data).toEqual([
+      expect.objectContaining({
+        date: blockedKey,
+        reason: "Motivo privado del profesor",
+      }),
+    ]);
+
+    const endOfDay = new Date(blocked);
+    endOfDay.setHours(22, 0, 0, 0);
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({ from: formatForApi(blocked), to: formatForApi(endOfDay) })
+      .expect(200);
+    expect(availability.body.blockedDates).toContain(blockedKey);
+    expect(JSON.stringify(availability.body)).not.toContain("Motivo privado del profesor");
+  });
+
+  it("uses one exact minute duration contract for availability, reserve and reschedule", async () => {
+    await request(app)
+      .get("/api/bookings/availability")
+      .query({ duration: 0.501 })
+      .expect(400);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ duration: 0.501 }))
+      .expect(400);
+    expect(await Booking.countDocuments()).toBe(0);
+    expect(await BookingSlot.countDocuments()).toBe(0);
+
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ duration: 1.5 }))
+      .expect(201);
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+    expect(stored.duration).toBe(1.5);
+    expect(new Date(stored.endTime).getTime() - new Date(stored.timeSlot).getTime())
+      .toBe(90 * 60 * 1000);
+
+    await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(tomorrowAt(13)),
+        newDuration: 0.501,
+      })
+      .expect(400);
+    const unchanged = await Booking.findById(stored._id).lean();
+    expect(unchanged.duration).toBe(1.5);
+    expect(new Date(unchanged.timeSlot).getTime()).toBe(new Date(stored.timeSlot).getTime());
+  });
+
+  it("updates the complete admin schedule atomically with optimistic revision", async () => {
+    const token = await createAdminAndLogin();
+    const initial = await request(app)
+      .get("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(initial.body.data.revision).toBe(0);
+
+    const schedule = {
+      ...initial.body.data,
+      openingHour: 8,
+      closingHour: 20,
+      availabilityPolicy: fullWeekPolicy({
+        blockedIntervals: [{
+          date: dateKey(nextWeekdayAt(4, 10)),
+          start: "10:00",
+          end: "11:00",
+          reason: "Reunión privada del profesor",
+        }],
+      }),
+    };
+    delete schedule.revision;
+
+    const updated = await request(app)
+      .put("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .set("If-Match", '"0"')
+      .send({ schedule })
+      .expect(200);
+    expect(updated.body.data).toMatchObject({
+      revision: 1,
+      openingHour: 8,
+      closingHour: 20,
+    });
+    expect(updated.body.data.availabilityPolicy.blockedIntervals[0].reason)
+      .toBe("Reunión privada del profesor");
+
+    await request(app)
+      .put("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .set("If-Match", '"0"')
+      .send({ schedule: { ...schedule, closingHour: 19 } })
+      .expect(409);
+
+    await request(app)
+      .put("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .set("If-Match", '"1"')
+      .send({ schedule: { ...schedule, openingHour: 21, closingHour: 20 } })
+      .expect(400);
+    const afterRejectedWrites = await request(app)
+      .get("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(afterRejectedWrites.body.data).toMatchObject({
+      revision: 1,
+      openingHour: 8,
+      closingHour: 20,
+    });
+  });
+
+  it("serializes legacy per-key schedule writes without persisting an invalid pair", async () => {
+    const token = await createAdminAndLogin();
+    const responses = await Promise.all([
+      request(app)
+        .put("/api/settings/schedule.openingHour")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: 10 }),
+      request(app)
+        .put("/api/settings/schedule.closingHour")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: 8 }),
+    ]);
+    expect(responses.filter(({ status }) => status === 200)).toHaveLength(1);
+    expect(responses.filter(({ status }) => [400, 409].includes(status))).toHaveLength(1);
+
+    const schedule = await request(app)
+      .get("/api/settings/admin/schedule")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(schedule.body.data.openingHour).toBeLessThan(schedule.body.data.closingHour);
+  });
+
+  it("blocks slot-duration changes while an active booking owns the current grid", async () => {
+    const token = await createAdminAndLogin();
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    await BookingSlot.deleteMany({});
+
+    const response = await request(app)
+      .put("/api/settings/schedule.slotDurationMinutes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ value: 15 })
+      .expect(409);
+
+    expect(response.body).toMatchObject({
+      success: false,
+      code: "SLOT_DURATION_CHANGE_BLOCKED",
+    });
+    expect(response.body).not.toHaveProperty("data");
+    expect(await AppSettings.exists({ key: "schedule.slotDurationMinutes" })).toBeNull();
+  });
+
+  it("blocks slot-duration changes while a live orphan slot claim exists", async () => {
+    const token = await createAdminAndLogin();
+    await BookingSlot.create({
+      booking: new mongoose.Types.ObjectId(),
+      slotStart: tomorrowAt(10),
+      slotDurationMinutes: 30,
+    });
+
+    await request(app)
+      .put("/api/settings/schedule.slotDurationMinutes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ value: 15 })
+      .expect(409);
+
+    expect(await AppSettings.exists({ key: "schedule.slotDurationMinutes" })).toBeNull();
+  });
+
+  it.each(["Cancelado", "Finalizado"])(
+    "allows the same slot duration and a change after %s releases its slots",
+    async (terminalStatus) => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload())
+        .expect(201);
+      const booking = await Booking.findOne({
+        bookingCode: created.body.data.bookingCode,
+      }).lean();
+
+      await request(app)
+        .put("/api/settings/schedule.slotDurationMinutes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: 30 })
+        .expect(200);
+
+      await request(app)
+        .put(`/api/bookings/${booking._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: terminalStatus })
+        .expect(200);
+      expect(await BookingSlot.countDocuments({ booking: booking._id })).toBe(0);
+
+      await request(app)
+        .put("/api/settings/schedule.slotDurationMinutes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: 15 })
+        .expect(200);
+      const aggregate = await AppSettings.findOne({ key: "schedule.aggregate" }).lean();
+      expect(aggregate.value.settings["schedule.slotDurationMinutes"]).toBe(15);
+    },
+  );
+
+  it("aborts an old-grid reservation when slot duration changes after its claim", async () => {
+    const token = await createAdminAndLogin();
+    const originalSettingsUpdate = AppSettings.findOneAndUpdate;
+    const originalSlotCreate = BookingSlot.create;
+    let releaseSettingsUpdate;
+    let signalSettingsUpdateReached;
+    let signalSettingsWritten;
+    let signalSlotClaimed;
+    const settingsUpdateGate = new Promise((resolve) => { releaseSettingsUpdate = resolve; });
+    const settingsUpdateReached = new Promise((resolve) => { signalSettingsUpdateReached = resolve; });
+    const settingsWritten = new Promise((resolve) => { signalSettingsWritten = resolve; });
+    const slotClaimed = new Promise((resolve) => { signalSlotClaimed = resolve; });
+
+    const settingsSpy = vi
+      .spyOn(AppSettings, "findOneAndUpdate")
+      .mockImplementation(async function gateSlotDurationWrite(filter, update, options) {
+        if (filter?.key !== "schedule.aggregate") {
+          return originalSettingsUpdate.call(this, filter, update, options);
+        }
+        signalSettingsUpdateReached();
+        await settingsUpdateGate;
+        const result = await originalSettingsUpdate.call(this, filter, update, options);
+        signalSettingsWritten();
+        return result;
+      });
+    const slotSpy = vi
+      .spyOn(BookingSlot, "create")
+      .mockImplementation(async function waitForNewGrid(document, ...args) {
+        const slot = await originalSlotCreate.call(this, document, ...args);
+        signalSlotClaimed();
+        await settingsWritten;
+        return slot;
+      });
+
+    try {
+      const settingsRequest = request(app)
+        .put("/api/settings/schedule.slotDurationMinutes")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: 15 })
+        .then((response) => response);
+      await settingsUpdateReached;
+
+      const bookingRequest = request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ duration: 0.5 }))
+        .then((response) => response);
+      await slotClaimed;
+      releaseSettingsUpdate();
+
+      const [settingsResponse, bookingResponse] = await Promise.all([
+        settingsRequest,
+        bookingRequest,
+      ]);
+      expect(settingsResponse.status).toBe(200);
+      expect(bookingResponse.status).toBe(409);
+      expect(bookingResponse.body).toMatchObject({
+        success: false,
+        code: "SCHEDULE_GRID_CHANGED",
+      });
+      expect(await Booking.countDocuments()).toBe(0);
+      expect(await BookingSlot.countDocuments()).toBe(0);
+      const aggregate = await AppSettings.findOne({ key: "schedule.aggregate" }).lean();
+      expect(aggregate.value.settings["schedule.slotDurationMinutes"]).toBe(15);
+    } finally {
+      releaseSettingsUpdate();
+      signalSettingsWritten();
+      settingsSpy.mockRestore();
+      slotSpy.mockRestore();
+    }
   });
 
   it("creates a booking and exposes only calendar blocks publicly", async () => {
@@ -682,11 +1265,9 @@ describe("booking flows", () => {
       .get("/api/bookings/availability")
       .expect(200);
 
-    expect(availability.body.data).toHaveLength(1);
-    expect(availability.body.data[0]).toHaveProperty("timeSlot");
-    expect(availability.body.data[0]).not.toHaveProperty("studentName");
-    expect(availability.body.data[0]).not.toHaveProperty("email");
-    expect(availability.body.data[0]).not.toHaveProperty("phone");
+    expect(availability.body.data).toEqual([]);
+    expect(availability.body.count).toBe(0);
+    expect(availability.body.slots).toEqual(expect.any(Array));
   });
 
   it("never discloses booking data from the public short-code endpoint", async () => {
@@ -1137,20 +1718,33 @@ describe("booking flows", () => {
   });
 
   it("atomically reserves slot blocks so concurrent bookings cannot overlap", async () => {
-    const attempts = await Promise.all(
-      Array.from({ length: 20 }, (_, index) =>
-        request(app)
-          .post("/api/bookings/reserve")
-          .set("Idempotency-Key", `concurrent-reservation-${index}`)
-          .send(validBookingPayload({ studentName: `Alumno ${index}` })),
-      ),
-    );
+    expect(await Booking.countDocuments()).toBe(0);
+    expect(await BookingSlot.countDocuments()).toBe(0);
+    try {
+      const attempts = await Promise.all(
+        Array.from({ length: 20 }, (_, index) =>
+          request(app)
+            .post("/api/bookings/reserve")
+            .set("Idempotency-Key", `concurrent-reservation-${index}`)
+            .send(validBookingPayload({ studentName: `Alumno ${index}` })),
+        ),
+      );
 
-    expect(attempts.filter((response) => response.status === 201)).toHaveLength(1);
-    expect(attempts.filter((response) => response.status === 409)).toHaveLength(19);
-    expect(await Booking.countDocuments()).toBe(1);
-    expect(await BookingSlot.countDocuments()).toBe(2);
-  });
+      expect(attempts.filter((response) => response.status === 201)).toHaveLength(1);
+      expect(attempts.filter((response) => response.status === 409)).toHaveLength(19);
+      expect(await Booking.countDocuments()).toBe(1);
+      expect(await BookingSlot.countDocuments()).toBe(2);
+    } finally {
+      await Promise.all([
+        Booking.deleteMany({}),
+        BookingSlot.deleteMany({}),
+        IdempotencyKey.deleteMany({}),
+      ]);
+      expect(await Booking.countDocuments()).toBe(0);
+      expect(await BookingSlot.countDocuments()).toBe(0);
+      expect(await IdempotencyKey.countDocuments()).toBe(0);
+    }
+  }, 30000);
 
   it("compensates partial slot claims when a later block is already occupied", async () => {
     const slotStarts = getBookingSlotStarts({

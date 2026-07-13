@@ -21,6 +21,7 @@ import {
 import {
   calculateAvailableSlots,
   getScheduleConfiguration,
+  normalizeDurationMinutes,
   validateConfiguredSlot,
 } from "../services/availabilityService.js";
 import {
@@ -53,17 +54,16 @@ import {
 } from "../utils/bookingRules.js";
 import {
   ACTIVE_BOOKING_FILTER,
+  SLOT_OWNING_BOOKING_FILTER,
   TRASHED_BOOKING_FILTER,
   withActiveBooking,
 } from "../utils/bookingFilters.js";
 import { recordBookingAudit } from "../services/auditService.js";
 import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
 import { STUDENT_IDENTITY_ALGORITHM_VERSION } from "../services/studentIdentityService.js";
+import { isScheduleGridChangeInProgress } from "../services/scheduleGridChangeLeaseService.js";
 
-const activeStatusFilter = {
-  ...ACTIVE_BOOKING_FILTER,
-  status: { $nin: ["Cancelado", "Finalizado"] },
-};
+const activeStatusFilter = SLOT_OWNING_BOOKING_FILTER;
 
 const STATUS_TRANSITIONS = {
   Pendiente: ["Confirmado", "Cancelado"],
@@ -193,6 +193,33 @@ const acquireSlotMutationLock = async (
     expiresAt: new Date(now.getTime() + SLOT_MUTATION_LOCK_MS),
   } : null;
 };
+const SLOT_RELEASING_STATUSES = new Set(["Cancelado", "Finalizado"]);
+
+class ScheduleGridChangedError extends Error {
+  constructor() {
+    super("La configuración horaria cambió durante la operación.");
+    this.name = "ScheduleGridChangedError";
+  }
+}
+
+const assertScheduleGridUnchanged = async (expectedSlotDurationMinutes) => {
+  // Check the lease first. If a change starts after this read, its subsequent
+  // Booking/BookingSlot guard will observe this operation's already-owned slots.
+  if (await isScheduleGridChangeInProgress()) {
+    throw new ScheduleGridChangedError();
+  }
+  const schedule = await getScheduleConfiguration();
+  if (schedule.slotDurationMinutes !== expectedSlotDurationMinutes) {
+    throw new ScheduleGridChangedError();
+  }
+};
+
+const scheduleGridChangedResponse = (res, requestId) => res.status(409).json({
+  success: false,
+  code: "SCHEDULE_GRID_CHANGED",
+  message: "La disponibilidad cambió mientras procesábamos la solicitud. Reintentá.",
+  requestId,
+});
 
 const releaseSlotMutationLock = async (bookingId, lock) =>
   Booking.updateOne(
@@ -269,11 +296,56 @@ const managementBookingForCode = async (req, res, bookingCode) => {
   return booking;
 };
 
-const hasConflict = async (startTime, endTime, excludeId = null) => {
+const bufferedBounds = (
+  startTime,
+  endTime,
+  { bufferBeforeMinutes = 0, bufferAfterMinutes = 0 } = {},
+) => ({
+  start: new Date(
+    new Date(startTime).getTime() - Number(bufferBeforeMinutes) * 60 * 1000,
+  ),
+  end: new Date(
+    new Date(endTime).getTime() + Number(bufferAfterMinutes) * 60 * 1000,
+  ),
+});
+
+const existingBookingOverlapExpression = (startTime, endTime) => ({
+  $and: [
+    {
+      $lt: [
+        {
+          $subtract: [
+            "$timeSlot",
+            { $multiply: [{ $ifNull: ["$bufferBeforeMinutes", 0] }, 60 * 1000] },
+          ],
+        },
+        endTime,
+      ],
+    },
+    {
+      $gt: [
+        {
+          $add: [
+            "$endTime",
+            { $multiply: [{ $ifNull: ["$bufferAfterMinutes", 0] }, 60 * 1000] },
+          ],
+        },
+        startTime,
+      ],
+    },
+  ],
+});
+
+const hasConflict = async (
+  startTime,
+  endTime,
+  excludeId = null,
+  buffers = {},
+) => {
+  const claim = bufferedBounds(startTime, endTime, buffers);
   const criteria = {
     ...activeStatusFilter,
-    timeSlot: { $lt: endTime },
-    endTime: { $gt: startTime },
+    $expr: existingBookingOverlapExpression(claim.start, claim.end),
   };
 
   if (excludeId) {
@@ -370,10 +442,10 @@ export const createBooking = async (req, res, next) => {
     }
 
     const startTime = parseDateTimeInput(payload.timeSlot);
-    const duration = Number(payload.duration);
+    const requestedDuration = Number(payload.duration);
 
-    const [{ error: slotError, schedule }, requireManual] = await Promise.all([
-      validateConfiguredSlot(startTime, duration),
+    const [{ error: slotError, schedule, durationMinutes, endTime }, requireManual] = await Promise.all([
+      validateConfiguredSlot(startTime, requestedDuration),
       getSetting("booking.requireManualConfirmation"),
     ]);
 
@@ -382,8 +454,7 @@ export const createBooking = async (req, res, next) => {
     }
 
     const { slotDurationMinutes } = schedule;
-
-    const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+    const duration = durationMinutes / 60;
     const bookingStatus = requireManual ? "Pendiente" : "Confirmado";
 
     const requestFingerprint = fingerprintRequest({
@@ -437,7 +508,7 @@ export const createBooking = async (req, res, next) => {
       }
     }
 
-    if (await hasConflict(startTime, endTime)) {
+    if (await hasConflict(startTime, endTime, null, schedule)) {
       if (idempotencyRecord) {
         await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
       }
@@ -467,6 +538,8 @@ export const createBooking = async (req, res, next) => {
       timeSlot: startTime,
       endTime,
       duration,
+      bufferBeforeMinutes: schedule.bufferBeforeMinutes,
+      bufferAfterMinutes: schedule.bufferAfterMinutes,
       notes: "",
       status: bookingStatus,
       studentLink: {
@@ -483,9 +556,10 @@ export const createBooking = async (req, res, next) => {
       },
     });
     const { managementToken, managementUrl } = issueManagementToken(newBooking);
+    const claim = bufferedBounds(startTime, endTime, schedule);
     const slotStarts = getBookingSlotStarts({
-      startTime,
-      endTime,
+      startTime: claim.start,
+      endTime: claim.end,
       slotDurationMinutes,
     });
     await claimBookingSlots({
@@ -494,6 +568,7 @@ export const createBooking = async (req, res, next) => {
       slotDurationMinutes,
     });
     try {
+      await assertScheduleGridUnchanged(slotDurationMinutes);
       await newBooking.save();
     } catch (error) {
       await releaseBookingSlots(newBooking._id);
@@ -549,6 +624,10 @@ export const createBooking = async (req, res, next) => {
       });
     }
 
+    if (error instanceof ScheduleGridChangedError) {
+      return scheduleGridChangedResponse(res, req.requestId);
+    }
+
     if (error?.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -580,13 +659,13 @@ export const getAvailability = async (req, res, next) => {
     }
 
     const schedule = await getScheduleConfiguration();
-    const requestedDuration = range.duration ?? schedule.slotDurationMinutes / 60;
-    const requestedDurationMinutes = Math.round(requestedDuration * 60);
+    const durationValidation = normalizeDurationMinutes(
+      range.duration ?? schedule.slotDurationMinutes / 60,
+      schedule.slotDurationMinutes,
+    );
+    const requestedDuration = durationValidation.durationMinutes / 60;
 
-    if (
-      requestedDurationMinutes < schedule.slotDurationMinutes ||
-      requestedDurationMinutes % schedule.slotDurationMinutes !== 0
-    ) {
+    if (durationValidation.error) {
       return badRequest(
         res,
         `La duraciÃ³n debe respetar intervalos de ${schedule.slotDurationMinutes} minutos.`,
@@ -607,11 +686,10 @@ export const getAvailability = async (req, res, next) => {
         trustedFilter({
           ...activeStatusFilter,
           ...exclusionFilter,
-          timeSlot: { $lte: range.to },
-          endTime: { $gte: range.from },
+          $expr: existingBookingOverlapExpression(range.from, range.to),
         }),
       )
-        .select("timeSlot endTime duration status")
+        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status")
         .lean()
         .sort({ timeSlot: 1 }),
       BlockedDate.find().select("date").lean(),
@@ -628,18 +706,21 @@ export const getAvailability = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      count: bookings.length,
-      data: bookings.map((booking) => ({
-        _id: booking._id,
-        timeSlot: booking.timeSlot,
-        endTime: booking.endTime,
-        duration: booking.duration,
-        status: booking.status,
-      })),
+      count: 0,
+      data: [],
       blockedDates,
       // Legacy fields are preserved for the deployed frontend. `slots` is the
       // backend-authoritative availability contract for all future consumers.
-      schedule,
+      schedule: {
+        timeZone: schedule.timeZone,
+        slotDurationMinutes: schedule.slotDurationMinutes,
+        minimumNoticeMinutes: schedule.minimumNoticeMinutes,
+        maximumAdvanceDays: schedule.maximumAdvanceDays,
+      },
+      range: {
+        from: range.from.toISOString(),
+        to: range.to.toISOString(),
+      },
       slots,
       requestId: req.requestId,
     });
@@ -810,15 +891,24 @@ export const updateBooking = async (req, res, next) => {
       }
 
       const startTime = parseDateTimeInput(updateData.timeSlot);
-      const duration = Number(existing.duration) || 1;
-      const { error: slotError, schedule } = await validateConfiguredSlot(startTime, duration);
+      const existingDuration = Number(existing.duration) || 1;
+      const {
+        error: slotError,
+        schedule,
+        durationMinutes,
+        endTime,
+      } = await validateConfiguredSlot(startTime, existingDuration);
       if (slotError) {
         return badRequest(res, slotError);
       }
       const { slotDurationMinutes } = schedule;
-
-      const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
-      const conflict = await hasConflict(startTime, endTime, req.params.id);
+      const duration = durationMinutes / 60;
+      const conflict = await hasConflict(
+        startTime,
+        endTime,
+        req.params.id,
+        schedule,
+      );
       if (conflict) {
         return badRequest(res, "El nuevo horario tiene conflicto con otra reserva activa.");
       }
@@ -834,9 +924,13 @@ export const updateBooking = async (req, res, next) => {
 
       updateData.timeSlot = startTime;
       updateData.endTime = endTime;
+      updateData.duration = duration;
+      updateData.bufferBeforeMinutes = schedule.bufferBeforeMinutes;
+      updateData.bufferAfterMinutes = schedule.bufferAfterMinutes;
+      const claim = bufferedBounds(startTime, endTime, schedule);
       slotStarts = getBookingSlotStarts({
-        startTime,
-        endTime,
+        startTime: claim.start,
+        endTime: claim.end,
         slotDurationMinutes,
       });
       claimedSlots = await claimBookingSlots({
@@ -844,6 +938,7 @@ export const updateBooking = async (req, res, next) => {
         slotStarts,
         slotDurationMinutes,
       });
+      await assertScheduleGridUnchanged(slotDurationMinutes);
     }
 
     const NOTE_FIELDS = ["notes", "studentEvolution", "emotionalState"];
@@ -856,7 +951,7 @@ export const updateBooking = async (req, res, next) => {
       mongoUpdate.$push = { notesHistory: { $each: historyPush } };
     }
 
-    if (!slotMutationLock && updateData.status === "Cancelado") {
+    if (!slotMutationLock && SLOT_RELEASING_STATUSES.has(updateData.status)) {
       slotMutationLock = await acquireSlotMutationLock(req.params.id);
       if (!slotMutationLock) {
         return res.status(409).json({
@@ -895,7 +990,7 @@ export const updateBooking = async (req, res, next) => {
       return notFound(res, "Reserva no encontrada.");
     }
 
-    if (updateData.status === "Cancelado") {
+    if (SLOT_RELEASING_STATUSES.has(updateData.status)) {
       await releaseBookingSlots(updatedBooking._id);
     } else if (slotStarts) {
       await releaseBookingSlotsExcept(updatedBooking._id, slotStarts);
@@ -926,6 +1021,10 @@ export const updateBooking = async (req, res, next) => {
     if (slotMutationLock) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
         .catch(() => {});
+    }
+
+    if (error instanceof ScheduleGridChangedError) {
+      return scheduleGridChangedResponse(res, req.requestId);
     }
 
     if (typeof next === "function") {
@@ -1190,8 +1289,13 @@ export const restoreBooking = async (req, res, next) => {
 
     const trashedBooking = slotMutationLock.booking;
     const startTime = new Date(trashedBooking.timeSlot);
-    const duration = Number(trashedBooking.duration) || 1;
-    const { error: slotError, schedule } = await validateConfiguredSlot(startTime, duration);
+    const storedDuration = Number(trashedBooking.duration) || 1;
+    const {
+      error: slotError,
+      schedule,
+      durationMinutes,
+      endTime,
+    } = await validateConfiguredSlot(startTime, storedDuration);
     if (slotError) {
       await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
       slotMutationLock = null;
@@ -1202,8 +1306,17 @@ export const restoreBooking = async (req, res, next) => {
       });
     }
 
-    const endTime = new Date(trashedBooking.endTime);
-    if (await hasConflict(startTime, endTime, trashedBooking._id)) {
+    const duration = durationMinutes / 60;
+    const restoredBuffers = {
+      bufferBeforeMinutes: trashedBooking.bufferBeforeMinutes || 0,
+      bufferAfterMinutes: trashedBooking.bufferAfterMinutes || 0,
+    };
+    if (await hasConflict(
+      startTime,
+      endTime,
+      trashedBooking._id,
+      restoredBuffers,
+    )) {
       await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
       slotMutationLock = null;
       return res.status(409).json({
@@ -1213,9 +1326,10 @@ export const restoreBooking = async (req, res, next) => {
       });
     }
 
+    const restoredClaim = bufferedBounds(startTime, endTime, restoredBuffers);
     const slotStarts = getBookingSlotStarts({
-      startTime,
-      endTime,
+      startTime: restoredClaim.start,
+      endTime: restoredClaim.end,
       slotDurationMinutes: schedule.slotDurationMinutes,
     });
     claimedSlots = await claimBookingSlots({
@@ -1223,6 +1337,7 @@ export const restoreBooking = async (req, res, next) => {
       slotStarts,
       slotDurationMinutes: schedule.slotDurationMinutes,
     });
+    await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
 
     const restoredBooking = await Booking.findOneAndUpdate(
       {
@@ -1328,6 +1443,10 @@ export const restoreBooking = async (req, res, next) => {
         message: "El horario original ya esta ocupado.",
         requestId: req.requestId,
       });
+    }
+
+    if (error instanceof ScheduleGridChangedError) {
+      return scheduleGridChangedResponse(res, req.requestId);
     }
 
     if (typeof next === "function") return next(error);
@@ -1498,14 +1617,18 @@ export const rescheduleBooking = async (req, res, next) => {
     }
 
     const startTime = parseDateTimeInput(parsed.data.newTimeSlot);
-    const duration = Number(parsed.data.newDuration);
-    const { error: slotError, schedule } = await validateConfiguredSlot(startTime, duration);
+    const requestedDuration = Number(parsed.data.newDuration);
+    const {
+      error: slotError,
+      schedule,
+      durationMinutes,
+      endTime,
+    } = await validateConfiguredSlot(startTime, requestedDuration);
     if (slotError) {
       return badRequest(res, slotError);
     }
     const { slotDurationMinutes } = schedule;
-
-    const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+    const duration = durationMinutes / 60;
     if (idempotencyKey) {
       const storageKey = scopedIdempotencyKey("reschedule", idempotencyKey);
       const requestFingerprint = fingerprintRequest({
@@ -1566,7 +1689,12 @@ export const rescheduleBooking = async (req, res, next) => {
       });
     }
     let lockedBooking = slotMutationLock.booking;
-    const conflict = await hasConflict(startTime, endTime, booking._id);
+    const conflict = await hasConflict(
+      startTime,
+      endTime,
+      booking._id,
+      schedule,
+    );
     if (conflict) {
       await releaseSlotMutationLock(booking._id, slotMutationLock.lock);
       slotMutationLock = null;
@@ -1577,9 +1705,10 @@ export const rescheduleBooking = async (req, res, next) => {
     }
 
     const previousTimeSlot = lockedBooking.timeSlot;
+    const claim = bufferedBounds(startTime, endTime, schedule);
     const slotStarts = getBookingSlotStarts({
-      startTime,
-      endTime,
+      startTime: claim.start,
+      endTime: claim.end,
       slotDurationMinutes,
     });
     claimedSlots = await claimBookingSlots({
@@ -1587,6 +1716,7 @@ export const rescheduleBooking = async (req, res, next) => {
       slotStarts,
       slotDurationMinutes,
     });
+    await assertScheduleGridUnchanged(slotDurationMinutes);
 
     lockedBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
@@ -1595,6 +1725,8 @@ export const rescheduleBooking = async (req, res, next) => {
           timeSlot: startTime,
           endTime,
           duration,
+          bufferBeforeMinutes: schedule.bufferBeforeMinutes,
+          bufferAfterMinutes: schedule.bufferAfterMinutes,
           status: "Confirmado",
         },
       },
@@ -1643,6 +1775,7 @@ export const rescheduleBooking = async (req, res, next) => {
       sendBookingNotifications({ booking: lockedBooking, event: "rescheduled", previousTimeSlot }),
     ]).catch((err) => console.error("[rescheduleBooking side-effects]", err.message));
   } catch (error) {
+    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
     if (slotMutationLock) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
         .catch(() => {});
@@ -1657,6 +1790,10 @@ export const rescheduleBooking = async (req, res, next) => {
         message: "Horario ocupado.",
         requestId: req.requestId,
       });
+    }
+
+    if (error instanceof ScheduleGridChangedError) {
+      return scheduleGridChangedResponse(res, req.requestId);
     }
 
     if (typeof next === "function") {

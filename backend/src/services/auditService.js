@@ -52,6 +52,8 @@ const AUDITED_BOOKING_FIELDS = [
   "timeSlot",
   "endTime",
   "duration",
+  "bufferBeforeMinutes",
+  "bufferAfterMinutes",
   "price",
   "notes",
   "studentNotes",
