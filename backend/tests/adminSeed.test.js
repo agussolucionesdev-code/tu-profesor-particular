@@ -16,11 +16,13 @@ describe("ensureConfiguredAdmin", () => {
     create.mockReset();
     process.env.ADMIN_USERNAME = "admin@example.com";
     process.env.ADMIN_PASSWORD = "new-secure-password";
+    delete process.env.ADMIN_EMAIL;
     delete process.env.ADMIN_PASSWORD_ROTATE;
   });
 
   afterEach(() => {
     delete process.env.ADMIN_USERNAME;
+    delete process.env.ADMIN_EMAIL;
     delete process.env.ADMIN_PASSWORD;
     delete process.env.ADMIN_PASSWORD_ROTATE;
   });
@@ -52,5 +54,16 @@ describe("ensureConfiguredAdmin", () => {
 
     expect(await bcrypt.compare(process.env.ADMIN_PASSWORD, existingUser.password)).toBe(false);
     expect(existingUser.save).not.toHaveBeenCalled();
+  });
+
+  it("supports the legacy ADMIN_EMAIL setting as the configured username", async () => {
+    const existingUser = { username: "admin@example.com" };
+    delete process.env.ADMIN_USERNAME;
+    process.env.ADMIN_EMAIL = "ADMIN@example.com ";
+    findOne.mockResolvedValue(existingUser);
+
+    await expect(ensureConfiguredAdmin()).resolves.toBe(existingUser);
+
+    expect(findOne).toHaveBeenCalledWith({ username: "admin@example.com" });
   });
 });
