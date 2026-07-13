@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { isConfiguredSocialUrl } from "../../src/utils/socialUrl.js";
 
 const readSource = (relativePath) =>
   readFileSync(new URL(relativePath, import.meta.url), "utf8");
@@ -25,7 +26,31 @@ test("does not advertise the already-live principal website as upcoming", () => 
 
 test("renders only explicitly configured social profiles", () => {
   assert.doesNotMatch(footerSource, /\|\|\s*"https:\/\/(instagram|facebook|linkedin)\.com"/);
-  assert.match(footerSource, /SOCIAL_LINKS\.filter\(\(item\)\s*=>\s*item\.href\)/);
+  assert.match(
+    footerSource,
+    /SOCIAL_LINKS\.filter\(\(item\)\s*=>[\s\S]*?isConfiguredSocialUrl\(item\.href\)/,
+  );
+
+  for (const href of [
+    undefined,
+    "",
+    "not-a-url",
+    "javascript:alert(1)",
+    "https://facebook.com",
+    "https://www.facebook.com/",
+    "https://instagram.com?campaign=footer",
+    "https://linkedin.com/#social",
+  ]) {
+    assert.equal(isConfiguredSocialUrl(href), false, `${href} must stay hidden`);
+  }
+
+  for (const href of [
+    "https://facebook.com/tu-profesor-particular",
+    "https://www.instagram.com/tu_profesor_particular/",
+    "https://linkedin.com/in/agustin-sosa",
+  ]) {
+    assert.equal(isConfiguredSocialUrl(href), true, `${href} must stay visible`);
+  }
 });
 
 test("states one consistent online and in-person offer", () => {

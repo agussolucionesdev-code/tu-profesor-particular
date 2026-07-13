@@ -19,6 +19,7 @@ import {
 import ThemeLogo from "../components/ui/ThemeLogo";
 import Reveal from "../components/ui/Reveal";
 import useInView from "../hooks/useInView";
+import { isConfiguredSocialUrl } from "../utils/socialUrl";
 import "./Footer.css";
 
 const FOOTER_LINKS = [
@@ -60,7 +61,9 @@ const SOCIAL_LINKS = [
   },
 ];
 
-const CONFIGURED_SOCIAL_LINKS = SOCIAL_LINKS.filter((item) => item.href);
+const CONFIGURED_SOCIAL_LINKS = SOCIAL_LINKS.filter((item) =>
+  isConfiguredSocialUrl(item.href),
+);
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
