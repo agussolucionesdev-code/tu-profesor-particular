@@ -15,6 +15,10 @@ const adminLoginSource = readFileSync(
   new URL("../../src/components/admin/AdminLoginScreen.jsx", import.meta.url),
   "utf8",
 );
+const adminCss = readFileSync(
+  new URL("../../src/components/AdminPanel.css", import.meta.url),
+  "utf8",
+);
 
 const officialAssets = [
   {
@@ -72,6 +76,14 @@ test("ThemeLogo keeps one rendered image and responds to the explicit app theme"
 test("compact square surfaces use the monogram instead of shrinking the main lockup", () => {
   assert.match(portalSource, /<ThemeLogo\s+variant="monogram"/);
   assert.match(adminLoginSource, /<ThemeLogo\s+variant="monogram"/);
+});
+
+test("admin login constrains the monogram wrapper independently from global logo styles", () => {
+  assert.match(adminLoginSource, /className="admin-login-brand-mark"/);
+  assert.match(adminCss, /\.admin-login-brand-mark\s*\{[^}]*width:\s*clamp\(88px,\s*12vw,\s*112px\)/s);
+  assert.match(adminCss, /\.admin-login-brand-mark\s*\{[^}]*aspect-ratio:\s*1/s);
+  assert.match(adminCss, /\.admin-login-brand-mark \.admin-login-logo\s*\{[^}]*width:\s*100%/s);
+  assert.match(adminCss, /\.admin-login-brand-mark \.admin-login-logo\s*\{[^}]*height:\s*100%/s);
 });
 
 test("full and tagline variants keep the stable supplied lockup in both themes", () => {

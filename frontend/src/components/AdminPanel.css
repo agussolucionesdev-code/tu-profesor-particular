@@ -43,10 +43,21 @@
   margin-bottom: 1.4rem;
 }
 
-.admin-login-logo {
-  width: 78px;
-  height: 78px;
+.admin-login-brand-mark {
+  width: clamp(88px, 12vw, 112px);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+}
+
+.admin-login-brand-mark .admin-login-logo {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+}
+
+.admin-login-logo {
   margin-bottom: 0.4rem;
   filter: drop-shadow(0 8px 20px rgba(15, 23, 42, 0.10));
 }

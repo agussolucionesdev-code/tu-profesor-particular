@@ -14,7 +14,12 @@ const AdminLoginScreen = ({
     <div className="admin-login-shell admin-login-shell--minimal">
       <div className="admin-login-card admin-login-card--centered">
         <div className="admin-login-brand">
-        <ThemeLogo variant="monogram" imgClassName="admin-login-logo" alt="Tu Profesor Particular" />
+          <ThemeLogo
+            variant="monogram"
+            className="admin-login-brand-mark"
+            imgClassName="admin-login-logo"
+            alt="Tu Profesor Particular"
+          />
           <span className="admin-login-eyebrow">Panel del profesor</span>
           <h2>Acceso privado</h2>
           <p className="admin-login-subtitle">
