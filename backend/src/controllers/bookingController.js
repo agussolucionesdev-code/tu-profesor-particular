@@ -48,6 +48,7 @@ import {
   parseDateTimeInput,
   rescheduleSchema,
   updateBookingSchema,
+  updateAttendanceSchema,
   validateContact,
 } from "../utils/bookingRules.js";
 import {
@@ -888,6 +889,130 @@ export const updateBooking = async (req, res, next) => {
       return next(error);
     }
 
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const updateBookingAttendance = async (req, res, next) => {
+  let slotMutationLock = null;
+
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return badRequest(res, "Identificador de reserva invalido.");
+    }
+
+    const parsed = updateAttendanceSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return badRequest(res, "Datos de asistencia invalidos.", parsed.error.flatten());
+    }
+
+    slotMutationLock = await acquireSlotMutationLock(req.params.id);
+    if (!slotMutationLock) {
+      const activeBookingExists = await Booking.exists(withActiveBooking({ _id: req.params.id }));
+      if (!activeBookingExists) return notFound(res, "Reserva no encontrada.");
+      return res.status(409).json({
+        success: false,
+        message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+        requestId: req.requestId,
+      });
+    }
+
+    const beforeAttendance = slotMutationLock.booking.toObject();
+    beforeAttendance.attendanceStatus ||= "Sin registrar";
+    beforeAttendance.attendanceRecordedAt ??= null;
+    beforeAttendance.attendanceNotes ||= "";
+    beforeAttendance.attendanceUpdatedBy ??= null;
+
+    const attendanceRecordedAt = parsed.data.attendanceStatus === "Sin registrar"
+      ? null
+      : new Date();
+    const attendanceNotes = parsed.data.attendanceStatus === "Sin registrar"
+      ? ""
+      : parsed.data.attendanceNotes;
+    const updatedBooking = await Booking.findOneAndUpdate(
+      {
+        ...ownedSlotMutationFilter(slotMutationLock),
+        ...ACTIVE_BOOKING_FILTER,
+      },
+      {
+        $set: {
+          attendanceStatus: parsed.data.attendanceStatus,
+          attendanceRecordedAt,
+          attendanceNotes,
+          attendanceUpdatedBy: req.user.id,
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedBooking) {
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(409).json({
+        success: false,
+        message: "La reserva cambio mientras se registraba la asistencia. Reintenta.",
+        requestId: req.requestId,
+      });
+    }
+
+    try {
+      await recordBookingAudit({
+        req,
+        action: "booking.attendance.updated",
+        bookingId: updatedBooking._id,
+        before: beforeAttendance,
+        after: updatedBooking,
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+    } catch (auditError) {
+      const compensation = await compensateWithinOwnedLease({
+        filter: {
+          _id: updatedBooking._id,
+          ...ACTIVE_BOOKING_FILTER,
+          updatedAt: updatedBooking.updatedAt,
+          slotMutationLock: slotMutationLock.lock,
+        },
+        update: {
+          $set: {
+            attendanceStatus: beforeAttendance.attendanceStatus,
+            attendanceRecordedAt: beforeAttendance.attendanceRecordedAt,
+            attendanceNotes: beforeAttendance.attendanceNotes,
+            attendanceUpdatedBy: beforeAttendance.attendanceUpdatedBy,
+          },
+        },
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+      if (compensation.modifiedCount !== 1) {
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "booking_attendance_audit_compensation_lost_lease",
+          bookingId: String(updatedBooking._id),
+          requestId: req.requestId,
+        }));
+      }
+      throw auditError;
+    }
+
+    await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
+    slotMutationLock = null;
+    setNoStore(res);
+    return res.status(200).json({
+      success: true,
+      message: "Asistencia actualizada.",
+      data: updatedBooking,
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(
+        slotMutationLock.booking._id,
+        slotMutationLock.lock,
+      ).catch(() => {});
+    }
+    if (typeof next === "function") return next(error);
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor.",

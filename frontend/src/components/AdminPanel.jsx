@@ -82,6 +82,7 @@ const AdminPanel = () => {
     refreshBookings,
     handleQuickStatusChange,
     updateBookingFields,
+    updateBookingAttendance,
     deleteBooking,
     deleteAllBookings,
     clearBookings,
@@ -129,14 +130,21 @@ const AdminPanel = () => {
     editNotes,
     editEvolution,
     editEmotionalState,
+    attendanceStatus,
+    attendanceNotes,
+    attendanceSaving,
+    attendanceFeedback,
     setEditNotes,
     setEditEvolution,
     setEditEmotionalState,
+    setAttendanceStatus,
+    setAttendanceNotes,
     openEditBooking,
     closeEditBooking,
     handleSave,
     handleStatusChange,
-  } = useBookingEditModal(updateBookingFields);
+    handleAttendanceSave,
+  } = useBookingEditModal(updateBookingFields, updateBookingAttendance);
 
   usePushNotifications(isAuthenticated ? authConfig : null);
 
@@ -572,12 +580,19 @@ const AdminPanel = () => {
           editNotes={editNotes}
           editEvolution={editEvolution}
           editEmotionalState={editEmotionalState}
+          attendanceStatus={attendanceStatus}
+          attendanceNotes={attendanceNotes}
+          attendanceSaving={attendanceSaving}
+          attendanceFeedback={attendanceFeedback}
           onClose={closeEditBooking}
           onNotesChange={(e) => setEditNotes(e.target.value)}
           onEvolutionChange={(e) => setEditEvolution(e.target.value)}
           onEmotionalStateChange={(e) => setEditEmotionalState(e.target.value)}
+          onAttendanceStatusChange={(e) => setAttendanceStatus(e.target.value)}
+          onAttendanceNotesChange={(e) => setAttendanceNotes(e.target.value)}
           onStatusChange={handleStatusChange}
           onSave={handleSave}
+          onAttendanceSave={handleAttendanceSave}
         />
       )}
 

@@ -14,6 +14,15 @@ export const BOOKING_STATUS = [
   "Finalizado",
 ];
 
+export const ATTENDANCE_STATUS = [
+  "Sin registrar",
+  "Presente",
+  "Ausente",
+  "Cancelación tardía",
+  "No-show",
+  "Recuperatorio",
+];
+
 export const ADULT_RELATIONSHIP_VALUE = "self";
 export const RESPONSIBLE_RELATIONSHIP_OTHER_VALUE = "otro";
 export const RESPONSIBLE_RELATIONSHIP_VALUES = [
@@ -167,6 +176,13 @@ export const updateBookingSchema = z
     studentEvolution: z.string().trim().max(5000).optional(),
     emotionalState: z.string().trim().max(1000).optional(),
     timeSlot: z.union([z.string(), z.date()]).optional(),
+  })
+  .strict();
+
+export const updateAttendanceSchema = z
+  .object({
+    attendanceStatus: z.enum(ATTENDANCE_STATUS),
+    attendanceNotes: z.string().trim().max(1000).optional().default(""),
   })
   .strict();
 

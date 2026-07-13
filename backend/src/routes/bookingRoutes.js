@@ -8,6 +8,7 @@ import {
   deleteBooking,
   restoreBooking,
   updateBooking,
+  updateBookingAttendance,
   deleteAllBookings,
   rescheduleBooking,
   cancelBookingClient,
@@ -44,6 +45,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 router.delete("/:id", requireAdmin, deleteBooking);
 router.post("/:id/restore", requireAdmin, restoreBooking);
+router.patch("/:id/attendance", requireAdmin, updateBookingAttendance);
 router.put("/:id", requireAdmin, updateBooking);
 
 router.get("/:code", publicLookupLimiter, getBookingByCode);

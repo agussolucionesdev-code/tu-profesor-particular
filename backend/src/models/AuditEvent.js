@@ -14,7 +14,7 @@ const auditEventSchema = new mongoose.Schema(
     actor: { type: actorSchema, required: true, immutable: true },
     action: {
       type: String,
-      enum: ["booking.deleted", "booking.restored"],
+      enum: ["booking.deleted", "booking.restored", "booking.attendance.updated"],
       required: true,
       immutable: true,
     },

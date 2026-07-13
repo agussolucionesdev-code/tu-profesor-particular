@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchAllBookings,
   updateBooking,
+  updateBookingAttendance as apiUpdateBookingAttendance,
   deleteBooking as apiDeleteBooking,
   deleteAllBookings as apiDeleteAllBookings,
 } from "../api/bookingApi";
@@ -116,6 +117,20 @@ export const useBookingsData = ({
     [authConfig],
   );
 
+  const updateBookingAttendance = useCallback(
+    async (id, payload) => {
+      const response = await apiUpdateBookingAttendance(id, payload, authConfig);
+      const updatedBooking = response.data.data;
+      setBookings((current) =>
+        current.map((booking) =>
+          booking._id === id ? updatedBooking : booking,
+        ),
+      );
+      return updatedBooking;
+    },
+    [authConfig],
+  );
+
   const handleDeleteBooking = useCallback(
     async (id) => {
       try {
@@ -155,6 +170,7 @@ export const useBookingsData = ({
     refreshBookings: fetchBookings,
     handleQuickStatusChange,
     updateBookingFields,
+    updateBookingAttendance,
     deleteBooking: handleDeleteBooking,
     deleteAllBookings: handleDeleteAll,
     clearBookings,

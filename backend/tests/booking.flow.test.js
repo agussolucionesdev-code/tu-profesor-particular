@@ -2375,4 +2375,149 @@ describe("booking flows", () => {
     errorSpy.mockRestore();
     expect(await AuditEvent.countDocuments()).toBe(0);
   });
+
+  it("requires admin authentication to record attendance", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .send({ attendanceStatus: "Presente" })
+      .expect(401);
+
+    expect((await Booking.findById(stored._id).lean()).attendanceStatus).toBe("Sin registrar");
+  });
+
+  it("strictly validates attendance status and rejects extra payload fields", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ attendanceStatus: "Llegó tarde" })
+      .expect(400);
+
+    await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ attendanceStatus: "Presente", status: "Finalizado" })
+      .expect(400);
+
+    expect(await AuditEvent.countDocuments({ action: "booking.attendance.updated" })).toBe(0);
+  });
+
+  it("treats legacy bookings without attendance fields as unregistered", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await Booking.collection.updateOne(
+      { _id: stored._id },
+      { $unset: { attendanceStatus: "", attendanceRecordedAt: "", attendanceNotes: "", attendanceUpdatedBy: "" } },
+    );
+
+    const response = await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ attendanceStatus: "Recuperatorio" })
+      .expect(200);
+
+    expect(response.body.data.attendanceStatus).toBe("Recuperatorio");
+    const audit = await AuditEvent.findOne({
+      entityId: stored._id,
+      action: "booking.attendance.updated",
+    }).lean();
+    expect(audit.before.attendanceStatus).toBe("Sin registrar");
+    expect(audit.after.attendanceStatus).toBe("Recuperatorio");
+  });
+
+  it("rejects attendance changes for soft-deleted bookings", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ attendanceStatus: "Ausente" })
+      .expect(404);
+
+    expect(await AuditEvent.countDocuments({ action: "booking.attendance.updated" })).toBe(0);
+  });
+
+  it("records sanitized attendance before and after values with the admin actor", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    const response = await request(app)
+      .patch(`/api/bookings/${stored._id}/attendance`)
+      .set("Authorization", `Bearer ${token}`)
+      .set("X-Request-Id", "attendance-audit-request")
+      .send({ attendanceStatus: "Cancelación tardía", attendanceNotes: "Avisó 20 minutos antes." })
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      attendanceStatus: "Cancelación tardía",
+      attendanceNotes: "Avisó 20 minutos antes.",
+    });
+    expect(response.body.data.attendanceRecordedAt).toBeTruthy();
+    const audit = await AuditEvent.findOne({ entityId: stored._id, action: "booking.attendance.updated" }).lean();
+    expect(audit).toMatchObject({
+      requestId: "attendance-audit-request",
+      actor: { role: "admin", username: "admin@example.com" },
+      before: { attendanceStatus: "Sin registrar" },
+      after: {
+        attendanceStatus: "Cancelación tardía",
+        attendanceNotes: "Avisó 20 minutos antes.",
+      },
+    });
+    expect(JSON.stringify(audit)).not.toMatch(/managementToken|slotMutationLock/i);
+  });
+
+  it("allows only one concurrent attendance update and audit event", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    const [first, second] = await Promise.all([
+      request(app)
+        .patch(`/api/bookings/${stored._id}/attendance`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ attendanceStatus: "Presente" }),
+      request(app)
+        .patch(`/api/bookings/${stored._id}/attendance`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ attendanceStatus: "No-show" }),
+    ]);
+
+    expect([first.status, second.status].sort()).toEqual([200, 409]);
+    expect(await AuditEvent.countDocuments({
+      entityId: stored._id,
+      action: "booking.attendance.updated",
+    })).toBe(1);
+  });
 });

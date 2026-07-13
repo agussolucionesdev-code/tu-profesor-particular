@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import mongoose from "mongoose";
 import {
+  ATTENDANCE_STATUS,
   RESPONSIBLE_RELATIONSHIP_OTHER_VALUE,
   RESPONSIBLE_RELATIONSHIP_VALUES,
   normalizeCode,
@@ -133,6 +134,18 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       enum: BOOKING_STATUS,
       default: "Pendiente",
+    },
+    attendanceStatus: {
+      type: String,
+      enum: ATTENDANCE_STATUS,
+      default: "Sin registrar",
+    },
+    attendanceRecordedAt: { type: Date, default: null },
+    attendanceNotes: { type: String, trim: true, default: "", maxlength: 1000 },
+    attendanceUpdatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
     deletedAt: { type: Date, default: null, index: true },
     deletedBy: {

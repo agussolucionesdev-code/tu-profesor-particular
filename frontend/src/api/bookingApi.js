@@ -64,6 +64,9 @@ export const fetchAllBookings = (authConfig) =>
 export const updateBooking = (id, data, authConfig) =>
   apiClient.put(`/api/bookings/${id}`, data, authConfig);
 
+export const updateBookingAttendance = (id, data, authConfig) =>
+  apiClient.patch(`/api/bookings/${id}/attendance`, data, authConfig);
+
 export const deleteBooking = (id, authConfig) =>
   apiClient.delete(`/api/bookings/${id}`, authConfig);
 

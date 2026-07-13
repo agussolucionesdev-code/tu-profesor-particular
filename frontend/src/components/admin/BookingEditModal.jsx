@@ -64,12 +64,19 @@ const BookingEditModal = ({
   editNotes,
   editEvolution,
   editEmotionalState,
+  attendanceStatus,
+  attendanceNotes,
+  attendanceSaving,
+  attendanceFeedback,
   onClose,
   onNotesChange,
   onEvolutionChange,
   onEmotionalStateChange,
+  onAttendanceStatusChange,
+  onAttendanceNotesChange,
   onStatusChange,
   onSave,
+  onAttendanceSave,
 }) => {
   const dialogRef = useFocusTrap(true);
 
@@ -79,13 +86,13 @@ const BookingEditModal = ({
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e) => { if (e.key === "Escape") onClose(); };
+    const handleKeyDown = (e) => { if (e.key === "Escape" && !attendanceSaving) onClose(); };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [attendanceSaving, onClose]);
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
+    <div className="admin-modal-overlay" onClick={attendanceSaving ? undefined : onClose}>
       <div
         ref={dialogRef}
         className="admin-modal-card"
@@ -117,6 +124,70 @@ const BookingEditModal = ({
               <option value="Cancelado">Cancelado</option>
             </select>
           </label>
+
+          <section className="attendance-section" aria-labelledby="attendance-section-title" aria-busy={attendanceSaving}>
+            <div className="admin-field-header attendance-heading">
+              <div>
+                <span className="card-kicker">Seguimiento de la clase</span>
+                <h4 id="attendance-section-title">Asistencia</h4>
+              </div>
+              <span className="attendance-badge">{attendanceStatus || "Sin registrar"}</span>
+            </div>
+
+            <div className="admin-field">
+              <label htmlFor="edit-attendance-status">Resultado de asistencia</label>
+              <select
+                id="edit-attendance-status"
+                className="admin-input"
+                value={attendanceStatus}
+                onChange={onAttendanceStatusChange}
+                disabled={attendanceSaving}
+              >
+                <option value="Sin registrar">Sin registrar</option>
+                <option value="Presente">Presente</option>
+                <option value="Ausente">Ausente</option>
+                <option value="Cancelación tardía">Cancelación tardía</option>
+                <option value="No-show">No-show</option>
+                <option value="Recuperatorio">Recuperatorio</option>
+              </select>
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-field-header">
+                <label htmlFor="edit-attendance-notes">Observación de asistencia (opcional)</label>
+                <CharCounter value={attendanceNotes} max={1000} />
+              </div>
+              <textarea
+                id="edit-attendance-notes"
+                className="admin-input admin-textarea"
+                rows="3"
+                maxLength={1000}
+                value={attendanceNotes}
+                onChange={onAttendanceNotesChange}
+                disabled={attendanceSaving || attendanceStatus === "Sin registrar"}
+                placeholder="Ej.: avisó con poca anticipación o coordinó recuperatorio."
+              />
+            </div>
+
+            {attendanceFeedback && (
+              <p
+                className={`attendance-feedback ${attendanceFeedback.type}`}
+                role="status"
+                aria-live="polite"
+              >
+                {attendanceFeedback.message}
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="admin-secondary-btn attendance-save-btn"
+              onClick={onAttendanceSave}
+              disabled={attendanceSaving}
+            >
+              {attendanceSaving ? "Guardando asistencia..." : "Guardar asistencia"}
+            </button>
+          </section>
 
           <div className="admin-field">
             <div className="admin-field-header">
@@ -174,6 +245,7 @@ const BookingEditModal = ({
             type="button"
             className="admin-secondary-btn"
             onClick={onClose}
+            disabled={attendanceSaving}
           >
             Cancelar
           </button>
@@ -181,6 +253,7 @@ const BookingEditModal = ({
             type="button"
             className="admin-primary-btn slim"
             onClick={onSave}
+            disabled={attendanceSaving}
           >
             Guardar cambios
           </button>
