@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaBan, FaCalendarAlt, FaTrashAlt } from "react-icons/fa";
 import {
   fetchBlockedDates,
@@ -20,20 +20,26 @@ const BlockedDatesView = ({ authConfig }) => {
   const [dateToUnblock, setDateToUnblock] = useState(null);
   const [removeError, setRemoveError] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    setBlockedDates([]);
     try {
-      const res = await fetchBlockedDates();
+      const res = await fetchBlockedDates(authConfig);
       setBlockedDates(Array.isArray(res.data.data) ? res.data.data : []);
-    } catch {
-      setError("No se pudieron cargar las fechas bloqueadas.");
+    } catch (err) {
+      setBlockedDates([]);
+      setError(
+        err?.response?.status === 401
+          ? "Tu sesión venció. Volvé a iniciar sesión para consultar las fechas bloqueadas."
+          : "No se pudieron cargar las fechas bloqueadas.",
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [authConfig]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const getDatesInRange = (from, to) => {
     const dates = [];
@@ -153,7 +159,7 @@ const BlockedDatesView = ({ authConfig }) => {
         {loading ? (
           <p className="empty-copy">Cargando…</p>
         ) : error ? (
-          <p className="empty-copy settings-error">{error}</p>
+          <p className="empty-copy settings-error" role="alert">{error}</p>
         ) : blockedDates.length === 0 ? (
           <p className="empty-copy">No hay fechas bloqueadas actualmente.</p>
         ) : (

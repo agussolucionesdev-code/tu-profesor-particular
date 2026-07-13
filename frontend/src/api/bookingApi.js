@@ -88,8 +88,8 @@ export const loginAdmin = (credentials) =>
 /**
  * Blocked dates
  */
-export const fetchBlockedDates = () =>
-  apiClient.get("/api/blocked-dates");
+export const fetchBlockedDates = (authConfig) =>
+  apiClient.get("/api/blocked-dates", authConfig);
 
 export const addBlockedDate = (data, authConfig) =>
   apiClient.post("/api/blocked-dates", data, authConfig);
