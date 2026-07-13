@@ -15,6 +15,7 @@ import {
   FaKeyboard,
   FaPlus,
   FaSignOutAlt,
+  FaSyncAlt,
   FaTimes,
   FaUsers,
 } from "react-icons/fa";
@@ -59,6 +60,7 @@ const VIEW_OPTIONS = [
 
 const AdminPanel = () => {
   useDocumentTitle("Panel de administracion");
+  const pauseAutoRefreshRef = useRef(false);
   const {
     authConfig,
     isAuthenticated,
@@ -76,12 +78,19 @@ const AdminPanel = () => {
     bookings,
     sortedBookings,
     dataLoading,
+    lastRefreshedAt,
+    refreshBookings,
     handleQuickStatusChange,
     updateBookingFields,
     deleteBooking,
     deleteAllBookings,
     clearBookings,
-  } = useBookingsData({ authConfig, isAuthenticated, handleLogout });
+  } = useBookingsData({
+    authConfig,
+    isAuthenticated,
+    handleLogout,
+    pauseAutoRefreshRef,
+  });
 
   const { activeBookings, historyBookings } = useMemo(() => {
     const todayStart = new Date();
@@ -136,9 +145,26 @@ const AdminPanel = () => {
   const [sentMessages, setSentMessages] = useState(getSentMessages);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showMoreNav, setShowMoreNav] = useState(false);
+  const [bulkInteractionActive, setBulkInteractionActive] = useState(false);
   const moreNavRef = useRef(null);
 
   const shortcutsRef = useFocusTrap(showShortcuts);
+
+  useEffect(() => {
+    pauseAutoRefreshRef.current = Boolean(
+      selectedBooking ||
+      viewBooking ||
+      showShortcuts ||
+      showMoreNav ||
+      bulkInteractionActive,
+    );
+  }, [
+    bulkInteractionActive,
+    selectedBooking,
+    showMoreNav,
+    showShortcuts,
+    viewBooking,
+  ]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -291,6 +317,24 @@ const AdminPanel = () => {
             <button
               type="button"
               className="admin-secondary-btn slim"
+              onClick={() => refreshBookings()}
+              disabled={dataLoading}
+              aria-label="Recargar turnos ahora"
+            >
+              <FaSyncAlt className={dataLoading ? "spinner" : ""} aria-hidden="true" />
+              Recargar
+            </button>
+            {lastRefreshedAt && (
+              <span className="admin-last-refresh" role="status">
+                Actualizado {lastRefreshedAt.toLocaleTimeString("es-AR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            )}
+            <button
+              type="button"
+              className="admin-secondary-btn slim"
               onClick={() => setShowShortcuts(true)}
               title="Atajos de teclado (?)"
             >
@@ -430,6 +474,7 @@ const AdminPanel = () => {
               onDeleteBooking={deleteBooking}
               onDeleteAll={deleteAllBookings}
               onQuickStatusChange={handleQuickStatusChange}
+              onInteractionStateChange={setBulkInteractionActive}
             />
           )}
 

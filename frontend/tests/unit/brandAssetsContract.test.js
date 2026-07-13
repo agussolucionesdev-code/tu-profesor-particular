@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { statSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, statSync } from "node:fs";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -7,31 +8,55 @@ import sharp from "sharp";
 const sourceUrl = new URL("../../src/components/ui/ThemeLogo.jsx", import.meta.url);
 const source = readFileSync(sourceUrl, "utf8");
 
-const transparentAssets = [
-  new URL("../../src/assets/images/logo-icon-sin-fondo.png", import.meta.url),
-  new URL("../../src/assets/images/logo-full-sin-fondo.png", import.meta.url),
+const officialAssets = [
+  {
+    url: new URL("../../src/assets/images/brand-logo-monogram-light.png", import.meta.url),
+    width: 1254,
+    height: 1254,
+    sha256: "76e35e9bd6b52bca95d8bfc9e393cb13e5812dbfe1ea5bc208f34da19c436fe9",
+  },
+  {
+    url: new URL("../../src/assets/images/brand-logo-monogram-dark.png", import.meta.url),
+    width: 1254,
+    height: 1254,
+    sha256: "4666fa1537a83a0ea17867efa541843c74299b9702dcd08c8c0dc437f5707177",
+  },
+  {
+    url: new URL("../../src/assets/images/brand-logo-main-tagline.png", import.meta.url),
+    width: 1536,
+    height: 1024,
+    sha256: "f80e7bcc059725e3409fdc59b80e152571c8e0ae59ebe1ef92d36450719c5999",
+  },
 ];
 
-test("ThemeLogo only references transparent brand assets", () => {
-  assert.match(source, /logo-icon-sin-fondo\.png/);
-  assert.match(source, /logo-full-sin-fondo\.png/);
-  assert.doesNotMatch(source, /logo-(?:monogram|full)-(?:light|dark|tagline)\.png/);
+test("ThemeLogo references only the official new TU identity", () => {
+  assert.match(source, /brand-logo-monogram-light\.png/);
+  assert.match(source, /brand-logo-monogram-dark\.png/);
+  assert.match(source, /brand-logo-main-tagline\.png/);
+  assert.doesNotMatch(source, /logo-(?:icon|full)-sin-fondo\.png/);
 });
 
-test("the referenced brand assets have real alpha and a bounded transfer weight", async () => {
-  let totalBytes = 0;
+test("official assets are byte-identical to the supplied ZIP and keep their native ratio", async () => {
+  for (const asset of officialAssets) {
+    const assetPath = fileURLToPath(asset.url);
+    const bytes = readFileSync(assetPath);
+    const metadata = await sharp(bytes).metadata();
 
-  for (const asset of transparentAssets) {
-    const assetPath = fileURLToPath(asset);
-    const metadata = await sharp(assetPath).metadata();
-    totalBytes += statSync(assetPath).size;
-    assert.equal(metadata.hasAlpha, true, `${asset.pathname} must have alpha`);
+    assert.equal(metadata.width, asset.width);
+    assert.equal(metadata.height, asset.height);
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.sha256);
+    assert.ok(statSync(assetPath).size > 0);
   }
-
-  assert.ok(totalBytes < 1_100_000, `brand payload is ${totalBytes} bytes`);
 });
 
-test("ThemeLogo renders one image instead of preloading hidden theme duplicates", () => {
+test("ThemeLogo excludes ZIP files with a baked checkerboard", () => {
+  assert.doesNotMatch(source, /Main_Logo_No_Tagline/);
+  assert.doesNotMatch(source, /brand-logo-main-(?:light|dark)\.png/);
+});
+
+test("ThemeLogo keeps one rendered image and responds to the explicit app theme", () => {
   const imageTags = source.match(/\n\s*<img\b/g) ?? [];
   assert.equal(imageTags.length, 1);
+  assert.match(source, /MutationObserver/);
+  assert.match(source, /dataset\.theme/);
 });

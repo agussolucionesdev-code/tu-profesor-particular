@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchAllBookings,
   updateBooking,
@@ -6,30 +6,58 @@ import {
   deleteAllBookings as apiDeleteAllBookings,
 } from "../api/bookingApi";
 import { toSafeDate as toDate } from "../utils/bookingFormatters";
+import { createSingleFlight } from "../utils/adminOperations";
 
-export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) => {
+const AUTO_REFRESH_INTERVAL_MS = 60_000;
+
+export const useBookingsData = ({
+  authConfig,
+  isAuthenticated,
+  handleLogout,
+  pauseAutoRefreshRef,
+}) => {
   const [bookings, setBookings] = useState([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
+  const refreshControllerRef = useRef(null);
+  if (!refreshControllerRef.current) {
+    refreshControllerRef.current = createSingleFlight();
+  }
 
-  const fetchBookings = useCallback(async () => {
-    setDataLoading(true);
-    try {
-      const response = await fetchAllBookings(authConfig);
-      setBookings(Array.isArray(response.data.data) ? response.data.data : []);
-    } catch (error) {
-      console.error("Error al cargar reservas:", error);
-      if (error.response?.status === 401) {
-        handleLogout();
-        setBookings([]);
+  const fetchBookings = useCallback(({ silent = false } = {}) => {
+    return refreshControllerRef.current.run(async () => {
+      if (!silent) setDataLoading(true);
+      try {
+        const response = await fetchAllBookings(authConfig);
+        setBookings(Array.isArray(response.data.data) ? response.data.data : []);
+        setLastRefreshedAt(new Date());
+      } catch (error) {
+        console.error("Error al cargar reservas:", error);
+        if (error.response?.status === 401) {
+          handleLogout();
+          setBookings([]);
+        }
+      } finally {
+        if (!silent) setDataLoading(false);
       }
-    } finally {
-      setDataLoading(false);
-    }
+    });
   }, [authConfig, handleLogout]);
 
   useEffect(() => {
     if (isAuthenticated) fetchBookings();
   }, [isAuthenticated, fetchBookings]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      if (!pauseAutoRefreshRef?.current) {
+        fetchBookings({ silent: true });
+      }
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [fetchBookings, isAuthenticated, pauseAutoRefreshRef]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -62,8 +90,15 @@ export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) =
             booking._id === id ? { ...booking, status: newStatus } : booking,
           ),
         );
-      } catch {
+        return { ok: true };
+      } catch (error) {
         console.error("No se pudo actualizar el estado del turno:", id);
+        return {
+          ok: false,
+          error:
+            error?.response?.data?.message ||
+            "No se pudo actualizar el estado del turno.",
+        };
       }
     },
     [authConfig],
@@ -116,6 +151,8 @@ export const useBookingsData = ({ authConfig, isAuthenticated, handleLogout }) =
     bookings,
     sortedBookings,
     dataLoading,
+    lastRefreshedAt,
+    refreshBookings: fetchBookings,
     handleQuickStatusChange,
     updateBookingFields,
     deleteBooking: handleDeleteBooking,

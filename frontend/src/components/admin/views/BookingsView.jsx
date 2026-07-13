@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FaCalendarAlt,
   FaCheckCircle,
@@ -27,6 +27,10 @@ import {
   toSafeDate as toDate,
 } from "../../../utils/bookingFormatters";
 import { usePagination } from "../../../hooks/usePagination";
+import {
+  ariaSortValue,
+  runBulkOperation,
+} from "../../../utils/adminOperations";
 
 const STATUS_FILTERS = ["Todos", "Pendiente", "Confirmado", "Finalizado", "Cancelado"];
 const PAGE_SIZE = 20;
@@ -55,6 +59,7 @@ const BookingsView = ({
   onDeleteBooking,
   onDeleteAll,
   onQuickStatusChange,
+  onInteractionStateChange,
 }) => {
   const [sortKey, setSortKey] = useState("timeSlot");
   const [sortDir, setSortDir] = useState("asc");
@@ -62,6 +67,14 @@ const BookingsView = ({
   const [bulkLoading, setBulkLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } or "all"
   const [deleteError, setDeleteError] = useState("");
+  const [bulkResult, setBulkResult] = useState(null);
+
+  useEffect(() => {
+    onInteractionStateChange?.(
+      selectedIds.size > 0 || bulkLoading || confirmDelete !== null,
+    );
+    return () => onInteractionStateChange?.(false);
+  }, [bulkLoading, confirmDelete, onInteractionStateChange, selectedIds]);
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -149,9 +162,14 @@ const BookingsView = ({
 
   const handleBulkAction = async (newStatus) => {
     setBulkLoading(true);
+    setBulkResult(null);
     try {
-      await Promise.all([...selectedIds].map((id) => onQuickStatusChange(id, newStatus)));
-      setSelectedIds(new Set());
+      const result = await runBulkOperation(
+        [...selectedIds],
+        (id) => onQuickStatusChange(id, newStatus),
+      );
+      setSelectedIds(new Set(result.failedIds));
+      setBulkResult({ ...result, status: newStatus });
     } finally {
       setBulkLoading(false);
     }
@@ -159,10 +177,12 @@ const BookingsView = ({
 
   const thProps = (key, label) => ({
     className: `sortable-th ${sortKey === key ? "is-sorted" : ""}`,
-    onClick: () => toggleSort(key),
-    "aria-sort": sortKey === key ? (sortDir === "asc" ? "ascending" : "descending") : "none",
+    "aria-sort": ariaSortValue(sortKey, key, sortDir),
     title: `Ordenar por ${label}`,
   });
+
+  const bookingName = (id) =>
+    bookings.find((booking) => booking._id === id)?.studentName || id;
 
   return (
     <section className="admin-card">
@@ -257,6 +277,27 @@ const BookingsView = ({
         </div>
       )}
 
+      {bulkResult && (
+        <div
+          className={`bulk-result ${bulkResult.failedIds.length > 0 ? "has-errors" : "is-success"}`}
+          role="status"
+          aria-live="polite"
+        >
+          <strong>
+            {bulkResult.failedIds.length > 0
+              ? `Se actualizaron ${bulkResult.succeededIds.length} de ${bulkResult.results.length} turnos.`
+              : `Se actualizaron los ${bulkResult.succeededIds.length} turnos seleccionados.`}
+          </strong>
+          <ul>
+            {bulkResult.results.map((result) => (
+              <li key={result.id}>
+                {bookingName(result.id)}: {result.ok ? bulkResult.status : `sin cambios (${result.error})`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {dataLoading ? (
         <div className="admin-loading-state">
           <FaSpinner className="spinner giant" />
@@ -279,17 +320,25 @@ const BookingsView = ({
                     />
                   </th>
                   <th {...thProps("status", "estado")}>
-                    Estado <SortIcon active={sortKey === "status"} dir={sortDir} />
+                    <button type="button" className="sortable-header-btn" onClick={() => toggleSort("status")}>
+                      Estado <SortIcon active={sortKey === "status"} dir={sortDir} />
+                    </button>
                   </th>
                   <th>Código</th>
                   <th {...thProps("studentName", "alumno")}>
-                    Alumno <SortIcon active={sortKey === "studentName"} dir={sortDir} />
+                    <button type="button" className="sortable-header-btn" onClick={() => toggleSort("studentName")}>
+                      Alumno <SortIcon active={sortKey === "studentName"} dir={sortDir} />
+                    </button>
                   </th>
                   <th {...thProps("timeSlot", "fecha")}>
-                    Horario <SortIcon active={sortKey === "timeSlot"} dir={sortDir} />
+                    <button type="button" className="sortable-header-btn" onClick={() => toggleSort("timeSlot")}>
+                      Horario <SortIcon active={sortKey === "timeSlot"} dir={sortDir} />
+                    </button>
                   </th>
                   <th {...thProps("subject", "materia")}>
-                    Materia <SortIcon active={sortKey === "subject"} dir={sortDir} />
+                    <button type="button" className="sortable-header-btn" onClick={() => toggleSort("subject")}>
+                      Materia <SortIcon active={sortKey === "subject"} dir={sortDir} />
+                    </button>
                   </th>
                   <th>Contacto</th>
                   <th>Acciones</th>
