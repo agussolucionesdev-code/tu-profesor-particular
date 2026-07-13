@@ -15,11 +15,13 @@ import {
 } from "../src/services/bookingSlotService.js";
 
 const sendManagementLinkEmailMock = vi.hoisted(() => vi.fn());
+const sendReminderNotificationMock = vi.hoisted(() => vi.fn());
 vi.mock("../src/config/mailer.js", async () => {
   const actual = await vi.importActual("../src/config/mailer.js");
   return {
     ...actual,
     sendManagementLinkEmail: sendManagementLinkEmailMock,
+    sendReminderNotification: sendReminderNotificationMock,
   };
 });
 
@@ -31,7 +33,14 @@ let IdempotencyKey;
 let User;
 let AppSettings;
 let BlockedDate;
+let AuditEvent;
 let requestManagementLink;
+let processReminders;
+let ensureOperationalIndexes;
+let setAuditWriterForTests;
+let writeAuditDocument;
+let AUDIT_WRITE_TIMEOUT_MS;
+let SLOT_MUTATION_LOCK_MS;
 
 const getMemoryLaunchTimeout = () =>
   Number(process.env.MONGO_MEMORY_LAUNCH_TIMEOUT_MS || 90000);
@@ -133,6 +142,7 @@ const createAdminAndLogin = async () => {
 
 beforeAll(async () => {
   process.env.JWT_SECRET = "test-secret";
+  process.env.RATE_LIMIT_MAX = "1000";
   process.env.PUBLIC_MUTATION_RATE_LIMIT_MAX = "1000";
   process.env.FRONTEND_URL = "https://frontend.example.com";
   mongoServer = await MongoMemoryServer.create({
@@ -149,6 +159,17 @@ beforeAll(async () => {
   User = (await import("../src/models/User.js")).default;
   AppSettings = (await import("../src/models/AppSettings.js")).default;
   BlockedDate = (await import("../src/models/BlockedDate.js")).default;
+  AuditEvent = (await import("../src/models/AuditEvent.js")).default;
+  processReminders = (await import("../src/services/reminderService.js")).processReminders;
+  ensureOperationalIndexes = (
+    await import("../src/config/operationalIndexes.js")
+  ).ensureOperationalIndexes;
+  ({
+    setAuditWriterForTests,
+    writeAuditDocument,
+    AUDIT_WRITE_TIMEOUT_MS,
+  } = await import("../src/services/auditService.js"));
+  ({ SLOT_MUTATION_LOCK_MS } = await import("../src/config/bookingMutationLease.js"));
   requestManagementLink = (
     await import("../src/controllers/bookingController.js")
   ).requestManagementLink;
@@ -161,12 +182,17 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   sendManagementLinkEmailMock.mockReset().mockResolvedValue(true);
+  sendReminderNotificationMock.mockReset().mockResolvedValue({
+    sent: true,
+    recipient: "familia@example.com",
+  });
   await Booking.deleteMany({});
   await BookingSlot.deleteMany({});
   await IdempotencyKey.deleteMany({});
   await User.deleteMany({});
   await AppSettings.deleteMany({});
   await BlockedDate.deleteMany({});
+  await AuditEvent.deleteMany({});
 });
 
 afterAll(async () => {
@@ -989,16 +1015,20 @@ describe("booking flows", () => {
     }
   });
 
-  it("releases the mutation lock when an admin delete fails", async () => {
+  it("releases the mutation lock when an admin soft-delete write fails", async () => {
     const token = await createAdminAndLogin();
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
       .expect(201);
     const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const originalFindOneAndUpdate = Booking.findOneAndUpdate;
     const deleteSpy = vi
-      .spyOn(Booking, "findOneAndDelete")
-      .mockRejectedValueOnce(new Error("booking delete failed"));
+      .spyOn(Booking, "findOneAndUpdate")
+      .mockImplementation(function failSoftDelete(filter, update, options) {
+        if (update?.$set?.deletedAt) return Promise.reject(new Error("booking delete failed"));
+        return originalFindOneAndUpdate.call(this, filter, update, options);
+      });
 
     try {
       await request(app)
@@ -1595,7 +1625,7 @@ describe("booking flows", () => {
     expect(await BookingSlot.exists({ _id: inFlightSlot._id })).not.toBeNull();
   });
 
-  it("reconciles an orphan left by a hard delete once its claim grace elapsed", async () => {
+  it("reconciles stale slots left by a soft delete with failed cleanup", async () => {
     const token = await createAdminAndLogin();
     const targetTime = formatForApi(tomorrowAt(10));
     const created = await request(app)
@@ -1622,7 +1652,7 @@ describe("booking flows", () => {
       cleanupSpy.mockRestore();
     }
 
-    expect(await Booking.findById(stored._id)).toBeNull();
+    expect((await Booking.findById(stored._id)).deletedAt).toBeInstanceOf(Date);
     expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
 
     await request(app)
@@ -1789,4 +1819,560 @@ describe("booking flows", () => {
       timeSlot: parseDateTimeInput(targetTime),
     })).toBe(1);
   }, 15000);
+
+  it("soft-deletes an admin booking, releases its slots and writes a sanitized audit event", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .set("X-Request-Id", "delete-audit-request")
+      .expect(200);
+
+    const deleted = await Booking.findById(stored._id).lean();
+    expect(deleted).not.toBeNull();
+    expect(deleted.deletedAt).toBeInstanceOf(Date);
+    expect(String(deleted.deletedBy)).toBeTruthy();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+
+    const audit = await AuditEvent.findOne({ entityId: stored._id, action: "booking.deleted" }).lean();
+    expect(audit).toMatchObject({
+      entityType: "Booking",
+      requestId: "delete-audit-request",
+      actor: { role: "admin", username: "admin@example.com" },
+    });
+    expect(String(audit.actor.id)).toBe(String(deleted.deletedBy));
+    expect(audit.before.bookingCode).toBe(stored.bookingCode);
+    expect(audit.after.deletedAt).toBeTruthy();
+    expect(JSON.stringify(audit)).not.toMatch(/managementToken|slotMutationLock/i);
+  });
+
+  it("excludes deleted bookings from operations and exposes them only through scope=trash", async () => {
+    const token = await createAdminAndLogin();
+    const timeSlot = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    const activeList = await request(app)
+      .get("/api/bookings")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(activeList.body.data).toHaveLength(0);
+
+    const trashList = await request(app)
+      .get("/api/bookings?scope=trash")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(trashList.body.data).toHaveLength(1);
+    expect(trashList.body.data[0]._id).toBe(String(stored._id));
+
+    const stats = await request(app)
+      .get("/api/bookings/stats")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(stats.body.data.stats.total).toBe(0);
+
+    await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ notes: "No debe mutarse" })
+      .expect(404);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Reemplazo activo",
+        email: "reemplazo@example.com",
+        timeSlot,
+      }))
+      .expect(201);
+
+    const reminderTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await Booking.updateMany({ deletedAt: null }, { $set: { status: "Pendiente" } });
+    await Booking.updateOne(
+      { _id: stored._id },
+      { $set: { status: "Confirmado", timeSlot: reminderTime, endTime: new Date(reminderTime.getTime() + 3600000) } },
+    );
+    await processReminders();
+    expect(sendReminderNotificationMock).not.toHaveBeenCalled();
+  });
+
+  it("restores a trashed booking only after revalidating and reclaiming its slots", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    await request(app)
+      .post(`/api/bookings/${stored._id}/restore`)
+      .set("Authorization", `Bearer ${token}`)
+      .set("X-Request-Id", "restore-audit-request")
+      .expect(200);
+
+    const restored = await Booking.findById(stored._id).lean();
+    expect(restored.deletedAt).toBeNull();
+    expect(restored.deletedBy).toBeNull();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+    expect(await AuditEvent.exists({
+      entityId: stored._id,
+      action: "booking.restored",
+      requestId: "restore-audit-request",
+    })).toBeTruthy();
+  });
+
+  it("returns 409 and keeps a booking trashed when its original slot is occupied", async () => {
+    const token = await createAdminAndLogin();
+    const timeSlot = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Ocupa el horario",
+        email: "ocupa@example.com",
+        timeSlot,
+      }))
+      .expect(201);
+
+    await request(app)
+      .post(`/api/bookings/${stored._id}/restore`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(409);
+
+    const stillDeleted = await Booking.findById(stored._id).lean();
+    expect(stillDeleted.deletedAt).toBeInstanceOf(Date);
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+  });
+
+  it("compensates a soft delete when its audit event cannot be persisted", async () => {
+    const token = await createAdminAndLogin();
+    const timeSlot = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const resetWriter = setAuditWriterForTests(async () => {
+      throw new Error("audit unavailable");
+    });
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+    } finally {
+      resetWriter();
+    }
+
+    const unchanged = await Booking.findById(stored._id)
+      .select("+slotMutationLock +slotMutationLockExpiresAt")
+      .lean();
+    expect(unchanged.deletedAt).toBeNull();
+    expect(unchanged.deletedBy).toBeNull();
+    expect(unchanged.slotMutationLock).toBeUndefined();
+    expect(unchanged.slotMutationLockExpiresAt).toBeUndefined();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+    expect(await AuditEvent.countDocuments()).toBe(0);
+
+    const replacement = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "No duplica sin auditoria",
+        email: "sin-auditoria@example.com",
+        timeSlot,
+      }));
+    expect(replacement.status).not.toBe(201);
+  });
+
+  it("keeps delete ownership locked until its audit event commits", async () => {
+    const token = await createAdminAndLogin();
+    const timeSlot = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    let resumeAudit;
+    let signalAuditPaused;
+    const auditPaused = new Promise((resolve) => { signalAuditPaused = resolve; });
+    const auditGate = new Promise((resolve) => { resumeAudit = resolve; });
+    const resetWriter = setAuditWriterForTests(({ document, timeoutMS }) => {
+      if (document.action !== "booking.deleted") return writeAuditDocument({ document, timeoutMS });
+      signalAuditPaused();
+      return auditGate.then(() => writeAuditDocument({ document, timeoutMS }));
+    });
+
+    const deletionPromise = request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .then((response) => response);
+
+    let replacement;
+    let deletion;
+    try {
+      await auditPaused;
+      replacement = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({
+          studentName: "Intento durante auditoria",
+          email: "durante-auditoria@example.com",
+          timeSlot,
+        }));
+    } finally {
+      resumeAudit();
+      deletion = await deletionPromise;
+      resetWriter();
+    }
+
+    expect(replacement.status).toBe(409);
+    expect(deletion.status).toBe(200);
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Reemplazo tras auditoria",
+        email: "tras-auditoria@example.com",
+        timeSlot,
+      }))
+      .expect(201);
+    expect(await Booking.countDocuments({ deletedAt: null, timeSlot: parseDateTimeInput(timeSlot) })).toBe(1);
+  }, 15000);
+
+  it("compensates a restore when its audit event cannot be persisted", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    const resetWriter = setAuditWriterForTests(async () => {
+      throw new Error("audit unavailable");
+    });
+
+    try {
+      await request(app)
+        .post(`/api/bookings/${stored._id}/restore`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+    } finally {
+      resetWriter();
+    }
+
+    const stillDeleted = await Booking.findById(stored._id)
+      .select("+slotMutationLock +slotMutationLockExpiresAt")
+      .lean();
+    expect(stillDeleted.deletedAt).toBeInstanceOf(Date);
+    expect(stillDeleted.slotMutationLock).toBeUndefined();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+    expect(await AuditEvent.countDocuments({ action: "booking.restored" })).toBe(0);
+  });
+
+  it("keeps restore ownership locked until its audit event commits", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    let resumeAudit;
+    let signalAuditPaused;
+    const auditPaused = new Promise((resolve) => { signalAuditPaused = resolve; });
+    const auditGate = new Promise((resolve) => { resumeAudit = resolve; });
+    const resetWriter = setAuditWriterForTests(({ document, timeoutMS }) => {
+      if (document.action !== "booking.restored") return writeAuditDocument({ document, timeoutMS });
+      signalAuditPaused();
+      return auditGate.then(() => writeAuditDocument({ document, timeoutMS }));
+    });
+
+    const restorePromise = request(app)
+      .post(`/api/bookings/${stored._id}/restore`)
+      .set("Authorization", `Bearer ${token}`)
+      .then((response) => response);
+
+    let concurrentDelete;
+    let restored;
+    try {
+      await auditPaused;
+      concurrentDelete = await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`);
+    } finally {
+      resumeAudit();
+      restored = await restorePromise;
+      resetWriter();
+    }
+
+    expect(concurrentDelete.status).toBe(409);
+    expect(restored.status).toBe(200);
+    const finalBooking = await Booking.findById(stored._id)
+      .select("+slotMutationLock +slotMutationLockExpiresAt")
+      .lean();
+    expect(finalBooking.deletedAt).toBeNull();
+    expect(finalBooking.slotMutationLock).toBeUndefined();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+  }, 15000);
+
+  it("provisions the soft-delete and audit indexes idempotently without dropping indexes", async () => {
+    await ensureOperationalIndexes(mongoose.connection);
+    await ensureOperationalIndexes(mongoose.connection);
+
+    const bookingIndexNames = (await Booking.collection.indexes()).map((index) => index.name);
+    const auditIndexNames = (await AuditEvent.collection.indexes()).map((index) => index.name);
+    expect(bookingIndexNames).toEqual(expect.arrayContaining([
+      "deletedAt_1",
+      "deletedAt_1_timeSlot_-1",
+    ]));
+    expect(auditIndexNames).toEqual(expect.arrayContaining([
+      "entityId_1",
+      "entityType_1_entityId_1_createdAt_-1",
+      "action_1_createdAt_-1",
+    ]));
+  });
+
+  it("times out delete auditing before its lease and blocks replacement, delete and restore races", async () => {
+    expect(AUDIT_WRITE_TIMEOUT_MS).toBeLessThan(SLOT_MUTATION_LOCK_MS);
+    const token = await createAdminAndLogin();
+    const timeSlot = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    let signalAuditStarted;
+    const auditStarted = new Promise((resolve) => { signalAuditStarted = resolve; });
+    const resetWriter = setAuditWriterForTests(({ timeoutMS }) => {
+      signalAuditStarted(timeoutMS);
+      return new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("bounded audit timeout")), timeoutMS);
+      });
+    });
+
+    const deletionPromise = request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .then((response) => response);
+
+    let deletion;
+    try {
+      const timeoutMS = await auditStarted;
+      const locked = await Booking.findById(stored._id)
+        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .lean();
+      expect(new Date(locked.slotMutationLockExpiresAt).getTime() - Date.now()).toBeGreaterThan(timeoutMS);
+
+      const [replacement, concurrentDelete, concurrentRestore] = await Promise.all([
+        request(app)
+          .post("/api/bookings/reserve")
+          .send(validBookingPayload({
+            studentName: "No entra durante timeout",
+            email: "timeout-delete@example.com",
+            timeSlot,
+          })),
+        request(app)
+          .delete(`/api/bookings/${stored._id}`)
+          .set("Authorization", `Bearer ${token}`),
+        request(app)
+          .post(`/api/bookings/${stored._id}/restore`)
+          .set("Authorization", `Bearer ${token}`),
+      ]);
+      expect(replacement.status).toBe(409);
+      expect(concurrentDelete.status).toBe(409);
+      expect(concurrentRestore.status).toBe(409);
+      deletion = await deletionPromise;
+    } finally {
+      resetWriter();
+    }
+
+    expect(deletion.status).toBe(500);
+    const finalBooking = await Booking.findById(stored._id)
+      .select("+slotMutationLock +slotMutationLockExpiresAt")
+      .lean();
+    expect(finalBooking.deletedAt).toBeNull();
+    expect(finalBooking.slotMutationLock).toBeUndefined();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+    expect(await AuditEvent.countDocuments()).toBe(0);
+    expect(await Booking.countDocuments({ deletedAt: null, timeSlot: parseDateTimeInput(timeSlot) })).toBe(1);
+  }, 15000);
+
+  it("times out restore auditing before its lease without allowing a concurrent delete", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    let signalAuditStarted;
+    const auditStarted = new Promise((resolve) => { signalAuditStarted = resolve; });
+    const resetWriter = setAuditWriterForTests(({ document, timeoutMS }) => {
+      if (document.action !== "booking.restored") return writeAuditDocument({ document, timeoutMS });
+      signalAuditStarted(timeoutMS);
+      return new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("bounded audit timeout")), timeoutMS);
+      });
+    });
+
+    const restorePromise = request(app)
+      .post(`/api/bookings/${stored._id}/restore`)
+      .set("Authorization", `Bearer ${token}`)
+      .then((response) => response);
+    let restore;
+    try {
+      const timeoutMS = await auditStarted;
+      const locked = await Booking.findById(stored._id)
+        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .lean();
+      expect(new Date(locked.slotMutationLockExpiresAt).getTime() - Date.now()).toBeGreaterThan(timeoutMS);
+      const concurrentDelete = await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`);
+      expect(concurrentDelete.status).toBe(409);
+      restore = await restorePromise;
+    } finally {
+      resetWriter();
+    }
+
+    expect(restore.status).toBe(500);
+    const finalBooking = await Booking.findById(stored._id)
+      .select("+slotMutationLock +slotMutationLockExpiresAt")
+      .lean();
+    expect(finalBooking.deletedAt).toBeInstanceOf(Date);
+    expect(finalBooking.slotMutationLock).toBeUndefined();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+    expect(await AuditEvent.countDocuments({ action: "booking.restored" })).toBe(0);
+  }, 15000);
+
+  it("persists explicit audit timestamps so the audit index returns deterministic chronology", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await request(app)
+      .post(`/api/bookings/${stored._id}/restore`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    const auditIndexes = await AuditEvent.collection.indexes();
+    expect(auditIndexes.some((index) =>
+      index.name === "entityType_1_entityId_1_createdAt_-1")).toBe(true);
+    const events = await AuditEvent.find({ entityId: stored._id })
+      .sort({ createdAt: -1 })
+      .lean();
+    expect(events).toHaveLength(2);
+    expect(events.every((event) => event.createdAt instanceof Date)).toBe(true);
+    expect(events.map((event) => event.action)).toEqual([
+      "booking.restored",
+      "booking.deleted",
+    ]);
+    expect(events[0].createdAt.getTime()).toBeGreaterThan(events[1].createdAt.getTime());
+  });
+
+  it("never reactivates a delete compensation after the locked document changed", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const resetWriter = setAuditWriterForTests(async ({ document }) => {
+      await Booking.collection.updateOne(
+        { _id: document.entityId },
+        { $set: { updatedAt: new Date(Date.now() + 1_000) } },
+      );
+      throw new Error("audit failed after authoritative change");
+    });
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+    } finally {
+      resetWriter();
+    }
+
+    const finalBooking = await Booking.findById(stored._id).lean();
+    expect(finalBooking.deletedAt).toBeInstanceOf(Date);
+    expect(await AuditEvent.countDocuments()).toBe(0);
+  });
+
+  it("reports modifiedCount zero and never reactivates after the server lease expired", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const resetWriter = setAuditWriterForTests(async ({ document }) => {
+      await Booking.collection.updateOne(
+        { _id: document.entityId },
+        { $set: { slotMutationLockExpiresAt: new Date(Date.now() - 1_000) } },
+      );
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      throw new Error("audit failed after lease expiry");
+    });
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+    } finally {
+      resetWriter();
+    }
+
+    const finalBooking = await Booking.findById(stored._id).lean();
+    expect(finalBooking.deletedAt).toBeInstanceOf(Date);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[audit-compensation]",
+      expect.stringContaining("booking_delete_audit_compensation_lost_lease"),
+    );
+    errorSpy.mockRestore();
+    expect(await AuditEvent.countDocuments()).toBe(0);
+  });
 });

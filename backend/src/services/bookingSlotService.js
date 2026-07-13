@@ -61,7 +61,7 @@ const deleteManyWithRetry = async ({ filter, operation, bookingId = null }) => {
 
 const isStaleBookingSlot = async (slot) => {
   const owner = await Booking.findById(slot.booking)
-    .select("status timeSlot endTime slotMutationLockExpiresAt")
+    .select("status timeSlot endTime deletedAt slotMutationLockExpiresAt")
     .lean();
 
   if (!owner) {
@@ -71,14 +71,14 @@ const isStaleBookingSlot = async (slot) => {
     return Date.now() - new Date(slot.createdAt).getTime() >= ORPHAN_SLOT_GRACE_MS;
   }
 
-  if (["Cancelado", "Finalizado"].includes(owner.status)) return true;
-
   if (
     owner.slotMutationLockExpiresAt &&
     new Date(owner.slotMutationLockExpiresAt).getTime() > Date.now()
   ) {
     return false;
   }
+
+  if (owner.deletedAt || ["Cancelado", "Finalizado"].includes(owner.status)) return true;
 
   const slotStart = new Date(slot.slotStart).getTime();
   const authoritativeStart = new Date(owner.timeSlot).getTime();

@@ -50,8 +50,18 @@ import {
   updateBookingSchema,
   validateContact,
 } from "../utils/bookingRules.js";
+import {
+  ACTIVE_BOOKING_FILTER,
+  TRASHED_BOOKING_FILTER,
+  withActiveBooking,
+} from "../utils/bookingFilters.js";
+import { recordBookingAudit } from "../services/auditService.js";
+import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
 
-const activeStatusFilter = { status: { $nin: ["Cancelado", "Finalizado"] } };
+const activeStatusFilter = {
+  ...ACTIVE_BOOKING_FILTER,
+  status: { $nin: ["Cancelado", "Finalizado"] },
+};
 
 const STATUS_TRANSITIONS = {
   Pendiente: ["Confirmado", "Cancelado"],
@@ -68,7 +78,6 @@ const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
 const MANAGEMENT_LINK_COOLDOWN_MS = 5 * 60 * 1000;
 const IDEMPOTENCY_KEY_TTL_MS = 24 * 60 * 60 * 1000;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/;
-const SLOT_MUTATION_LOCK_MS = 30 * 1000;
 const INVALID_MANAGEMENT_LINK_MESSAGE = "El enlace de gestión no es válido o venció.";
 
 const publicBooking = (booking) => ({
@@ -149,12 +158,16 @@ const requiresIdempotencyKey = () => process.env.REQUIRE_IDEMPOTENCY_KEY === "tr
 const scopedIdempotencyKey = (scope, idempotencyKey) =>
   fingerprintRequest({ scope, idempotencyKey });
 
-const acquireSlotMutationLock = async (bookingId) => {
+const acquireSlotMutationLock = async (
+  bookingId,
+  scopeFilter = ACTIVE_BOOKING_FILTER,
+) => {
   const lock = crypto.randomUUID();
   const now = new Date();
   const booking = await Booking.findOneAndUpdate(
     {
       _id: bookingId,
+      ...scopeFilter,
       $or: [
         { slotMutationLock: null },
         { slotMutationLock: { $exists: false } },
@@ -170,7 +183,11 @@ const acquireSlotMutationLock = async (bookingId) => {
     { new: true },
   );
 
-  return booking ? { booking, lock } : null;
+  return booking ? {
+    booking,
+    lock,
+    expiresAt: new Date(now.getTime() + SLOT_MUTATION_LOCK_MS),
+  } : null;
 };
 
 const releaseSlotMutationLock = async (bookingId, lock) =>
@@ -178,6 +195,31 @@ const releaseSlotMutationLock = async (bookingId, lock) =>
     { _id: bookingId, slotMutationLock: lock },
     { $unset: { slotMutationLock: 1, slotMutationLockExpiresAt: 1 } },
   );
+
+const AUDIT_COMPENSATION_TIMEOUT_CAP_MS = 1_000;
+const AUDIT_COMPENSATION_SAFETY_MS = 100;
+
+const compensateWithinOwnedLease = async ({ filter, update, leaseExpiresAt }) => {
+  const remainingLeaseMS = new Date(leaseExpiresAt).getTime() - Date.now();
+  const timeoutMS = Math.min(
+    AUDIT_COMPENSATION_TIMEOUT_CAP_MS,
+    remainingLeaseMS - AUDIT_COMPENSATION_SAFETY_MS,
+  );
+  if (!Number.isFinite(timeoutMS) || timeoutMS <= 0) {
+    return { acknowledged: true, matchedCount: 0, modifiedCount: 0 };
+  }
+
+  return Booking.updateOne(
+    trustedFilter({
+      ...filter,
+      // The database server, not the application clock, decides whether the
+      // lease is still owned at the instant the compensation executes.
+      $expr: { $gt: ["$slotMutationLockExpiresAt", "$$NOW"] },
+    }),
+    update,
+    { timeoutMS },
+  );
+};
 
 const ownedSlotMutationFilter = ({ booking, lock }) => ({
   _id: booking._id,
@@ -192,7 +234,7 @@ const findManagedBooking = async (req) => {
   const managementTokenHash = hashManagementToken(token);
   if (!managementTokenHash) return null;
 
-  const booking = await Booking.findOne({ managementTokenHash })
+  const booking = await Booking.findOne(withActiveBooking({ managementTokenHash }))
     .select("+managementTokenHash")
     .exec();
 
@@ -579,14 +621,18 @@ export const getAllBookings = async (req, res, next) => {
   try {
     setNoStore(res);
 
+    const scopeFilter = req.query.scope === "trash"
+      ? TRASHED_BOOKING_FILTER
+      : ACTIVE_BOOKING_FILTER;
+
     const page = Math.max(1, parseInt(req.query.page, 10) || 0);
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 0));
 
     if (page > 0 && limit > 0) {
       const skip = (page - 1) * limit;
       const [bookings, total] = await Promise.all([
-        Booking.find().sort({ timeSlot: -1 }).skip(skip).limit(limit).lean(),
-        Booking.countDocuments(),
+        Booking.find(scopeFilter).sort({ timeSlot: -1 }).skip(skip).limit(limit).lean(),
+        Booking.countDocuments(scopeFilter),
       ]);
       return res.status(200).json({
         success: true,
@@ -599,7 +645,7 @@ export const getAllBookings = async (req, res, next) => {
       });
     }
 
-    const bookings = await Booking.find().sort({ timeSlot: -1 }).lean();
+    const bookings = await Booking.find(scopeFilter).sort({ timeSlot: -1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -631,14 +677,15 @@ export const getBookingStats = async (req, res, next) => {
 
     const [statusCounts, monthRevenue, lastMonthRevenue] = await Promise.all([
       Booking.aggregate([
+        { $match: ACTIVE_BOOKING_FILTER },
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
       Booking.aggregate([
-        { $match: { status: "Finalizado", timeSlot: { $gte: startOfMonth } } },
+        { $match: { ...ACTIVE_BOOKING_FILTER, status: "Finalizado", timeSlot: { $gte: startOfMonth } } },
         { $group: { _id: null, total: { $sum: { $ifNull: ["$price", 0] } } } },
       ]),
       Booking.aggregate([
-        { $match: { status: "Finalizado", timeSlot: { $gte: startOfLastMonth, $lte: endOfLastMonth } } },
+        { $match: { ...ACTIVE_BOOKING_FILTER, status: "Finalizado", timeSlot: { $gte: startOfLastMonth, $lte: endOfLastMonth } } },
         { $group: { _id: null, total: { $sum: { $ifNull: ["$price", 0] } } } },
       ]),
     ]);
@@ -694,7 +741,9 @@ export const updateBooking = async (req, res, next) => {
 
     // Validate status transition before touching the DB
     if (updateData.status !== undefined) {
-      const current = await Booking.findById(req.params.id).select("status").lean();
+      const current = await Booking.findOne(withActiveBooking({ _id: req.params.id }))
+        .select("status")
+        .lean();
       if (!current) return notFound(res, "Reserva no encontrada.");
 
       const allowed = STATUS_TRANSITIONS[current.status] ?? [];
@@ -709,7 +758,9 @@ export const updateBooking = async (req, res, next) => {
 
     let slotStarts = null;
     if (updateData.timeSlot !== undefined) {
-      const existing = await Booking.findById(req.params.id).select("duration").lean();
+      const existing = await Booking.findOne(withActiveBooking({ _id: req.params.id }))
+        .select("duration")
+        .lean();
       if (!existing) {
         return notFound(res, "Reserva no encontrada.");
       }
@@ -778,7 +829,7 @@ export const updateBooking = async (req, res, next) => {
         mongoUpdate,
         { new: true, runValidators: true },
       )
-      : await Booking.findByIdAndUpdate(req.params.id, mongoUpdate, {
+      : await Booking.findOneAndUpdate(withActiveBooking({ _id: req.params.id }), mongoUpdate, {
         new: true,
         runValidators: true,
       });
@@ -862,8 +913,17 @@ export const deleteBooking = async (req, res, next) => {
       });
     }
 
-    const deletedBooking = await Booking.findOneAndDelete(
-      ownedSlotMutationFilter(slotMutationLock),
+    const beforeDeletion = slotMutationLock.booking;
+    const deletedAt = new Date();
+    const deletedBooking = await Booking.findOneAndUpdate(
+      {
+        ...ownedSlotMutationFilter(slotMutationLock),
+        ...ACTIVE_BOOKING_FILTER,
+      },
+      {
+        $set: { deletedAt, deletedBy: req.user.id },
+      },
+      { new: true },
     );
     if (!deletedBooking) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock);
@@ -875,14 +935,48 @@ export const deleteBooking = async (req, res, next) => {
       });
     }
 
+    try {
+      await recordBookingAudit({
+        req,
+        action: "booking.deleted",
+        bookingId: deletedBooking._id,
+        before: beforeDeletion,
+        after: deletedBooking,
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+    } catch (auditError) {
+      // Standalone MongoDB cannot make the booking and audit writes atomic.
+      // Compensate before releasing slots; deleted documents cannot be changed
+      // through normal mutations while this compare-and-set runs.
+      const compensation = await compensateWithinOwnedLease({
+        filter: {
+          _id: deletedBooking._id,
+          deletedAt,
+          deletedBy: req.user.id,
+          updatedAt: deletedBooking.updatedAt,
+          slotMutationLock: slotMutationLock.lock,
+        },
+        update: { $set: { deletedAt: null, deletedBy: null } },
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+      if (compensation.modifiedCount !== 1) {
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "booking_delete_audit_compensation_lost_lease",
+          bookingId: String(deletedBooking._id),
+          requestId: req.requestId,
+        }));
+      }
+      throw auditError;
+    }
     await releaseBookingSlots(deletedBooking._id);
+    await releaseSlotMutationLock(deletedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
     await deleteBookingFromSheet(deletedBooking.bookingCode);
 
     setNoStore(res);
     res.status(200).json({
       success: true,
-      message: "Reserva eliminada.",
+      message: "Reserva enviada a la papelera.",
       requestId: req.requestId,
     });
   } catch (error) {
@@ -897,6 +991,162 @@ export const deleteBooking = async (req, res, next) => {
       return next(error);
     }
 
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const restoreBooking = async (req, res, next) => {
+  let claimedSlots = null;
+  let slotMutationLock = null;
+
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return badRequest(res, "Identificador de reserva invalido.");
+    }
+
+    slotMutationLock = await acquireSlotMutationLock(
+      req.params.id,
+      TRASHED_BOOKING_FILTER,
+    );
+    if (!slotMutationLock) {
+      return res.status(409).json({
+        success: false,
+        message: "La reserva no esta en la papelera o esta siendo modificada.",
+        requestId: req.requestId,
+      });
+    }
+
+    const trashedBooking = slotMutationLock.booking;
+    const startTime = new Date(trashedBooking.timeSlot);
+    const duration = Number(trashedBooking.duration) || 1;
+    const { error: slotError, schedule } = await validateConfiguredSlot(startTime, duration);
+    if (slotError) {
+      await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(409).json({
+        success: false,
+        message: `No se puede restaurar en su horario original: ${slotError}`,
+        requestId: req.requestId,
+      });
+    }
+
+    const endTime = new Date(trashedBooking.endTime);
+    if (await hasConflict(startTime, endTime, trashedBooking._id)) {
+      await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(409).json({
+        success: false,
+        message: "El horario original ya esta ocupado.",
+        requestId: req.requestId,
+      });
+    }
+
+    const slotStarts = getBookingSlotStarts({
+      startTime,
+      endTime,
+      slotDurationMinutes: schedule.slotDurationMinutes,
+    });
+    claimedSlots = await claimBookingSlots({
+      bookingId: trashedBooking._id,
+      slotStarts,
+      slotDurationMinutes: schedule.slotDurationMinutes,
+    });
+
+    const restoredBooking = await Booking.findOneAndUpdate(
+      {
+        ...ownedSlotMutationFilter(slotMutationLock),
+        ...TRASHED_BOOKING_FILTER,
+      },
+      {
+        $set: { deletedAt: null, deletedBy: null },
+      },
+      { new: true, runValidators: true },
+    );
+    if (!restoredBooking) {
+      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      claimedSlots = null;
+      await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(409).json({
+        success: false,
+        message: "La reserva cambio mientras era restaurada. Reintenta.",
+        requestId: req.requestId,
+      });
+    }
+
+    const successfulClaim = claimedSlots;
+    claimedSlots = null;
+    try {
+      await recordBookingAudit({
+        req,
+        action: "booking.restored",
+        bookingId: restoredBooking._id,
+        before: trashedBooking,
+        after: restoredBooking,
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+    } catch (auditError) {
+      const compensation = await compensateWithinOwnedLease({
+        filter: {
+          _id: restoredBooking._id,
+          ...ACTIVE_BOOKING_FILTER,
+          updatedAt: restoredBooking.updatedAt,
+          slotMutationLock: slotMutationLock.lock,
+        },
+        update: {
+          $set: {
+            deletedAt: trashedBooking.deletedAt,
+            deletedBy: trashedBooking.deletedBy,
+          },
+        },
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+      if (compensation.modifiedCount === 1) {
+        await releaseBookingSlots(restoredBooking._id);
+      } else {
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "booking_restore_audit_compensation_failed",
+          bookingId: String(restoredBooking._id),
+          requestId: req.requestId,
+          claimedSlotCount: successfulClaim?.insertedSlotIds?.length ?? 0,
+        }));
+      }
+      throw auditError;
+    }
+    await releaseBookingSlotsExcept(restoredBooking._id, slotStarts);
+    await releaseSlotMutationLock(restoredBooking._id, slotMutationLock.lock);
+    slotMutationLock = null;
+    await updateBookingInSheet(restoredBooking);
+
+    setNoStore(res);
+    return res.status(200).json({
+      success: true,
+      message: "Reserva restaurada.",
+      data: restoredBooking,
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(
+        slotMutationLock.booking._id,
+        slotMutationLock.lock,
+      ).catch(() => {});
+    }
+
+    if (error instanceof BookingSlotConflictError || error?.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "El horario original ya esta ocupado.",
+        requestId: req.requestId,
+      });
+    }
+
+    if (typeof next === "function") return next(error);
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor.",
@@ -948,7 +1198,7 @@ export const requestManagementLink = async (req, res, next) => {
       return acceptedResponse();
     }
 
-    const booking = await Booking.findOne({ bookingCode, email })
+    const booking = await Booking.findOne(withActiveBooking({ bookingCode, email }))
       .select("+managementTokenHash +managementLinkLastSentAt")
       .exec();
     if (!booking) return acceptedResponse();

@@ -134,6 +134,12 @@ const bookingSchema = new mongoose.Schema(
       enum: BOOKING_STATUS,
       default: "Pendiente",
     },
+    deletedAt: { type: Date, default: null, index: true },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -186,6 +192,7 @@ bookingSchema.pre("validate", async function validateBookingDocument() {
 
 bookingSchema.index({ timeSlot: 1, status: 1 });
 bookingSchema.index({ status: 1, timeSlot: 1, endTime: 1 }); // for hasConflict + getAvailability
+bookingSchema.index({ deletedAt: 1, timeSlot: -1 });
 bookingSchema.index({ email: 1 });
 bookingSchema.index({ phone: 1 });
 bookingSchema.index(

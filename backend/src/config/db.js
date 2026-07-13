@@ -4,6 +4,7 @@ import {
   stopLocalMongod,
   getLocalMongodUri,
 } from "./localMongod.js";
+import { ensureOperationalIndexes } from "./operationalIndexes.js";
 
 let memoryServer = null;
 let connectionEventsRegistered = false;
@@ -238,6 +239,7 @@ const connectMongoTarget = async (target) => {
   );
 
   const conn = await mongoose.connect(target.uri, getConnectionOptions());
+  await ensureOperationalIndexes(conn.connection);
 
   const persistenceLabel = target.persistent ? "PERSISTENT ✓" : "VOLATILE — data resets on restart ⚠";
   console.log("==================================================");

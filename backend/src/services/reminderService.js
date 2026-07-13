@@ -1,6 +1,7 @@
 import Booking from "../models/Booking.js";
 import AppSettings from "../models/AppSettings.js";
 import { sendReminderNotification } from "../config/mailer.js";
+import { ACTIVE_BOOKING_FILTER } from "../utils/bookingFilters.js";
 
 // Find bookings whose timeSlot falls 20–28 hours from now.
 // Running at 09:00 AM daily catches classes from 05:00 tomorrow to 13:00 tomorrow,
@@ -16,6 +17,7 @@ export const processReminders = async () => {
   let bookings;
   try {
     bookings = await Booking.find({
+      ...ACTIVE_BOOKING_FILTER,
       status: "Confirmado",
       email: { $exists: true, $ne: "" },
       timeSlot: { $gte: windowStart, $lte: windowEnd },
