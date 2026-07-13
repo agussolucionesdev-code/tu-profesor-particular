@@ -648,6 +648,40 @@
   font-weight: inherit;
   padding: 0.45rem 0.25rem;
 }
+
+.student-migration-notice,
+.student-load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--brand-accent-warm) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand-accent-warm) 10%, var(--color-white));
+  color: var(--color-text-main);
+}
+
+.student-migration-notice span,
+.student-load-error p { margin: 0; color: var(--color-text-secondary); }
+
+.student-profile-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.student-profile-badge.verified { background: rgba(34, 197, 94, 0.14); color: var(--color-success-deep); }
+.student-profile-badge.pending { background: rgba(245, 158, 11, 0.14); color: var(--color-warning-deep, #92400e); }
+
+[data-theme="dark"] .student-migration-notice,
+[data-theme="dark"] .student-load-error { background: #111827; border-color: rgba(245, 158, 11, 0.4); }
+[data-theme="dark"] .student-profile-badge.verified { color: #86efac; }
+[data-theme="dark"] .student-profile-badge.pending { color: #fcd34d; }
 .sortable-header-btn:focus-visible {
   border-radius: 6px;
   outline: 3px solid var(--focus-ring-color);

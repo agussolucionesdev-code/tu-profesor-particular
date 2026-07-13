@@ -58,6 +58,7 @@ import {
 } from "../utils/bookingFilters.js";
 import { recordBookingAudit } from "../services/auditService.js";
 import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
+import { STUDENT_IDENTITY_ALGORITHM_VERSION } from "../services/studentIdentityService.js";
 
 const activeStatusFilter = {
   ...ACTIVE_BOOKING_FILTER,
@@ -443,6 +444,18 @@ export const createBooking = async (req, res, next) => {
       duration,
       notes: "",
       status: bookingStatus,
+      studentLink: {
+        status: "pending",
+        source: "booking",
+        algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+        runId: null,
+        linkedAt: null,
+        lastAttemptAt: new Date(),
+        candidateIds: [],
+        errorCode: "",
+        attempts: 0,
+        nextAttemptAt: new Date(),
+      },
     });
     const { managementToken, managementUrl } = issueManagementToken(newBooking);
     const slotStarts = getBookingSlotStarts({
@@ -1187,7 +1200,22 @@ export const restoreBooking = async (req, res, next) => {
         ...TRASHED_BOOKING_FILTER,
       },
       {
-        $set: { deletedAt: null, deletedBy: null },
+        $set: {
+          deletedAt: null,
+          deletedBy: null,
+          ...(!trashedBooking.studentId ? { studentLink: {
+            status: "pending",
+            source: "repair",
+            algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+            runId: null,
+            linkedAt: null,
+            lastAttemptAt: new Date(),
+            candidateIds: [],
+            errorCode: "",
+            attempts: 0,
+            nextAttemptAt: new Date(),
+          } } : {}),
+        },
       },
       { new: true, runValidators: true },
     );
@@ -1226,6 +1254,7 @@ export const restoreBooking = async (req, res, next) => {
           $set: {
             deletedAt: trashedBooking.deletedAt,
             deletedBy: trashedBooking.deletedBy,
+            studentLink: trashedBooking.studentLink || null,
           },
         },
         leaseExpiresAt: slotMutationLock.expiresAt,

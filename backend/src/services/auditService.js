@@ -62,6 +62,8 @@ const AUDITED_BOOKING_FIELDS = [
   "attendanceRecordedAt",
   "attendanceNotes",
   "attendanceUpdatedBy",
+  "studentId",
+  "studentLink",
   "deletedAt",
   "deletedBy",
   "createdAt",

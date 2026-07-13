@@ -457,8 +457,9 @@ const AdminPanel = () => {
 
           {activeView === "students" && (
             <StudentsView
-              students={overviewData.students}
+              legacyStudents={overviewData.students}
               sortedBookings={sortedBookings}
+              authConfig={authConfig}
               onSelectBooking={setViewBooking}
               onSendWhatsApp={handleSendWhatsApp}
             />

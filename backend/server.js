@@ -5,6 +5,10 @@ import connectDB, { disconnectDB } from "./src/config/db.js";
 import { ensureConfiguredAdmin } from "./src/config/adminSeed.js";
 import { processReminders } from "./src/services/reminderService.js";
 import Booking from "./src/models/Booking.js";
+import {
+  createStudentLinkReconciler,
+  processPendingStudentLinks,
+} from "./src/services/studentLinkWorker.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const REQUEST_TIMEOUT_MS = Number(process.env.SERVER_REQUEST_TIMEOUT_MS || 15000);
@@ -87,6 +91,20 @@ const launch = async () => {
   try {
     await connectWithRetry(5, 5000);
     await ensureConfiguredAdmin();
+
+    const reconcileStudentLinks = createStudentLinkReconciler({ processor: async () => {
+      try {
+        const result = await processPendingStudentLinks();
+        if (result.processed) console.log("WORKER: Student links reconciled", result);
+        return result;
+      } catch (error) {
+        console.error("WORKER: Student link reconciliation error:", error.message);
+        return { processed: 0, failed: 1 };
+      }
+    } });
+    await reconcileStudentLinks();
+    cron.schedule("* * * * *", reconcileStudentLinks);
+    console.log("WORKER: durable Student link reconciliation scheduled every minute.");
 
     // Daily reminder: runs at 09:00 AM local time.
     // Finds confirmed bookings with email that start 20–28 hours from now

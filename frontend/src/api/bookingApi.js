@@ -67,6 +67,15 @@ export const updateBooking = (id, data, authConfig) =>
 export const updateBookingAttendance = (id, data, authConfig) =>
   apiClient.patch(`/api/bookings/${id}/attendance`, data, authConfig);
 
+export const fetchStudents = (params, authConfig) =>
+  apiClient.get("/api/students", { ...authConfig, params });
+
+export const fetchStudentById = (id, authConfig, signal) =>
+  apiClient.get(`/api/students/${encodeURIComponent(id)}`, {
+    ...authConfig,
+    signal,
+  });
+
 export const deleteBooking = (id, authConfig) =>
   apiClient.delete(`/api/bookings/${id}`, authConfig);
 

@@ -9,6 +9,7 @@ import authRoutes from "./routes/authRoutes.js";
 import blockedDatesRoutes from "./routes/blockedDatesRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 import { globalApiLimiter } from "./middleware/rateLimiters.js";
 import { requestContextMiddleware } from "./middleware/requestContext.js";
 
@@ -175,6 +176,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/blocked-dates", blockedDatesRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/push", pushRoutes);
+app.use("/api/students", studentRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

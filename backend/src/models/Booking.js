@@ -147,6 +147,37 @@ const bookingSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    // The original identity/contact fields above are an immutable historical
+    // snapshot. Student updates never cascade back into a Booking.
+    studentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      default: null,
+    },
+    studentLink: {
+      type: new mongoose.Schema(
+        {
+          status: {
+            type: String,
+            enum: ["pending", "linked", "review", "failed"],
+            required: true,
+          },
+          source: { type: String, enum: ["booking", "migration", "repair"], required: true },
+          algorithmVersion: { type: String, required: true, maxlength: 40 },
+          runId: { type: String, trim: true, default: null, maxlength: 100 },
+          linkedAt: { type: Date, default: null },
+          lastAttemptAt: { type: Date, required: true },
+          candidateIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
+          errorCode: { type: String, trim: true, default: "", maxlength: 80 },
+          attempts: { type: Number, default: 0, min: 0 },
+          nextAttemptAt: { type: Date, default: Date.now },
+          leaseId: { type: String, default: null, maxlength: 80 },
+          leaseExpiresAt: { type: Date, default: null },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
     deletedAt: { type: Date, default: null, index: true },
     deletedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -208,6 +239,8 @@ bookingSchema.index({ status: 1, timeSlot: 1, endTime: 1 }); // for hasConflict 
 bookingSchema.index({ deletedAt: 1, timeSlot: -1 });
 bookingSchema.index({ email: 1 });
 bookingSchema.index({ phone: 1 });
+bookingSchema.index({ studentId: 1, timeSlot: -1 });
+bookingSchema.index({ "studentLink.runId": 1 });
 bookingSchema.index(
   { managementTokenHash: 1 },
   { unique: true, sparse: true },
