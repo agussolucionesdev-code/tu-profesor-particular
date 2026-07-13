@@ -76,6 +76,8 @@ const MAX_AVAILABILITY_RANGE_DAYS = Number(
 );
 const MAX_AVAILABILITY_RANGE_MS =
   MAX_AVAILABILITY_RANGE_DAYS * 24 * 60 * 60 * 1000;
+const DEFAULT_ADMIN_BOOKING_PAGE_SIZE = 50;
+const MAX_ADMIN_BOOKING_PAGE_SIZE = 200;
 const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
 const MANAGEMENT_LINK_COOLDOWN_MS = 5 * 60 * 1000;
 const IDEMPOTENCY_KEY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -317,6 +319,29 @@ const parseAvailabilityRange = (query) => {
   }
 
   return { from, to, duration: parsed.data.duration };
+};
+
+const parseAdminBookingPagination = (query) => {
+  const hasPage = query.page !== undefined;
+  const hasLimit = query.limit !== undefined;
+  if (!hasPage && !hasLimit) return { enabled: false };
+
+  const parsePositiveInteger = (value) => {
+    if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return null;
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) ? parsed : null;
+  };
+  const page = hasPage ? parsePositiveInteger(query.page) : 1;
+  const limit = hasLimit
+    ? parsePositiveInteger(query.limit)
+    : DEFAULT_ADMIN_BOOKING_PAGE_SIZE;
+
+  if (!page || !limit || limit > MAX_ADMIN_BOOKING_PAGE_SIZE) return null;
+
+  const skip = (page - 1) * limit;
+  if (!Number.isSafeInteger(skip) || skip < 0) return null;
+
+  return { enabled: true, page, limit, skip };
 };
 
 const isValidObjectId = (value) => mongoose.isValidObjectId(value);
@@ -639,11 +664,16 @@ export const getAllBookings = async (req, res, next) => {
       ? TRASHED_BOOKING_FILTER
       : ACTIVE_BOOKING_FILTER;
 
-    const page = Math.max(1, parseInt(req.query.page, 10) || 0);
-    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 0));
+    const pagination = parseAdminBookingPagination(req.query);
+    if (!pagination) {
+      return badRequest(
+        res,
+        `La paginación debe usar enteros positivos y un límite máximo de ${MAX_ADMIN_BOOKING_PAGE_SIZE}.`,
+      );
+    }
 
-    if (page > 0 && limit > 0) {
-      const skip = (page - 1) * limit;
+    if (pagination.enabled) {
+      const { page, limit, skip } = pagination;
       const [bookings, total] = await Promise.all([
         Booking.find(scopeFilter).sort({ timeSlot: -1 }).skip(skip).limit(limit).lean(),
         Booking.countDocuments(scopeFilter),

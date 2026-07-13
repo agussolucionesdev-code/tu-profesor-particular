@@ -811,6 +811,96 @@ describe("booking flows", () => {
     expect(adminList.body.data[0].email).toBe("familia@example.com");
   });
 
+  it("keeps the legacy unpaginated admin list while validating explicit pagination", async () => {
+    const token = await createAdminAndLogin();
+    const bookingTimes = [9, 10, 11, 12].map((hour) => nextWeekdayAt(1, hour));
+    const createdBookings = [];
+
+    for (const [index, timeSlot] of bookingTimes.entries()) {
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({
+          studentName: `Alumno listado ${index}`,
+          email: `listado-${index}@example.com`,
+          timeSlot: formatForApi(timeSlot),
+        }))
+        .expect(201);
+      createdBookings.push(created.body.data);
+    }
+
+    const deletedBooking = await Booking.findOne({
+      bookingCode: createdBookings[3].bookingCode,
+    }).lean();
+    await request(app)
+      .delete(`/api/bookings/${deletedBooking._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    const legacyList = await request(app)
+      .get("/api/bookings")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(legacyList.body.data).toHaveLength(3);
+    expect(legacyList.body).not.toHaveProperty("page");
+    expect(legacyList.body).not.toHaveProperty("totalPages");
+    expect(legacyList.body.data.map(({ bookingCode }) => bookingCode)).not.toContain(
+      deletedBooking.bookingCode,
+    );
+
+    const paginatedList = await request(app)
+      .get("/api/bookings?page=2&limit=2")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(paginatedList.body).toMatchObject({
+      count: 1,
+      total: 3,
+      page: 2,
+      totalPages: 2,
+    });
+    expect(paginatedList.body.data).toHaveLength(1);
+
+    const trashList = await request(app)
+      .get("/api/bookings?scope=trash")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(trashList.body.data).toHaveLength(1);
+    expect(trashList.body.data[0].bookingCode).toBe(deletedBooking.bookingCode);
+    expect(JSON.stringify({ legacyList: legacyList.body, trashList: trashList.body }))
+      .not.toMatch(/managementTokenHash|slotMutationLock/i);
+
+    await request(app)
+      .get("/api/bookings?page=invalid&limit=2")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+    await request(app)
+      .get("/api/bookings?page=1&limit=0")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+    await request(app)
+      .get("/api/bookings?page=1&limit=201")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+  });
+
+  it("rejects an unsafe admin pagination offset before querying bookings", async () => {
+    const token = await createAdminAndLogin();
+    const findSpy = vi.spyOn(Booking, "find");
+
+    try {
+      await request(app)
+        .get(`/api/bookings?page=${Number.MAX_SAFE_INTEGER}&limit=200`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(400);
+
+      expect(findSpy).not.toHaveBeenCalled();
+    } finally {
+      findSpy.mockRestore();
+    }
+  });
+
   it("rejects oversized availability ranges and invalid admin ids", async () => {
     const farFuture = tomorrowAt(8);
     farFuture.setDate(farFuture.getDate() + 180);
