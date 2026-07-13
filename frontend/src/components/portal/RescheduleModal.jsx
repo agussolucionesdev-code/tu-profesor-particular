@@ -13,6 +13,8 @@ import {
 } from "../../utils/bookingFormatters";
 import { primeVoicePlayback, speakAlert } from "../../utils/neuroToast";
 import { rescheduleBooking, fetchAvailability } from "../../api/bookingApi";
+import { createIdempotencyKey } from "../../utils/idempotencyKey";
+import { selectSlotsForDate } from "../../utils/availabilitySlots";
 import "./RescheduleModal.css";
 
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
@@ -26,6 +28,7 @@ const PERIODS = [
 
 const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, showToast }) => {
   const dialogRef = useRef(null);
+  const rescheduleAttemptRef = useRef(null);
 
   const [selectedDay, setSelectedDay] = useState(() => {
     const d = new Date(editingBooking.timeSlot);
@@ -35,6 +38,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   const [selectedTime, setSelectedTime] = useState(new Date(editingBooking.timeSlot));
   const [newDuration, setNewDuration] = useState(editingBooking.duration);
   const [existingBookingsForBlock, setExistingBookingsForBlock] = useState([]);
+  const [backendSlots, setBackendSlots] = useState(undefined);
+  const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
 
   // Body scroll lock + focus
   useEffect(() => {
@@ -62,6 +67,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
           (b) => b.status !== "Cancelado" && b._id !== editingBooking._id,
         );
         setExistingBookingsForBlock(active);
+        setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
+        setAvailabilityTimeZone(res.data.schedule?.timeZone);
       })
       .catch((error) => {
         console.error(error);
@@ -100,7 +107,7 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     .sort((a, b) => a - b);
 
   // Generate 30-min slots for selected day, mark occupied/past
-  const slots = useMemo(() => {
+  const legacySlots = useMemo(() => {
     const now = new Date();
     const excluded = new Set();
     existingBookingsForBlock
@@ -125,6 +132,17 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     }
     return result;
   }, [selectedDay, existingBookingsForBlock]);
+
+  const slots = useMemo(
+    () =>
+      selectSlotsForDate({
+        selectedDate: selectedDay,
+        backendSlots,
+        fallbackSlots: legacySlots,
+        timeZone: availabilityTimeZone,
+      }).map((slot) => ({ time: slot.timeObj, disabled: slot.isOccupied })),
+    [selectedDay, backendSlots, legacySlots, availabilityTimeZone],
+  );
 
   // Group slots by period, skip empty periods
   const slotsByPeriod = useMemo(
@@ -186,14 +204,24 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     const minutes = String(newDate.getMinutes()).padStart(2, "0");
     const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
     try {
+      const reschedulePayload = {
+        bookingCode: editingBooking.bookingCode,
+        newTimeSlot: formattedDate,
+        newDuration: durationNumber,
+      };
+      const requestFingerprint = JSON.stringify(reschedulePayload);
+      if (rescheduleAttemptRef.current?.fingerprint !== requestFingerprint) {
+        rescheduleAttemptRef.current = {
+          fingerprint: requestFingerprint,
+          key: createIdempotencyKey(),
+        };
+      }
       const response = await rescheduleBooking(
-        {
-          bookingCode: editingBooking.bookingCode,
-          newTimeSlot: formattedDate,
-          newDuration: durationNumber,
-        },
+        reschedulePayload,
         managementToken,
+        rescheduleAttemptRef.current.key,
       );
+      rescheduleAttemptRef.current = null;
       const followUp = (() => {
         const n = response.data.notifications;
         const sent = n?.client?.sent ?? n?.clientEmailSent ?? false;

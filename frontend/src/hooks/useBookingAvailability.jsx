@@ -10,6 +10,11 @@ import {
 } from "date-fns";
 import { fetchAvailability } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
+import {
+  getAvailableBackendDateKeys,
+  getBusinessDateKey,
+  selectSlotsForDate,
+} from "../utils/availabilitySlots";
 
 // 30 medias horas entre 07:00 y 22:00 — referencia para colorear días llenos en el calendario.
 const TOTAL_DAY_SLOTS = 30;
@@ -38,15 +43,21 @@ const SLOT_SECTIONS_DEFINITION = [
 export const useBookingAvailability = (selectedDate, showToast) => {
   const [existingBookings, setExistingBookings] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
+  const [backendSlots, setBackendSlots] = useState(undefined);
+  const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
 
   useEffect(() => {
     const loadBookings = async () => {
       try {
         const res = await fetchAvailability();
         setExistingBookings(
-          res.data.data.filter((booking) => booking.status !== "Cancelado"),
+          (Array.isArray(res.data.data) ? res.data.data : []).filter(
+            (booking) => booking.status !== "Cancelado",
+          ),
         );
         setBlockedDates(Array.isArray(res.data.blockedDates) ? res.data.blockedDates : []);
+        setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
+        setAvailabilityTimeZone(res.data.schedule?.timeZone);
       } catch (error) {
         console.error("Error fetching bookings", error);
         showToast?.(getBookingApiMessage(error), "warning");
@@ -55,7 +66,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     loadBookings();
   }, [showToast]);
 
-  const availableSlots = useMemo(() => {
+  const legacyAvailableSlots = useMemo(() => {
     if (!selectedDate) return [];
 
     const dayStart = startOfDay(selectedDate);
@@ -91,6 +102,22 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     return slots;
   }, [selectedDate, existingBookings]);
 
+  const availableSlots = useMemo(
+    () =>
+      selectSlotsForDate({
+        selectedDate,
+        backendSlots,
+        fallbackSlots: legacyAvailableSlots,
+        timeZone: availabilityTimeZone,
+      }),
+    [selectedDate, backendSlots, legacyAvailableSlots, availabilityTimeZone],
+  );
+
+  const availableBackendDateKeys = useMemo(
+    () => getAvailableBackendDateKeys(backendSlots, availabilityTimeZone),
+    [backendSlots, availabilityTimeZone],
+  );
+
   const dayAvailabilityMap = useMemo(() => {
     const map = new Map();
     for (const booking of existingBookings) {
@@ -113,9 +140,12 @@ export const useBookingAvailability = (selectedDate, showToast) => {
   const getDayClassName = useCallback(
     (date) => {
       const today = new Date();
-      const dayKey = format(startOfDay(date), "yyyy-MM-dd");
+      const dayKey = getBusinessDateKey(date, availabilityTimeZone);
       if (blockedDates.includes(dayKey)) {
         return isSameDay(date, today) ? "custom-today day-blocked" : "day-blocked";
+      }
+      if (availableBackendDateKeys && !availableBackendDateKeys.has(dayKey)) {
+        return isSameDay(date, today) ? "custom-today day-full" : "day-full";
       }
       const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
       const base = isSameDay(date, today) ? "custom-today" : "";
@@ -124,17 +154,25 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         return base ? `${base} day-full` : "day-full";
       return base ? `${base} day-partial` : "day-partial";
     },
-    [dayAvailabilityMap, blockedDates],
+    [dayAvailabilityMap, blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
 
   const renderDayContents = useCallback(
     (day, date) => {
-      const dayKey = format(startOfDay(date), "yyyy-MM-dd");
+      const dayKey = getBusinessDateKey(date, availabilityTimeZone);
       if (blockedDates.includes(dayKey)) {
         return (
           <>
             {day}
             <span className="sr-only">, bloqueado</span>
+          </>
+        );
+      }
+      if (availableBackendDateKeys && !availableBackendDateKeys.has(dayKey)) {
+        return (
+          <>
+            {day}
+            <span className="sr-only">, sin cupos</span>
           </>
         );
       }
@@ -152,7 +190,7 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         </>
       );
     },
-    [dayAvailabilityMap, blockedDates],
+    [dayAvailabilityMap, blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
 
   const maxAllowedDuration = useMemo(() => {
@@ -206,24 +244,29 @@ export const useBookingAvailability = (selectedDate, showToast) => {
 
   const isDateAvailable = useCallback(
     (date) => {
-      const dayKey = format(startOfDay(date), "yyyy-MM-dd");
-      return !blockedDates.includes(dayKey);
+      const dayKey = getBusinessDateKey(date, availabilityTimeZone);
+      return (
+        !blockedDates.includes(dayKey) &&
+        (!availableBackendDateKeys || availableBackendDateKeys.has(dayKey))
+      );
     },
-    [blockedDates],
+    [blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
 
   const hasAnyAvailability = useMemo(() => {
+    if (availableBackendDateKeys) return availableBackendDateKeys.size > 0;
+
     const today = startOfDay(new Date());
     const horizon = new Date(today);
     horizon.setDate(horizon.getDate() + 90);
     for (let d = new Date(today); d <= horizon; d.setDate(d.getDate() + 1)) {
-      const dayKey = format(d, "yyyy-MM-dd");
+      const dayKey = getBusinessDateKey(d, availabilityTimeZone);
       if (blockedDates.includes(dayKey)) continue;
       const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
       if (occupied < TOTAL_DAY_SLOTS) return true;
     }
     return false;
-  }, [blockedDates, dayAvailabilityMap]);
+  }, [blockedDates, dayAvailabilityMap, availableBackendDateKeys, availabilityTimeZone]);
 
   return {
     existingBookings,

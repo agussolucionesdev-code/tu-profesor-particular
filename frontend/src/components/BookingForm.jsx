@@ -47,6 +47,7 @@ import {
   getBookingApiMessage,
   RESPONSIBLE_RELATIONSHIP_OTHER_VALUE,
 } from "../utils/bookingFormatters";
+import { createIdempotencyKey } from "../utils/idempotencyKey";
 import {
   isVoiceMuted,
   primeVoicePlayback,
@@ -220,6 +221,7 @@ const BookingForm = () => {
 
   const formCardRef = useRef(null);
   const textareaRef = useRef(null);
+  const bookingAttemptRef = useRef(null);
   const prevUnlockedAcademicRef = useRef(false);
   const prevUnlockedCommentsRef = useRef(false);
 
@@ -784,7 +786,7 @@ const BookingForm = () => {
       const safeEmail =
         formData.email.trim() !== "" ? formData.email.trim() : "";
 
-      const response = await createBooking({
+      const bookingPayload = {
         ...formData,
         email: safeEmail,
         responsibleName: finalResponsibleName,
@@ -793,7 +795,19 @@ const BookingForm = () => {
         timeSlot: formattedDate,
         duration: Number(formData.duration),
         tutorName: "Agustin",
-      });
+      };
+      const requestFingerprint = JSON.stringify(bookingPayload);
+      if (bookingAttemptRef.current?.fingerprint !== requestFingerprint) {
+        bookingAttemptRef.current = {
+          fingerprint: requestFingerprint,
+          key: createIdempotencyKey(),
+        };
+      }
+      const response = await createBooking(
+        bookingPayload,
+        bookingAttemptRef.current.key,
+      );
+      bookingAttemptRef.current = null;
 
       const end = addMinutes(dateObj, Number(formData.duration) * 60);
       const bookingCode = response.data.data.bookingCode;

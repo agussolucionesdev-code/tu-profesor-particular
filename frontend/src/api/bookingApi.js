@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { createIdempotencyKey, withIdempotencyKey } from "../utils/idempotencyKey";
 
 /**
  * Public booking endpoints
@@ -6,8 +7,8 @@ import apiClient from "./apiClient";
 export const fetchAvailability = (params) =>
   apiClient.get("/api/bookings/availability", { params });
 
-export const createBooking = (data) =>
-  apiClient.post("/api/bookings/reserve", data);
+export const createBooking = (data, idempotencyKey = createIdempotencyKey()) =>
+  apiClient.post("/api/bookings/reserve", data, withIdempotencyKey(idempotencyKey));
 
 export const lookupBookings = (identifier) =>
   apiClient.get(`/api/bookings/${encodeURIComponent(identifier)}`);
@@ -27,11 +28,18 @@ export const getManagedBooking = (managementToken) =>
 export const revokeManagementAccess = (managementToken) =>
   apiClient.post("/api/bookings/manage/revoke", {}, managementConfig(managementToken));
 
-export const rescheduleBooking = (data, managementToken) =>
+export const rescheduleBooking = (
+  data,
+  managementToken,
+  idempotencyKey = createIdempotencyKey(),
+) =>
   apiClient.post(
     "/api/bookings/reschedule",
     data,
-    managementToken ? managementConfig(managementToken) : undefined,
+    withIdempotencyKey(
+      idempotencyKey,
+      managementToken ? managementConfig(managementToken) : undefined,
+    ),
   );
 
 export const cancelBooking = (data, managementToken) =>
