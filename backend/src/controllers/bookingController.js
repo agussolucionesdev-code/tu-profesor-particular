@@ -1,5 +1,7 @@
+import crypto from "node:crypto";
 import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
+import IdempotencyKey from "../models/IdempotencyKey.js";
 import BlockedDate from "../models/BlockedDate.js";
 import { getSetting } from "./settingsController.js";
 import { sendBookingNotifications } from "../config/mailer.js";
@@ -20,6 +22,20 @@ import {
   calculateAvailableSlots,
   getScheduleConfiguration,
 } from "../services/availabilityService.js";
+import {
+  BookingSlotConflictError,
+  clearBookingSlots,
+  claimBookingSlots,
+  getBookingSlotStarts,
+  releaseClaimedBookingSlots,
+  releaseBookingSlots,
+  releaseBookingSlotsExcept,
+} from "../services/bookingSlotService.js";
+import {
+  decryptIdempotencyResponse,
+  encryptIdempotencyResponse,
+  fingerprintRequest,
+} from "../services/idempotencyService.js";
 import { businessDateKey } from "../utils/timeZone.js";
 import {
   availabilityQuerySchema,
@@ -52,6 +68,9 @@ const MAX_AVAILABILITY_RANGE_MS =
   MAX_AVAILABILITY_RANGE_DAYS * 24 * 60 * 60 * 1000;
 const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
 const MANAGEMENT_LINK_COOLDOWN_MS = 5 * 60 * 1000;
+const IDEMPOTENCY_KEY_TTL_MS = 24 * 60 * 60 * 1000;
+const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/;
+const SLOT_MUTATION_LOCK_MS = 30 * 1000;
 const INVALID_MANAGEMENT_LINK_MESSAGE = "El enlace de gestión no es válido o venció.";
 
 const publicBooking = (booking) => ({
@@ -124,6 +143,43 @@ const forbiddenManagementBooking = (res) =>
 const getManagementToken = (req) => String(
   req.get("X-Booking-Manage-Token") || "",
 ).trim();
+
+const getIdempotencyKey = (req) => String(req.get("Idempotency-Key") || "").trim();
+
+const requiresIdempotencyKey = () => process.env.REQUIRE_IDEMPOTENCY_KEY === "true";
+
+const scopedIdempotencyKey = (scope, idempotencyKey) =>
+  fingerprintRequest({ scope, idempotencyKey });
+
+const acquireSlotMutationLock = async (bookingId) => {
+  const lock = crypto.randomUUID();
+  const now = new Date();
+  const booking = await Booking.findOneAndUpdate(
+    {
+      _id: bookingId,
+      $or: [
+        { slotMutationLock: null },
+        { slotMutationLock: { $exists: false } },
+        { slotMutationLockExpiresAt: { $lte: now } },
+      ],
+    },
+    {
+      $set: {
+        slotMutationLock: lock,
+        slotMutationLockExpiresAt: new Date(now.getTime() + SLOT_MUTATION_LOCK_MS),
+      },
+    },
+    { new: true },
+  );
+
+  return booking ? { booking, lock } : null;
+};
+
+const releaseSlotMutationLock = async (bookingId, lock) =>
+  Booking.updateOne(
+    { _id: bookingId, slotMutationLock: lock },
+    { $unset: { slotMutationLock: 1, slotMutationLockExpiresAt: 1 } },
+  );
 
 const findManagedBooking = async (req) => {
   const token = getManagementToken(req);
@@ -218,7 +274,17 @@ const parseAvailabilityRange = (query) => {
 const isValidObjectId = (value) => mongoose.isValidObjectId(value);
 
 export const createBooking = async (req, res, next) => {
+  let idempotencyRecord = null;
+
   try {
+    const idempotencyKey = getIdempotencyKey(req);
+    if (
+      (requiresIdempotencyKey() && !idempotencyKey) ||
+      (idempotencyKey && !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey))
+    ) {
+      return badRequest(res, "Debes enviar un Idempotency-Key valido para crear la reserva.");
+    }
+
     const parsed = createBookingSchema.safeParse(req.body);
     if (!parsed.success) {
       return badRequest(res, "Revisa los datos de la reserva.", parsed.error.flatten());
@@ -254,12 +320,72 @@ export const createBooking = async (req, res, next) => {
     }
 
     const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
-    const conflict = await hasConflict(startTime, endTime);
-    if (conflict) {
-      return badRequest(res, "Horario ocupado.");
+    const bookingStatus = requireManual ? "Pendiente" : "Confirmado";
+
+    const requestFingerprint = fingerprintRequest({
+      ...payload,
+      timeSlot: startTime.toISOString(),
+      duration,
+    });
+
+    if (idempotencyKey) {
+      try {
+        idempotencyRecord = await IdempotencyKey.create({
+          key: idempotencyKey,
+          fingerprint: requestFingerprint,
+          expiresAt: new Date(Date.now() + IDEMPOTENCY_KEY_TTL_MS),
+        });
+      } catch (error) {
+        if (error?.code !== 11000) throw error;
+
+        const existing = await IdempotencyKey.findOne({ key: idempotencyKey })
+          .select("+responseCiphertext +responseIv +responseAuthTag")
+          .exec();
+        if (!existing || existing.fingerprint !== requestFingerprint) {
+          return res.status(409).json({
+            success: false,
+            message: "Ese Idempotency-Key ya fue usado con una reserva diferente.",
+            requestId: req.requestId,
+          });
+        }
+
+        if (
+          existing.status !== "completed" ||
+          !existing.responseStatus ||
+          !existing.responseCiphertext
+        ) {
+          return res.status(409).json({
+            success: false,
+            message: "La reserva con ese Idempotency-Key todavia esta siendo procesada.",
+            requestId: req.requestId,
+          });
+        }
+
+        try {
+          return res.status(existing.responseStatus).json(decryptIdempotencyResponse(existing));
+        } catch {
+          return res.status(409).json({
+            success: false,
+            message: "No se pudo reutilizar esa reserva de forma segura. Genera una nueva solicitud.",
+            requestId: req.requestId,
+          });
+        }
+      }
     }
 
-    const bookingStatus = requireManual ? "Pendiente" : "Confirmado";
+    if (await hasConflict(startTime, endTime)) {
+      if (idempotencyRecord) {
+        await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
+      }
+      if (idempotencyKey) {
+        return res.status(409).json({
+          success: false,
+          message: "Horario ocupado.",
+          requestId: req.requestId,
+        });
+      }
+      return badRequest(res, "Horario ocupado.");
+    }
 
     const newBooking = new Booking({
       responsibleName: payload.responsibleName,
@@ -281,10 +407,25 @@ export const createBooking = async (req, res, next) => {
       status: bookingStatus,
     });
     const { managementToken, managementUrl } = issueManagementToken(newBooking);
-    await newBooking.save();
+    const slotStarts = getBookingSlotStarts({
+      startTime,
+      endTime,
+      slotDurationMinutes: slotDurationMinutes ?? 30,
+    });
+    await claimBookingSlots({
+      bookingId: newBooking._id,
+      slotStarts,
+      slotDurationMinutes: slotDurationMinutes ?? 30,
+    });
+    try {
+      await newBooking.save();
+    } catch (error) {
+      await releaseBookingSlots(newBooking._id);
+      throw error;
+    }
 
     // Respond immediately after DB insert — side effects run in background
-    res.status(201).json({
+    const responseBody = {
       success: true,
       message: "Reserva confirmada con exito.",
       data: {
@@ -294,7 +435,18 @@ export const createBooking = async (req, res, next) => {
       },
       notifications: null,
       requestId: req.requestId,
-    });
+    };
+
+    if (idempotencyRecord) {
+      Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
+        booking: newBooking._id,
+        status: "completed",
+        responseStatus: 201,
+      });
+      await idempotencyRecord.save();
+    }
+
+    res.status(201).json(responseBody);
 
     Promise.allSettled([
       appendBookingToSheet(newBooking),
@@ -309,6 +461,18 @@ export const createBooking = async (req, res, next) => {
       }),
     ]).catch((err) => console.error("[createBooking side-effects]", err.message));
   } catch (error) {
+    if (idempotencyRecord && idempotencyRecord.status !== "completed") {
+      await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id }).catch(() => {});
+    }
+
+    if (error instanceof BookingSlotConflictError) {
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
+    }
+
     if (error?.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -530,6 +694,9 @@ export const getBookingByCode = async (req, res, next) => {
 };
 
 export const updateBooking = async (req, res, next) => {
+  let claimedSlots = null;
+  let slotMutationLock = null;
+
   try {
     if (!isValidObjectId(req.params.id)) {
       return badRequest(res, "Identificador de reserva invalido.");
@@ -557,6 +724,7 @@ export const updateBooking = async (req, res, next) => {
       }
     }
 
+    let slotStarts = null;
     if (updateData.timeSlot !== undefined) {
       const existing = await Booking.findById(req.params.id).select("duration").lean();
       if (!existing) {
@@ -565,7 +733,15 @@ export const updateBooking = async (req, res, next) => {
 
       const startTime = parseDateTimeInput(updateData.timeSlot);
       const duration = Number(existing.duration) || 1;
-      const slotError = validateSlot(startTime, duration);
+      const slotDurationMinutes = (await getSetting("schedule.slotDurationMinutes")) ?? 30;
+      const slotError = validateSlot(
+        startTime,
+        duration,
+        undefined,
+        undefined,
+        undefined,
+        slotDurationMinutes,
+      );
       if (slotError) {
         return badRequest(res, slotError);
       }
@@ -576,8 +752,27 @@ export const updateBooking = async (req, res, next) => {
         return badRequest(res, "El nuevo horario tiene conflicto con otra reserva activa.");
       }
 
+      slotMutationLock = await acquireSlotMutationLock(req.params.id);
+      if (!slotMutationLock) {
+        return res.status(409).json({
+          success: false,
+          message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+          requestId: req.requestId,
+        });
+      }
+
       updateData.timeSlot = startTime;
       updateData.endTime = endTime;
+      slotStarts = getBookingSlotStarts({
+        startTime,
+        endTime,
+        slotDurationMinutes,
+      });
+      claimedSlots = await claimBookingSlots({
+        bookingId: req.params.id,
+        slotStarts,
+        slotDurationMinutes,
+      });
     }
 
     const NOTE_FIELDS = ["notes", "studentEvolution", "emotionalState"];
@@ -590,13 +785,36 @@ export const updateBooking = async (req, res, next) => {
       mongoUpdate.$push = { notesHistory: { $each: historyPush } };
     }
 
+    if (!slotMutationLock && updateData.status === "Cancelado") {
+      slotMutationLock = await acquireSlotMutationLock(req.params.id);
+      if (!slotMutationLock) {
+        return res.status(409).json({
+          success: false,
+          message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+          requestId: req.requestId,
+        });
+      }
+    }
+
     const updatedBooking = await Booking.findByIdAndUpdate(req.params.id, mongoUpdate, {
       new: true,
       runValidators: true,
     });
 
     if (!updatedBooking) {
+      await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds);
       return notFound(res, "Reserva no encontrada.");
+    }
+
+    if (updateData.status === "Cancelado") {
+      await releaseBookingSlots(updatedBooking._id);
+    } else if (slotStarts) {
+      await releaseBookingSlotsExcept(updatedBooking._id, slotStarts);
+    }
+    claimedSlots = null;
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
+      slotMutationLock = null;
     }
 
     await updateBookingInSheet(updatedBooking);
@@ -615,6 +833,12 @@ export const updateBooking = async (req, res, next) => {
       requestId: req.requestId,
     });
   } catch (error) {
+    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
+        .catch(() => {});
+    }
+
     if (typeof next === "function") {
       return next(error);
     }
@@ -628,16 +852,31 @@ export const updateBooking = async (req, res, next) => {
 };
 
 export const deleteBooking = async (req, res, next) => {
+  let slotMutationLock = null;
+
   try {
     if (!isValidObjectId(req.params.id)) {
       return badRequest(res, "Identificador de reserva invalido.");
     }
 
+    slotMutationLock = await acquireSlotMutationLock(req.params.id);
+    if (!slotMutationLock) {
+      return res.status(409).json({
+        success: false,
+        message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+        requestId: req.requestId,
+      });
+    }
+
     const deletedBooking = await Booking.findByIdAndDelete(req.params.id);
     if (!deletedBooking) {
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock);
+      slotMutationLock = null;
       return notFound(res, "Reserva no encontrada.");
     }
 
+    await releaseBookingSlots(deletedBooking._id);
+    slotMutationLock = null;
     await deleteBookingFromSheet(deletedBooking.bookingCode);
 
     setNoStore(res);
@@ -662,6 +901,7 @@ export const deleteBooking = async (req, res, next) => {
 export const deleteAllBookings = async (req, res, next) => {
   try {
     await Booking.deleteMany({});
+    await clearBookingSlots();
     await resetBookingSheet();
 
     setNoStore(res);
@@ -733,6 +973,14 @@ export const requestManagementLink = async (req, res, next) => {
 
     return acceptedResponse();
   } catch (error) {
+    if (error instanceof BookingSlotConflictError) {
+      return res.status(409).json({
+        success: false,
+        message: "El nuevo horario tiene conflicto con otra reserva activa.",
+        requestId: req.requestId,
+      });
+    }
+
     if (typeof next === "function") return next(error);
     return acceptedResponse();
   }
@@ -779,7 +1027,19 @@ export const revokeManagementAccess = async (req, res, next) => {
 };
 
 export const rescheduleBooking = async (req, res, next) => {
+  let claimedSlots = null;
+  let idempotencyRecord = null;
+  let slotMutationLock = null;
+
   try {
+    const idempotencyKey = getIdempotencyKey(req);
+    if (
+      (requiresIdempotencyKey() && !idempotencyKey) ||
+      (idempotencyKey && !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey))
+    ) {
+      return badRequest(res, "Debes enviar un Idempotency-Key valido para reprogramar.");
+    }
+
     const parsed = rescheduleSchema.safeParse(req.body);
     if (!parsed.success) {
       return badRequest(res, "Datos de reprogramacion invalidos.", parsed.error.flatten());
@@ -798,38 +1058,155 @@ export const rescheduleBooking = async (req, res, next) => {
 
     const startTime = parseDateTimeInput(parsed.data.newTimeSlot);
     const duration = Number(parsed.data.newDuration);
-    const slotError = validateSlot(startTime, duration);
+    const slotDurationMinutes = (await getSetting("schedule.slotDurationMinutes")) ?? 30;
+    const slotError = validateSlot(
+      startTime,
+      duration,
+      undefined,
+      undefined,
+      undefined,
+      slotDurationMinutes,
+    );
     if (slotError) {
       return badRequest(res, slotError);
     }
 
     const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+    if (idempotencyKey) {
+      const storageKey = scopedIdempotencyKey("reschedule", idempotencyKey);
+      const requestFingerprint = fingerprintRequest({
+        bookingCode: cleanCode,
+        newTimeSlot: startTime.toISOString(),
+        newDuration: duration,
+      });
+      try {
+        idempotencyRecord = await IdempotencyKey.create({
+          key: storageKey,
+          fingerprint: requestFingerprint,
+          expiresAt: new Date(Date.now() + IDEMPOTENCY_KEY_TTL_MS),
+        });
+      } catch (error) {
+        if (error?.code !== 11000) throw error;
+        const existing = await IdempotencyKey.findOne({ key: storageKey })
+          .select("+responseCiphertext +responseIv +responseAuthTag")
+          .exec();
+        if (!existing || existing.fingerprint !== requestFingerprint) {
+          return res.status(409).json({
+            success: false,
+            message: "Ese Idempotency-Key ya fue usado con una reprogramacion diferente.",
+            requestId: req.requestId,
+          });
+        }
+        if (
+          existing.status !== "completed" ||
+          !existing.responseStatus ||
+          !existing.responseCiphertext
+        ) {
+          return res.status(409).json({
+            success: false,
+            message: "La reprogramacion con ese Idempotency-Key todavia esta siendo procesada.",
+            requestId: req.requestId,
+          });
+        }
+        try {
+          return res.status(existing.responseStatus).json(decryptIdempotencyResponse(existing));
+        } catch {
+          return res.status(409).json({
+            success: false,
+            message: "No se pudo reutilizar esa reprogramacion de forma segura. Genera una nueva solicitud.",
+            requestId: req.requestId,
+          });
+        }
+      }
+    }
+
+    slotMutationLock = await acquireSlotMutationLock(booking._id);
+    if (!slotMutationLock) {
+      if (idempotencyRecord) {
+        await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
+      }
+      return res.status(409).json({
+        success: false,
+        message: "Esta reserva esta siendo reprogramada. Reintenta en unos segundos.",
+        requestId: req.requestId,
+      });
+    }
+    const lockedBooking = slotMutationLock.booking;
     const conflict = await hasConflict(startTime, endTime, booking._id);
     if (conflict) {
+      await releaseSlotMutationLock(booking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      if (idempotencyRecord) {
+        await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
+      }
       return badRequest(res, "Horario ocupado.");
     }
 
-    const previousTimeSlot = booking.timeSlot;
-
-    booking.timeSlot = startTime;
-    booking.endTime = endTime;
-    booking.duration = duration;
-    booking.status = "Confirmado";
-    await booking.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Turno reprogramado.",
-      data: publicBooking(booking),
-      notifications: null,
-      requestId: req.requestId,
+    const previousTimeSlot = lockedBooking.timeSlot;
+    const slotStarts = getBookingSlotStarts({
+      startTime,
+      endTime,
+      slotDurationMinutes,
+    });
+    claimedSlots = await claimBookingSlots({
+      bookingId: lockedBooking._id,
+      slotStarts,
+      slotDurationMinutes,
     });
 
+    lockedBooking.timeSlot = startTime;
+    lockedBooking.endTime = endTime;
+    lockedBooking.duration = duration;
+    lockedBooking.status = "Confirmado";
+    try {
+      await lockedBooking.save();
+    } catch (error) {
+      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      throw error;
+    }
+    await releaseBookingSlotsExcept(lockedBooking._id, slotStarts);
+    await releaseSlotMutationLock(lockedBooking._id, slotMutationLock.lock);
+    slotMutationLock = null;
+
+    const responseBody = {
+      success: true,
+      message: "Turno reprogramado.",
+      data: publicBooking(lockedBooking),
+      notifications: null,
+      requestId: req.requestId,
+    };
+    if (idempotencyRecord) {
+      Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
+        booking: lockedBooking._id,
+        status: "completed",
+        responseStatus: 200,
+      });
+      await idempotencyRecord.save();
+    }
+
+    res.status(200).json(responseBody);
+
     Promise.allSettled([
-      updateBookingInSheet(booking),
-      sendBookingNotifications({ booking, event: "rescheduled", previousTimeSlot }),
+      updateBookingInSheet(lockedBooking),
+      sendBookingNotifications({ booking: lockedBooking, event: "rescheduled", previousTimeSlot }),
     ]).catch((err) => console.error("[rescheduleBooking side-effects]", err.message));
   } catch (error) {
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
+        .catch(() => {});
+    }
+    if (idempotencyRecord && idempotencyRecord.status !== "completed") {
+      await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id }).catch(() => {});
+    }
+
+    if (error instanceof BookingSlotConflictError) {
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
+    }
+
     if (typeof next === "function") {
       return next(error);
     }
@@ -910,6 +1287,7 @@ export const cancelBookingClient = async (req, res, next) => {
 
     booking.status = "Cancelado";
     await booking.save();
+    await releaseBookingSlots(booking._id);
 
     res.status(200).json({
       success: true,

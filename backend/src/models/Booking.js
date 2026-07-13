@@ -123,6 +123,12 @@ const bookingSchema = new mongoose.Schema(
     managementTokenRevokedAt: { type: Date, default: null },
     managementLinkLastSentAt: { type: Date, default: null, select: false },
 
+    // Short-lived ownership lock for operations that need to replace multiple
+    // BookingSlot documents without allowing another reprogramming request to
+    // release claims it did not create.
+    slotMutationLock: { type: String, default: null, select: false },
+    slotMutationLockExpiresAt: { type: Date, default: null, select: false },
+
     status: {
       type: String,
       enum: BOOKING_STATUS,

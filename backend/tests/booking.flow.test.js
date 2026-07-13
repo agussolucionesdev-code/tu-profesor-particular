@@ -8,6 +8,11 @@ import {
   getDefaultAvailabilityRange,
   parseDateTimeInput,
 } from "../src/utils/bookingRules.js";
+import {
+  BookingSlotConflictError,
+  claimBookingSlots,
+  getBookingSlotStarts,
+} from "../src/services/bookingSlotService.js";
 
 const sendManagementLinkEmailMock = vi.hoisted(() => vi.fn());
 vi.mock("../src/config/mailer.js", async () => {
@@ -21,9 +26,12 @@ vi.mock("../src/config/mailer.js", async () => {
 let app;
 let mongoServer;
 let Booking;
+let BookingSlot;
+let IdempotencyKey;
 let User;
 let AppSettings;
 let BlockedDate;
+let requestManagementLink;
 
 const getMemoryLaunchTimeout = () =>
   Number(process.env.MONGO_MEMORY_LAUNCH_TIMEOUT_MS || 90000);
@@ -136,14 +144,26 @@ beforeAll(async () => {
 
   app = (await import("../src/app.js")).default;
   Booking = (await import("../src/models/Booking.js")).default;
+  BookingSlot = (await import("../src/models/BookingSlot.js")).default;
+  IdempotencyKey = (await import("../src/models/IdempotencyKey.js")).default;
   User = (await import("../src/models/User.js")).default;
   AppSettings = (await import("../src/models/AppSettings.js")).default;
   BlockedDate = (await import("../src/models/BlockedDate.js")).default;
+  requestManagementLink = (
+    await import("../src/controllers/bookingController.js")
+  ).requestManagementLink;
+
+  await Promise.all([
+    BookingSlot.syncIndexes(),
+    IdempotencyKey.syncIndexes(),
+  ]);
 }, Math.max(30000, getMemoryLaunchTimeout() + 15000));
 
 beforeEach(async () => {
   sendManagementLinkEmailMock.mockReset().mockResolvedValue(true);
   await Booking.deleteMany({});
+  await BookingSlot.deleteMany({});
+  await IdempotencyKey.deleteMany({});
   await User.deleteMany({});
   await AppSettings.deleteMany({});
   await BlockedDate.deleteMany({});
@@ -155,6 +175,37 @@ afterAll(async () => {
 });
 
 describe("booking flows", () => {
+  it("forwards the original failure when requesting a management link", async () => {
+    const originalError = new Error("booking lookup failed");
+    const findOneSpy = vi.spyOn(Booking, "findOne").mockReturnValueOnce({
+      select: () => ({
+        exec: () => Promise.reject(originalError),
+      }),
+    });
+    const next = vi.fn();
+    const res = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    };
+
+    try {
+      await requestManagementLink(
+        {
+          body: { bookingCode: "ABC234", email: "familia@example.com" },
+          requestId: "test-request-id",
+        },
+        res,
+        next,
+      );
+
+      expect(next).toHaveBeenCalledOnce();
+      expect(next).toHaveBeenCalledWith(originalError);
+      expect(res.status).not.toHaveBeenCalled();
+    } finally {
+      findOneSpy.mockRestore();
+    }
+  });
+
   it("interprets public date labels and default ranges in Buenos Aires time", () => {
     const parsed = parseDateTimeInput("19/07/2026 00:00");
     expect(businessDateAndClock(parsed)).toMatchObject({
@@ -452,6 +503,7 @@ describe("booking flows", () => {
       .expect(200);
 
     expect(rescheduled.body.data.duration).toBe(1.5);
+    expect(await BookingSlot.countDocuments()).toBe(3);
 
     const cancelled = await request(app)
       .post("/api/bookings/cancel")
@@ -460,6 +512,282 @@ describe("booking flows", () => {
       .expect(200);
 
     expect(cancelled.body.data.status).toBe("Cancelado");
+    expect(await BookingSlot.countDocuments()).toBe(0);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ studentName: "Nuevo alumno" }))
+      .expect(201);
+  });
+
+  it("keeps the original slot claim when concurrent reschedules collide", async () => {
+    const first = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const second = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Lucia Perez",
+        email: "lucia@example.com",
+        timeSlot: formatForApi(tomorrowAt(14)),
+      }))
+      .expect(201);
+    const target = formatForApi(tomorrowAt(12));
+
+    const attempts = await Promise.all([
+      request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", first.body.data.managementToken)
+        .send({ bookingCode: first.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
+      request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", second.body.data.managementToken)
+        .send({ bookingCode: second.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
+    ]);
+
+    expect(attempts.filter((response) => response.status === 200)).toHaveLength(1);
+    expect(attempts.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(await BookingSlot.countDocuments()).toBe(4);
+  });
+
+  it("serializes concurrent reschedules of the same booking", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const targets = [formatForApi(tomorrowAt(12)), formatForApi(tomorrowAt(14))];
+
+    const attempts = await Promise.all(
+      targets.map((newTimeSlot) =>
+        request(app)
+          .post("/api/bookings/reschedule")
+          .set("X-Booking-Manage-Token", created.body.data.managementToken)
+          .send({
+            bookingCode: created.body.data.bookingCode,
+            newTimeSlot,
+            newDuration: 1,
+          }),
+      ),
+    );
+
+    expect(attempts.filter((response) => response.status === 200)).toHaveLength(1);
+    expect(attempts.filter((response) => response.status === 409)).toHaveLength(1);
+
+    const persisted = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const slotStarts = await BookingSlot.find({ booking: persisted._id }).lean();
+    expect(slotStarts).toHaveLength(2);
+    expect(slotStarts.every((slot) => new Date(slot.slotStart) >= new Date(persisted.timeSlot))).toBe(true);
+  });
+
+  it("keeps slots in sync for admin reschedule, cancellation, delete and reset", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ timeSlot: formatForApi(tomorrowAt(12)) })
+      .expect(200);
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+
+    await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "Cancelado" })
+      .expect(200);
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+
+    const deletable = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ studentName: "Alumno para eliminar", timeSlot: formatForApi(tomorrowAt(14)) }))
+      .expect(201);
+    const deletableStored = await Booking.findOne({ bookingCode: deletable.body.data.bookingCode }).lean();
+    await request(app)
+      .delete(`/api/bookings/${deletableStored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(await BookingSlot.countDocuments({ booking: deletableStored._id })).toBe(0);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ studentName: "Alumno para reiniciar", timeSlot: formatForApi(tomorrowAt(16)) }))
+      .expect(201);
+    await request(app)
+      .delete("/api/bookings/all")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(await BookingSlot.countDocuments()).toBe(0);
+  });
+
+  it("releases claimed slots and the mutation lock when an admin update fails", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const beforeSlots = await BookingSlot.find({ booking: stored._id })
+      .sort({ slotStart: 1 })
+      .lean();
+    const persistenceError = new Error("booking update failed");
+    const updateSpy = vi
+      .spyOn(Booking, "findByIdAndUpdate")
+      .mockRejectedValueOnce(persistenceError);
+
+    try {
+      await request(app)
+        .put(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ timeSlot: formatForApi(tomorrowAt(12)) })
+        .expect(500);
+
+      const afterSlots = await BookingSlot.find({ booking: stored._id })
+        .sort({ slotStart: 1 })
+        .lean();
+      const afterBooking = await Booking.findById(stored._id)
+        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .lean();
+      expect(afterSlots.map((slot) => slot.slotStart)).toEqual(
+        beforeSlots.map((slot) => slot.slotStart),
+      );
+      expect(afterBooking).not.toHaveProperty("slotMutationLock");
+      expect(afterBooking.slotMutationLockExpiresAt).toBeUndefined();
+    } finally {
+      updateSpy.mockRestore();
+    }
+  });
+
+  it("atomically reserves slot blocks so concurrent bookings cannot overlap", async () => {
+    const attempts = await Promise.all(
+      Array.from({ length: 20 }, (_, index) =>
+        request(app)
+          .post("/api/bookings/reserve")
+          .set("Idempotency-Key", `concurrent-reservation-${index}`)
+          .send(validBookingPayload({ studentName: `Alumno ${index}` })),
+      ),
+    );
+
+    expect(attempts.filter((response) => response.status === 201)).toHaveLength(1);
+    expect(attempts.filter((response) => response.status === 409)).toHaveLength(19);
+    expect(await Booking.countDocuments()).toBe(1);
+    expect(await BookingSlot.countDocuments()).toBe(2);
+  });
+
+  it("compensates partial slot claims when a later block is already occupied", async () => {
+    const slotStarts = getBookingSlotStarts({
+      startTime: tomorrowAt(18),
+      endTime: tomorrowAt(19),
+      slotDurationMinutes: 30,
+    });
+    await BookingSlot.create({
+      booking: new mongoose.Types.ObjectId(),
+      slotStart: slotStarts[1],
+      slotDurationMinutes: 30,
+    });
+
+    await expect(
+      claimBookingSlots({
+        bookingId: new mongoose.Types.ObjectId(),
+        slotStarts,
+        slotDurationMinutes: 30,
+      }),
+    ).rejects.toBeInstanceOf(BookingSlotConflictError);
+
+    expect(await BookingSlot.countDocuments()).toBe(1);
+    expect(await BookingSlot.exists({ slotStart: slotStarts[0] })).toBeNull();
+  });
+
+  it("replays a completed response for the same idempotency key without duplicating the booking", async () => {
+    const idempotencyKey = "retry-safe-reservation-key";
+    const payload = validBookingPayload();
+
+    const first = await request(app)
+      .post("/api/bookings/reserve")
+      .set("Idempotency-Key", idempotencyKey)
+      .send(payload)
+      .expect(201);
+    const replay = await request(app)
+      .post("/api/bookings/reserve")
+      .set("Idempotency-Key", idempotencyKey)
+      .send(payload)
+      .expect(201);
+
+    expect(replay.body).toEqual(first.body);
+    expect(await Booking.countDocuments()).toBe(1);
+    expect(await IdempotencyKey.countDocuments()).toBe(1);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .set("Idempotency-Key", idempotencyKey)
+      .send(validBookingPayload({ studentName: "Otro alumno" }))
+      .expect(409);
+  });
+
+  it("requires Idempotency-Key when strict enforcement is enabled", async () => {
+    process.env.REQUIRE_IDEMPOTENCY_KEY = "true";
+    try {
+      await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload())
+        .expect(400);
+    } finally {
+      delete process.env.REQUIRE_IDEMPOTENCY_KEY;
+    }
+  });
+
+  it("requires Idempotency-Key for rescheduling when strict enforcement is enabled", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    process.env.REQUIRE_IDEMPOTENCY_KEY = "true";
+    try {
+      await request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .send({
+          bookingCode: created.body.data.bookingCode,
+          newTimeSlot: formatForApi(tomorrowAt(12)),
+          newDuration: 1,
+        })
+        .expect(400);
+    } finally {
+      delete process.env.REQUIRE_IDEMPOTENCY_KEY;
+    }
+  });
+
+  it("replays a completed reschedule for the same idempotency key", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const idempotencyKey = "retry-safe-reschedule-key";
+    const payload = {
+      bookingCode: created.body.data.bookingCode,
+      newTimeSlot: formatForApi(tomorrowAt(12)),
+      newDuration: 1,
+    };
+
+    const first = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .set("Idempotency-Key", idempotencyKey)
+      .send(payload)
+      .expect(200);
+    const replay = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .set("Idempotency-Key", idempotencyKey)
+      .send(payload)
+      .expect(200);
+
+    expect(replay.body).toEqual(first.body);
+    expect(await BookingSlot.countDocuments()).toBe(2);
   });
 
   it.each(["Cancelado", "Finalizado"])(

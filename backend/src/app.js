@@ -135,6 +135,7 @@ app.use(
       "Authorization",
       "X-Request-Id",
       "X-Booking-Manage-Token",
+      "Idempotency-Key",
     ],
     maxAge: 60 * 60 * 12,
   }),
