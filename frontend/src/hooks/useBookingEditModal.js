@@ -9,6 +9,8 @@ export const useBookingEditModal = (updateBookingFields, updateBookingAttendance
   const [attendanceNotes, setAttendanceNotes] = useState("");
   const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [attendanceFeedback, setAttendanceFeedback] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editFeedback, setEditFeedback] = useState(null);
 
   const openEditBooking = useCallback((booking) => {
     setSelectedBooking(booking);
@@ -18,6 +20,7 @@ export const useBookingEditModal = (updateBookingFields, updateBookingAttendance
     setAttendanceStatus(booking.attendanceStatus || "Sin registrar");
     setAttendanceNotes(booking.attendanceNotes || "");
     setAttendanceFeedback(null);
+    setEditFeedback(null);
   }, []);
 
   const handleAttendanceSave = useCallback(async () => {
@@ -54,6 +57,9 @@ export const useBookingEditModal = (updateBookingFields, updateBookingAttendance
   ]);
 
   const handleSave = useCallback(async () => {
+    if (!selectedBooking || editSaving) return;
+    setEditSaving(true);
+    setEditFeedback(null);
     try {
       const payload = {
         status: selectedBooking.status,
@@ -63,10 +69,25 @@ export const useBookingEditModal = (updateBookingFields, updateBookingAttendance
       };
       await updateBookingFields(selectedBooking._id, payload);
       setSelectedBooking(null);
-    } catch {
-      alert("No se pudieron guardar los cambios.");
+    } catch (error) {
+      setEditFeedback({
+        type: "error",
+        message:
+          error?.response?.data?.message ||
+          error?.message ||
+          "No se pudieron guardar los cambios.",
+      });
+    } finally {
+      setEditSaving(false);
     }
-  }, [selectedBooking, editNotes, editEvolution, editEmotionalState, updateBookingFields]);
+  }, [
+    editEmotionalState,
+    editEvolution,
+    editNotes,
+    editSaving,
+    selectedBooking,
+    updateBookingFields,
+  ]);
 
   const closeEditBooking = useCallback(() => setSelectedBooking(null), []);
 
@@ -87,6 +108,8 @@ export const useBookingEditModal = (updateBookingFields, updateBookingAttendance
     attendanceNotes,
     attendanceSaving,
     attendanceFeedback,
+    editSaving,
+    editFeedback,
     setEditNotes,
     setEditEvolution,
     setEditEmotionalState,

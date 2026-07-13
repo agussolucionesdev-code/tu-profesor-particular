@@ -68,6 +68,8 @@ const BookingEditModal = ({
   attendanceNotes,
   attendanceSaving,
   attendanceFeedback,
+  editSaving,
+  editFeedback,
   onClose,
   onNotesChange,
   onEvolutionChange,
@@ -86,13 +88,18 @@ const BookingEditModal = ({
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e) => { if (e.key === "Escape" && !attendanceSaving) onClose(); };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && !attendanceSaving && !editSaving) onClose();
+    };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [attendanceSaving, onClose]);
+  }, [attendanceSaving, editSaving, onClose]);
 
   return (
-    <div className="admin-modal-overlay" onClick={attendanceSaving ? undefined : onClose}>
+    <div
+      className="admin-modal-overlay"
+      onClick={attendanceSaving || editSaving ? undefined : onClose}
+    >
       <div
         ref={dialogRef}
         className="admin-modal-card"
@@ -100,6 +107,8 @@ const BookingEditModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-modal-title"
+        aria-describedby={editFeedback ? "edit-booking-feedback" : undefined}
+        aria-busy={editSaving}
         tabIndex={-1}
       >
         <div className="admin-modal-header">
@@ -117,6 +126,7 @@ const BookingEditModal = ({
               className="admin-input"
               value={bookingStatusLabel(booking.status)}
               onChange={onStatusChange}
+              disabled={editSaving}
             >
               <option value="Pendiente">Pendiente</option>
               <option value="Confirmado">Confirmado</option>
@@ -201,6 +211,7 @@ const BookingEditModal = ({
               maxLength={MAX_NOTES}
               value={editNotes}
               onChange={onNotesChange}
+              disabled={editSaving}
               placeholder="Seguimiento, dudas frecuentes, temas a reforzar..."
             />
           </div>
@@ -217,6 +228,7 @@ const BookingEditModal = ({
               maxLength={MAX_EVOLUTION}
               value={editEvolution}
               onChange={onEvolutionChange}
+              disabled={editSaving}
               placeholder="¿Qué avances ha tenido? Temas superados, dificultades actuales..."
             />
           </div>
@@ -233,6 +245,7 @@ const BookingEditModal = ({
               maxLength={MAX_EMOTIONAL}
               value={editEmotionalState}
               onChange={onEmotionalStateChange}
+              disabled={editSaving}
               placeholder="¿Cómo se siente el alumno? Motivación, estrés, actitud ante el estudio..."
             />
           </div>
@@ -240,12 +253,23 @@ const BookingEditModal = ({
 
         <NotesHistoryPanel history={booking?.notesHistory} />
 
+        {editFeedback && (
+          <p
+            id="edit-booking-feedback"
+            className={`attendance-feedback ${editFeedback.type}`}
+            role={editFeedback.type === "error" ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {editFeedback.message}
+          </p>
+        )}
+
         <div className="admin-modal-footer">
           <button
             type="button"
             className="admin-secondary-btn"
             onClick={onClose}
-            disabled={attendanceSaving}
+            disabled={attendanceSaving || editSaving}
           >
             Cancelar
           </button>
@@ -253,9 +277,9 @@ const BookingEditModal = ({
             type="button"
             className="admin-primary-btn slim"
             onClick={onSave}
-            disabled={attendanceSaving}
+            disabled={attendanceSaving || editSaving}
           >
-            Guardar cambios
+            {editSaving ? "Guardando cambios..." : "Guardar cambios"}
           </button>
         </div>
       </div>

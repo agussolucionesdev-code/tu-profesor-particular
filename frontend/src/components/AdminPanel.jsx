@@ -134,6 +134,8 @@ const AdminPanel = () => {
     attendanceNotes,
     attendanceSaving,
     attendanceFeedback,
+    editSaving,
+    editFeedback,
     setEditNotes,
     setEditEvolution,
     setEditEmotionalState,
@@ -585,6 +587,8 @@ const AdminPanel = () => {
           attendanceNotes={attendanceNotes}
           attendanceSaving={attendanceSaving}
           attendanceFeedback={attendanceFeedback}
+          editSaving={editSaving}
+          editFeedback={editFeedback}
           onClose={closeEditBooking}
           onNotesChange={(e) => setEditNotes(e.target.value)}
           onEvolutionChange={(e) => setEditEvolution(e.target.value)}

@@ -7,7 +7,11 @@ import {
   deleteAllBookings as apiDeleteAllBookings,
 } from "../api/bookingApi";
 import { toSafeDate as toDate } from "../utils/bookingFormatters";
-import { createSingleFlight } from "../utils/adminOperations";
+import {
+  createSingleFlight,
+  normalizeCanonicalBooking,
+  replaceBookingWithCanonical,
+} from "../utils/adminOperations";
 
 const AUTO_REFRESH_INTERVAL_MS = 60_000;
 
@@ -85,13 +89,19 @@ export const useBookingsData = ({
   const handleQuickStatusChange = useCallback(
     async (id, newStatus) => {
       try {
-        await updateBooking(id, { status: newStatus }, authConfig);
-        setBookings((current) =>
-          current.map((booking) =>
-            booking._id === id ? { ...booking, status: newStatus } : booking,
-          ),
+        const response = await updateBooking(
+          id,
+          { status: newStatus },
+          authConfig,
         );
-        return { ok: true };
+        const updatedBooking = normalizeCanonicalBooking(
+          id,
+          response?.data?.data,
+        );
+        setBookings((current) =>
+          replaceBookingWithCanonical(current, id, updatedBooking),
+        );
+        return { ok: true, booking: updatedBooking };
       } catch (error) {
         console.error("No se pudo actualizar el estado del turno:", id);
         return {
@@ -107,12 +117,12 @@ export const useBookingsData = ({
 
   const updateBookingFields = useCallback(
     async (id, payload) => {
-      await updateBooking(id, payload, authConfig);
+      const response = await updateBooking(id, payload, authConfig);
+      const updatedBooking = normalizeCanonicalBooking(id, response?.data?.data);
       setBookings((current) =>
-        current.map((booking) =>
-          booking._id === id ? { ...booking, ...payload } : booking,
-        ),
+        replaceBookingWithCanonical(current, id, updatedBooking),
       );
+      return updatedBooking;
     },
     [authConfig],
   );
