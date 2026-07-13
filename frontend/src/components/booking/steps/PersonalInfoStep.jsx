@@ -34,6 +34,7 @@ const PersonalInfoStep = ({
   handleChange,
   toggleAdultMode,
   onContinueToAcademic,
+  onValidationError,
 }) => {
   // ── Definición de campos según modo adulto ──────────────────────────────
   const fields = useMemo(() => {
@@ -62,7 +63,7 @@ const PersonalInfoStep = ({
   const {
     activeIndex,
     showVerification,
-    fieldRefs,
+    setFieldRef,
     goNext,
     jumpTo,
     enterVerification,
@@ -88,6 +89,7 @@ const PersonalInfoStep = ({
   const confirmField = useCallback(
     (fieldKey) => {
       if (!isFieldConfirmed(fieldKey)) {
+        onValidationError?.(fieldKey);
         setHasAttemptedNext(true);
         return;
       }
@@ -98,7 +100,7 @@ const PersonalInfoStep = ({
         goNext();
       }
     },
-    [enterVerification, goNext, isFieldConfirmed, setHasAttemptedNext],
+    [enterVerification, goNext, isFieldConfirmed, onValidationError, setHasAttemptedNext],
   );
 
   // ── Enter en inputs de texto ─────────────────────────────────────────────
@@ -251,7 +253,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={isValidField("studentName")}
                   fieldRef={(el) => {
-                    fieldRefs.current.studentName = el;
+                    setFieldRef("studentName", el);
                   }}
                   onConfirm={() => confirmField("studentName")}
                   showBack={false}
@@ -303,7 +305,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={isValidField("phone")}
                   fieldRef={(el) => {
-                    fieldRefs.current.phone = el;
+                    setFieldRef("phone", el);
                   }}
                   onConfirm={() => confirmField("phone")}
                   onBack={() => jumpTo(0)}
@@ -354,7 +356,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={activeIndex > fields.findIndex((f) => f.key === "adultMode")}
                   fieldRef={(el) => {
-                    fieldRefs.current.adultMode = el;
+                    setFieldRef("adultMode", el);
                   }}
                   onConfirm={() => confirmField("adultMode")}
                   onBack={() => jumpTo(activeIndex - 1)}
@@ -405,7 +407,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={isValidField("responsibleName")}
                   fieldRef={(el) => {
-                    fieldRefs.current.responsibleName = el;
+                    setFieldRef("responsibleName", el);
                   }}
                   onConfirm={() => confirmField("responsibleName")}
                   onBack={() => jumpTo(activeIndex - 1)}
@@ -458,7 +460,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={isValidField("responsibleRelationship")}
                   fieldRef={(el) => {
-                    fieldRefs.current.responsibleRelationship = el;
+                    setFieldRef("responsibleRelationship", el);
                   }}
                   onConfirm={() => confirmField("responsibleRelationship")}
                   onBack={() => jumpTo(activeIndex - 1)}
@@ -504,7 +506,7 @@ const PersonalInfoStep = ({
                   isActive
                   isCompleted={isValidField("responsibleRelationshipOther")}
                   fieldRef={(el) => {
-                    fieldRefs.current.responsibleRelationshipOther = el;
+                    setFieldRef("responsibleRelationshipOther", el);
                   }}
                   onConfirm={() => confirmField("responsibleRelationshipOther")}
                   onBack={() => jumpTo(activeIndex - 1)}
@@ -566,7 +568,7 @@ const PersonalInfoStep = ({
                     formData.email.trim() === "" || isValidField("email")
                   }
                   fieldRef={(el) => {
-                    fieldRefs.current.email = el;
+                    setFieldRef("email", el);
                   }}
                   onConfirm={() => confirmField("email")}
                   onBack={() => jumpTo(activeIndex - 1)}

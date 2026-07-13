@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaClipboardList,
   FaExclamationTriangle,
+  FaHome,
   FaMoon,
   FaSun,
   FaTimes,
@@ -170,6 +171,7 @@ const Navbar = () => {
   };
 
   const navLinks = [
+    { title: "Inicio", path: "/", icon: <FaHome /> },
     { title: "Reservar", path: "/reservar", icon: <FaCalendarAlt /> },
     { title: "Mis Turnos", path: "/portal", icon: <FaClipboardList /> },
   ];
@@ -179,7 +181,7 @@ const Navbar = () => {
       <div className="navbar-aurora" aria-hidden="true" />
       <div className="navbar-container">
         <Link
-          to="/reservar"
+          to="/"
           className="navbar-brand"
           onClick={() => setIsOpen(false)}
           aria-label="Tu Profesor Particular — Agustín Elías Sosa"
@@ -203,9 +205,7 @@ const Navbar = () => {
         <div className="navbar-right-zone">
           <ul className={`nav-menu-list ${isOpen ? "active" : ""}`}>
             {navLinks.map((link) => {
-              const isActive =
-                location.pathname === link.path ||
-                (link.path === "/reservar" && location.pathname === "/");
+              const isActive = location.pathname === link.path;
 
               return (
                 <li key={link.path} className="nav-item">

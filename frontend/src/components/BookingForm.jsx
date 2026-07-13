@@ -38,7 +38,11 @@ import { createBooking, fetchPublicSettings } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { useWizardNavigation } from "../hooks/useWizardNavigation";
-import { WIZARD_STEPS } from "../constants/bookingWizard";
+import {
+  WIZARD_STEPS,
+  toBookingApiAcademicSituation,
+} from "../constants/bookingWizard";
+import { createBookingFunnelTracker } from "../utils/bookingFunnel";
 import {
   ADULT_RELATIONSHIP_VALUE,
   formatDurationOptionLabel,
@@ -74,10 +78,9 @@ const STEP_VOICE_OPTIONS = {
 };
 
 const STEP_VOICE_GUIDANCE = {
-  1: "Empezamos simple. Completá solo lo necesario y avanzamos de a poco, sin apuro. Yo te acompaño para que el turno quede claro desde el primer intento.",
-  2: "Muy bien. Ahora elegí el día que te dé más tranquilidad. Te muestro opciones disponibles para que no tengas que adivinar ni preocuparte por cruces.",
-  3: "Ya tenemos el día. Elegí el horario que mejor encaje con tu rutina; cuando lo marques, te llevo al resumen para cerrar todo con calma.",
-  4: "Último tramo. Revisá el resumen, elegí la duración ideal y confirmamos solo cuando todo se sienta correcto.",
+  1: "Empezamos simple. Completá los datos esenciales del alumno y su contacto.",
+  2: "Muy bien. Ahora contame la necesidad académica y el objetivo de la clase.",
+  3: "Último tramo. Elegí fecha, horario y duración, y revisá todo antes de confirmar.",
 };
 
 const VOICE_TIP_KEY = "voice_guide_tip_dismissed";
@@ -107,8 +110,15 @@ const BookingForm = () => {
   const [successData, setSuccessData] = useState(null);
   const [pricePerHour, setPricePerHour] = useState(0);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
-  const [stepOneSection, setStepOneSection] = useState("personal");
+  const [scheduleSection, setScheduleSection] = useState("date");
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
+  const funnelTrackerRef = useRef(null);
+  const currentStepRef = useRef(currentStep);
+  const abandonmentTimerRef = useRef(null);
+  currentStepRef.current = currentStep;
+  if (!funnelTrackerRef.current) {
+    funnelTrackerRef.current = createBookingFunnelTracker();
+  }
 
   // ── Pre-fill desde URL params (ej: /reservar?materia=Matemáticas&nivel=Secundaria)
   const [searchParams] = useSearchParams();
@@ -184,8 +194,6 @@ const BookingForm = () => {
     isAdult,
     hasAttemptedNext,
     setHasAttemptedNext,
-    hasUnlockedAcademic,
-    hasUnlockedComments,
     isValidField,
     isPersonalInfoComplete,
     isAcademicInfoComplete,
@@ -209,7 +217,10 @@ const BookingForm = () => {
     nextFreeSlot,
     selectedDayOnly,
     isSelectedTimeAvailable,
+    isSelectedTimeVerified,
     availabilityMatchesSelectedDuration,
+    availabilityStatus,
+    retryAvailability,
   } = useBookingAvailability(formData.timeSlot, formData.duration, showToast);
 
   const [sliderHeight, setSliderHeight] = useState(0);
@@ -224,15 +235,20 @@ const BookingForm = () => {
   const formCardRef = useRef(null);
   const textareaRef = useRef(null);
   const bookingAttemptRef = useRef(null);
-  const prevUnlockedAcademicRef = useRef(false);
-  const prevUnlockedCommentsRef = useRef(false);
-
-
   useEffect(() => {
-    if (!isPersonalInfoComplete) {
-      setStepOneSection("personal");
+    if (abandonmentTimerRef.current) {
+      window.clearTimeout(abandonmentTimerRef.current);
     }
-  }, [isPersonalInfoComplete]);
+    funnelTrackerRef.current.start(1);
+    const trackAbandonment = () => {
+      funnelTrackerRef.current.abandon(currentStepRef.current);
+    };
+    window.addEventListener("pagehide", trackAbandonment);
+    return () => {
+      window.removeEventListener("pagehide", trackAbandonment);
+      abandonmentTimerRef.current = window.setTimeout(trackAbandonment, 0);
+    };
+  }, []);
 
   const syncSliderHeight = useCallback(() => {
     const activePanel = slideRefs.current[currentStep];
@@ -364,6 +380,7 @@ const BookingForm = () => {
     formData.academicSituation,
     formData.timeSlot,
     formData.duration,
+    scheduleSection,
     availableSlots.length,
     syncSliderHeight,
   ]);
@@ -393,10 +410,10 @@ const BookingForm = () => {
   }, []);
 
   useEffect(() => {
-    if (!isDesktopCalendarViewport || currentStep !== 2) {
+    if (!isDesktopCalendarViewport || currentStep !== 3 || scheduleSection !== "date") {
       setIsCalendarExpanded(false);
     }
-  }, [currentStep, isDesktopCalendarViewport]);
+  }, [currentStep, isDesktopCalendarViewport, scheduleSection]);
 
   useEffect(() => {
     if (!isCalendarExpanded) return undefined;
@@ -436,6 +453,12 @@ const BookingForm = () => {
   const isTimeSelected = Boolean(
     formData.timeSlot && formData.timeSlot.getHours() !== 0,
   );
+  const isConfirmationReady =
+    Number(formData.duration) >= 0.5 &&
+    isTimeSelected &&
+    availabilityStatus === "ready" &&
+    availabilityMatchesSelectedDuration &&
+    isSelectedTimeVerified;
   const stepProgressWidth =
     ((currentStep - 1) / Math.max(WIZARD_STEPS.length - 1, 1)) * 100;
   const confirmationDateLabel =
@@ -445,6 +468,14 @@ const BookingForm = () => {
   const confirmationDurationLabel = formData.duration
     ? formatDurationOptionLabel(formData.duration)
     : "";
+  const formattedPricePerHour =
+    pricePerHour > 0
+      ? new Intl.NumberFormat("es-AR", {
+          style: "currency",
+          currency: "ARS",
+          maximumFractionDigits: 0,
+        }).format(pricePerHour)
+      : "";
   const confirmationTimeRangeLabel =
     formData.timeSlot && formData.timeSlot.getHours() > 0
       ? `${format(formData.timeSlot, "HH:mm")} a ${
@@ -463,45 +494,11 @@ const BookingForm = () => {
     .filter(Boolean)
     .join(" - ");
   const confirmationLookupHint =
-    "Después de confirmar te mostramos un código grande para usar en Mis Turnos. Si no lo tenés a mano, también podés entrar con el email o el número de teléfono cargados.";
+    "Después de confirmar te mostramos un código visible y un enlace seguro de gestión. Guardá ese enlace; si informaste un email, también podés solicitar que te lo enviemos nuevamente.";
   const responsibleRelationshipLabel = formatResponsibleRelationshipLabel(
     isAdult ? ADULT_RELATIONSHIP_VALUE : formData.responsibleRelationship,
     formData.responsibleRelationshipOther,
   );
-  const isConfirmationReady = Number(formData.duration) >= 0.5;
-
-  // Scroll into view when a new progressive-disclosure section unlocks
-  useEffect(() => {
-    if (hasUnlockedAcademic && !prevUnlockedAcademicRef.current) {
-      window.setTimeout(() => {
-        const panel = slideRefs.current[1];
-        const anchor = panel?.querySelectorAll(".progressive-disclosure-grid.is-active")?.[0];
-        if (!anchor) return;
-        const navH = document.querySelector(".navbar-elite")?.getBoundingClientRect().height ?? 0;
-        const top = anchor.getBoundingClientRect().top + window.scrollY - navH - 20;
-        const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        window.scrollTo({ top: Math.max(0, top), behavior: prefersReduced ? "auto" : "smooth" });
-      }, 320);
-    }
-    prevUnlockedAcademicRef.current = hasUnlockedAcademic;
-  }, [hasUnlockedAcademic]);
-
-  useEffect(() => {
-    if (hasUnlockedComments && !prevUnlockedCommentsRef.current) {
-      window.setTimeout(() => {
-        const panel = slideRefs.current[1];
-        const sections = panel?.querySelectorAll(".progressive-disclosure-grid.is-active");
-        const anchor = sections?.[sections.length - 1];
-        if (!anchor) return;
-        const navH = document.querySelector(".navbar-elite")?.getBoundingClientRect().height ?? 0;
-        const top = anchor.getBoundingClientRect().top + window.scrollY - navH - 20;
-        const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        window.scrollTo({ top: Math.max(0, top), behavior: prefersReduced ? "auto" : "smooth" });
-      }, 320);
-    }
-    prevUnlockedCommentsRef.current = hasUnlockedComments;
-  }, [hasUnlockedComments]);
-
   const getYearGradeOptions = () => {
     const level = formData.educationLevel;
     if (level === "Primaria")
@@ -537,7 +534,8 @@ const BookingForm = () => {
   };
 
   const validateStep = (step) => {
-    if (step === 1 && !canProceedToStep2) {
+    if (step === 1 && !isPersonalInfoComplete) {
+      funnelTrackerRef.current.validationError(1, "essential_data_incomplete");
       setHasAttemptedNext(true);
       showToast(
         "Faltan algunos datos. Revisa los campos resaltados para continuar.",
@@ -555,35 +553,18 @@ const BookingForm = () => {
       );
       return false;
     }
-    if (step === 2 && !formData.timeSlot) {
+    if (step === 2 && !isAcademicInfoComplete) {
+      funnelTrackerRef.current.validationError(2, "academic_need_incomplete");
       showToast(
-        "Elegí una fecha en el calendario para descubrir los horarios libres.",
-        "warning",
+        "Completá nivel, curso, materia y objetivo para continuar.",
+        "error",
         {
-          title: "Elegí una fecha",
-          speak:
-            "Para seguir, elegí una fecha disponible en el calendario. Después te llevo a los horarios libres, paso a paso.",
+          title: "Revisemos la necesidad académica",
+          speak: "Falta completar algún dato académico obligatorio.",
           voiceOptions: STEP_VOICE_OPTIONS,
         },
       );
-      scrollToStepIssue(2, ".calendar-card, .section-title");
-      return false;
-    }
-    if (
-      step === 3 &&
-      (!formData.timeSlot || formData.timeSlot.getHours() === 0)
-    ) {
-      showToast(
-        "Seleccioná el horario que mejor se adapte a vos para continuar.",
-        "warning",
-        {
-          title: "Falta el horario",
-          speak:
-            "Ya tenemos el día. Ahora elegí un horario libre que te resulte cómodo; después revisamos todo antes de confirmar.",
-          voiceOptions: STEP_VOICE_OPTIONS,
-        },
-      );
-      scrollToStepIssue(3, ".slot-btn:not(.disabled), .section-title");
+      scrollToStepIssue(2, ".premium-input.error, .section-title");
       return false;
     }
     return true;
@@ -591,11 +572,7 @@ const BookingForm = () => {
 
   const goToStep = (targetStep) => {
     if (!navigateToStep(targetStep)) return;
-
-    // 1A: Default duration to 1h when entering confirmation step
-    if (targetStep === 4 && !formData.duration) {
-      handleChange({ target: { name: "duration", value: 1 } });
-    }
+    funnelTrackerRef.current.stageChange(currentStep, targetStep);
 
     smoothScrollToStep(targetStep);
     speakWarmGuidance(STEP_VOICE_GUIDANCE[targetStep]);
@@ -634,17 +611,21 @@ const BookingForm = () => {
           voiceOptions: STEP_VOICE_OPTIONS,
         },
       );
-      scrollToStepIssue(2, ".calendar-card, .section-title");
+      funnelTrackerRef.current.validationError(3, "date_missing");
+      scrollToStepIssue(3, ".calendar-card, .section-title");
       return;
     }
 
-    goToNext();
+    setScheduleSection("time");
+    smoothScrollToStep(3);
   };
 
   const handleProceedToConfirmationStep = () => {
-    if (!isTimeSelected) {
+    if (!isTimeSelected || availabilityStatus !== "ready" || !isSelectedTimeVerified) {
       showToast(
-        "Seleccioná el horario que mejor se adapte a vos para continuar.",
+        availabilityStatus === "ready"
+          ? "Seleccioná el horario que mejor se adapte a vos para continuar."
+          : "Esperá a que verifiquemos la disponibilidad antes de continuar.",
         "warning",
         {
           title: "Elegí un horario",
@@ -653,11 +634,16 @@ const BookingForm = () => {
           voiceOptions: STEP_VOICE_OPTIONS,
         },
       );
+      funnelTrackerRef.current.validationError(3, "time_missing");
       scrollToStepIssue(3, ".slot-btn:not(.disabled), .section-title");
       return;
     }
 
-    goToNext();
+    if (!formData.duration) {
+      handleChange({ target: { name: "duration", value: 1 } });
+    }
+    setScheduleSection("confirmation");
+    smoothScrollToStep(3);
   };
 
   const handleDateSelect = (date) => {
@@ -665,7 +651,7 @@ const BookingForm = () => {
 
     if (formData.timeSlot && isSameDay(date, formData.timeSlot)) {
       setFormData((prev) => ({ ...prev, timeSlot: null }));
-      scrollToStepIssue(2, ".calendar-card, .section-title");
+      scrollToStepIssue(3, ".calendar-card, .section-title");
       speakWarmGuidance(
         "Fecha quitada. Elegí otro día disponible cuando quieras; seguimos con los horarios libres sin perder lo que ya completaste.",
       );
@@ -676,7 +662,7 @@ const BookingForm = () => {
       }
       // No scroll on date pick — user is already viewing the calendar.
       // Only nudge if the section-title is above the fold.
-      smoothScrollToStep(2, { selector: ".date-step-content", delay: 80 });
+      smoothScrollToStep(3, { selector: ".date-step-content", delay: 80 });
       speakWarmGuidance(
         "Fecha elegida. Bien: ahora tocá el botón para ver horarios disponibles y elegir el que te quede más cómodo.",
       );
@@ -685,7 +671,7 @@ const BookingForm = () => {
 
   const clearDateSelection = () => {
     setFormData((prev) => ({ ...prev, timeSlot: null }));
-    scrollToStepIssue(2, ".calendar-card, .section-title");
+    scrollToStepIssue(3, ".calendar-card, .section-title");
     speakWarmGuidance(
       "Fecha quitada. Cuando quieras, elegí otra fecha disponible y seguimos con calma.",
     );
@@ -767,7 +753,7 @@ const BookingForm = () => {
       return;
     }
     setFormData((prev) => ({ ...prev, duration }));
-    scrollToStepAction(4);
+    scrollToStepAction(3);
     speakWarmGuidance(
       `Duración elegida: ${formatDurationVoiceLabel(duration)}. Revisá el resumen con tranquilidad y confirmá solo si todo está correcto.`,
     );
@@ -777,11 +763,21 @@ const BookingForm = () => {
     setShowModal(false);
     resetForm();
     resetToFirstStep();
+    setScheduleSection("date");
+    funnelTrackerRef.current = createBookingFunnelTracker();
+    funnelTrackerRef.current.start(1);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     primeVoicePlayback();
+    if (!isConfirmationReady) {
+      showToast(
+        "Esperá a que confirmemos que el horario sigue disponible antes de reservar.",
+        "warning",
+      );
+      return;
+    }
     setLoading(true);
     setSubmitError("");
     setSubmitSlow(false);
@@ -807,9 +803,13 @@ const BookingForm = () => {
       const safeEmail =
         formData.email.trim() !== "" ? formData.email.trim() : "";
 
+      const backendCompatibleFormData = { ...formData };
+      delete backendCompatibleFormData.objective;
       const bookingPayload = {
-        ...formData,
+        ...backendCompatibleFormData,
         email: safeEmail,
+        school: formData.school.trim(),
+        academicSituation: toBookingApiAcademicSituation(formData),
         responsibleName: finalResponsibleName,
         responsibleRelationship: finalResponsibleRelationship,
         responsibleRelationshipOther: finalResponsibleRelationshipOther,
@@ -829,6 +829,7 @@ const BookingForm = () => {
         bookingAttemptRef.current.key,
       );
       bookingAttemptRef.current = null;
+      funnelTrackerRef.current.complete(3);
 
       const end = addMinutes(dateObj, Number(formData.duration) * 60);
       const bookingCode = response.data.data.bookingCode;
@@ -887,7 +888,7 @@ const BookingForm = () => {
           { locale: es },
         )} a las ${format(dateObj, "HH:mm")} horas. Guardá el código ${spellCodeForVoice(
           bookingCode,
-        )}. Te voy a esperar en Mis Turnos para cualquier cambio, con ese código, tu correo o tu número de teléfono.`,
+        )}. Guardá el enlace seguro de gestión que aparece en pantalla para hacer cualquier cambio.`,
         STEP_VOICE_OPTIONS,
       );
     } catch (error) {
@@ -956,7 +957,9 @@ const BookingForm = () => {
         `Fecha: ${successData.day}`,
         `Horario: ${successData.startTime} a ${successData.endTime} h (${successData.actualDuration} h)`,
         `Código: ${successData.bookingCode}`,
-        `Gestión: después voy a entrar en Mis Turnos con este código.`,
+        successData.managementUrl
+          ? `Gestión segura: ${successData.managementUrl}`
+          : "Gestión: guardá el enlace seguro mostrado al confirmar.",
         ``,
         `Gracias.`,
       ].filter((l) => l !== null).join("\n")
@@ -1088,6 +1091,39 @@ const BookingForm = () => {
           )}
         </div>
 
+        <section
+          className="booking-expectations"
+          aria-labelledby="booking-expectations-title"
+        >
+          <div className="booking-expectations-heading">
+            <span className="booking-expectations-kicker">Con claridad desde el inicio</span>
+            <h2 id="booking-expectations-title">Antes de reservar</h2>
+          </div>
+          <ul className="booking-expectations-list">
+            <li>
+              <strong>Modalidad:</strong> Online y presencial en Temperley, Buenos Aires.
+            </li>
+            <li>
+              <strong>Duración:</strong> la elegís según el horario disponible antes de confirmar.
+            </li>
+            <li>
+              <strong>Primera clase de diagnóstico:</strong> vemos tu punto de partida y definimos cómo avanzar.
+            </li>
+            <li>
+              <strong>Cambios:</strong> reprogramá o cancelá una reserva activa desde Mis Turnos.
+            </li>
+            {formattedPricePerHour ? (
+              <li>
+                <strong>Valor por hora:</strong> {formattedPricePerHour}.
+              </li>
+            ) : (
+              <li>
+                <strong>Precio no publicado:</strong> consultalo con el profesor antes de reservar.
+              </li>
+            )}
+          </ul>
+        </section>
+
         <div
           className="neuro-stepper neuro-stepper-compact"
         >
@@ -1176,39 +1212,22 @@ const BookingForm = () => {
                 <PersonalInfoStep
                   formData={formData}
                   isAdult={isAdult}
-                  isVisible={stepOneSection === "personal"}
+                  isConfirmationReady={isConfirmationReady}
+                  availabilityStatus={availabilityStatus}
+                  isVisible
                   hasAttemptedNext={hasAttemptedNext}
                   setHasAttemptedNext={setHasAttemptedNext}
                   isValidField={isValidField}
                   getFieldStateClass={getFieldStateClass}
                   handleChange={handleChange}
                   toggleAdultMode={toggleAdultMode}
-                  onContinueToAcademic={() => setStepOneSection("academic")}
+                  onContinueToAcademic={goToNext}
+                  onValidationError={(field) =>
+                    funnelTrackerRef.current.validationError(1, `${field}_invalid`)
+                  }
                 />
-
-              <AcademicInfoStep
-                formData={formData}
-                isAdult={isAdult}
-                isVisible={stepOneSection === "academic"}
-                hasAttemptedNext={hasAttemptedNext}
-                setHasAttemptedNext={setHasAttemptedNext}
-                isValidField={isValidField}
-                getFieldStateClass={getFieldStateClass}
-                handleChange={handleChange}
-                isPersonalInfoComplete={isPersonalInfoComplete}
-                isAcademicInfoComplete={isAcademicInfoComplete}
-                canProceedToStep2={canProceedToStep2}
-                textareaRef={textareaRef}
-                getYearGradeOptions={getYearGradeOptions}
-                subjectsByLevelOverride={subjectsByLevelOverride}
-                goToNext={goToNext}
-                onBackToPersonal={() => setStepOneSection("personal")}
-              />
             </div>
 
-            {/* =======================================
-                PASO 2: CALENDARIO
-                ======================================= */}
             <div
               ref={(element) => {
                 slideRefs.current[2] = element;
@@ -1216,26 +1235,29 @@ const BookingForm = () => {
               className={`form-slide-panel ${currentStep === 2 ? "active-panel" : ""}`}
               {...getSlidePanelA11y(2)}
             >
-              <DateSelectionStep
+              <AcademicInfoStep
                 formData={formData}
-                selectedDayOnly={selectedDayOnly}
-                selectedDayLabel={selectedDayLabel}
-                availableSlotCount={availableSlotCount}
-                hasAnyAvailability={hasAnyAvailability}
-                handleDateSelect={handleDateSelect}
-                clearDateSelection={clearDateSelection}
-                handleProceedToTimeStep={handleProceedToTimeStep}
-                goToPrev={goToPrev}
-                renderCalendarHeader={renderCalendarHeader}
-                getDayClassName={getDayClassName}
-                renderDayContents={renderDayContents}
-                isDateAvailable={isDateAvailable}
+                isAdult={isAdult}
+                isVisible={currentStep === 2}
+                hasAttemptedNext={hasAttemptedNext}
+                setHasAttemptedNext={setHasAttemptedNext}
+                isValidField={isValidField}
+                getFieldStateClass={getFieldStateClass}
+                handleChange={handleChange}
+                isPersonalInfoComplete={isPersonalInfoComplete}
+                canProceedToStep2={canProceedToStep2}
+                textareaRef={textareaRef}
+                getYearGradeOptions={getYearGradeOptions}
+                subjectsByLevelOverride={subjectsByLevelOverride}
+                goToNext={goToNext}
+                onBackToPersonal={goToPrev}
+                onValidationError={(field) =>
+                  funnelTrackerRef.current.validationError(2, `${field}_invalid`)
+                }
               />
             </div>
 
-            {/* =======================================
-                PASO 3: HORARIOS
-                ======================================= */}
+            {/* PASO 3: FECHA, HORARIO, DURACIÓN Y REVISIÓN */}
             <div
               ref={(element) => {
                 slideRefs.current[3] = element;
@@ -1243,57 +1265,65 @@ const BookingForm = () => {
               className={`form-slide-panel ${currentStep === 3 ? "active-panel" : ""}`}
               {...getSlidePanelA11y(3)}
             >
-              <TimeSelectionStep
-                formData={formData}
-                isTimeSelected={isTimeSelected}
-                selectedTimeLabel={selectedTimeLabel}
-                selectedDayLabel={selectedDayLabel}
-                selectedDayOnly={selectedDayOnly}
-                slotSections={slotSections}
-                availableSlots={availableSlots}
-                availableSlotCount={availableSlotCount}
-                handleTimeSelect={handleTimeSelect}
-                clearTimeSelection={clearTimeSelection}
-                handleProceedToConfirmationStep={
-                  handleProceedToConfirmationStep
-                }
-                goToPrev={goToPrev}
-              />
-            </div>
-
-            {/* =======================================
-                PASO 4: CONFIRMACION
-                ======================================= */}
-            <div
-              ref={(element) => {
-                slideRefs.current[4] = element;
-              }}
-              className={`form-slide-panel ${currentStep === 4 ? "active-panel" : ""}`}
-              {...getSlidePanelA11y(4)}
-            >
-              <ConfirmationStep
-                formData={formData}
-                isAdult={isAdult}
-                isTimeSelected={isTimeSelected}
-                isConfirmationReady={isConfirmationReady}
-                confirmationDateLabel={confirmationDateLabel}
-                confirmationDurationLabel={confirmationDurationLabel}
-                confirmationTimeRangeLabel={confirmationTimeRangeLabel}
-                confirmationEducationLabel={confirmationEducationLabel}
-                responsibleRelationshipLabel={responsibleRelationshipLabel}
-                confirmationLookupHint={confirmationLookupHint}
-                durationOptions={durationOptions}
-                maxAllowedDuration={maxAllowedDuration}
-                handleDurationSelect={handleDurationSelect}
-                handleSubmit={handleSubmit}
-                goToPrev={goToPrev}
-                loading={loading}
-                loadingPhase={loadingPhase}
-                submitSlow={submitSlow}
-                submitError={submitError}
-                onRetry={(e) => { setSubmitError(""); handleSubmit(e); }}
-                pricePerHour={pricePerHour}
-              />
+              {scheduleSection === "date" && (
+                <DateSelectionStep
+                  formData={formData}
+                  selectedDayOnly={selectedDayOnly}
+                  selectedDayLabel={selectedDayLabel}
+                  availableSlotCount={availableSlotCount}
+                  hasAnyAvailability={hasAnyAvailability}
+                  availabilityStatus={availabilityStatus}
+                  retryAvailability={retryAvailability}
+                  handleDateSelect={handleDateSelect}
+                  clearDateSelection={clearDateSelection}
+                  handleProceedToTimeStep={handleProceedToTimeStep}
+                  goToPrev={goToPrev}
+                  renderCalendarHeader={renderCalendarHeader}
+                  getDayClassName={getDayClassName}
+                  renderDayContents={renderDayContents}
+                  isDateAvailable={isDateAvailable}
+                />
+              )}
+              {scheduleSection === "time" && (
+                <TimeSelectionStep
+                  formData={formData}
+                  isTimeSelected={isTimeSelected}
+                  selectedTimeLabel={selectedTimeLabel}
+                  slotSections={slotSections}
+                  availableSlots={availableSlots}
+                  availabilityStatus={availabilityStatus}
+                  retryAvailability={retryAvailability}
+                  handleTimeSelect={handleTimeSelect}
+                  clearTimeSelection={clearTimeSelection}
+                  handleProceedToConfirmationStep={handleProceedToConfirmationStep}
+                  goToPrev={() => setScheduleSection("date")}
+                />
+              )}
+              {scheduleSection === "confirmation" && (
+                <ConfirmationStep
+                  formData={formData}
+                  isAdult={isAdult}
+                  isConfirmationReady={isConfirmationReady}
+                  availabilityStatus={availabilityStatus}
+                  confirmationDateLabel={confirmationDateLabel}
+                  confirmationDurationLabel={confirmationDurationLabel}
+                  confirmationTimeRangeLabel={confirmationTimeRangeLabel}
+                  confirmationEducationLabel={confirmationEducationLabel}
+                  responsibleRelationshipLabel={responsibleRelationshipLabel}
+                  confirmationLookupHint={confirmationLookupHint}
+                  durationOptions={durationOptions}
+                  maxAllowedDuration={maxAllowedDuration}
+                  handleDurationSelect={handleDurationSelect}
+                  handleSubmit={handleSubmit}
+                  goToPrev={() => setScheduleSection("time")}
+                  loading={loading}
+                  loadingPhase={loadingPhase}
+                  submitSlow={submitSlow}
+                  submitError={submitError}
+                  onRetry={(e) => { setSubmitError(""); handleSubmit(e); }}
+                  pricePerHour={pricePerHour}
+                />
+              )}
             </div>
           </div>
         </div>

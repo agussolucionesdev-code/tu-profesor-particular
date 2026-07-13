@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addDays,
   addWeeks,
@@ -16,35 +16,34 @@ import {
   FaExclamationTriangle,
   FaRegCalendarAlt,
 } from "react-icons/fa";
+import { fetchAdminSettings } from "../../../api/bookingApi";
 import { toSafeDate as toDate } from "../../../utils/bookingFormatters";
+import {
+  createCalendarRange,
+  parseCalendarSchedule,
+} from "../../../utils/calendarSchedule";
 import "./CalendarView.css";
 
-const OPENING_HOUR = 7;
-const CLOSING_HOUR = 22;
-const TOTAL_HOURS = CLOSING_HOUR - OPENING_HOUR;
-const HOUR_HEIGHT = 64; // px per hour
-const TIME_GUTTER = 56; // px for the time label column
+const HOUR_HEIGHT = 64;
+const TIME_GUTTER = 56;
 
-const HOURS = Array.from({ length: TOTAL_HOURS }, (_, i) => OPENING_HOUR + i);
-
-/* ─── helpers ─── */
-const getBookingTop = (booking) => {
-  const h = booking.start.getHours() + booking.start.getMinutes() / 60;
-  return Math.max(0, (h - OPENING_HOUR) * HOUR_HEIGHT);
+const getBookingTop = (booking, range) => {
+  const hour = booking.start.getHours() + booking.start.getMinutes() / 60;
+  return Math.max(0, (hour - range.openingHour) * HOUR_HEIGHT);
 };
 
 const getBookingHeight = (booking) => {
-  const dur = Number(booking.duration) || 1;
-  return Math.max(dur * HOUR_HEIGHT, HOUR_HEIGHT / 2);
+  const duration = Number(booking.duration) || 1;
+  return Math.max(duration * HOUR_HEIGHT, HOUR_HEIGHT / 2);
 };
 
-const isOutOfHours = (booking) => {
+const isOutOfHours = (booking, range) => {
   if (!booking.start) return false;
-  const startH = booking.start.getHours() + booking.start.getMinutes() / 60;
-  const endH = booking.end
+  const startHour = booking.start.getHours() + booking.start.getMinutes() / 60;
+  const endHour = booking.end
     ? booking.end.getHours() + booking.end.getMinutes() / 60
-    : startH + (Number(booking.duration) || 1);
-  return startH < OPENING_HOUR || endH > CLOSING_HOUR;
+    : startHour + (Number(booking.duration) || 1);
+  return startHour < range.openingHour || endHour > range.closingHour;
 };
 
 const statusClass = (status) => {
@@ -57,8 +56,7 @@ const statusClass = (status) => {
   return map[status] || "cal-confirmed";
 };
 
-/* ─── Booking block ─── */
-const BookingBlock = ({ booking, onClick }) => {
+const BookingBlock = ({ booking, onClick, range }) => {
   const startStr = booking.start
     ? format(booking.start, "HH:mm", { locale: es })
     : "";
@@ -78,7 +76,7 @@ const BookingBlock = ({ booking, onClick }) => {
       type="button"
       className={`cal-booking-block ${statusClass(booking.status)}`}
       style={{
-        top: `${getBookingTop(booking)}px`,
+        top: `${getBookingTop(booking, range)}px`,
         height: `${getBookingHeight(booking)}px`,
       }}
       onClick={() => onClick(booking)}
@@ -91,28 +89,26 @@ const BookingBlock = ({ booking, onClick }) => {
   );
 };
 
-/* ─── Week view ─── */
-const CalendarWeekView = ({ weekStart, bookings, onSelectBooking }) => {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
+const CalendarWeekView = ({ weekStart, bookings, onSelectBooking, range }) => {
+  const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   const bookingsForDay = (day) =>
-    bookings.filter((b) => b.start && isSameDay(b.start, day));
+    bookings.filter((booking) => booking.start && isSameDay(booking.start, day));
 
   const now = new Date();
+  const nowHour = now.getHours() + now.getMinutes() / 60;
+  const nowIsVisible =
+    nowHour >= range.openingHour && nowHour <= range.closingHour;
   const nowTop =
-    now >= weekStart && now <= addDays(weekStart, 6)
-      ? (now.getHours() + now.getMinutes() / 60 - OPENING_HOUR) * HOUR_HEIGHT
+    nowIsVisible && now >= weekStart && now <= addDays(weekStart, 6)
+      ? (nowHour - range.openingHour) * HOUR_HEIGHT
       : null;
-
-  const todayIndex = days.findIndex((d) => isToday(d));
 
   return (
     <div className="cal-week-scroll">
-      {/* Day headers */}
       <div className="cal-week-head" style={{ paddingLeft: TIME_GUTTER }}>
-        {days.map((day, i) => (
+        {days.map((day) => (
           <div
-            key={i}
+            key={day.toISOString()}
             className={`cal-day-header ${isToday(day) ? "is-today" : ""}`}
           >
             <span className="cal-day-name">
@@ -123,53 +119,45 @@ const CalendarWeekView = ({ weekStart, bookings, onSelectBooking }) => {
         ))}
       </div>
 
-      {/* Body: time gutter + day columns */}
       <div
         className="cal-week-body"
-        style={{ height: `${TOTAL_HOURS * HOUR_HEIGHT}px` }}
+        style={{ height: `${range.totalHours * HOUR_HEIGHT}px` }}
       >
-        {/* Time gutter */}
         <div className="cal-time-gutter" style={{ width: TIME_GUTTER }}>
-          {HOURS.map((h) => (
+          {range.hours.map((hour) => (
             <div
-              key={h}
+              key={hour}
               className="cal-hour-label"
-              style={{ top: `${(h - OPENING_HOUR) * HOUR_HEIGHT}px` }}
+              style={{ top: `${(hour - range.openingHour) * HOUR_HEIGHT}px` }}
             >
-              {String(h).padStart(2, "0")}:00
+              {String(hour).padStart(2, "0")}:00
             </div>
           ))}
         </div>
 
-        {/* Day columns */}
-        {days.map((day, i) => (
+        {days.map((day) => (
           <div
-            key={i}
+            key={day.toISOString()}
             className={`cal-day-col ${isToday(day) ? "is-today" : ""}`}
           >
-            {/* Hour lines */}
-            {HOURS.map((h) => (
+            {range.hours.map((hour) => (
               <div
-                key={h}
+                key={hour}
                 className="cal-hour-line"
-                style={{ top: `${(h - OPENING_HOUR) * HOUR_HEIGHT}px` }}
+                style={{ top: `${(hour - range.openingHour) * HOUR_HEIGHT}px` }}
               />
             ))}
 
-            {/* Current time indicator */}
             {nowTop !== null && isToday(day) && (
-              <div
-                className="cal-now-line"
-                style={{ top: `${nowTop}px` }}
-              />
+              <div className="cal-now-line" style={{ top: `${nowTop}px` }} />
             )}
 
-            {/* Bookings */}
             {bookingsForDay(day).map((booking) => (
               <BookingBlock
                 key={booking._id}
                 booking={booking}
                 onClick={onSelectBooking}
+                range={range}
               />
             ))}
           </div>
@@ -179,43 +167,41 @@ const CalendarWeekView = ({ weekStart, bookings, onSelectBooking }) => {
   );
 };
 
-/* ─── Day view (mobile) ─── */
-const CalendarDayView = ({ currentDay, bookings, onSelectBooking }) => {
+const CalendarDayView = ({ currentDay, bookings, onSelectBooking, range }) => {
   const dayBookings = bookings.filter(
-    (b) => b.start && isSameDay(b.start, currentDay),
+    (booking) => booking.start && isSameDay(booking.start, currentDay),
   );
-
   const now = new Date();
+  const nowHour = now.getHours() + now.getMinutes() / 60;
   const isCurrentDay = isToday(currentDay);
-  const nowTop = isCurrentDay
-    ? (now.getHours() + now.getMinutes() / 60 - OPENING_HOUR) * HOUR_HEIGHT
-    : null;
+  const nowTop =
+    isCurrentDay && nowHour >= range.openingHour && nowHour <= range.closingHour
+      ? (nowHour - range.openingHour) * HOUR_HEIGHT
+      : null;
 
   return (
     <div
       className="cal-day-body"
-      style={{ height: `${TOTAL_HOURS * HOUR_HEIGHT}px` }}
+      style={{ height: `${range.totalHours * HOUR_HEIGHT}px` }}
     >
-      {/* Time gutter */}
       <div className="cal-time-gutter" style={{ width: TIME_GUTTER }}>
-        {HOURS.map((h) => (
+        {range.hours.map((hour) => (
           <div
-            key={h}
+            key={hour}
             className="cal-hour-label"
-            style={{ top: `${(h - OPENING_HOUR) * HOUR_HEIGHT}px` }}
+            style={{ top: `${(hour - range.openingHour) * HOUR_HEIGHT}px` }}
           >
-            {String(h).padStart(2, "0")}:00
+            {String(hour).padStart(2, "0")}:00
           </div>
         ))}
       </div>
 
-      {/* Single day column */}
       <div className={`cal-day-col is-full ${isCurrentDay ? "is-today" : ""}`}>
-        {HOURS.map((h) => (
+        {range.hours.map((hour) => (
           <div
-            key={h}
+            key={hour}
             className="cal-hour-line"
-            style={{ top: `${(h - OPENING_HOUR) * HOUR_HEIGHT}px` }}
+            style={{ top: `${(hour - range.openingHour) * HOUR_HEIGHT}px` }}
           />
         ))}
 
@@ -231,6 +217,7 @@ const CalendarDayView = ({ currentDay, bookings, onSelectBooking }) => {
               key={booking._id}
               booking={booking}
               onClick={onSelectBooking}
+              range={range}
             />
           ))
         )}
@@ -239,16 +226,20 @@ const CalendarDayView = ({ currentDay, bookings, onSelectBooking }) => {
   );
 };
 
-/* ─── Main CalendarView wrapper ─── */
-const CalendarView = ({ sortedBookings, onSelectBooking }) => {
-  const enriched = sortedBookings.map((b) => ({
-    ...b,
-    start: toDate(b.timeSlot),
-    end: toDate(b.endTime),
-  }));
-
+const CalendarView = ({ sortedBookings, onSelectBooking, authConfig }) => {
+  const enriched = useMemo(
+    () => sortedBookings.map((booking) => ({
+      ...booking,
+      start: toDate(booking.timeSlot),
+      end: toDate(booking.endTime),
+    })),
+    [sortedBookings],
+  );
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 720);
+  const [scheduleStatus, setScheduleStatus] = useState("loading");
+  const [scheduleRange, setScheduleRange] = useState(null);
+  const [scheduleRequestVersion, setScheduleRequestVersion] = useState(0);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 720);
@@ -256,24 +247,55 @@ const CalendarView = ({ sortedBookings, onSelectBooking }) => {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  useEffect(() => {
+    let isCurrentRequest = true;
+    fetchAdminSettings(authConfig)
+      .then((response) => {
+        if (!isCurrentRequest) return;
+        const range = createCalendarRange(
+          parseCalendarSchedule(response.data.data),
+        );
+        setScheduleRange(range);
+        setScheduleStatus(range ? "ready" : "error");
+      })
+      .catch(() => {
+        if (!isCurrentRequest) return;
+        setScheduleRange(null);
+        setScheduleStatus("error");
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [authConfig, scheduleRequestVersion]);
+
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = addDays(weekStart, 6);
-
-  const outOfHoursBookings = enriched.filter((b) => {
-    if (!b.start) return false;
-    if (isMobile) return isSameDay(b.start, currentDate) && isOutOfHours(b);
-    return b.start >= weekStart && b.start <= weekEnd && isOutOfHours(b);
-  });
+  const outOfHoursBookings = scheduleRange
+    ? enriched.filter((booking) => {
+      if (!booking.start) return false;
+      if (isMobile) {
+        return isSameDay(booking.start, currentDate) &&
+          isOutOfHours(booking, scheduleRange);
+      }
+      return booking.start >= weekStart &&
+        booking.start <= weekEnd &&
+        isOutOfHours(booking, scheduleRange);
+    })
+    : [];
 
   const goToPrevious = () =>
-    setCurrentDate((d) => (isMobile ? subDays(d, 1) : subWeeks(d, 1)));
+    setCurrentDate((date) => isMobile ? subDays(date, 1) : subWeeks(date, 1));
   const goToNext = () =>
-    setCurrentDate((d) => (isMobile ? addDays(d, 1) : addWeeks(d, 1)));
+    setCurrentDate((date) => isMobile ? addDays(date, 1) : addWeeks(date, 1));
   const goToToday = () => setCurrentDate(new Date());
 
   const headingText = isMobile
     ? format(currentDate, "EEEE d 'de' MMMM", { locale: es })
-    : `${format(weekStart, "d MMM", { locale: es })} – ${format(addDays(weekStart, 6), "d MMM yyyy", { locale: es })}`;
+    : `${format(weekStart, "d MMM", { locale: es })} – ${format(weekEnd, "d MMM yyyy", { locale: es })}`;
+  const visibleRangeLabel = scheduleRange
+    ? `${String(scheduleRange.openingHour).padStart(2, "0")}:00–${String(scheduleRange.closingHour).padStart(2, "0")}:00`
+    : "";
 
   return (
     <section className="admin-card cal-container">
@@ -301,20 +323,15 @@ const CalendarView = ({ sortedBookings, onSelectBooking }) => {
           <FaChevronRight aria-hidden="true" />
         </button>
 
-        <button
-          type="button"
-          className="cal-today-btn"
-          onClick={goToToday}
-        >
+        <button type="button" className="cal-today-btn" onClick={goToToday}>
           Hoy
         </button>
       </div>
 
-      {/* Status legend */}
       <div className="cal-legend">
-        {["Pendiente", "Confirmado", "Finalizado", "Cancelado"].map((s) => (
-          <span key={s} className={`cal-legend-item ${statusClass(s)}`}>
-            {s}
+        {["Pendiente", "Confirmado", "Finalizado", "Cancelado"].map((status) => (
+          <span key={status} className={`cal-legend-item ${statusClass(status)}`}>
+            {status}
           </span>
         ))}
       </div>
@@ -324,34 +341,62 @@ const CalendarView = ({ sortedBookings, onSelectBooking }) => {
           <FaExclamationTriangle aria-hidden="true" />
           <span>
             {outOfHoursBookings.length === 1
-              ? "Hay 1 turno fuera del horario visible (07:00–22:00)"
-              : `Hay ${outOfHoursBookings.length} turnos fuera del horario visible (07:00–22:00)`}
+              ? `Hay 1 turno fuera del horario visible (${visibleRangeLabel})`
+              : `Hay ${outOfHoursBookings.length} turnos fuera del horario visible (${visibleRangeLabel})`}
             :{" "}
-            {outOfHoursBookings.map((b) => (
-              <strong key={b._id}>
-                {b.studentName} {b.start ? format(b.start, "EEE d HH:mm", { locale: es }) : ""}
+            {outOfHoursBookings.map((booking) => (
+              <strong key={booking._id}>
+                {booking.studentName}{" "}
+                {booking.start ? format(booking.start, "EEE d HH:mm", { locale: es }) : ""}
               </strong>
-            )).reduce((acc, el, i) => (i === 0 ? [el] : [...acc, ", ", el]), [])}
+            )).reduce((items, item, index) => index === 0 ? [item] : [...items, ", ", item], [])}
             . Revisá la configuración de horario.
           </span>
         </div>
       )}
 
-      <div className="cal-scroll-wrapper">
-        {isMobile ? (
-          <CalendarDayView
-            currentDay={currentDate}
-            bookings={enriched}
-            onSelectBooking={onSelectBooking}
-          />
-        ) : (
-          <CalendarWeekView
-            weekStart={weekStart}
-            bookings={enriched}
-            onSelectBooking={onSelectBooking}
-          />
-        )}
-      </div>
+      {scheduleStatus === "loading" && (
+        <div className="cal-schedule-state" role="status">
+          Cargando horario configurado…
+        </div>
+      )}
+      {scheduleStatus === "error" && (
+        <div className="cal-schedule-state" role="alert">
+          <FaExclamationTriangle aria-hidden="true" />
+          <span>No pudimos verificar el horario configurado. El calendario queda deshabilitado para evitar mostrar una agenda incorrecta.</span>
+          <button
+            type="button"
+            className="cal-today-btn"
+            onClick={() => {
+              setScheduleStatus("loading");
+              setScheduleRange(null);
+              setScheduleRequestVersion((version) => version + 1);
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {scheduleStatus === "ready" && scheduleRange && (
+        <div className="cal-scroll-wrapper">
+          {isMobile ? (
+            <CalendarDayView
+              currentDay={currentDate}
+              bookings={enriched}
+              onSelectBooking={onSelectBooking}
+              range={scheduleRange}
+            />
+          ) : (
+            <CalendarWeekView
+              weekStart={weekStart}
+              bookings={enriched}
+              onSelectBooking={onSelectBooking}
+              range={scheduleRange}
+            />
+          )}
+        </div>
+      )}
     </section>
   );
 };

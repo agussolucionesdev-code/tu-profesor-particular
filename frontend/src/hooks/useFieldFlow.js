@@ -74,6 +74,9 @@ const useFieldFlow = ({ fields, resetTrigger, startVisible = true }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showVerification, setShowVerification] = useState(false);
   const fieldRefs = useRef({});
+  const setFieldRef = useCallback((fieldKey, element) => {
+    fieldRefs.current[fieldKey] = element;
+  }, []);
 
   /**
    * Hace scroll al campo en el índice dado y pone foco en su primer
@@ -201,6 +204,7 @@ const useFieldFlow = ({ fields, resetTrigger, startVisible = true }) => {
     activeIndex,
     showVerification,
     fieldRefs,
+    setFieldRef,
     goNext,
     jumpTo,
     enterVerification,

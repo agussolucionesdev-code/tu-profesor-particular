@@ -1,20 +1,16 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
 import {
   formatDateLong,
   formatTime,
 } from "../../utils/bookingFormatters";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import "./CancelModal.css";
 
 const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    const trigger = document.activeElement;
-    dialogRef.current?.focus();
-    return () => { trigger?.focus?.(); };
-  }, []);
+  const dialogRef = useFocusTrap(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -26,14 +22,29 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !isSubmitting) onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [isSubmitting, onClose]);
+
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return createPortal(
-    <div className="cancel-overlay" onClick={onClose} aria-hidden="true">
+    <div
+      className="cancel-overlay"
+      onClick={() => {
+        if (!isSubmitting) onClose();
+      }}
+    >
       <div
         ref={dialogRef}
         className="cancel-dialog"
@@ -41,8 +52,9 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-title"
+        aria-describedby="cancel-description"
+        aria-busy={isSubmitting}
         tabIndex={-1}
-        aria-hidden="false"
       >
         {/* Header */}
         <div className="cancel-header">
@@ -53,7 +65,7 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
             <h3 id="cancel-title" className="cancel-title">
               ¿Querés liberar este horario?
             </h3>
-            <p className="cancel-subtitle">
+            <p id="cancel-description" className="cancel-subtitle">
               Si confirmás, el turno se cancela y el horario vuelve a estar
               disponible.
             </p>
@@ -94,15 +106,21 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
 
         {/* Actions */}
         <div className="cancel-footer">
-          <button type="button" className="cancel-btn-keep" onClick={onClose}>
+          <button
+            type="button"
+            className="cancel-btn-keep"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             No, mantenerlo
           </button>
           <button
             type="button"
             className="cancel-btn-confirm"
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            disabled={isSubmitting}
           >
-            Sí, liberar horario
+            {isSubmitting ? "Liberando horario…" : "Sí, liberar horario"}
           </button>
         </div>
       </div>

@@ -13,8 +13,8 @@ import { formatDurationOptionLabel } from "../../../utils/bookingFormatters";
 const ConfirmationStep = ({
   formData,
   isAdult,
-  isTimeSelected,
   isConfirmationReady,
+  availabilityStatus,
   confirmationDateLabel,
   confirmationDurationLabel,
   confirmationTimeRangeLabel,
@@ -37,7 +37,7 @@ const ConfirmationStep = ({
     pricePerHour > 0 && formData.duration >= 0.5
       ? pricePerHour * formData.duration
       : null;
-  const showPriceCoordinate = pricePerHour === 0 && formData.duration >= 0.5;
+  const showUnpublishedPrice = pricePerHour === 0 && formData.duration >= 0.5;
 
   return (
     <>
@@ -64,9 +64,9 @@ const ConfirmationStep = ({
               <strong>${estimatedPrice.toLocaleString("es-AR")}</strong>
             </div>
           )}
-          {showPriceCoordinate && (
+          {showUnpublishedPrice && (
             <div className="confirm-fact">
-              <span>Precio: A coordinar</span>
+              <span>Precio no publicado: consultalo con el profesor.</span>
             </div>
           )}
         </div>
@@ -155,6 +155,8 @@ const ConfirmationStep = ({
           educationLevel={confirmationEducationLabel}
           subject={formData.subject}
           school={formData.school}
+          objective={formData.objective}
+          comments={formData.academicSituation}
           email={formData.email}
           phone={formData.phone}
           lookupHint={confirmationLookupHint}
@@ -225,6 +227,7 @@ const ConfirmationStep = ({
               type="button"
               className="btn-neuro-primary"
               onClick={onRetry}
+              disabled={!isConfirmationReady}
             >
               Reintentar
             </button>
@@ -232,14 +235,21 @@ const ConfirmationStep = ({
         ) : (
           <button
             type="button"
-            className={`btn-neuro-success ${formData.duration >= 0.5 ? "ready-to-pulse" : "btn-disabled"}`}
+            className={`btn-neuro-success ${isConfirmationReady ? "ready-to-pulse" : "btn-disabled"}`}
             onClick={handleSubmit}
-            disabled={loading || !formData.duration || formData.duration < 0.5}
+            disabled={loading || !isConfirmationReady}
           >
             <FaCheckCircle aria-hidden="true" /> Confirmar Reserva
           </button>
         )}
       </div>
+      {!loading && availabilityStatus !== "ready" && (
+        <p className="calendar-no-slots-note" role="status" aria-live="polite">
+          {availabilityStatus === "loading"
+            ? "Estamos verificando que el horario siga disponible…"
+            : "No pudimos verificar el horario. Volvé al paso anterior y reintentá."}
+        </p>
+      )}
     </>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import DatePicker from "react-datepicker";
-import { addMinutes, format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import es from "date-fns/locale/es";
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaTimes } from "react-icons/fa";
 import {
@@ -19,6 +19,7 @@ import {
   isSelectedTimeAvailable,
   selectSlotsForDate,
 } from "../../utils/availabilitySlots";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import "./RescheduleModal.css";
 
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
@@ -31,7 +32,7 @@ const PERIODS = [
 ];
 
 const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, showToast }) => {
-  const dialogRef = useRef(null);
+  const dialogRef = useFocusTrap(true);
   const rescheduleAttemptRef = useRef(null);
 
   const [selectedDay, setSelectedDay] = useState(() => {
@@ -41,45 +42,44 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   });
   const [selectedTime, setSelectedTime] = useState(new Date(editingBooking.timeSlot));
   const [newDuration, setNewDuration] = useState(editingBooking.duration);
-  const [existingBookingsForBlock, setExistingBookingsForBlock] = useState([]);
   const [backendSlots, setBackendSlots] = useState(undefined);
   const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
+  const [availabilityStatus, setAvailabilityStatus] = useState("loading");
+  const [resolvedAvailabilityDuration, setResolvedAvailabilityDuration] = useState(null);
+  const [availabilityRequestVersion, setAvailabilityRequestVersion] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Body scroll lock + focus
+  // Body scroll lock. Focus containment and restoration use the shared dialog hook.
   useEffect(() => {
-    dialogRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, []);
 
   // Escape to close
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !isSubmitting) onClose();
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [isSubmitting, onClose]);
 
   // Load availability
   useEffect(() => {
     let isCurrentRequest = true;
     const requestParams = availabilityRequestParams(newDuration);
-    const durationChanged = Number(editingBooking.duration) !== Number(newDuration);
-
     fetchAvailability(requestParams, managementToken)
       .then((res) => {
         if (!isCurrentRequest) return;
-        const active = res.data.data.filter(
-          (b) => b.status !== "Cancelado" && b._id !== editingBooking._id,
-        );
-        setExistingBookingsForBlock(active);
         const responseSlots = Array.isArray(res.data.slots) ? res.data.slots : undefined;
         setBackendSlots(responseSlots);
         setAvailabilityTimeZone(res.data.schedule?.timeZone);
-        if (durationChanged && Array.isArray(responseSlots)) {
+        setResolvedAvailabilityDuration(requestParams?.duration ?? null);
+        setAvailabilityStatus(Array.isArray(responseSlots) ? "ready" : "error");
+        if (Array.isArray(responseSlots)) {
           setSelectedTime((currentTime) =>
             isSelectedTimeAvailable({
               selectedTime: currentTime,
@@ -88,11 +88,17 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
               ? currentTime
               : null,
           );
+        } else {
+          setSelectedTime(null);
         }
       })
       .catch((error) => {
         if (!isCurrentRequest) return;
         console.error(error);
+        setBackendSlots(undefined);
+        setResolvedAvailabilityDuration(requestParams?.duration ?? null);
+        setAvailabilityStatus("error");
+        setSelectedTime(null);
         showToast(getBookingApiMessage(error), "warning", {
           title: "Disponibilidad pendiente",
           speak: "No pude actualizar la disponibilidad ahora mismo. Probá de nuevo en unos segundos.",
@@ -102,7 +108,7 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     return () => {
       isCurrentRequest = false;
     };
-  }, [editingBooking._id, editingBooking.duration, managementToken, newDuration, showToast]);
+  }, [availabilityRequestVersion, editingBooking.duration, managementToken, newDuration, showToast]);
 
   // Derive full datetime from day + selected time slot
   const newDate = useMemo(() => {
@@ -130,47 +136,25 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     .filter((v) => Number.isFinite(v) && v >= 0.5 && v <= 3)
     .sort((a, b) => a - b);
 
-  // Generate 30-min slots for selected day, mark occupied/past
-  const legacySlots = useMemo(() => {
-    const now = new Date();
-    const excluded = new Set();
-    existingBookingsForBlock
-      .filter((b) => isSameDay(new Date(b.timeSlot), selectedDay))
-      .forEach((b) => {
-        let cur = new Date(b.timeSlot);
-        const end = new Date(b.endTime);
-        while (cur < end) {
-          excluded.add(cur.getTime());
-          cur = addMinutes(cur, 30);
-        }
-      });
-
-    const result = [];
-    for (let h = 7; h < 22; h++) {
-      for (let m = 0; m < 60; m += 30) {
-        const slot = new Date(selectedDay);
-        slot.setHours(h, m, 0, 0);
-        const isPast = isSameDay(selectedDay, now) && slot <= addMinutes(now, 60);
-        result.push({ time: slot, disabled: excluded.has(slot.getTime()) || isPast });
-      }
-    }
-    return result;
-  }, [selectedDay, existingBookingsForBlock]);
+  const requestedAvailabilityDuration = availabilityRequestParams(newDuration)?.duration ?? null;
+  const effectiveAvailabilityStatus =
+    resolvedAvailabilityDuration === requestedAvailabilityDuration
+      ? availabilityStatus
+      : "loading";
 
   const slots = useMemo(
     () =>
-      selectSlotsForDate({
-        selectedDate: selectedDay,
-        backendSlots,
-        fallbackSlots: legacySlots,
-        timeZone: availabilityTimeZone,
-      }).map((slot) => ({
-        // Legacy fallback slots predate the backend contract and already use
-        // `time`/`disabled`; backend slots use `timeObj`/`isOccupied`.
-        time: slot.timeObj ?? slot.time,
-        disabled: slot.isOccupied ?? slot.disabled,
-      })),
-    [selectedDay, backendSlots, legacySlots, availabilityTimeZone],
+      effectiveAvailabilityStatus === "ready"
+        ? selectSlotsForDate({
+          selectedDate: selectedDay,
+          backendSlots,
+          timeZone: availabilityTimeZone,
+        }).map((slot) => ({
+          time: slot.timeObj,
+          disabled: slot.isOccupied,
+        }))
+        : [],
+    [effectiveAvailabilityStatus, selectedDay, backendSlots, availabilityTimeZone],
   );
 
   // Group slots by period, skip empty periods
@@ -220,7 +204,14 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   };
 
   const handleReschedule = async () => {
+    if (isSubmitting) return;
     primeVoicePlayback();
+    if (effectiveAvailabilityStatus !== "ready") {
+      return showToast(
+        "Esperá a que confirmemos la disponibilidad antes de reprogramar.",
+        "warning",
+      );
+    }
     if (!newDate) return showToast("Seleccioná un día y horario.", "error");
     const durationNumber = Number(newDuration);
     if (!Number.isFinite(durationNumber) || durationNumber < 0.5) {
@@ -232,6 +223,7 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     const hours = String(newDate.getHours()).padStart(2, "0");
     const minutes = String(newDate.getMinutes()).padStart(2, "0");
     const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+    setIsSubmitting(true);
     try {
       const reschedulePayload = {
         bookingCode: editingBooking.bookingCode,
@@ -263,8 +255,10 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
         speak: `Listo. El turno fue reprogramado para ${format(newDate, "EEEE d 'de' MMMM 'a las' HH:mm", { locale: es })}, con una duración de ${formatDurationVoiceLabel(durationNumber)}.`,
         voiceOptions: PORTAL_VOICE_OPTIONS,
       });
+      setIsSubmitting(false);
       onSuccess();
     } catch (error) {
+      setIsSubmitting(false);
       showToast(getBookingApiMessage(error), "error", {
         title: "No se pudo reprogramar",
         speak: "No pude guardar la reprogramación. Revisá tu conexión e intentá nuevamente.",
@@ -274,7 +268,12 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   };
 
   return createPortal(
-    <div className="reschedule-overlay" onClick={onClose} aria-hidden="false">
+    <div
+      className="reschedule-overlay"
+      onClick={() => {
+        if (!isSubmitting) onClose();
+      }}
+    >
       <div
         ref={dialogRef}
         className="reschedule-dialog"
@@ -282,6 +281,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
         role="dialog"
         aria-modal="true"
         aria-labelledby="reschedule-title"
+        aria-describedby="reschedule-feedback"
+        aria-busy={isSubmitting}
         tabIndex={-1}
       >
         {/* Header */}
@@ -302,6 +303,7 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
             className="reschedule-close-btn"
             onClick={onClose}
             aria-label="Cerrar"
+            disabled={isSubmitting}
           >
             <FaTimes aria-hidden="true" />
           </button>
@@ -370,6 +372,32 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
               <div className="reschedule-col-label">
                 <FaClock aria-hidden="true" /> Horario disponible
               </div>
+              {effectiveAvailabilityStatus === "loading" && (
+                <p className="reschedule-availability-message" role="status">
+                  Cargando agenda actualizada…
+                </p>
+              )}
+              {effectiveAvailabilityStatus === "error" && (
+                <div className="reschedule-availability-message" role="alert">
+                  <p>No pudimos verificar la agenda. No vamos a ofrecer horarios sin confirmar.</p>
+                  <button
+                    type="button"
+                    className="reschedule-slot-btn"
+                    onClick={() => {
+                      setAvailabilityStatus("loading");
+                      setBackendSlots(undefined);
+                      setAvailabilityRequestVersion((version) => version + 1);
+                    }}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+              {effectiveAvailabilityStatus === "ready" && slots.length === 0 && (
+                <p className="reschedule-availability-message" role="status">
+                  No hay horarios disponibles para este día.
+                </p>
+              )}
               {slotsByPeriod.map((period) => (
                 <div key={period.id} className="reschedule-period">
                   <h4 className="reschedule-period-label">{period.label}</h4>
@@ -434,24 +462,43 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
 
         {/* Footer */}
         <div className="reschedule-footer">
-          <p className="reschedule-footer-note">
-            {!selectedTime
-              ? "Elegí un horario para habilitar la confirmación."
-              : hasRescheduleChanges
-                ? "Propuesta lista para confirmar."
-                : "Cambiá fecha, hora o duración para habilitar la confirmación."}
+          <p
+            id="reschedule-feedback"
+            className="reschedule-footer-note"
+            aria-live="polite"
+          >
+            {effectiveAvailabilityStatus === "loading"
+              ? "Verificando que el horario siga disponible."
+              : effectiveAvailabilityStatus === "error"
+                ? "No pudimos verificar el horario. Reintentá la consulta."
+                : !selectedTime
+                  ? "Elegí un horario para habilitar la confirmación."
+                  : hasRescheduleChanges
+                    ? "Propuesta lista para confirmar."
+                    : "Cambiá fecha, hora o duración para habilitar la confirmación."}
           </p>
           <div className="reschedule-footer-actions">
-            <button type="button" className="reschedule-btn-cancel" onClick={onClose}>
+            <button
+              type="button"
+              className="reschedule-btn-cancel"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Mantener actual
             </button>
             <button
               type="button"
               className="reschedule-btn-confirm"
               onClick={handleReschedule}
-              disabled={!newDate || !hasValidDuration || !hasRescheduleChanges}
+              disabled={
+                isSubmitting ||
+                effectiveAvailabilityStatus !== "ready" ||
+                !newDate ||
+                !hasValidDuration ||
+                !hasRescheduleChanges
+              }
             >
-              Confirmar cambio
+              {isSubmitting ? "Guardando cambio…" : "Confirmar cambio"}
             </button>
           </div>
         </div>

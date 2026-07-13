@@ -8,9 +8,10 @@ export const availabilityRequestParams = (duration) => {
 };
 
 export const isSelectedTimeAvailable = ({ selectedTime, backendSlots }) => {
-  if (!Array.isArray(backendSlots) || !selectedTime || selectedTime.getHours() === 0) {
+  if (!selectedTime || selectedTime.getHours() === 0) {
     return true;
   }
+  if (!Array.isArray(backendSlots)) return false;
 
   const selectedTimeValue = selectedTime.getTime();
   return backendSlots.some((slot) => {
@@ -18,6 +19,14 @@ export const isSelectedTimeAvailable = ({ selectedTime, backendSlots }) => {
     return !Number.isNaN(slotTime.getTime()) && slotTime.getTime() === selectedTimeValue;
   });
 };
+
+export const isVerifiedAvailabilitySelection = ({
+  availabilityStatus,
+  selectedTime,
+  backendSlots,
+}) =>
+  availabilityStatus === "ready" &&
+  isSelectedTimeAvailable({ selectedTime, backendSlots });
 
 export const getBusinessDateKey = (date, timeZone = DEFAULT_TIME_ZONE) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -30,17 +39,12 @@ export const getBusinessDateKey = (date, timeZone = DEFAULT_TIME_ZONE) => {
   return `${values.year}-${values.month}-${values.day}`;
 };
 
-/**
- * Keeps the deployed legacy schedule only for servers that do not return slots.
- * An empty `slots` array is authoritative and must remain empty.
- */
 export const selectSlotsForDate = ({
   selectedDate,
   backendSlots,
-  fallbackSlots,
   timeZone = DEFAULT_TIME_ZONE,
 }) => {
-  if (!Array.isArray(backendSlots)) return fallbackSlots;
+  if (!Array.isArray(backendSlots)) return [];
   if (!selectedDate) return [];
 
   const selectedDateKey = getBusinessDateKey(selectedDate, timeZone);

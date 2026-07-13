@@ -439,7 +439,8 @@
   box-shadow: 0 8px 28px rgba(10,30,58,.08);
   transform: rotateY(0deg);
 }
-.hp-subject-card:hover .hp-subject-front {
+.hp-subject-card:hover .hp-subject-front,
+.hp-subject-card:focus-within .hp-subject-front {
   transform: rotateY(-180deg);
 }
 
@@ -450,7 +451,8 @@
   box-shadow: 0 16px 48px rgba(0,0,0,.28);
   transform: rotateY(180deg);
 }
-.hp-subject-card:hover .hp-subject-back {
+.hp-subject-card:hover .hp-subject-back,
+.hp-subject-card:focus-within .hp-subject-back {
   transform: rotateY(0deg);
 }
 

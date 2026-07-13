@@ -1,4 +1,5 @@
 import useInView from "../../hooks/useInView";
+import { createElement } from "react";
 
 /**
  * @component Reveal
@@ -47,14 +48,14 @@ const Reveal = ({
 
   const style = delay > 0 ? { transitionDelay: `${delay}ms` } : undefined;
 
-  return (
-    <Tag
-      ref={ref}
-      className={`${directionClass}${isVisible ? " is-visible" : ""}${className ? ` ${className}` : ""}`}
-      style={style}
-    >
-      {children}
-    </Tag>
+  return createElement(
+    Tag,
+    {
+      ref,
+      className: `${directionClass}${isVisible ? " is-visible" : ""}${className ? ` ${className}` : ""}`,
+      style,
+    },
+    children,
   );
 };
 

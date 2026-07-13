@@ -1,33 +1,67 @@
 export const WIZARD_STEPS = [
   {
     id: 1,
-    label: "Tus Datos",
+    label: "Tus datos",
     title: "Empezamos simple",
-    message: "Te pido solo lo justo para dejar el turno claro desde el primer intento.",
+    message: "Completá los datos esenciales del alumno y su contacto.",
     chips: ["Contacto claro", "Validación al momento"],
   },
   {
     id: 2,
-    label: "El Día",
-    title: "Buscamos un buen día",
-    message: "Mostramos fechas reales para que elijas con calma y sin vueltas.",
-    chips: ["Fechas reales", "Sin perder avances"],
+    label: "Necesidad académica",
+    title: "Entendemos qué necesitás",
+    message: "Definí nivel, curso, materia y objetivo de la clase.",
+    chips: ["Objetivo claro", "Contexto opcional"],
   },
   {
     id: 3,
-    label: "Tu Horario",
-    title: "Elegís tu horario",
-    message: "Ves solo bloques libres para evitar cruces y decidir más rápido.",
-    chips: ["Bloques libres", "Sin superposiciones"],
-  },
-  {
-    id: 4,
-    label: "Confirmar",
-    title: "Listo para confirmar",
-    message: "Revisás el resumen y te llevás un código para gestionar cualquier cambio.",
-    chips: ["Resumen final", "Código de gestión"],
+    label: "Tu turno",
+    title: "Elegí y revisá tu turno",
+    message: "Seleccioná fecha, horario y duración antes de confirmar.",
+    chips: ["Agenda real", "Resumen final"],
   },
 ];
+
+export const BOOKING_INITIAL_FORM_DATA = {
+  responsibleName: "",
+  responsibleRelationship: "",
+  responsibleRelationshipOther: "",
+  studentName: "",
+  email: "",
+  phone: "",
+  school: "",
+  educationLevel: "",
+  yearGrade: "",
+  subject: "",
+  objective: "",
+  academicSituation: "",
+  timeSlot: null,
+  duration: "",
+};
+
+export const isAcademicDraftComplete = (draft) =>
+  Boolean(
+    draft.educationLevel?.trim() &&
+      draft.yearGrade?.trim() &&
+      draft.subject?.trim() &&
+      draft.objective?.trim().length >= 3 &&
+      draft.objective?.trim().length <= 300,
+  );
+
+export const updateBookingDraft = (draft, patch) => ({ ...draft, ...patch });
+
+export const toBookingApiAcademicSituation = ({
+  objective = "",
+  academicSituation = "",
+}) =>
+  [
+    `Objetivo: ${objective.trim()}`,
+    academicSituation.trim()
+      ? `Comentarios: ${academicSituation.trim()}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
 export const BOOKING_SUPPORT_PILLS = [
   "Reserva guiada",

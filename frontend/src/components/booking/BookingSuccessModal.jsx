@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   FaCalendarAlt,
@@ -15,6 +15,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { downloadIcs } from "../../utils/icsExport";
 
 const getDeliveryAlert = (successData) => {
@@ -52,7 +53,7 @@ const BookingSuccessModal = ({
   onCopyManagementLink,
   onClose,
 }) => {
-  const dialogRef = useRef(null);
+  const dialogRef = useFocusTrap(show);
   const [copyAnnouncement, setCopyAnnouncement] = useState("");
 
   const handleCopyCode = () => {
@@ -61,13 +62,13 @@ const BookingSuccessModal = ({
     setTimeout(() => setCopyAnnouncement(""), 2000);
   };
 
-  // Focus trap + body scroll lock
+  // Body scroll lock. Focus containment and restoration are shared by all dialogs.
   useEffect(() => {
     if (!show) return;
-    dialogRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [show]);
 
@@ -110,6 +111,7 @@ const BookingSuccessModal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-success-title"
+        aria-describedby="booking-success-feedback"
         tabIndex={-1}
       >
         {/* Close */}
@@ -174,7 +176,11 @@ const BookingSuccessModal = ({
         </div>
 
         {/* Delivery alert */}
-        <div className={`success-alert success-alert-${alert.type}`}>
+        <div
+          id="booking-success-feedback"
+          className={`success-alert success-alert-${alert.type}`}
+          role="status"
+        >
           {alert.icon}
           <span>{alert.text}</span>
         </div>

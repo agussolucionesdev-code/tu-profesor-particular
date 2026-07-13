@@ -12,6 +12,7 @@ import {
   FaUndo,
 } from "react-icons/fa";
 import { useUISettings } from "./UISettingsContext";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import "./AccessibilityControls.css";
 
 const themeOptions = [
@@ -32,6 +33,14 @@ const accentOptions = [
   { value: "green", label: "Verde calma" },
 ];
 
+const bookingPrimaryActionSelector = [
+  ".form-slide-panel.active-panel:not([aria-hidden='true']) .field-flow-btn.field-flow-next",
+  ".form-slide-panel.active-panel:not([aria-hidden='true']) .btn-date-next.is-ready",
+  ".form-slide-panel.active-panel:not([aria-hidden='true']) .btn-time-next.is-ready",
+  ".form-slide-panel.active-panel:not([aria-hidden='true']) .step-actions .btn-neuro-primary",
+  ".form-slide-panel.active-panel:not([aria-hidden='true']) .step-actions .btn-neuro-success",
+].join(", ");
+
 const countActivePreferences = (preferences) =>
   [
     preferences.themePreference !== "light",
@@ -43,7 +52,10 @@ const countActivePreferences = (preferences) =>
     preferences.calmUi,
   ].filter(Boolean).length;
 
-const AccessibilityControls = ({ isAdminRoute = false }) => {
+const AccessibilityControls = ({
+  isAdminRoute = false,
+  isBookingRoute = false,
+}) => {
   const {
     preferences,
     updatePreference,
@@ -52,23 +64,18 @@ const AccessibilityControls = ({ isAdminRoute = false }) => {
   } = useUISettings();
   const [isOpen, setIsOpen] = useState(false);
   const shellRef = useRef(null);
-  const triggerRef = useRef(null);
-  const closeButtonRef = useRef(null);
-  const wasOpenRef = useRef(false);
+  const panelRef = useFocusTrap(isOpen);
   const activePreferences = countActivePreferences(preferences);
   const [footerLift, setFooterLift] = useState(0);
+  const [bookingActionLift, setBookingActionLift] = useState(0);
 
   useEffect(() => {
-    const updateFooterLift = () => {
+    const updateFloatingControlOffsets = () => {
       const footer = window.document.querySelector(".footer-elite");
-
-      if (!footer) {
-        setFooterLift(0);
-        return;
-      }
-
-      const footerRect = footer.getBoundingClientRect();
-      const visibleFooterHeight = Math.max(0, window.innerHeight - footerRect.top);
+      const footerRect = footer?.getBoundingClientRect();
+      const visibleFooterHeight = footerRect
+        ? Math.max(0, window.innerHeight - footerRect.top)
+        : 0;
       const maxLift = Math.max(0, window.innerHeight - 96);
       const nextLift =
         visibleFooterHeight > 0
@@ -76,18 +83,51 @@ const AccessibilityControls = ({ isAdminRoute = false }) => {
           : 0;
 
       setFooterLift(nextLift);
+
+      if (!isBookingRoute || window.innerWidth > 720) {
+        setBookingActionLift(0);
+        return;
+      }
+
+      const bookingAction = window.document.querySelector(
+        bookingPrimaryActionSelector,
+      );
+      const actionRect = bookingAction?.getBoundingClientRect();
+      const actionIsNearViewportBottom =
+        actionRect &&
+        actionRect.top >= window.innerHeight - 220 &&
+        actionRect.top < window.innerHeight;
+
+      setBookingActionLift(
+        actionIsNearViewportBottom
+          ? Math.min(window.innerHeight - actionRect.top + 16, maxLift)
+          : 0,
+      );
     };
 
-    const frameId = window.requestAnimationFrame(updateFooterLift);
-    window.addEventListener("scroll", updateFooterLift, { passive: true });
-    window.addEventListener("resize", updateFooterLift);
+    const frameId = window.requestAnimationFrame(updateFloatingControlOffsets);
+    const mainContent = window.document.getElementById("main-content");
+    const layoutObserver =
+      isBookingRoute && mainContent
+        ? new MutationObserver(updateFloatingControlOffsets)
+        : null;
+
+    layoutObserver?.observe(mainContent, {
+      attributes: true,
+      attributeFilter: ["aria-hidden", "class"],
+      childList: true,
+      subtree: true,
+    });
+    window.addEventListener("scroll", updateFloatingControlOffsets, { passive: true });
+    window.addEventListener("resize", updateFloatingControlOffsets);
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.removeEventListener("scroll", updateFooterLift);
-      window.removeEventListener("resize", updateFooterLift);
+      layoutObserver?.disconnect();
+      window.removeEventListener("scroll", updateFloatingControlOffsets);
+      window.removeEventListener("resize", updateFloatingControlOffsets);
     };
-  }, []);
+  }, [isBookingRoute]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -113,29 +153,20 @@ const AccessibilityControls = ({ isAdminRoute = false }) => {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen) {
-      wasOpenRef.current = true;
-      closeButtonRef.current?.focus();
-      return;
-    }
-
-    if (wasOpenRef.current) {
-      triggerRef.current?.focus();
-      wasOpenRef.current = false;
-    }
-  }, [isOpen]);
-
   return (
     <div
-      className={`a11y-shell${isAdminRoute ? " is-admin-route" : ""}`}
+      className={`a11y-shell${isAdminRoute ? " is-admin-route" : ""}${isBookingRoute ? " is-booking-route" : ""}`}
       ref={shellRef}
-      style={{ "--a11y-footer-lift": `${footerLift}px` }}
+      style={{
+        "--a11y-footer-lift": `${footerLift}px`,
+        "--a11y-booking-action-lift": `${bookingActionLift}px`,
+      }}
     >
       {isOpen && (
         <section
           id="a11y-panel"
           className="a11y-panel"
+          ref={panelRef}
           role="dialog"
           aria-labelledby="a11y-panel-title"
           aria-describedby="a11y-panel-copy"
@@ -148,7 +179,6 @@ const AccessibilityControls = ({ isAdminRoute = false }) => {
             <button
               type="button"
               className="a11y-close-btn"
-              ref={closeButtonRef}
               onClick={() => setIsOpen(false)}
               aria-label="Cerrar panel de accesibilidad"
             >
@@ -340,7 +370,6 @@ const AccessibilityControls = ({ isAdminRoute = false }) => {
       <button
         type="button"
         className={`a11y-fab ${isOpen ? "is-open" : ""}`}
-        ref={triggerRef}
         onClick={() => setIsOpen((currentState) => !currentState)}
         aria-expanded={isOpen}
         aria-controls="a11y-panel"

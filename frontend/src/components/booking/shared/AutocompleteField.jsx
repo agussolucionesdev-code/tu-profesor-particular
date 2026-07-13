@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useId } from "react";
+import { useState, useRef, useEffect, useId, useMemo } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 
 /**
@@ -28,12 +28,15 @@ const AutocompleteField = ({
   const listId = useId();
 
   // Filter suggestions by input value — max 6 results
-  const filtered =
-    value && value.length > 0
-      ? suggestions
-          .filter((s) => s.toLowerCase().includes(value.toLowerCase()))
-          .slice(0, 6)
-      : [];
+  const filtered = useMemo(
+    () =>
+      value && value.length > 0
+        ? suggestions
+            .filter((s) => s.toLowerCase().includes(value.toLowerCase()))
+            .slice(0, 6)
+        : [],
+    [suggestions, value],
+  );
 
   // Don't show dropdown if exact match already selected
   const exactMatch =
@@ -42,61 +45,52 @@ const AutocompleteField = ({
   const showDropdown = isOpen && filtered.length > 0 && !exactMatch;
 
   /* ── Select a suggestion ────────────────────────────────────── */
-  const handleSelect = useCallback(
-    (suggestion) => {
-      onChange({ target: { name, value: suggestion } });
-      setIsOpen(false);
-      setFocusedIndex(-1);
-      inputRef.current?.focus();
-    },
-    [name, onChange],
-  );
+  const handleSelect = (suggestion) => {
+    onChange({ target: { name, value: suggestion } });
+    setIsOpen(false);
+    setFocusedIndex(-1);
+    inputRef.current?.focus();
+  };
 
   /* ── Handle input change ────────────────────────────────────── */
-  const handleInputChange = useCallback(
-    (e) => {
-      onChange(e);
-      setIsOpen(true);
-      setFocusedIndex(-1);
-    },
-    [onChange],
-  );
+  const handleInputChange = (e) => {
+    onChange(e);
+    setIsOpen(true);
+    setFocusedIndex(-1);
+  };
 
   /* ── Keyboard navigation ────────────────────────────────────── */
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (showDropdown) {
-        switch (e.key) {
-          case "ArrowDown":
+  const handleKeyDown = (e) => {
+    if (showDropdown) {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedIndex((prev) =>
+            Math.min(prev + 1, filtered.length - 1),
+          );
+          return;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          return;
+        case "Enter":
+          if (focusedIndex >= 0 && focusedIndex < filtered.length) {
             e.preventDefault();
-            setFocusedIndex((prev) =>
-              Math.min(prev + 1, filtered.length - 1),
-            );
+            handleSelect(filtered[focusedIndex]);
             return;
-          case "ArrowUp":
-            e.preventDefault();
-            setFocusedIndex((prev) => Math.max(prev - 1, 0));
-            return;
-          case "Enter":
-            if (focusedIndex >= 0 && focusedIndex < filtered.length) {
-              e.preventDefault();
-              handleSelect(filtered[focusedIndex]);
-              return;
-            }
-            break;
-          case "Escape":
-            setIsOpen(false);
-            setFocusedIndex(-1);
-            return;
-          default:
-            break;
-        }
+          }
+          break;
+        case "Escape":
+          setIsOpen(false);
+          setFocusedIndex(-1);
+          return;
+        default:
+          break;
       }
-      // Pass through to external handler
-      externalKeyDown?.(e);
-    },
-    [showDropdown, focusedIndex, filtered, handleSelect, externalKeyDown],
-  );
+    }
+    // Pass through to external handler
+    externalKeyDown?.(e);
+  };
 
   /* ── Scroll focused option into view ────────────────────────── */
   useEffect(() => {
@@ -150,6 +144,7 @@ const AutocompleteField = ({
           name={name}
           value={value}
           onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           role="combobox"

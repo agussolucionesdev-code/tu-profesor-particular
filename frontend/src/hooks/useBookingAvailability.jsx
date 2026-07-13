@@ -1,13 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  addMinutes,
-  differenceInMinutes,
-  format,
-  isSameDay,
-  setHours,
-  setMinutes,
-  startOfDay,
-} from "date-fns";
+import { format, isSameDay, startOfDay } from "date-fns";
 import { fetchAvailability } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 import {
@@ -15,32 +7,32 @@ import {
   getAvailableBackendDateKeys,
   getBusinessDateKey,
   isSelectedTimeAvailable,
+  isVerifiedAvailabilitySelection,
   selectSlotsForDate,
 } from "../utils/availabilitySlots";
-
-// 30 medias horas entre 07:00 y 22:00 — referencia para colorear días llenos en el calendario.
-const TOTAL_DAY_SLOTS = 30;
 
 const SLOT_SECTIONS_DEFINITION = [
   {
     id: "morning",
     label: "Mañana",
-    helper: "07:00 a 11:30",
     match: (hour) => hour < 12,
   },
   {
     id: "afternoon",
     label: "Tarde",
-    helper: "12:00 a 16:30",
     match: (hour) => hour >= 12 && hour < 17,
   },
   {
     id: "evening",
     label: "Tarde noche",
-    helper: "17:00 a 21:30",
     match: (hour) => hour >= 17,
   },
 ];
+
+const describeSlotRange = (slots) => {
+  if (slots.length === 0) return "";
+  return `${format(slots[0].timeObj, "HH:mm")} a ${format(slots.at(-1).timeObj, "HH:mm")}`;
+};
 
 export const useBookingAvailability = (selectedDate, selectedDuration, showToast) => {
   const [existingBookings, setExistingBookings] = useState([]);
@@ -48,6 +40,8 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
   const [backendSlots, setBackendSlots] = useState(undefined);
   const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
   const [resolvedAvailabilityDuration, setResolvedAvailabilityDuration] = useState(null);
+  const [availabilityStatus, setAvailabilityStatus] = useState("loading");
+  const [availabilityRequestVersion, setAvailabilityRequestVersion] = useState(0);
 
   useEffect(() => {
     let isCurrentRequest = true;
@@ -67,63 +61,38 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
         setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
         setAvailabilityTimeZone(res.data.schedule?.timeZone);
         setResolvedAvailabilityDuration(requestedDuration);
+        setAvailabilityStatus(Array.isArray(res.data.slots) ? "ready" : "error");
       } catch (error) {
         if (!isCurrentRequest) return;
         console.error("Error fetching bookings", error);
+        setBackendSlots(undefined);
+        setResolvedAvailabilityDuration(requestedDuration);
+        setAvailabilityStatus("error");
         showToast?.(getBookingApiMessage(error), "warning");
       }
     };
+
     loadBookings();
     return () => {
       isCurrentRequest = false;
     };
-  }, [selectedDuration, showToast]);
+  }, [availabilityRequestVersion, selectedDuration, showToast]);
 
-  const legacyAvailableSlots = useMemo(() => {
-    if (!selectedDate) return [];
-
-    const dayStart = startOfDay(selectedDate);
-    const now = new Date();
-    const isToday = isSameDay(dayStart, now);
-
-    let cursor = setHours(setMinutes(dayStart, 0), 7);
-    const closingTime = setHours(setMinutes(dayStart, 0), 22);
-
-    const slots = [];
-    while (cursor < closingTime) {
-      const isOccupiedByBooking = existingBookings.some((booking) => {
-        const bookStart = new Date(booking.timeSlot);
-        const bookEnd = new Date(booking.endTime);
-        return cursor >= bookStart && cursor < bookEnd;
-      });
-
-      const isPast = isToday && cursor <= addMinutes(now, 60);
-      const status = isPast
-        ? "past"
-        : isOccupiedByBooking
-          ? "occupied"
-          : "available";
-
-      slots.push({
-        timeObj: new Date(cursor),
-        isOccupied: isOccupiedByBooking || isPast,
-        status,
-      });
-
-      cursor = addMinutes(cursor, 30);
-    }
-    return slots;
-  }, [selectedDate, existingBookings]);
+  const requestedDuration = availabilityRequestParams(selectedDuration)?.duration ?? null;
+  const effectiveAvailabilityStatus = resolvedAvailabilityDuration === requestedDuration
+    ? availabilityStatus
+    : "loading";
 
   const availableSlots = useMemo(
     () =>
-      selectSlotsForDate({
-        selectedDate,
-        backendSlots,
-        fallbackSlots: legacyAvailableSlots,
-        timeZone: availabilityTimeZone,
-      }),
-    [selectedDate, backendSlots, legacyAvailableSlots, availabilityTimeZone],
+      effectiveAvailabilityStatus === "ready"
+        ? selectSlotsForDate({
+          selectedDate,
+          backendSlots,
+          timeZone: availabilityTimeZone,
+        })
+        : [],
+    [effectiveAvailabilityStatus, selectedDate, backendSlots, availabilityTimeZone],
   );
 
   const availableBackendDateKeys = useMemo(
@@ -131,71 +100,37 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     [backendSlots, availabilityTimeZone],
   );
 
-  const dayAvailabilityMap = useMemo(() => {
-    const map = new Map();
-    for (const booking of existingBookings) {
-      const bStart = new Date(booking.timeSlot);
-      const bEnd = new Date(booking.endTime);
-      const dayKey = format(startOfDay(bStart), "yyyy-MM-dd");
-      if (!map.has(dayKey)) map.set(dayKey, 0);
-      const windowStart = setHours(setMinutes(startOfDay(bStart), 0), 7);
-      const windowEnd = setHours(setMinutes(startOfDay(bStart), 0), 22);
-      let slot = new Date(Math.max(bStart.getTime(), windowStart.getTime()));
-      const slotEnd = new Date(Math.min(bEnd.getTime(), windowEnd.getTime()));
-      while (slot < slotEnd) {
-        map.set(dayKey, map.get(dayKey) + 1);
-        slot = addMinutes(slot, 30);
-      }
-    }
-    return map;
-  }, [existingBookings]);
-
   const getDayClassName = useCallback(
     (date) => {
       const today = new Date();
       const dayKey = getBusinessDateKey(date, availabilityTimeZone);
-      if (blockedDates.includes(dayKey)) {
-        return isSameDay(date, today) ? "custom-today day-blocked" : "day-blocked";
-      }
-      if (availableBackendDateKeys && !availableBackendDateKeys.has(dayKey)) {
-        return isSameDay(date, today) ? "custom-today day-full" : "day-full";
-      }
-      const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
       const base = isSameDay(date, today) ? "custom-today" : "";
-      if (occupied === 0) return base;
-      if (occupied >= TOTAL_DAY_SLOTS)
+
+      if (blockedDates.includes(dayKey)) {
+        return base ? `${base} day-blocked` : "day-blocked";
+      }
+      if (effectiveAvailabilityStatus === "ready" && !availableBackendDateKeys?.has(dayKey)) {
         return base ? `${base} day-full` : "day-full";
-      return base ? `${base} day-partial` : "day-partial";
+      }
+      if (availableBackendDateKeys?.has(dayKey)) {
+        return base ? `${base} day-partial` : "day-partial";
+      }
+      return base;
     },
-    [dayAvailabilityMap, blockedDates, availableBackendDateKeys, availabilityTimeZone],
+    [effectiveAvailabilityStatus, blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
 
   const renderDayContents = useCallback(
     (day, date) => {
       const dayKey = getBusinessDateKey(date, availabilityTimeZone);
-      if (blockedDates.includes(dayKey)) {
-        return (
-          <>
-            {day}
-            <span className="sr-only">, bloqueado</span>
-          </>
-        );
+      let statusLabel = "disponibilidad pendiente";
+      if (blockedDates.includes(dayKey)) statusLabel = "bloqueado";
+      else if (effectiveAvailabilityStatus === "ready" && !availableBackendDateKeys?.has(dayKey)) {
+        statusLabel = "sin cupos";
+      } else if (availableBackendDateKeys?.has(dayKey)) {
+        statusLabel = "con horarios disponibles";
       }
-      if (availableBackendDateKeys && !availableBackendDateKeys.has(dayKey)) {
-        return (
-          <>
-            {day}
-            <span className="sr-only">, sin cupos</span>
-          </>
-        );
-      }
-      const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
-      const statusLabel =
-        occupied === 0
-          ? "libre"
-          : occupied >= TOTAL_DAY_SLOTS
-            ? "sin cupos"
-            : "con turnos parciales";
+
       return (
         <>
           {day}
@@ -203,23 +138,8 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
         </>
       );
     },
-    [dayAvailabilityMap, blockedDates, availableBackendDateKeys, availabilityTimeZone],
+    [effectiveAvailabilityStatus, blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
-
-  const maxAllowedDuration = useMemo(() => {
-    if (!selectedDate || selectedDate.getHours() === 0) return 3;
-    const bookingsSameDay = existingBookings
-      .filter((booking) => isSameDay(new Date(booking.timeSlot), selectedDate))
-      .map((booking) => ({ start: new Date(booking.timeSlot) }))
-      .filter((booking) => booking.start > selectedDate)
-      .sort((a, b) => a.start - b.start);
-
-    const closingTime = setHours(setMinutes(selectedDate, 0), 22);
-    const nextLimit =
-      bookingsSameDay.length > 0 ? bookingsSameDay[0].start : closingTime;
-    const diffMinutes = differenceInMinutes(nextLimit, selectedDate);
-    return Math.floor(Math.max(0.5, Math.min(diffMinutes / 60, 3)) * 10) / 10;
-  }, [selectedDate, existingBookings]);
 
   const selectedDayOnly = useMemo(() => {
     if (!selectedDate) return null;
@@ -238,48 +158,42 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
 
   const slotSections = useMemo(
     () =>
-      SLOT_SECTIONS_DEFINITION.map((section) => ({
-        ...section,
-        slots: availableSlots.filter((slot) =>
+      SLOT_SECTIONS_DEFINITION.map((section) => {
+        const slots = availableSlots.filter((slot) =>
           section.match(slot.timeObj.getHours()),
-        ),
-      })).filter((section) => section.slots.length > 0),
+        );
+        return {
+          ...section,
+          helper: describeSlotRange(slots),
+          slots,
+        };
+      }).filter((section) => section.slots.length > 0),
     [availableSlots],
   );
 
+  const maxAllowedDuration = 3;
   const durationOptions = useMemo(() => {
     const options = [];
     for (let current = 0.5; current <= maxAllowedDuration; current += 0.5) {
       options.push(Number(current.toFixed(1)));
     }
     return options;
-  }, [maxAllowedDuration]);
+  }, []);
 
   const isDateAvailable = useCallback(
     (date) => {
       const dayKey = getBusinessDateKey(date, availabilityTimeZone);
       return (
+        effectiveAvailabilityStatus === "ready" &&
         !blockedDates.includes(dayKey) &&
-        (!availableBackendDateKeys || availableBackendDateKeys.has(dayKey))
+        Boolean(availableBackendDateKeys?.has(dayKey))
       );
     },
-    [blockedDates, availableBackendDateKeys, availabilityTimeZone],
+    [effectiveAvailabilityStatus, blockedDates, availableBackendDateKeys, availabilityTimeZone],
   );
 
-  const hasAnyAvailability = useMemo(() => {
-    if (availableBackendDateKeys) return availableBackendDateKeys.size > 0;
-
-    const today = startOfDay(new Date());
-    const horizon = new Date(today);
-    horizon.setDate(horizon.getDate() + 90);
-    for (let d = new Date(today); d <= horizon; d.setDate(d.getDate() + 1)) {
-      const dayKey = getBusinessDateKey(d, availabilityTimeZone);
-      if (blockedDates.includes(dayKey)) continue;
-      const occupied = dayAvailabilityMap.get(dayKey) ?? 0;
-      if (occupied < TOTAL_DAY_SLOTS) return true;
-    }
-    return false;
-  }, [blockedDates, dayAvailabilityMap, availableBackendDateKeys, availabilityTimeZone]);
+  const hasAnyAvailability =
+    effectiveAvailabilityStatus === "ready" && Boolean(availableBackendDateKeys?.size);
 
   return {
     existingBookings,
@@ -299,7 +213,17 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
       selectedTime: selectedDate,
       backendSlots,
     }),
-    availabilityMatchesSelectedDuration:
-      resolvedAvailabilityDuration === (availabilityRequestParams(selectedDuration)?.duration ?? null),
+    isSelectedTimeVerified: isVerifiedAvailabilitySelection({
+      availabilityStatus: effectiveAvailabilityStatus,
+      selectedTime: selectedDate,
+      backendSlots,
+    }),
+    availabilityMatchesSelectedDuration: resolvedAvailabilityDuration === requestedDuration,
+    availabilityStatus: effectiveAvailabilityStatus,
+    retryAvailability: () => {
+      setAvailabilityStatus("loading");
+      setBackendSlots(undefined);
+      setAvailabilityRequestVersion((version) => version + 1);
+    },
   };
 };

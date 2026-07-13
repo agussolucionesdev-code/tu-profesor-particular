@@ -41,24 +41,26 @@ const FOOTER_LINKS = [
 
 const SOCIAL_LINKS = [
   {
-    href: import.meta.env.VITE_INSTAGRAM_URL || "https://instagram.com",
+    href: import.meta.env.VITE_INSTAGRAM_URL,
     label: "Instagram",
     icon: <FaInstagram aria-hidden="true" />,
     className: "social-bubble insta",
   },
   {
-    href: import.meta.env.VITE_FACEBOOK_URL || "https://facebook.com",
+    href: import.meta.env.VITE_FACEBOOK_URL,
     label: "Facebook",
     icon: <FaFacebookF aria-hidden="true" />,
     className: "social-bubble fb",
   },
   {
-    href: import.meta.env.VITE_LINKEDIN_URL || "https://linkedin.com",
+    href: import.meta.env.VITE_LINKEDIN_URL,
     label: "LinkedIn",
     icon: <FaLinkedinIn aria-hidden="true" />,
     className: "social-bubble in",
   },
 ];
+
+const CONFIGURED_SOCIAL_LINKS = SOCIAL_LINKS.filter((item) => item.href);
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -204,8 +206,9 @@ const Footer = () => {
               </span>
             </div>
 
+            {CONFIGURED_SOCIAL_LINKS.length > 0 && (
             <div className="social-area" aria-label="Redes sociales">
-              {SOCIAL_LINKS.map((item) => (
+              {CONFIGURED_SOCIAL_LINKS.map((item) => (
                 <a
                   key={item.label}
                   href={item.href}
@@ -219,6 +222,7 @@ const Footer = () => {
                 </a>
               ))}
             </div>
+            )}
           </div>
         </div>
         </Reveal>

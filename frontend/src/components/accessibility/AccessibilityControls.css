@@ -297,7 +297,10 @@
   .a11y-shell {
     left: 0.85rem;
     right: auto;
-    bottom: calc(max(1rem, var(--safe-area-bottom)) + var(--a11y-footer-lift, 0px));
+    bottom: calc(
+      max(1rem, var(--safe-area-bottom)) + var(--a11y-footer-lift, 0px) +
+        var(--a11y-booking-action-lift, 0px)
+    );
     align-items: flex-start;
   }
 

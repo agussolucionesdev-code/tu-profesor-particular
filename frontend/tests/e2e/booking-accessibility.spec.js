@@ -105,8 +105,31 @@ test.describe("guided booking shell", () => {
     const progress = page.getByRole("progressbar", {
       name: "Progreso de reserva",
     });
-    await expect(progress).toHaveAttribute("aria-valuetext", /Paso 1 de 4/i);
+    await expect(progress).toHaveAttribute("aria-valuetext", /Paso 1 de 3/i);
     await expect(progress.getByRole("button")).toHaveCount(0);
+  });
+
+  test("explains the booking expectations before asking for personal data", async ({
+    page,
+  }) => {
+    await mockHealthyBackend(page);
+    await page.goto("/reservar");
+    await waitForBookingReady(page);
+
+    const expectations = page.getByRole("region", {
+      name: "Antes de reservar",
+    });
+    await expect(expectations).toBeVisible();
+    await expect(expectations).toContainText(/online y presencial/i);
+    await expect(expectations).toContainText("Temperley");
+    await expect(expectations).toContainText("Primera clase de diagnóstico");
+    await expect(expectations).toContainText(/reprogramá o cancelá/i);
+
+    const expectationsBox = await expectations.boundingBox();
+    const studentNameBox = await page
+      .getByRole("textbox", { name: /Nombre del alumno/i })
+      .boundingBox();
+    expect(expectationsBox?.y).toBeLessThan(studentNameBox?.y ?? 0);
   });
 
   test("associates required fields with their validation errors", async ({
@@ -166,10 +189,9 @@ test.describe("mobile admin accessibility launcher", () => {
         "ui_accessibility_preferences",
         JSON.stringify({ themePreference: "light", fontScale: "xlarge" }),
       );
-      document.documentElement.style.setProperty("--safe-area-bottom", "24px");
     });
     await mockHealthyBackend(page);
-    await page.route("**/api/**", (route) =>
+    await page.route("http://localhost:3000/api/**", (route) =>
       route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -178,6 +200,9 @@ test.describe("mobile admin accessibility launcher", () => {
     );
 
     await page.goto("/admin");
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty("--safe-area-bottom", "24px");
+    });
     const launcher = page.locator(".a11y-fab");
     const bottomNav = page.locator(".admin-bottom-nav");
     await expect(launcher).toBeVisible();

@@ -1,8 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
-import {
-  normalizeText as norm,
-  getBookingStatusBucket as bookingStatusBucket,
-} from "../utils/bookingFormatters";
+import { normalizeText as norm } from "../utils/bookingFormatters";
 
 export const useBookingFilters = (sortedBookings) => {
   const [searchTerm, setSearchTerm] = useState("");

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { FaExclamationTriangle } from "react-icons/fa";
 
@@ -16,8 +16,7 @@ import { FaExclamationTriangle } from "react-icons/fa";
  *   onConfirm    — called when user confirms
  *   onCancel     — called when user cancels / presses Escape
  */
-const ConfirmDialog = ({
-  isOpen,
+const ConfirmDialogContent = ({
   title,
   message,
   confirmLabel = "Confirmar",
@@ -27,21 +26,14 @@ const ConfirmDialog = ({
   onConfirm,
   onCancel,
 }) => {
-  const dialogRef = useFocusTrap(isOpen);
+  const dialogRef = useFocusTrap(true);
   const [typed, setTyped] = useState("");
 
   useEffect(() => {
-    if (!isOpen) setTyped("");
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
     const handler = (e) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [isOpen, onCancel]);
-
-  if (!isOpen) return null;
+  }, [onCancel]);
 
   const canConfirm = typeToConfirm ? typed === typeToConfirm : true;
 
@@ -104,6 +96,12 @@ const ConfirmDialog = ({
       </div>
     </div>
   );
+};
+
+const ConfirmDialog = ({ isOpen, ...props }) => {
+  if (!isOpen) return null;
+
+  return <ConfirmDialogContent {...props} />;
 };
 
 export default ConfirmDialog;

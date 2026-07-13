@@ -481,8 +481,11 @@
   justify-content: center;
 }
 
-.theme-logo__dark  { display: none; }
-.theme-logo__light { display: block; }
+.theme-logo__image {
+  display: block;
+  max-width: 100%;
+}
 
-[data-theme="dark"] .theme-logo__light { display: none; }
-[data-theme="dark"] .theme-logo__dark  { display: block; }
+[data-theme="dark"] .theme-logo__image {
+  filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}

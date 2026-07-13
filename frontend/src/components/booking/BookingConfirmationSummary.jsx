@@ -5,6 +5,8 @@ import {
   FaSchool,
   FaUserGraduate,
   FaUserTie,
+  FaBullseye,
+  FaCommentDots,
 } from "react-icons/fa";
 
 const BookingConfirmationSummary = ({
@@ -16,6 +18,8 @@ const BookingConfirmationSummary = ({
   educationLevel,
   subject,
   school,
+  objective,
+  comments,
 }) => {
   const detailCards = [
     {
@@ -45,13 +49,27 @@ const BookingConfirmationSummary = ({
     {
       icon: <FaSchool aria-hidden="true" />,
       label: "Institución",
-      value: school || "Sin completar",
+      value: school || "No informada",
     },
     {
       icon: <FaBookOpen aria-hidden="true" />,
       label: "Materia",
       value: subject || "Sin completar",
     },
+    {
+      icon: <FaBullseye aria-hidden="true" />,
+      label: "Objetivo",
+      value: objective || "Sin completar",
+    },
+    ...(comments
+      ? [
+          {
+            icon: <FaCommentDots aria-hidden="true" />,
+            label: "Comentarios",
+            value: comments,
+          },
+        ]
+      : []),
   ];
 
   return (

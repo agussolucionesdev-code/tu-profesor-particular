@@ -19,9 +19,6 @@ export const fetchAvailability = (params, managementToken) =>
 export const createBooking = (data, idempotencyKey = createIdempotencyKey()) =>
   apiClient.post("/api/bookings/reserve", data, withIdempotencyKey(idempotencyKey));
 
-export const lookupBookings = (identifier) =>
-  apiClient.get(`/api/bookings/${encodeURIComponent(identifier)}`);
-
 export const requestManagementLink = (data) =>
   apiClient.post("/api/bookings/manage/request-link", data);
 

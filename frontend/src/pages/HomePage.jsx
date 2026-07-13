@@ -103,7 +103,7 @@ const STEPS = [
     num: "01",
     icon: FaUserGraduate,
     title: "Contanos tu situación",
-    desc: "Materia, nivel y contexto. Sin formularios eternos — en 2 minutos tenemos todo lo que necesitamos.",
+    desc: "Materia, nivel y contexto. Sin formularios eternos: en pocos pasos tenemos lo que necesitamos.",
     tag: "Sin registro. Sin contraseña.",
   },
   {
@@ -116,8 +116,8 @@ const STEPS = [
   {
     num: "03",
     icon: FaClipboardList,
-    title: "Confirmá y guardá tu código",
-    desc: "Recibís un código único. Con él podés reprogramar, cancelar o consultar el estado desde el portal — sin llamar.",
+    title: "Confirmá y guardá tu acceso",
+    desc: "Recibís un código visible y un enlace seguro. Ese enlace te permite reprogramar, cancelar o consultar el turno sin exponer tus datos.",
     tag: "Comprobante por email opcional.",
   },
   {
@@ -125,7 +125,7 @@ const STEPS = [
     icon: FaClipboardCheck,
     title: "Llegá con tus dudas",
     desc: "La primera clase es de diagnóstico. Entendemos dónde estás parado y trazamos el camino desde ahí.",
-    tag: "Jujuy 414, Temperley.",
+    tag: "Online o presencial en Temperley.",
   },
 ];
 
@@ -138,7 +138,7 @@ const REASONS = [
   {
     icon: FaRegClock,
     title: "Sin horarios rígidos",
-    desc: "Elegís cuándo. Podés reprogramar cuando algo cambia — sin culpa, sin llamadas, sin complicaciones. Todo desde el portal con tu código.",
+    desc: "Elegís cuándo. Podés reprogramar cuando algo cambia — sin culpa, sin llamadas, sin complicaciones. Usá tu enlace seguro de gestión.",
   },
   {
     icon: FaUserCheck,
@@ -166,8 +166,8 @@ const REASONS = [
 
 const HomePage = () => {
   usePageMeta(
-    "Tu Profesor Particular · Entendé de verdad, no de memoria — Clases online en Temperley",
-    "¿Estudiás pero el resultado no cambia? Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro. Sin pagos por adelantado. Reservá en 3 minutos.",
+    "Tu Profesor Particular · Entendé de verdad, no de memoria — Clases online y presenciales",
+    "¿Estudiás pero el resultado no cambia? Clases online y presenciales en Temperley de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro ni pagos por adelantado.",
   );
 
   return (
@@ -183,11 +183,11 @@ const HomePage = () => {
       >
         <span className="hp-web-banner-pulse" aria-hidden="true" />
         <span className="hp-web-banner-text">
-          🌐 <strong>Próximamente:</strong> mi web completa en{" "}
+          🌐 <strong>Sitio principal:</strong>{" "}
           <span className="hp-web-banner-url">tuprofesorparticular.com.ar</span>
         </span>
         <span className="hp-web-banner-cta">
-          Ver más <FaExternalLinkAlt aria-hidden="true" />
+          Visitar <FaExternalLinkAlt aria-hidden="true" />
         </span>
       </a>
 
@@ -209,7 +209,7 @@ const HomePage = () => {
 
           <div className="hp-hero-badge">
             <span className="hp-hero-badge-dot" aria-hidden="true" />
-            Clases particulares · Temperley, Buenos Aires
+            Clases online y presenciales · Temperley, Buenos Aires
           </div>
 
           <h1 className="hp-hero-h1">
@@ -226,7 +226,7 @@ const HomePage = () => {
             {[
               { icon: FaCheckCircle, text: "Sin pagos por adelantado" },
               { icon: FaCheckCircle, text: "Primera clase de diagnóstico" },
-              { icon: FaCheckCircle, text: "Reservá en 3 minutos" },
+              { icon: FaCheckCircle, text: "Reserva simple y guiada" },
             ].map((c) => (
               <span key={c.text} className="hp-chip">
                 <c.icon aria-hidden="true" /> {c.text}
@@ -237,7 +237,7 @@ const HomePage = () => {
           <div className="hp-hero-ctas">
             <Link to="/reservar" className="hp-cta-main">
               <FaCalendarCheck aria-hidden="true" />
-              Reservar mi clase — es gratis
+              Reservar mi clase — sin adelanto
               <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <a
@@ -280,7 +280,7 @@ const HomePage = () => {
               Reservar es lo más fácil
             </h2>
             <p className="hp-section-p hp-section-p--light">
-              Porque la barrera para empezar tiene que ser cero. Todo online, desde el celular, en 3 minutos.
+              Porque la barrera para empezar tiene que ser cero. Gestioná la reserva online, desde el celular y paso a paso.
             </p>
           </div>
 
@@ -309,7 +309,7 @@ const HomePage = () => {
           <div className="hp-steps-cta">
             <Link to="/reservar" className="hp-cta-main hp-cta-xl">
               <FaCalendarCheck aria-hidden="true" />
-              Empezar ahora — es gratis
+              Empezar ahora — sin adelanto
               <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <p className="hp-steps-note">Sin tarjeta. Sin contrato. Sin compromiso.</p>
@@ -357,7 +357,7 @@ const HomePage = () => {
                   </div>
 
                   {/* cara trasera */}
-                  <div className="hp-subject-back" aria-hidden="true">
+                  <div className="hp-subject-back">
                     <Icon className="hp-subject-back-icon" aria-hidden="true" />
                     <div className="hp-subject-back-copy">
                       <strong className="hp-subject-back-tagline">{s.tagline}</strong>
@@ -366,7 +366,6 @@ const HomePage = () => {
                     <Link
                       to={`/reservar?materia=${encodeURIComponent(s.param)}`}
                       className="hp-subject-back-btn"
-                      tabIndex={-1}
                     >
                       <FaCalendarCheck aria-hidden="true" />
                       Reservar clase de {s.label}

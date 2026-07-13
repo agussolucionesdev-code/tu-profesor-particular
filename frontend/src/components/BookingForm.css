@@ -143,6 +143,80 @@
   font-size: 0.85rem;
 }
 
+.booking-expectations {
+  margin: 1.1rem 0 1.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--input-bg);
+  text-align: left;
+}
+
+.booking-expectations-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.booking-expectations-kicker {
+  color: var(--accent-hover);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.booking-expectations h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.booking-expectations-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-expectations-list li {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.booking-expectations-list li::before {
+  content: "✓";
+  color: var(--accent-primary);
+  font-weight: 800;
+  margin-right: 0.45rem;
+}
+
+.booking-expectations-list strong {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .booking-expectations {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 640px) {
+  .booking-expectations-heading {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0.2rem;
+  }
+
+  .booking-expectations-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Voice guide tip ────────────────────────────────────────────────────── */
 .voice-guide-tip {
   display: flex;

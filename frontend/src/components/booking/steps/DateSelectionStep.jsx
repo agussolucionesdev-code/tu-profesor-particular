@@ -13,6 +13,8 @@ const DateSelectionStep = ({
   selectedDayLabel,
   availableSlotCount,
   hasAnyAvailability = true,
+  availabilityStatus,
+  retryAvailability,
   handleDateSelect,
   clearDateSelection,
   handleProceedToTimeStep,
@@ -67,7 +69,24 @@ const DateSelectionStep = ({
         </p>
 
         {/* ── Sin disponibilidad en el período completo ── */}
-        {!hasAnyAvailability && (
+        {availabilityStatus === "loading" && (
+          <div className="calendar-no-availability" role="status">
+            <FaExclamationCircle aria-hidden="true" />
+            <span>Cargando disponibilidad actualizada…</span>
+          </div>
+        )}
+
+        {availabilityStatus === "error" && (
+          <div className="calendar-no-availability" role="alert">
+            <FaExclamationCircle aria-hidden="true" />
+            <span>No pudimos cargar la agenda. No vamos a mostrar horarios sin verificar.</span>
+            <button type="button" className="btn-neuro-secondary" onClick={retryAvailability}>
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {availabilityStatus === "ready" && !hasAnyAvailability && (
           <div className="calendar-no-availability" role="alert">
             <FaExclamationCircle aria-hidden="true" />
             <span>
@@ -81,7 +100,7 @@ const DateSelectionStep = ({
         )}
 
         {/* ── Sin disponibilidad en el día seleccionado ── */}
-        {selectedDayOnly && availableSlotCount === 0 && (
+        {availabilityStatus === "ready" && selectedDayOnly && availableSlotCount === 0 && (
           <p className="calendar-no-slots-note" role="alert">
             No hay horarios libres para este día. Probá con otra fecha o{" "}
             <a href="https://wa.me/5491164236675" target="_blank" rel="noopener noreferrer">

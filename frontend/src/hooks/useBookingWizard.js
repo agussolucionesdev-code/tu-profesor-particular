@@ -1,5 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { WIZARD_STEPS } from "../constants/bookingWizard";
+import {
+  BOOKING_INITIAL_FORM_DATA,
+  WIZARD_STEPS,
+  isAcademicDraftComplete,
+  updateBookingDraft,
+} from "../constants/bookingWizard";
 import {
   RESPONSIBLE_RELATIONSHIP_OTHER_VALUE,
   sanitizePersonNameAr,
@@ -7,28 +12,12 @@ import {
   formatPhoneMaskAr,
 } from "../utils/bookingFormatters";
 
-const INITIAL_FORM_DATA = {
-  responsibleName: "",
-  responsibleRelationship: "",
-  responsibleRelationshipOther: "",
-  studentName: "",
-  email: "",
-  phone: "",
-  school: "",
-  educationLevel: "",
-  yearGrade: "",
-  subject: "",
-  academicSituation: "",
-  timeSlot: null,
-  duration: "",
-};
-
 const regexName = /^[A-Za-zÀ-ÿ\u00f1\u00d1\s']{3,60}$/;
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const useBookingWizard = (showToast, initialOverrides = {}) => {
   const [formData, setFormData] = useState(() => ({
-    ...INITIAL_FORM_DATA,
+    ...BOOKING_INITIAL_FORM_DATA,
     ...initialOverrides,
   }));
   const [isAdult, setIsAdult] = useState(false);
@@ -67,8 +56,16 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
           return formData.yearGrade.trim().length > 0;
         case "subject":
           return formData.subject.trim().length > 0;
+        case "objective":
+          return (
+            formData.objective.trim().length >= 3 &&
+            formData.objective.trim().length <= 300
+          );
         case "school":
-          return formData.school.trim().length > 0;
+          return (
+            formData.school.trim().length === 0 ||
+            formData.school.trim().length >= 2
+          );
         case "academicSituation":
           return true;
         default:
@@ -97,12 +94,8 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
   );
 
   const isAcademicInfoComplete = useMemo(
-    () =>
-      isValidField("educationLevel") &&
-      isValidField("yearGrade") &&
-      isValidField("subject") &&
-      isValidField("school"),
-    [isValidField],
+    () => isAcademicDraftComplete(formData),
+    [formData],
   );
 
   const canProceedToStep2 = useMemo(
@@ -124,7 +117,7 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
     if (name === "email") finalValue = value.trimStart().toLowerCase();
 
     setFormData((prev) => {
-      const newData = { ...prev, [name]: finalValue };
+      const newData = updateBookingDraft(prev, { [name]: finalValue });
       if (name === "educationLevel") {
         newData.yearGrade = "";
         newData.subject = "";
@@ -164,7 +157,7 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
   }, [isAdult, showToast]);
 
   const resetForm = useCallback(() => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData(BOOKING_INITIAL_FORM_DATA);
     setIsAdult(false);
     setHasAttemptedNext(false);
   }, []);
@@ -192,7 +185,7 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
       isValidField("educationLevel"),
       isValidField("yearGrade"),
       isValidField("subject"),
-      isValidField("school"),
+      isValidField("objective"),
     ],
     [isValidField, isAdult],
   );

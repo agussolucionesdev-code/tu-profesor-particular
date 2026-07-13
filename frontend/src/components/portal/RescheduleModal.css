@@ -255,6 +255,19 @@
   gap: 0;
 }
 
+.reschedule-availability-message {
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  margin: 0.75rem 0;
+  color: var(--color-text-secondary, #64748b);
+  line-height: 1.45;
+}
+
+.reschedule-availability-message p {
+  margin: 0;
+}
+
 .reschedule-period {
   margin-bottom: 0.875rem;
 }

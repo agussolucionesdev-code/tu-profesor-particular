@@ -11,16 +11,17 @@ const TimeSelectionStep = ({
   formData,
   isTimeSelected,
   selectedTimeLabel,
-  selectedDayLabel,
-  selectedDayOnly,
   slotSections,
   availableSlots,
-  availableSlotCount,
+  availabilityStatus,
+  retryAvailability,
   handleTimeSelect,
   clearTimeSelection,
   handleProceedToConfirmationStep,
   goToPrev,
 }) => {
+  const canContinue = isTimeSelected && availabilityStatus === "ready";
+
   return (
     <>
       <div className="time-step-content">
@@ -53,7 +54,15 @@ const TimeSelectionStep = ({
 
         {/* ── Slots card ── */}
         <div className="time-slots-card">
-          {availableSlots.length > 0 ? (
+          {availabilityStatus === "error" ? (
+            <div className="no-slots-box" role="alert">
+              <FaTimesCircle aria-hidden="true" />
+              <p>No pudimos verificar la agenda. Reintentá antes de elegir un horario.</p>
+              <button type="button" className="btn-neuro-secondary" onClick={retryAvailability}>
+                Reintentar
+              </button>
+            </div>
+          ) : availableSlots.length > 0 ? (
             <div className="slot-sections">
               {slotSections.map((section) => (
                 <section
@@ -114,7 +123,7 @@ const TimeSelectionStep = ({
           ) : (
             <div className="no-slots-box">
               <FaTimesCircle aria-hidden="true" />
-              <p>Cargando agenda...</p>
+              <p>{availabilityStatus === "loading" ? "Cargando agenda…" : "No hay horarios disponibles para este día."}</p>
             </div>
           )}
         </div>
@@ -136,12 +145,12 @@ const TimeSelectionStep = ({
 
           <button
             type="button"
-            className={`btn-time-next ${isTimeSelected ? "is-ready" : "is-locked"}`}
+            className={`btn-time-next ${canContinue ? "is-ready" : "is-locked"}`}
             onClick={handleProceedToConfirmationStep}
-            disabled={!isTimeSelected}
+            disabled={!canContinue}
           >
             <span>
-              {isTimeSelected ? "Confirmar reserva" : "Elegí un horario"}
+              {isTimeSelected ? "Revisar reserva" : "Elegí un horario"}
             </span>
             <FaArrowRight aria-hidden="true" />
           </button>
@@ -159,10 +168,11 @@ const TimeSelectionStep = ({
         </button>
         <button
           type="button"
-          className={`btn-neuro-primary ${isTimeSelected ? "btn-ready" : "btn-disabled"}`}
+          className={`btn-neuro-primary ${canContinue ? "btn-ready" : "btn-disabled"}`}
           onClick={handleProceedToConfirmationStep}
+          disabled={!canContinue}
         >
-          Confirmar reserva <FaArrowRight aria-hidden="true" />
+          Revisar reserva <FaArrowRight aria-hidden="true" />
         </button>
       </div>
     </>

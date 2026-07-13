@@ -4,6 +4,7 @@ import {
   availabilityRequestParams,
   getBusinessDateKey,
   isSelectedTimeAvailable,
+  isVerifiedAvailabilitySelection,
   selectSlotsForDate,
 } from "../../src/utils/availabilitySlots.js";
 
@@ -30,18 +31,39 @@ test("uses backend slots when the response includes the authoritative slots fiel
   assert.equal(slots[0].timeObj.toISOString(), "2026-07-13T13:00:00.000Z");
 });
 
-test("retains the explicit legacy fallback only when slots are absent", () => {
+test("allows confirmation only for a selected time verified by a ready response", () => {
+  const selectedTime = new Date("2026-07-13T13:00:00.000Z");
+  const backendSlots = [{ timeSlot: "2026-07-13T13:00:00.000Z" }];
+
+  assert.equal(isVerifiedAvailabilitySelection({
+    availabilityStatus: "ready",
+    selectedTime,
+    backendSlots,
+  }), true);
+  assert.equal(isVerifiedAvailabilitySelection({
+    availabilityStatus: "loading",
+    selectedTime,
+    backendSlots,
+  }), false);
+  assert.equal(isVerifiedAvailabilitySelection({
+    availabilityStatus: "error",
+    selectedTime,
+    backendSlots,
+  }), false);
+});
+
+test("does not invent legacy slots when the authoritative slots field is absent", () => {
   const fallbackSlots = [
     { timeObj: new Date("2026-07-13T10:00:00-03:00"), isOccupied: false },
   ];
 
-  assert.equal(
+  assert.deepEqual(
     selectSlotsForDate({
       selectedDate: selectedDay,
       backendSlots: undefined,
       fallbackSlots,
     }),
-    fallbackSlots,
+    [],
   );
 });
 
@@ -75,7 +97,7 @@ test("keeps the legacy request shape until the learner selects a duration", () =
   assert.equal(availabilityRequestParams(undefined), undefined);
 });
 
-test("clears only a selected time that the authoritative duration-aware slots no longer contain", () => {
+test("clears a selected time unless authoritative duration-aware slots contain it", () => {
   const selectedTime = new Date("2026-07-13T13:30:00.000Z");
   const slotsForLongerClass = [
     { timeSlot: "2026-07-13T13:00:00.000Z" },
@@ -95,6 +117,6 @@ test("clears only a selected time that the authoritative duration-aware slots no
   );
   assert.equal(
     isSelectedTimeAvailable({ selectedTime, backendSlots: undefined }),
-    true,
+    false,
   );
 });

@@ -447,6 +447,7 @@ const AdminPanel = () => {
             <CalendarView
               sortedBookings={sortedBookings}
               onSelectBooking={setViewBooking}
+              authConfig={authConfig}
             />
           )}
 

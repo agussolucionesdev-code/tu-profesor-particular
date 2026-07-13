@@ -112,7 +112,10 @@ const AppContent = () => {
         </Suspense>
       </main>
       {!isAdminRoute && <Footer />}
-      <AccessibilityControls isAdminRoute={isAdminRoute} />
+      <AccessibilityControls
+        isAdminRoute={isAdminRoute}
+        isBookingRoute={isBookingExperience}
+      />
     </>
   );
 };

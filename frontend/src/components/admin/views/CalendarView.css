@@ -122,6 +122,17 @@
   max-height: 70vh;
 }
 
+.cal-schedule-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 12rem;
+  padding: 1.5rem;
+  color: var(--color-text-secondary, #64748b);
+  text-align: center;
+}
+
 /* ─────────────────────────────────────
    Week view
 ───────────────────────────────────── */

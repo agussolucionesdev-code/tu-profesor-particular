@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export const usePagination = (items, pageSize = 20) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [previousItems, setPreviousItems] = useState(items);
 
   // Reset to page 1 whenever the items array changes meaningfully
-  useEffect(() => {
+  if (items !== previousItems) {
+    setPreviousItems(items);
     setCurrentPage(1);
-  }, [items]);
+  }
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);

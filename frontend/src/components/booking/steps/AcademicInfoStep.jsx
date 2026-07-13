@@ -5,6 +5,7 @@ import {
   FaSchool,
   FaCheckCircle,
   FaLightbulb,
+  FaBullseye,
 } from "react-icons/fa";
 import { getSubjectSuggestions as importedGetSubjectSuggestions } from "../../../constants/bookingWizard";
 import useFieldFlow from "../../../hooks/useFieldFlow";
@@ -25,6 +26,7 @@ const ACADEMIC_FIELDS = [
   { key: "educationLevel" },
   { key: "yearGrade" },
   { key: "subject" },
+  { key: "objective" },
   { key: "school" },
   { key: "academicSituation" },
 ];
@@ -46,13 +48,13 @@ const AcademicInfoStep = ({
   getFieldStateClass,
   handleChange,
   isPersonalInfoComplete,
-  isAcademicInfoComplete,
   canProceedToStep2,
   textareaRef,
   getYearGradeOptions,
   subjectsByLevelOverride,
   goToNext,
   onBackToPersonal,
+  onValidationError,
 }) => {
   const getSubjectSuggestions = (level) =>
     subjectsByLevelOverride ? (subjectsByLevelOverride[level] ?? []) : importedGetSubjectSuggestions(level);
@@ -60,7 +62,7 @@ const AcademicInfoStep = ({
   const {
     activeIndex,
     showVerification,
-    fieldRefs,
+    setFieldRef,
     goNext,
     jumpTo,
     enterVerification,
@@ -74,7 +76,9 @@ const AcademicInfoStep = ({
   // ── Validación de campo ──────────────────────────────────────────────────
   const isFieldConfirmed = useCallback(
     (fieldKey) => {
-      if (fieldKey === "academicSituation") return true;
+      if (fieldKey === "academicSituation" || fieldKey === "school") {
+        return true;
+      }
       return isValidField(fieldKey);
     },
     [isValidField],
@@ -87,6 +91,7 @@ const AcademicInfoStep = ({
   const confirmField = useCallback(
     (fieldKey) => {
       if (!isFieldConfirmed(fieldKey)) {
+        onValidationError?.(fieldKey);
         setHasAttemptedNext(true);
         return;
       }
@@ -97,7 +102,7 @@ const AcademicInfoStep = ({
         goNext();
       }
     },
-    [enterVerification, goNext, isFieldConfirmed, setHasAttemptedNext],
+    [enterVerification, goNext, isFieldConfirmed, onValidationError, setHasAttemptedNext],
   );
 
   // ── Enter en inputs de texto ─────────────────────────────────────────────
@@ -113,7 +118,9 @@ const AcademicInfoStep = ({
   // ── Auto-confirm en selects (educationLevel, yearGrade) ──────────────────
   const selectTimeoutRef = useRef(null);
   const confirmFieldRef = useRef(confirmField);
-  confirmFieldRef.current = confirmField;
+  useEffect(() => {
+    confirmFieldRef.current = confirmField;
+  }, [confirmField]);
 
   const makeSelectHandler = useCallback(
     (fieldKey) => (e) => {
@@ -156,10 +163,20 @@ const AcademicInfoStep = ({
         value: formData.subject,
       },
       {
-        key: "school",
-        label: "Institución",
-        value: formData.school,
+        key: "objective",
+        label: "Objetivo",
+        value: formData.objective,
       },
+      ...(formData.school.trim()
+        ? [
+            {
+              key: "school",
+              label: "Institución",
+              value: formData.school,
+              isOptional: true,
+            },
+          ]
+        : []),
       ...(formData.academicSituation.trim()
         ? [
             {
@@ -242,7 +259,7 @@ const AcademicInfoStep = ({
                     isActive
                     isCompleted={isValidField("educationLevel")}
                     fieldRef={(el) => {
-                      fieldRefs.current.educationLevel = el;
+                      setFieldRef("educationLevel", el);
                     }}
                     onConfirm={() => confirmField("educationLevel")}
                     onBack={onBackToPersonal}
@@ -282,7 +299,7 @@ const AcademicInfoStep = ({
                     isActive
                     isCompleted={isValidField("yearGrade")}
                     fieldRef={(el) => {
-                      fieldRefs.current.yearGrade = el;
+                      setFieldRef("yearGrade", el);
                     }}
                     onConfirm={() => confirmField("yearGrade")}
                     onBack={() => jumpTo(0)}
@@ -327,7 +344,7 @@ const AcademicInfoStep = ({
                     isActive
                     isCompleted={isValidField("subject")}
                     fieldRef={(el) => {
-                      fieldRefs.current.subject = el;
+                      setFieldRef("subject", el);
                     }}
                     onConfirm={() => confirmField("subject")}
                     onBack={() => jumpTo(1)}
@@ -353,30 +370,76 @@ const AcademicInfoStep = ({
                   </FieldBlock>
                 )}
 
+                {/* ── objective ── */}
+                {activeField.key === "objective" && (
+                  <FieldBlock
+                    key="objective"
+                    fieldKey="objective"
+                    label="Objetivo de la clase"
+                    required
+                    errorText={
+                      hasAttemptedNext && !isValidField("objective")
+                        ? "Contanos qué querés lograr en la clase"
+                        : null
+                    }
+                    helperText="Por ejemplo: preparar un examen, resolver una guía o reforzar un tema."
+                    isActive
+                    isCompleted={isValidField("objective")}
+                    fieldRef={(el) => {
+                      setFieldRef("objective", el);
+                    }}
+                    onConfirm={() => confirmField("objective")}
+                    onBack={() => jumpTo(2)}
+                    showBack
+                  >
+                    <div
+                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("objective")}`}
+                    >
+                      <FaBullseye className="input-icon" aria-hidden="true" />
+                      <input
+                        id="objective"
+                        type="text"
+                        name="objective"
+                        value={formData.objective}
+                        onChange={handleChange}
+                        aria-invalid={
+                          hasAttemptedNext && !isValidField("objective")
+                            ? "true"
+                            : "false"
+                        }
+                        placeholder="Ej.: preparar el examen de funciones"
+                        maxLength={300}
+                        onKeyDown={(e) => handleKey(e, "objective")}
+                      />
+                      {isValidField("objective") && (
+                        <FaCheckCircle
+                          className="valid-icon"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </div>
+                  </FieldBlock>
+                )}
+
                 {/* ── school ── */}
                 {activeField.key === "school" && (
                   <FieldBlock
                     key="school"
                     fieldKey="school"
                     label="Institución o colegio"
-                    required
-                    errorText={
-                      hasAttemptedNext && !isValidField("school")
-                        ? "Escribí la institución"
-                        : null
-                    }
+                    optional="opcional"
                     helperText="Esto ayuda a entender mejor el contexto del alumno."
                     isActive
-                    isCompleted={isValidField("school")}
+                    isCompleted={formData.school.trim().length > 0}
                     fieldRef={(el) => {
-                      fieldRefs.current.school = el;
+                      setFieldRef("school", el);
                     }}
                     onConfirm={() => confirmField("school")}
-                    onBack={() => jumpTo(2)}
+                    onBack={() => jumpTo(3)}
                     showBack
                   >
                     <div
-                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("school")}`}
+                      className={`neuro-input-wrapper premium-input ${getFieldStateClass("school", true)}`}
                     >
                       <FaSchool className="input-icon" aria-hidden="true" />
                       <input
@@ -386,15 +449,12 @@ const AcademicInfoStep = ({
                         value={formData.school}
                         onChange={handleChange}
                         autoComplete="organization"
-                        aria-invalid={
-                          hasAttemptedNext && !isValidField("school")
-                            ? "true"
-                            : "false"
-                        }
+                        aria-invalid="false"
                         placeholder="Escuela, facultad o institución"
+                        maxLength={120}
                         onKeyDown={(e) => handleKey(e, "school")}
                       />
-                      {isValidField("school") && (
+                      {formData.school.trim().length > 0 && (
                         <FaCheckCircle
                           className="valid-icon"
                           aria-hidden="true"
@@ -419,10 +479,10 @@ const AcademicInfoStep = ({
                     isActive
                     isCompleted={formData.academicSituation.trim().length > 0}
                     fieldRef={(el) => {
-                      fieldRefs.current.academicSituation = el;
+                      setFieldRef("academicSituation", el);
                     }}
                     onConfirm={() => confirmField("academicSituation")}
-                    onBack={() => jumpTo(3)}
+                    onBack={() => jumpTo(4)}
                     showBack
                     confirmLabel="Listo"
                   >
@@ -441,6 +501,7 @@ const AcademicInfoStep = ({
                             : "Ej: Quiero ordenar temas, practicar ejercicios y llegar mejor preparado al parcial."
                         }
                         lang="es"
+                        maxLength={800}
                       />
                       {formData.academicSituation.trim().length > 0 && (
                         <FaCheckCircle
@@ -470,7 +531,7 @@ const AcademicInfoStep = ({
               setHasAttemptedNext(false);
               goToNext();
             }}
-            continueLabel="Ir al día →"
+            continueLabel="Elegir turno →"
             canContinue={canProceedToStep2}
           />
         )}

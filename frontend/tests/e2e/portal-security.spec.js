@@ -1,24 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const booking = ({
-  id,
-  code,
-  status,
-  timeSlot,
-  endTime,
-  studentName,
-}) => ({
-  _id: id,
-  bookingCode: code,
-  status,
-  timeSlot,
-  endTime,
-  studentName,
-  subject: "Matemática",
-  duration: 1,
-  responsibleRelationship: "self",
-});
-
 const mockAppHealth = async (page) => {
   await page.route("**/health", (route) =>
     route.fulfill({
@@ -35,151 +16,79 @@ test.describe("portal security containment", () => {
     await page.addInitScript(() => window.localStorage.clear());
   });
 
-  test("accepts only an exact booking code and does not query by email", async ({
+  test("requests a private management link and never looks up booking data by code", async ({
     page,
   }) => {
-    let lookupRequests = 0;
+    const publicLookupRequests = [];
+    let recoveryPayload;
+
     await page.route("**/api/bookings/**", async (route) => {
-      lookupRequests += 1;
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ data: [] }),
-      });
-    });
+      const request = route.request();
+      const url = new URL(request.url());
 
-    await page.goto("/portal");
-
-    await expect(
-      page.getByText(/por seguridad.*código de reserva exacto/i),
-    ).toBeVisible();
-    await page.getByLabel(/código de reserva exacto/i).fill("alumno@example.com");
-    await page.getByRole("button", { name: /buscar mis turnos/i }).click();
-
-    await expect(page.getByRole("alert")).toContainText(
-      /ingresá un código de reserva válido/i,
-    );
-    expect(lookupRequests).toBe(0);
-  });
-
-  test("keeps finalized and cancelled history strictly read-only", async ({
-    page,
-  }) => {
-    const historicalBookings = [
-      booking({
-        id: "final-1",
-        code: "FINAL123",
-        status: "Finalizado",
-        timeSlot: "2025-01-10T15:00:00.000Z",
-        endTime: "2025-01-10T16:00:00.000Z",
-        studentName: "Alumno Finalizado",
-      }),
-      booking({
-        id: "cancel-1",
-        code: "CANCEL12",
-        status: "Cancelado",
-        timeSlot: "2025-01-11T15:00:00.000Z",
-        endTime: "2025-01-11T16:00:00.000Z",
-        studentName: "Alumno Cancelado",
-      }),
-    ];
-
-    await page.route("**/api/bookings/FINAL123", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ data: historicalBookings }),
-      }),
-    );
-
-    await page.goto("/portal");
-    await page.getByLabel(/código de reserva exacto/i).fill("FINAL123");
-    await page.getByRole("button", { name: /buscar mis turnos/i }).click();
-    await page.getByRole("button", { name: /ver historial/i }).click();
-
-    const history = page.locator(".tickets-grid--history");
-    await expect(history.getByText("Alumno Finalizado")).toBeVisible();
-    await expect(history.getByText("Alumno Cancelado")).toBeVisible();
-    await expect(
-      history.getByRole("button", {
-        name: /reprogramar|cancelar|confirmar asistencia|ocultar/i,
-      }),
-    ).toHaveCount(0);
-    await expect(history.locator("textarea")).toHaveCount(0);
-  });
-
-  test("announces informational search results without error semantics", async ({
-    page,
-  }) => {
-    await page.route("**/api/bookings/INFO123", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: [
-            booking({
-              id: "past-1",
-              code: "INFO123",
-              status: "Finalizado",
-              timeSlot: "2025-01-10T15:00:00.000Z",
-              endTime: "2025-01-10T16:00:00.000Z",
-              studentName: "Alumno Histórico",
-            }),
-          ],
-        }),
-      }),
-    );
-
-    await page.goto("/portal");
-    await page.getByLabel(/código de reserva exacto/i).fill("INFO123");
-    await page.getByRole("button", { name: /buscar mis turnos/i }).click();
-
-    const status = page.getByRole("status").filter({
-      hasText: /ese turno ya no está activo/i,
-    });
-    await expect(status).toBeVisible();
-    await expect(status).toHaveClass(/portal-message--info/);
-    await expect(page.getByRole("alert")).toHaveCount(0);
-  });
-
-  test("announces a successful cancellation as success", async ({ page }) => {
-    const future = new Date(Date.now() + 86_400_000);
-    const futureEnd = new Date(future.getTime() + 3_600_000);
-
-    await page.route("**/api/bookings/ACTIVE12", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          data: booking({
-            code: "ACTIVE12",
-            status: "Confirmado",
-            timeSlot: future.toISOString(),
-            endTime: futureEnd.toISOString(),
-            studentName: "Alumno Activo",
+      if (
+        request.method() === "POST" &&
+        url.pathname === "/api/bookings/manage/request-link"
+      ) {
+        recoveryPayload = request.postDataJSON();
+        return route.fulfill({
+          status: 202,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            message:
+              "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
           }),
-        }),
-      }),
+        });
+      }
+
+      publicLookupRequests.push({ method: request.method(), path: url.pathname });
+      return route.fulfill({ status: 500, body: "{}" });
+    });
+
+    await page.goto("/portal");
+
+    await expect(
+      page.getByRole("heading", { name: /acceso seguro a tus turnos/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /buscar mis turnos/i }),
+    ).toHaveCount(0);
+
+    await page.getByLabel(/código de reserva/i).fill("safe123");
+    await page.getByLabel(/email usado al reservar/i).fill("familia@example.com");
+    await page.getByRole("button", { name: /enviar enlace seguro/i }).click();
+
+    await expect(page.getByRole("status")).toContainText(
+      /si los datos coinciden.*enlace seguro por email/i,
     );
-    await page.route("**/api/bookings/cancel", (route) =>
+    expect(recoveryPayload).toEqual({
+      bookingCode: "SAFE123",
+      email: "familia@example.com",
+    });
+    expect(publicLookupRequests).toEqual([]);
+    expect(await page.locator("body").innerText()).not.toContain("Alumno Privado");
+  });
+
+  test("shows the same privacy-preserving result when recovery fails", async ({
+    page,
+  }) => {
+    await page.route("**/api/bookings/manage/request-link", (route) =>
       route.fulfill({
-        status: 200,
+        status: 500,
         contentType: "application/json",
-        body: JSON.stringify({ notifications: {} }),
+        body: JSON.stringify({ success: false }),
       }),
     );
 
     await page.goto("/portal");
-    await page.getByLabel(/código de reserva exacto/i).fill("ACTIVE12");
-    await page.getByRole("button", { name: /buscar mis turnos/i }).click();
-    await expect(page.locator("textarea")).toHaveCount(0);
-    await page.getByRole("button", { name: /cancelar turno de alumno activo/i }).click();
-    await page.getByRole("button", { name: /^sí, liberar horario$/i }).click();
+    await page.getByLabel(/código de reserva/i).fill("MISSING1");
+    await page.getByLabel(/email usado al reservar/i).fill("nadie@example.com");
+    await page.getByRole("button", { name: /enviar enlace seguro/i }).click();
 
-    const status = page.getByRole("status").filter({
-      hasText: /el turno se canceló correctamente/i,
-    });
-    await expect(status).toBeVisible();
-    await expect(status).toHaveClass(/portal-message--success/);
+    await expect(page.getByRole("status")).toContainText(
+      /si los datos coinciden.*enlace seguro por email/i,
+    );
+    await expect(page.getByText(/no encontramos|reserva inexistente/i)).toHaveCount(0);
   });
 });
