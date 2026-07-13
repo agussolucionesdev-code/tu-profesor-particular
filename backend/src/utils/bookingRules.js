@@ -4,7 +4,6 @@ import {
   businessDateKey,
   businessDayRange,
   DEFAULT_TIME_ZONE,
-  getBusinessTimeParts,
   parseBusinessDateTime,
 } from "./timeZone.js";
 
@@ -129,7 +128,7 @@ export const createBookingSchema = z
     tutorName: z.string().trim().max(80).optional().default("Agustin"),
     email: z.string().optional().default(""),
     phone: z.string().optional().default(""),
-    school: textField(2, 120),
+    school: z.string().trim().max(120).optional().default(""),
     educationLevel: textField(3, 60),
     yearGrade: textField(2, 60),
     subject: textField(2, 120),
@@ -197,7 +196,15 @@ export const validateContact = ({ email, phone }) => {
   return null;
 };
 
-export const validateSlot = (startTime, duration, openingHour = 7, closingHour = 22, advanceNoticeMinutes = 60, slotMinutes = 30) => {
+export const validateSlot = (
+  startTime,
+  duration,
+  openingHour = 7,
+  closingHour = 22,
+  advanceNoticeMinutes = 60,
+  slotMinutes = 30,
+  timeZone = TIME_ZONE,
+) => {
   if (!startTime || Number.isNaN(startTime.getTime())) {
     return "La fecha y hora del turno no es válida.";
   }
@@ -210,17 +217,15 @@ export const validateSlot = (startTime, duration, openingHour = 7, closingHour =
     return `La duración debe respetar intervalos de ${slotMinutes} minutos.`;
   }
 
-  const startParts = getBusinessTimeParts(startTime, TIME_ZONE);
-  const validMinutes = [];
-  for (let m = 0; m < 60; m += slotMinutes) validMinutes.push(m);
-  if (!validMinutes.includes(startParts.minute)) {
+  const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
+  const dateKey = businessDateKey(startTime, timeZone);
+  const opening = atBusinessTime(dateKey, openingHour, 0, timeZone);
+  const closing = atBusinessTime(dateKey, closingHour, 0, timeZone);
+  const slotMs = slotMinutes * 60 * 1000;
+
+  if ((startTime.getTime() - opening.getTime()) % slotMs !== 0) {
     return `Los turnos deben comenzar en intervalos de ${slotMinutes} minutos.`;
   }
-
-  const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
-  const dateKey = businessDateKey(startTime, TIME_ZONE);
-  const opening = atBusinessTime(dateKey, openingHour, 0, TIME_ZONE);
-  const closing = atBusinessTime(dateKey, closingHour, 0, TIME_ZONE);
 
   if (startTime < opening || endTime > closing) {
     return `El turno debe estar dentro del horario de ${String(openingHour).padStart(2, "0")}:00 a ${String(closingHour).padStart(2, "0")}:00.`;

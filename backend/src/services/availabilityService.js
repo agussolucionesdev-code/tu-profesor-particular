@@ -1,9 +1,11 @@
 import AppSettings from "../models/AppSettings.js";
+import BlockedDate from "../models/BlockedDate.js";
 import {
   atBusinessTime,
   businessDateKey,
   normalizeTimeZone,
 } from "../utils/timeZone.js";
+import { validateSlot } from "../utils/bookingRules.js";
 
 export const SCHEDULE_DEFAULTS = Object.freeze({
   "schedule.openingHour": 7,
@@ -82,6 +84,38 @@ export const getScheduleConfiguration = async () => {
   return normalizeSchedule(settings);
 };
 
+export const validateConfiguredSlot = async (startTime, duration) => {
+  const schedule = await getScheduleConfiguration();
+  const slotError = validateSlot(
+    startTime,
+    duration,
+    schedule.openingHour,
+    schedule.closingHour,
+    schedule.advanceNoticeMinutes,
+    schedule.slotDurationMinutes,
+    schedule.timeZone,
+  );
+
+  if (slotError) return { error: slotError, schedule };
+
+  const dateKey = businessDateKey(startTime, schedule.timeZone);
+  if (!schedule.activeWeekdays.includes(weekdayForDateKey(dateKey))) {
+    return {
+      error: "Ese día no está disponible para reservas.",
+      schedule,
+    };
+  }
+
+  if (await BlockedDate.exists({ date: dateKey })) {
+    return {
+      error: "Ese día no está disponible para reservas.",
+      schedule,
+    };
+  }
+
+  return { error: null, schedule };
+};
+
 const overlaps = (start, end, booking) => {
   const bookingStart = new Date(booking.timeSlot);
   const bookingEnd = new Date(booking.endTime);
@@ -95,6 +129,7 @@ export const calculateAvailableSlots = ({
   blockedDates,
   schedule,
   durationHours,
+  now = new Date(),
 }) => {
   const durationMinutes = Math.round(Number(durationHours) * 60);
   if (
@@ -108,6 +143,8 @@ export const calculateAvailableSlots = ({
   const blockedDateSet = new Set(blockedDates);
   const durationMs = durationMinutes * 60 * 1000;
   const slotMs = schedule.slotDurationMinutes * 60 * 1000;
+  const minimumStartMs = new Date(now).getTime()
+    + schedule.advanceNoticeMinutes * 60 * 1000;
   const slots = [];
   const lastDateKey = businessDateKey(to, schedule.timeZone);
   let currentDateKey = businessDateKey(from, schedule.timeZone);
@@ -139,6 +176,7 @@ export const calculateAvailableSlots = ({
         const endTime = new Date(startMs + durationMs);
 
         if (timeSlot < from || endTime > to) continue;
+        if (startMs < minimumStartMs) continue;
         if (bookings.some((booking) => overlaps(timeSlot, endTime, booking))) continue;
 
         slots.push({ timeSlot, endTime, duration: durationMinutes / 60 });

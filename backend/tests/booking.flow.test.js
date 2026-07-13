@@ -238,6 +238,290 @@ describe("booking flows", () => {
     expect(availability.body.slots).toEqual([]);
   });
 
+  it("rejects creating a booking on Sunday by default", async () => {
+    const sunday = nextWeekdayAt(0, 10);
+
+    const response = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(sunday) }))
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+    expect(await Booking.countDocuments()).toBe(0);
+  });
+
+  it("rejects creating a booking on a weekday disabled in persisted settings", async () => {
+    const tuesday = nextWeekdayAt(2, 10);
+    await AppSettings.create({
+      key: "schedule.activeWeekdays",
+      value: [1, 3, 4, 5, 6],
+    });
+
+    const response = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tuesday) }))
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+    expect(await Booking.countDocuments()).toBe(0);
+  });
+
+  it("rejects management rescheduling to Sunday by default", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const sunday = nextWeekdayAt(0, 10);
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+
+    const response = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(sunday),
+        newDuration: 1,
+      })
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+    const persisted = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    expect(persisted.timeSlot).toEqual(parseDateTimeInput(formatForApi(source)));
+  });
+
+  it("rejects an admin update that moves a booking to Sunday by default", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const sunday = nextWeekdayAt(0, 10);
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    const response = await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ timeSlot: formatForApi(sunday) })
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+    const persisted = await Booking.findById(stored._id).lean();
+    expect(persisted.timeSlot).toEqual(parseDateTimeInput(formatForApi(source)));
+  });
+
+  it("rejects creating a booking on an administratively blocked date", async () => {
+    const monday = nextWeekdayAt(1, 10);
+    await BlockedDate.create({ date: dateKey(monday), reason: "Feriado" });
+
+    const response = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(monday) }))
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+  });
+
+  it("rejects creating a booking outside persisted schedule hours", async () => {
+    const monday = nextWeekdayAt(1, 10);
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 12 },
+      { key: "schedule.closingHour", value: 18 },
+    ]);
+
+    const response = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(monday) }))
+      .expect(400);
+
+    expect(response.body.message).toContain("12:00 a 18:00");
+  });
+
+  it("rejects mutation timestamps containing seconds", async () => {
+    const mondayAtTen = parseDateTimeInput(formatForApi(nextWeekdayAt(1, 10)));
+    mondayAtTen.setUTCSeconds(30);
+
+    const response = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: mondayAtTen.toISOString() }))
+      .expect(400);
+
+    expect(response.body.message).toBe(
+      "Los turnos deben comenzar en intervalos de 30 minutos.",
+    );
+    expect(await Booking.countDocuments()).toBe(0);
+  });
+
+  it("aligns mutations to 45-minute slots measured from persisted opening time", async () => {
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 8 },
+      { key: "schedule.closingHour", value: 18 },
+      { key: "schedule.slotDurationMinutes", value: 45 },
+    ]);
+    const mondayAtTen = nextWeekdayAt(1, 10);
+    const mondayAtTenFifteen = nextWeekdayAt(1, 10, 15);
+
+    const misaligned = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        timeSlot: formatForApi(mondayAtTen),
+        duration: 0.75,
+      }))
+      .expect(400);
+    const aligned = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Alumno alineado",
+        timeSlot: formatForApi(mondayAtTenFifteen),
+        duration: 0.75,
+      }))
+      .expect(201);
+
+    expect(misaligned.body.message).toBe(
+      "Los turnos deben comenzar en intervalos de 45 minutos.",
+    );
+    expect(aligned.body.success).toBe(true);
+  });
+
+  it("cannot bypass slot concurrency with a 30-second timestamp offset", async () => {
+    const exactStart = parseDateTimeInput(formatForApi(nextWeekdayAt(1, 10)));
+    const offsetStart = new Date(exactStart.getTime() + 30 * 1000);
+
+    const attempts = await Promise.all([
+      request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ timeSlot: exactStart.toISOString() })),
+      request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({
+          studentName: "Alumno con offset",
+          email: "offset@example.com",
+          timeSlot: offsetStart.toISOString(),
+        })),
+    ]);
+
+    expect(attempts.filter((response) => response.status === 201)).toHaveLength(1);
+    expect(attempts.filter((response) => response.status === 400)).toHaveLength(1);
+    expect(await Booking.countDocuments()).toBe(1);
+    expect(await BookingSlot.countDocuments()).toBe(2);
+  });
+
+  it("applies persisted advance notice equally to availability and mutation", async () => {
+    const monday = nextWeekdayAt(1, 10);
+    const endOfMonday = new Date(monday);
+    endOfMonday.setHours(18, 0, 0, 0);
+    await AppSettings.create({
+      key: "schedule.advanceNoticeMinutes",
+      value: 30 * 24 * 60,
+    });
+
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: formatForApi(monday),
+        to: formatForApi(endOfMonday),
+        duration: 1,
+      })
+      .expect(200);
+    const mutation = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(monday) }))
+      .expect(400);
+
+    expect(availability.body.slots).toEqual([]);
+    expect(mutation.body.message).toContain("43200 minutos de anticipación");
+  });
+
+  it("rejects management rescheduling to an administratively blocked date", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const target = nextWeekdayAt(2, 10);
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+    await BlockedDate.create({ date: dateKey(target), reason: "Feriado" });
+
+    const response = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(target),
+        newDuration: 1,
+      })
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+  });
+
+  it("rejects management rescheduling outside persisted schedule hours", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const target = nextWeekdayAt(2, 10);
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 12 },
+      { key: "schedule.closingHour", value: 18 },
+    ]);
+
+    const response = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(target),
+        newDuration: 1,
+      })
+      .expect(400);
+
+    expect(response.body.message).toContain("12:00 a 18:00");
+  });
+
+  it("rejects an admin update to an administratively blocked date", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const target = nextWeekdayAt(2, 10);
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await BlockedDate.create({ date: dateKey(target), reason: "Feriado" });
+
+    const response = await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ timeSlot: formatForApi(target) })
+      .expect(400);
+
+    expect(response.body.message).toBe("Ese día no está disponible para reservas.");
+  });
+
+  it("rejects an admin update outside persisted schedule hours", async () => {
+    const source = nextWeekdayAt(1, 10);
+    const target = nextWeekdayAt(2, 10);
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(source) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 12 },
+      { key: "schedule.closingHour", value: 18 },
+    ]);
+
+    const response = await request(app)
+      .put(`/api/bookings/${stored._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ timeSlot: formatForApi(target) })
+      .expect(400);
+
+    expect(response.body.message).toContain("12:00 a 18:00");
+  });
+
   it("does not generate slots for an administratively blocked date", async () => {
     const monday = nextWeekdayAt(1);
     const endOfMonday = new Date(monday);
@@ -379,7 +663,7 @@ describe("booking flows", () => {
     expect(availability.body.data[0]).not.toHaveProperty("phone");
   });
 
-  it("only lets clients find one turn by its exact code and returns a minimal DTO", async () => {
+  it("never discloses booking data from the public short-code endpoint", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload())
@@ -389,29 +673,15 @@ describe("booking flows", () => {
 
     const byCode = await request(app)
       .get(`/api/bookings/${bookingCode}`)
-      .expect(200);
-    expect(byCode.body.data[0].bookingCode).toBe(bookingCode);
-    expect(Object.keys(byCode.body.data[0]).sort()).toEqual(
-      [
-        "bookingCode",
-        "duration",
-        "endTime",
-        "status",
-        "studentName",
-        "subject",
-        "timeSlot",
-      ].sort(),
-    );
+      .expect(410);
+    const missingCode = await request(app)
+      .get("/api/bookings/ABC234")
+      .expect(410);
 
-    const byEmail = await request(app)
-      .get("/api/bookings/familia@example.com")
-      .expect(400);
-    expect(byEmail.body).not.toHaveProperty("data");
-
-    const byPhone = await request(app)
-      .get("/api/bookings/1122223333")
-      .expect(400);
-    expect(byPhone.body).not.toHaveProperty("data");
+    expect(byCode.body).toEqual(missingCode.body);
+    expect(byCode.body).not.toHaveProperty("data");
+    expect(JSON.stringify(byCode.body)).not.toContain(bookingCode);
+    expect(JSON.stringify(byCode.body)).not.toContain("familia@example.com");
   });
 
   it("allows loopback dev origins and blocks unknown origins with 403", async () => {
@@ -675,7 +945,7 @@ describe("booking flows", () => {
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
     expect(await BookingSlot.countDocuments()).toBe(0);
-  });
+  }, 15000);
 
   it("releases claimed slots and the mutation lock when an admin update fails", async () => {
     const token = await createAdminAndLogin();
@@ -688,9 +958,13 @@ describe("booking flows", () => {
       .sort({ slotStart: 1 })
       .lean();
     const persistenceError = new Error("booking update failed");
+    const originalFindOneAndUpdate = Booking.findOneAndUpdate;
     const updateSpy = vi
-      .spyOn(Booking, "findByIdAndUpdate")
-      .mockRejectedValueOnce(persistenceError);
+      .spyOn(Booking, "findOneAndUpdate")
+      .mockImplementation(function failOwnedBookingUpdate(filter, update, options) {
+        if (update?.$set?.timeSlot) return Promise.reject(persistenceError);
+        return originalFindOneAndUpdate.call(this, filter, update, options);
+      });
 
     try {
       await request(app)
@@ -712,6 +986,33 @@ describe("booking flows", () => {
       expect(afterBooking.slotMutationLockExpiresAt).toBeUndefined();
     } finally {
       updateSpy.mockRestore();
+    }
+  });
+
+  it("releases the mutation lock when an admin delete fails", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const deleteSpy = vi
+      .spyOn(Booking, "findOneAndDelete")
+      .mockRejectedValueOnce(new Error("booking delete failed"));
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+
+      const afterBooking = await Booking.findById(stored._id)
+        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .lean();
+      expect(afterBooking).not.toHaveProperty("slotMutationLock");
+      expect(afterBooking.slotMutationLockExpiresAt).toBeUndefined();
+    } finally {
+      deleteSpy.mockRestore();
     }
   });
 
@@ -1151,4 +1452,341 @@ describe("booking flows", () => {
     const persisted = await Booking.find({}).lean();
     expect(persisted.every((booking) => booking.status !== "Cancelado")).toBe(true);
   });
+
+  it("retries transient slot cleanup failures for every booking lifecycle mutation", async () => {
+    const token = await createAdminAndLogin();
+    const failNextCleanup = () =>
+      vi.spyOn(BookingSlot, "deleteMany").mockRejectedValueOnce(
+        new Error("transient slot cleanup failure"),
+      );
+
+    const cancellable = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(8)) }))
+      .expect(201);
+    let cleanupSpy = failNextCleanup();
+    await request(app)
+      .post("/api/bookings/cancel")
+      .set("X-Booking-Manage-Token", cancellable.body.data.managementToken)
+      .send({ bookingCode: cancellable.body.data.bookingCode })
+      .expect(200);
+    cleanupSpy.mockRestore();
+    expect(await BookingSlot.countDocuments()).toBe(0);
+
+    const reschedulable = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    cleanupSpy = failNextCleanup();
+    await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", reschedulable.body.data.managementToken)
+      .send({
+        bookingCode: reschedulable.body.data.bookingCode,
+        newTimeSlot: formatForApi(tomorrowAt(12)),
+        newDuration: 1,
+      })
+      .expect(200);
+    cleanupSpy.mockRestore();
+    const rescheduledBooking = await Booking.findOne({
+      bookingCode: reschedulable.body.data.bookingCode,
+    }).lean();
+    expect(await BookingSlot.countDocuments({ booking: rescheduledBooking._id })).toBe(2);
+
+    const adminEditable = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(14)) }))
+      .expect(201);
+    const adminEditableBooking = await Booking.findOne({
+      bookingCode: adminEditable.body.data.bookingCode,
+    }).lean();
+    cleanupSpy = failNextCleanup();
+    await request(app)
+      .put(`/api/bookings/${adminEditableBooking._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ timeSlot: formatForApi(tomorrowAt(16)) })
+      .expect(200);
+    cleanupSpy.mockRestore();
+    expect(await BookingSlot.countDocuments({ booking: adminEditableBooking._id })).toBe(2);
+
+    const deletable = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(18)) }))
+      .expect(201);
+    const deletableBooking = await Booking.findOne({
+      bookingCode: deletable.body.data.bookingCode,
+    }).lean();
+    cleanupSpy = failNextCleanup();
+    await request(app)
+      .delete(`/api/bookings/${deletableBooking._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    cleanupSpy.mockRestore();
+    expect(await BookingSlot.countDocuments({ booking: deletableBooking._id })).toBe(0);
+  }, 20000);
+
+  it("self-heals a phantom slot after cleanup retries are exhausted", async () => {
+    const targetTime = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: targetTime }))
+      .expect(201);
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+    const cleanupSpy = vi
+      .spyOn(BookingSlot, "deleteMany")
+      .mockRejectedValue(new Error("persistent slot cleanup failure"));
+
+    try {
+      await request(app)
+        .post("/api/bookings/cancel")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .send({ bookingCode: created.body.data.bookingCode })
+        .expect(200);
+    } finally {
+      cleanupSpy.mockRestore();
+    }
+
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+
+    const replacement = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ studentName: "Alumno reemplazo", timeSlot: targetTime }))
+      .expect(201);
+    const replacementBooking = await Booking.findOne({
+      bookingCode: replacement.body.data.bookingCode,
+    }).lean();
+
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+    expect(await BookingSlot.countDocuments({ booking: replacementBooking._id })).toBe(2);
+  });
+
+  it("never reconciles an in-flight slot owned by an active mutation lock", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const owner = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const inFlightSlotStart = tomorrowAt(12);
+    await Booking.updateOne(
+      { _id: owner._id },
+      {
+        $set: {
+          slotMutationLock: "active-test-lock",
+          slotMutationLockExpiresAt: new Date(Date.now() + 30_000),
+        },
+      },
+    );
+    const inFlightSlot = await BookingSlot.create({
+      booking: owner._id,
+      slotStart: inFlightSlotStart,
+      slotDurationMinutes: 30,
+    });
+
+    await expect(
+      claimBookingSlots({
+        bookingId: new mongoose.Types.ObjectId(),
+        slotStarts: [inFlightSlotStart],
+        slotDurationMinutes: 30,
+      }),
+    ).rejects.toBeInstanceOf(BookingSlotConflictError);
+
+    expect(await BookingSlot.exists({ _id: inFlightSlot._id })).not.toBeNull();
+  });
+
+  it("reconciles an orphan left by a hard delete once its claim grace elapsed", async () => {
+    const token = await createAdminAndLogin();
+    const targetTime = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: targetTime }))
+      .expect(201);
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+    await BookingSlot.collection.updateMany(
+      { booking: stored._id },
+      { $set: { createdAt: new Date(Date.now() - 2 * 60 * 1000) } },
+    );
+    const cleanupSpy = vi
+      .spyOn(BookingSlot, "deleteMany")
+      .mockRejectedValue(new Error("persistent delete cleanup failure"));
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+    } finally {
+      cleanupSpy.mockRestore();
+    }
+
+    expect(await Booking.findById(stored._id)).toBeNull();
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ studentName: "Alumno tras borrado", timeSlot: targetTime }))
+      .expect(201);
+
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(0);
+  }, 15000);
+
+  it("serializes client cancellation against an in-flight reschedule", async () => {
+    const sourceTime = formatForApi(tomorrowAt(10));
+    const targetTime = tomorrowAt(12);
+    const targetInstant = parseDateTimeInput(formatForApi(targetTime));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: sourceTime }))
+      .expect(201);
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+
+    const originalFindOneAndUpdate = Booking.findOneAndUpdate;
+    let resumeReschedule;
+    let signalReschedulePaused;
+    let intercepted = false;
+    const reschedulePaused = new Promise((resolve) => {
+      signalReschedulePaused = resolve;
+    });
+    const rescheduleGate = new Promise((resolve) => {
+      resumeReschedule = resolve;
+    });
+    const updateSpy = vi
+      .spyOn(Booking, "findOneAndUpdate")
+      .mockImplementation(function updateWithPausedReschedule(filter, update, options) {
+        const isTargetReschedule =
+          !intercepted &&
+          String(filter?._id) === String(stored._id) &&
+          new Date(update?.$set?.timeSlot).getTime() === targetInstant.getTime() &&
+          update?.$set?.status === "Confirmado";
+        if (!isTargetReschedule) {
+          return originalFindOneAndUpdate.call(this, filter, update, options);
+        }
+
+        intercepted = true;
+        signalReschedulePaused();
+        return rescheduleGate.then(() =>
+          originalFindOneAndUpdate.call(this, filter, update, options));
+      });
+
+    const reschedulePromise = request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({
+        bookingCode: created.body.data.bookingCode,
+        newTimeSlot: formatForApi(targetTime),
+        newDuration: 1,
+      })
+      .then((response) => response);
+
+    let cancellation;
+    let replacement;
+    let rescheduled;
+    try {
+      await reschedulePaused;
+      cancellation = await request(app)
+        .post("/api/bookings/cancel")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .send({ bookingCode: created.body.data.bookingCode });
+      replacement = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({
+          studentName: "Alumno concurrente",
+          email: "concurrente@example.com",
+          timeSlot: formatForApi(targetTime),
+        }));
+    } finally {
+      resumeReschedule();
+      rescheduled = await reschedulePromise;
+      updateSpy.mockRestore();
+    }
+
+    expect(cancellation.status).toBe(409);
+    expect(replacement.status).toBe(409);
+    expect(rescheduled.status).toBe(200);
+    expect(await Booking.countDocuments({
+      status: { $nin: ["Cancelado", "Finalizado"] },
+      timeSlot: targetInstant,
+    })).toBe(1);
+  }, 15000);
+
+  it("serializes attendance confirmation against cancellation and replacement", async () => {
+    const targetTime = formatForApi(tomorrowAt(10));
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: targetTime }))
+      .expect(201);
+    const stored = await Booking.findOne({
+      bookingCode: created.body.data.bookingCode,
+    }).lean();
+    await Booking.updateOne({ _id: stored._id }, { $set: { status: "Pendiente" } });
+
+    const originalFindOneAndUpdate = Booking.findOneAndUpdate;
+    let resumeConfirmation;
+    let signalConfirmationPaused;
+    let intercepted = false;
+    const confirmationPaused = new Promise((resolve) => {
+      signalConfirmationPaused = resolve;
+    });
+    const confirmationGate = new Promise((resolve) => {
+      resumeConfirmation = resolve;
+    });
+    const updateSpy = vi
+      .spyOn(Booking, "findOneAndUpdate")
+      .mockImplementation(function updateWithPausedConfirmation(filter, update, options) {
+        const isConfirmation =
+          !intercepted &&
+          String(filter?._id) === String(stored._id) &&
+          update?.$set?.status === "Confirmado" &&
+          update?.$set?.timeSlot === undefined;
+        if (!isConfirmation) {
+          return originalFindOneAndUpdate.call(this, filter, update, options);
+        }
+
+        intercepted = true;
+        signalConfirmationPaused();
+        return confirmationGate.then(() =>
+          originalFindOneAndUpdate.call(this, filter, update, options));
+      });
+
+    const confirmationPromise = request(app)
+      .post("/api/bookings/confirm-attendance")
+      .set("X-Booking-Manage-Token", created.body.data.managementToken)
+      .send({ bookingCode: created.body.data.bookingCode })
+      .then((response) => response);
+
+    let cancellation;
+    let replacement;
+    let confirmation;
+    try {
+      await confirmationPaused;
+      cancellation = await request(app)
+        .post("/api/bookings/cancel")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .send({ bookingCode: created.body.data.bookingCode });
+      replacement = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({
+          studentName: "Alumno tras confirmacion concurrente",
+          email: "confirmacion.concurrente@example.com",
+          timeSlot: targetTime,
+        }));
+    } finally {
+      resumeConfirmation();
+      confirmation = await confirmationPromise;
+      updateSpy.mockRestore();
+    }
+
+    expect(cancellation.status).toBe(409);
+    expect(replacement.status).toBe(400);
+    expect(confirmation.status).toBe(200);
+    expect(await Booking.countDocuments({
+      status: { $nin: ["Cancelado", "Finalizado"] },
+      timeSlot: parseDateTimeInput(targetTime),
+    })).toBe(1);
+  }, 15000);
 });
