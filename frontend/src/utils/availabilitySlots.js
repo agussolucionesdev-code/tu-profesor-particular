@@ -1,5 +1,24 @@
 const DEFAULT_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
+export const availabilityRequestParams = (duration) => {
+  const numericDuration = Number(duration);
+  return Number.isFinite(numericDuration) && numericDuration >= 0.5
+    ? { duration: numericDuration }
+    : undefined;
+};
+
+export const isSelectedTimeAvailable = ({ selectedTime, backendSlots }) => {
+  if (!Array.isArray(backendSlots) || !selectedTime || selectedTime.getHours() === 0) {
+    return true;
+  }
+
+  const selectedTimeValue = selectedTime.getTime();
+  return backendSlots.some((slot) => {
+    const slotTime = new Date(slot.timeSlot);
+    return !Number.isNaN(slotTime.getTime()) && slotTime.getTime() === selectedTimeValue;
+  });
+};
+
 export const getBusinessDateKey = (date, timeZone = DEFAULT_TIME_ZONE) => {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,

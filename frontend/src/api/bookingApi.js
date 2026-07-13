@@ -1,11 +1,20 @@
 import apiClient from "./apiClient";
 import { createIdempotencyKey, withIdempotencyKey } from "../utils/idempotencyKey";
 
+const managementConfig = (managementToken) => ({
+  headers: { "X-Booking-Manage-Token": managementToken },
+});
+
 /**
  * Public booking endpoints
  */
-export const fetchAvailability = (params) =>
-  apiClient.get("/api/bookings/availability", { params });
+export const fetchAvailability = (params, managementToken) =>
+  apiClient.get(
+    "/api/bookings/availability",
+    managementToken
+      ? { params, ...managementConfig(managementToken) }
+      : { params },
+  );
 
 export const createBooking = (data, idempotencyKey = createIdempotencyKey()) =>
   apiClient.post("/api/bookings/reserve", data, withIdempotencyKey(idempotencyKey));
@@ -15,10 +24,6 @@ export const lookupBookings = (identifier) =>
 
 export const requestManagementLink = (data) =>
   apiClient.post("/api/bookings/manage/request-link", data);
-
-const managementConfig = (managementToken) => ({
-  headers: { "X-Booking-Manage-Token": managementToken },
-});
 
 // A bearer link token is sent exclusively in this request header. Never put
 // it in a URL, Axios defaults, browser storage, or telemetry.

@@ -14,7 +14,11 @@ import {
 import { primeVoicePlayback, speakAlert } from "../../utils/neuroToast";
 import { rescheduleBooking, fetchAvailability } from "../../api/bookingApi";
 import { createIdempotencyKey } from "../../utils/idempotencyKey";
-import { selectSlotsForDate } from "../../utils/availabilitySlots";
+import {
+  availabilityRequestParams,
+  isSelectedTimeAvailable,
+  selectSlotsForDate,
+} from "../../utils/availabilitySlots";
 import "./RescheduleModal.css";
 
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
@@ -61,16 +65,33 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
 
   // Load availability
   useEffect(() => {
-    fetchAvailability()
+    let isCurrentRequest = true;
+    const requestParams = availabilityRequestParams(newDuration);
+    const durationChanged = Number(editingBooking.duration) !== Number(newDuration);
+
+    fetchAvailability(requestParams, managementToken)
       .then((res) => {
+        if (!isCurrentRequest) return;
         const active = res.data.data.filter(
           (b) => b.status !== "Cancelado" && b._id !== editingBooking._id,
         );
         setExistingBookingsForBlock(active);
-        setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
+        const responseSlots = Array.isArray(res.data.slots) ? res.data.slots : undefined;
+        setBackendSlots(responseSlots);
         setAvailabilityTimeZone(res.data.schedule?.timeZone);
+        if (durationChanged && Array.isArray(responseSlots)) {
+          setSelectedTime((currentTime) =>
+            isSelectedTimeAvailable({
+              selectedTime: currentTime,
+              backendSlots: responseSlots,
+            })
+              ? currentTime
+              : null,
+          );
+        }
       })
       .catch((error) => {
+        if (!isCurrentRequest) return;
         console.error(error);
         showToast(getBookingApiMessage(error), "warning", {
           title: "Disponibilidad pendiente",
@@ -78,7 +99,10 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
           voiceOptions: PORTAL_VOICE_OPTIONS,
         });
       });
-  }, [editingBooking._id, showToast]);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [editingBooking._id, editingBooking.duration, managementToken, newDuration, showToast]);
 
   // Derive full datetime from day + selected time slot
   const newDate = useMemo(() => {
@@ -140,7 +164,12 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
         backendSlots,
         fallbackSlots: legacySlots,
         timeZone: availabilityTimeZone,
-      }).map((slot) => ({ time: slot.timeObj, disabled: slot.isOccupied })),
+      }).map((slot) => ({
+        // Legacy fallback slots predate the backend contract and already use
+        // `time`/`disabled`; backend slots use `timeObj`/`isOccupied`.
+        time: slot.timeObj ?? slot.time,
+        disabled: slot.isOccupied ?? slot.disabled,
+      })),
     [selectedDay, backendSlots, legacySlots, availabilityTimeZone],
   );
 

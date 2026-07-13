@@ -11,8 +11,10 @@ import {
 import { fetchAvailability } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
 import {
+  availabilityRequestParams,
   getAvailableBackendDateKeys,
   getBusinessDateKey,
+  isSelectedTimeAvailable,
   selectSlotsForDate,
 } from "../utils/availabilitySlots";
 
@@ -40,16 +42,22 @@ const SLOT_SECTIONS_DEFINITION = [
   },
 ];
 
-export const useBookingAvailability = (selectedDate, showToast) => {
+export const useBookingAvailability = (selectedDate, selectedDuration, showToast) => {
   const [existingBookings, setExistingBookings] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
   const [backendSlots, setBackendSlots] = useState(undefined);
   const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
+  const [resolvedAvailabilityDuration, setResolvedAvailabilityDuration] = useState(null);
 
   useEffect(() => {
+    let isCurrentRequest = true;
+    const requestParams = availabilityRequestParams(selectedDuration);
+    const requestedDuration = requestParams?.duration ?? null;
+
     const loadBookings = async () => {
       try {
-        const res = await fetchAvailability();
+        const res = await fetchAvailability(requestParams);
+        if (!isCurrentRequest) return;
         setExistingBookings(
           (Array.isArray(res.data.data) ? res.data.data : []).filter(
             (booking) => booking.status !== "Cancelado",
@@ -58,13 +66,18 @@ export const useBookingAvailability = (selectedDate, showToast) => {
         setBlockedDates(Array.isArray(res.data.blockedDates) ? res.data.blockedDates : []);
         setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
         setAvailabilityTimeZone(res.data.schedule?.timeZone);
+        setResolvedAvailabilityDuration(requestedDuration);
       } catch (error) {
+        if (!isCurrentRequest) return;
         console.error("Error fetching bookings", error);
         showToast?.(getBookingApiMessage(error), "warning");
       }
     };
     loadBookings();
-  }, [showToast]);
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [selectedDuration, showToast]);
 
   const legacyAvailableSlots = useMemo(() => {
     if (!selectedDate) return [];
@@ -282,5 +295,11 @@ export const useBookingAvailability = (selectedDate, showToast) => {
     availableSlotCount,
     nextFreeSlot,
     selectedDayOnly,
+    isSelectedTimeAvailable: isSelectedTimeAvailable({
+      selectedTime: selectedDate,
+      backendSlots,
+    }),
+    availabilityMatchesSelectedDuration:
+      resolvedAvailabilityDuration === (availabilityRequestParams(selectedDuration)?.duration ?? null),
   };
 };

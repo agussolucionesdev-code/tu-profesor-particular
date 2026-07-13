@@ -208,7 +208,9 @@ const BookingForm = () => {
     availableSlotCount,
     nextFreeSlot,
     selectedDayOnly,
-  } = useBookingAvailability(formData.timeSlot, showToast);
+    isSelectedTimeAvailable,
+    availabilityMatchesSelectedDuration,
+  } = useBookingAvailability(formData.timeSlot, formData.duration, showToast);
 
   const [sliderHeight, setSliderHeight] = useState(0);
   const [isDesktopCalendarViewport, setIsDesktopCalendarViewport] = useState(
@@ -736,6 +738,25 @@ const BookingForm = () => {
       setFormData((prev) => ({ ...prev, duration: maxAllowedDuration }));
     }
   }, [maxAllowedDuration, formData.timeSlot, formData.duration, setFormData]);
+
+  useEffect(() => {
+    if (
+      !isTimeSelected ||
+      !availabilityMatchesSelectedDuration ||
+      isSelectedTimeAvailable
+    ) {
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      timeSlot: prev.timeSlot ? startOfDay(prev.timeSlot) : null,
+    }));
+  }, [
+    availabilityMatchesSelectedDuration,
+    isSelectedTimeAvailable,
+    isTimeSelected,
+    setFormData,
+  ]);
 
   const handleDurationSelect = (duration) => {
     if (duration > maxAllowedDuration) {

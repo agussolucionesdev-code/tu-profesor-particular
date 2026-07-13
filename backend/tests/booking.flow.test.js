@@ -281,6 +281,59 @@ describe("booking flows", () => {
       .toEqual([0, 30, 0]);
   });
 
+  it("excludes only the valid management token's booking from availability", async () => {
+    const monday = nextWeekdayAt(1, 10);
+    const endOfMonday = new Date(monday);
+    endOfMonday.setHours(12, 0, 0, 0);
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 10 },
+      { key: "schedule.closingHour", value: 12 },
+      { key: "schedule.slotDurationMinutes", value: 30 },
+    ]);
+
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(monday), duration: 1 }))
+      .expect(201);
+    const { managementToken } = created.body.data;
+    const query = {
+      from: formatForApi(monday),
+      to: formatForApi(endOfMonday),
+      duration: 1,
+      // Public callers must never be able to select an arbitrary booking to
+      // hide. This legacy-looking parameter is intentionally ignored.
+      excludeBookingId: "000000000000000000000000",
+    };
+
+    const publicAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .query(query)
+      .expect(200);
+    const invalidAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .set("X-Booking-Manage-Token", "a".repeat(43))
+      .query(query)
+      .expect(200);
+    const managedAvailability = await request(app)
+      .get("/api/bookings/availability")
+      .set("X-Booking-Manage-Token", managementToken)
+      .query(query)
+      .expect(200);
+
+    expect(publicAvailability.body.data).toHaveLength(1);
+    expect(invalidAvailability.body.data).toHaveLength(1);
+    expect(managedAvailability.body.data).toEqual([]);
+    expect(publicAvailability.body.slots.map((slot) => businessClock(new Date(slot.timeSlot))))
+      .toEqual([{ hour: 11, minute: 0 }]);
+    expect(invalidAvailability.body.slots).toEqual(publicAvailability.body.slots);
+    expect(managedAvailability.body.slots.map((slot) => businessClock(new Date(slot.timeSlot))))
+      .toEqual([
+        { hour: 10, minute: 0 },
+        { hour: 10, minute: 30 },
+        { hour: 11, minute: 0 },
+      ]);
+  });
+
   it("creates a booking and exposes only calendar blocks publicly", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")

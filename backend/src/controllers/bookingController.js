@@ -517,10 +517,20 @@ export const getAvailability = async (req, res, next) => {
       );
     }
 
+    // Availability stays public. A valid bearer may only remove the booking
+    // bound to that bearer, which lets a family keep its current time while
+    // considering a different duration. Query parameters never choose what
+    // is excluded, so an unauthenticated caller cannot hide another booking.
+    const managedBookingForAvailability = await findManagedBooking(req);
+    const exclusionFilter = managedBookingForAvailability
+      ? { _id: { $ne: managedBookingForAvailability._id } }
+      : {};
+
     const [bookings, blockedRecords] = await Promise.all([
       Booking.find(
         trustedFilter({
           ...activeStatusFilter,
+          ...exclusionFilter,
           timeSlot: { $lte: range.to },
           endTime: { $gte: range.from },
         }),
