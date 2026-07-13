@@ -57,7 +57,7 @@ const ClientPortal = () => {
       <main className="portal-container">
         <header className="portal-header">
           <ThemeLogo
-            variant="full"
+            variant="monogram"
             imgClassName="portal-header-logo"
             alt="Tu Profesor Particular"
           />

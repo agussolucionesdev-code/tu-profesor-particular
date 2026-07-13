@@ -9,6 +9,8 @@ const MONOGRAM = {
 };
 
 const MAIN_LOGO = {
+  // The supplied pack has no checkerboard-free dark main lockup. Keep this
+  // official white-background lockup stable across themes instead of faking one.
   src: mainLogoWithTagline,
   width: 1536,
   height: 1024,

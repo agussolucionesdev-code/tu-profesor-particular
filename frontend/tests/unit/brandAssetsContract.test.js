@@ -7,6 +7,14 @@ import sharp from "sharp";
 
 const sourceUrl = new URL("../../src/components/ui/ThemeLogo.jsx", import.meta.url);
 const source = readFileSync(sourceUrl, "utf8");
+const portalSource = readFileSync(
+  new URL("../../src/components/ClientPortal.jsx", import.meta.url),
+  "utf8",
+);
+const adminLoginSource = readFileSync(
+  new URL("../../src/components/admin/AdminLoginScreen.jsx", import.meta.url),
+  "utf8",
+);
 
 const officialAssets = [
   {
@@ -59,4 +67,13 @@ test("ThemeLogo keeps one rendered image and responds to the explicit app theme"
   assert.equal(imageTags.length, 1);
   assert.match(source, /MutationObserver/);
   assert.match(source, /dataset\.theme/);
+});
+
+test("compact square surfaces use the monogram instead of shrinking the main lockup", () => {
+  assert.match(portalSource, /<ThemeLogo\s+variant="monogram"/);
+  assert.match(adminLoginSource, /<ThemeLogo\s+variant="monogram"/);
+});
+
+test("full and tagline variants keep the stable supplied lockup in both themes", () => {
+  assert.match(source, /variant === "monogram" \? MONOGRAM\[theme\] : MAIN_LOGO/);
 });
