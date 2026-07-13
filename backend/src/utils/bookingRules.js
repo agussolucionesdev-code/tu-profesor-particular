@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  atBusinessTime,
+  businessDateKey,
+  businessDayRange,
+  DEFAULT_TIME_ZONE,
+  getBusinessTimeParts,
+  parseBusinessDateTime,
+} from "./timeZone.js";
 
 export const BOOKING_STATUS = [
   "Confirmado",
@@ -38,8 +46,7 @@ const RESPONSIBLE_RELATIONSHIP_LABELS = new Map([
   ["primo", "Primo mayor de edad"],
 ]);
 
-export const TIME_ZONE =
-  process.env.APP_TIME_ZONE || "America/Argentina/Buenos_Aires";
+export const TIME_ZONE = DEFAULT_TIME_ZONE;
 
 export const parseDateTimeInput = (value) => {
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
@@ -52,15 +59,7 @@ export const parseDateTimeInput = (value) => {
 
   if (match) {
     const [, dd, mm, yyyy, hh, min] = match.map(Number);
-    const date = new Date(yyyy, mm - 1, dd, hh, min, 0, 0);
-    const isValid =
-      date.getFullYear() === yyyy &&
-      date.getMonth() === mm - 1 &&
-      date.getDate() === dd &&
-      date.getHours() === hh &&
-      date.getMinutes() === min;
-
-    return isValid ? date : null;
+    return parseBusinessDateTime(dd, mm, yyyy, hh, min, TIME_ZONE);
   }
 
   const parsed = new Date(trimmed);
@@ -175,6 +174,7 @@ export const updateBookingSchema = z
 export const availabilityQuerySchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
+  duration: z.coerce.number().min(0.5).max(10).optional(),
 });
 
 export const validateContact = ({ email, phone }) => {
@@ -210,17 +210,17 @@ export const validateSlot = (startTime, duration, openingHour = 7, closingHour =
     return `La duración debe respetar intervalos de ${slotMinutes} minutos.`;
   }
 
+  const startParts = getBusinessTimeParts(startTime, TIME_ZONE);
   const validMinutes = [];
   for (let m = 0; m < 60; m += slotMinutes) validMinutes.push(m);
-  if (!validMinutes.includes(startTime.getMinutes())) {
+  if (!validMinutes.includes(startParts.minute)) {
     return `Los turnos deben comenzar en intervalos de ${slotMinutes} minutos.`;
   }
 
   const endTime = new Date(startTime.getTime() + duration * 60 * 60 * 1000);
-  const opening = new Date(startTime);
-  opening.setHours(openingHour, 0, 0, 0);
-  const closing = new Date(startTime);
-  closing.setHours(closingHour, 0, 0, 0);
+  const dateKey = businessDateKey(startTime, TIME_ZONE);
+  const opening = atBusinessTime(dateKey, openingHour, 0, TIME_ZONE);
+  const closing = atBusinessTime(dateKey, closingHour, 0, TIME_ZONE);
 
   if (startTime < opening || endTime > closing) {
     return `El turno debe estar dentro del horario de ${String(openingHour).padStart(2, "0")}:00 a ${String(closingHour).padStart(2, "0")}:00.`;
@@ -235,10 +235,5 @@ export const validateSlot = (startTime, duration, openingHour = 7, closingHour =
 };
 
 export const getDefaultAvailabilityRange = () => {
-  const from = new Date();
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(to.getDate() + 90);
-  to.setHours(23, 59, 59, 999);
-  return { from, to };
+  return businessDayRange(new Date(), 90, TIME_ZONE);
 };

@@ -1,11 +1,10 @@
 import AppSettings from "../models/AppSettings.js";
+import {
+  SCHEDULE_DEFAULTS,
+  SCHEDULE_SETTING_KEYS,
+} from "../services/availabilityService.js";
 
-const SCHEDULE_KEYS = [
-  "schedule.openingHour",
-  "schedule.closingHour",
-  "schedule.advanceNoticeMinutes",
-  "schedule.slotDurationMinutes",
-];
+const SCHEDULE_KEYS = SCHEDULE_SETTING_KEYS;
 
 const PUBLIC_KEYS = [...SCHEDULE_KEYS, "booking.pricePerHour", "booking.subjectsByLevel"];
 
@@ -19,10 +18,7 @@ const ADMIN_ONLY_KEYS = [
 const ALLOWED_KEYS = [...PUBLIC_KEYS, ...ADMIN_ONLY_KEYS];
 
 const DEFAULTS = {
-  "schedule.openingHour": 7,
-  "schedule.closingHour": 22,
-  "schedule.advanceNoticeMinutes": 60,
-  "schedule.slotDurationMinutes": 30,
+  ...SCHEDULE_DEFAULTS,
   "booking.pricePerHour": 0,
   "booking.requireManualConfirmation": false,
   "booking.subjectsByLevel": null,

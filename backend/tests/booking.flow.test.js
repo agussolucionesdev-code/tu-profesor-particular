@@ -4,6 +4,10 @@ import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
+import {
+  getDefaultAvailabilityRange,
+  parseDateTimeInput,
+} from "../src/utils/bookingRules.js";
 
 const sendManagementLinkEmailMock = vi.hoisted(() => vi.fn());
 vi.mock("../src/config/mailer.js", async () => {
@@ -18,6 +22,8 @@ let app;
 let mongoServer;
 let Booking;
 let User;
+let AppSettings;
+let BlockedDate;
 
 const getMemoryLaunchTimeout = () =>
   Number(process.env.MONGO_MEMORY_LAUNCH_TIMEOUT_MS || 90000);
@@ -36,6 +42,53 @@ const tomorrowAt = (hour, minute = 0) => {
   date.setDate(date.getDate() + 1);
   date.setHours(hour, minute, 0, 0);
   return date;
+};
+
+const nextWeekdayAt = (weekday, hour = 0, minute = 0) => {
+  const date = new Date();
+  const daysUntil = (weekday - date.getDay() + 7) % 7 || 7;
+  date.setDate(date.getDate() + daysUntil);
+  date.setHours(hour, minute, 0, 0);
+  return date;
+};
+
+const dateKey = (date) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, "0"),
+  String(date.getDate()).padStart(2, "0"),
+].join("-");
+
+const businessClock = (date) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+};
+
+const businessDateAndClock = (date) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
 };
 
 const validBookingPayload = (overrides = {}) => ({
@@ -84,12 +137,16 @@ beforeAll(async () => {
   app = (await import("../src/app.js")).default;
   Booking = (await import("../src/models/Booking.js")).default;
   User = (await import("../src/models/User.js")).default;
+  AppSettings = (await import("../src/models/AppSettings.js")).default;
+  BlockedDate = (await import("../src/models/BlockedDate.js")).default;
 }, Math.max(30000, getMemoryLaunchTimeout() + 15000));
 
 beforeEach(async () => {
   sendManagementLinkEmailMock.mockReset().mockResolvedValue(true);
   await Booking.deleteMany({});
   await User.deleteMany({});
+  await AppSettings.deleteMany({});
+  await BlockedDate.deleteMany({});
 });
 
 afterAll(async () => {
@@ -98,6 +155,81 @@ afterAll(async () => {
 });
 
 describe("booking flows", () => {
+  it("interprets public date labels and default ranges in Buenos Aires time", () => {
+    const parsed = parseDateTimeInput("19/07/2026 00:00");
+    expect(businessDateAndClock(parsed)).toMatchObject({
+      year: 2026,
+      month: 7,
+      day: 19,
+      hour: 0,
+      minute: 0,
+    });
+
+    const defaults = getDefaultAvailabilityRange();
+    expect(businessDateAndClock(defaults.from)).toMatchObject({ hour: 0, minute: 0 });
+    expect(businessDateAndClock(defaults.to)).toMatchObject({ hour: 23, minute: 59 });
+  });
+
+  it("does not generate public availability slots on Sundays", async () => {
+    const sunday = nextWeekdayAt(0);
+    const endOfSunday = new Date(sunday);
+    endOfSunday.setHours(23, 59, 0, 0);
+
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: formatForApi(sunday),
+        to: formatForApi(endOfSunday),
+      })
+      .expect(200);
+
+    expect(availability.body.schedule.timeZone).toBe("America/Argentina/Buenos_Aires");
+    expect(availability.body.slots).toEqual([]);
+  });
+
+  it("does not generate slots for an administratively blocked date", async () => {
+    const monday = nextWeekdayAt(1);
+    const endOfMonday = new Date(monday);
+    endOfMonday.setHours(23, 59, 0, 0);
+    await BlockedDate.create({ date: dateKey(monday), reason: "Feriado" });
+
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: formatForApi(monday),
+        to: formatForApi(endOfMonday),
+      })
+      .expect(200);
+
+    expect(availability.body.slots).toEqual([]);
+  });
+
+  it("uses persisted closing time and requested duration to calculate slots", async () => {
+    const monday = nextWeekdayAt(1);
+    const endOfMonday = new Date(monday);
+    endOfMonday.setHours(23, 59, 0, 0);
+    await AppSettings.create([
+      { key: "schedule.openingHour", value: 10 },
+      { key: "schedule.closingHour", value: 12 },
+      { key: "schedule.slotDurationMinutes", value: 30 },
+    ]);
+
+    const availability = await request(app)
+      .get("/api/bookings/availability")
+      .query({
+        from: formatForApi(monday),
+        to: formatForApi(endOfMonday),
+        duration: 1,
+      })
+      .expect(200);
+
+    expect(availability.body.slots).toHaveLength(3);
+    expect(availability.body.slots.map((slot) => businessClock(new Date(slot.timeSlot)).hour))
+      .toEqual([10, 10, 11]);
+    expect(availability.body.slots.map((slot) => businessClock(new Date(slot.timeSlot)).minute))
+      .toEqual([0, 30, 0]);
+  });
+
   it("creates a booking and exposes only calendar blocks publicly", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")

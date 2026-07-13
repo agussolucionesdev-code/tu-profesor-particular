@@ -17,6 +17,11 @@ import {
   MANAGEMENT_TOKEN_PATTERN,
 } from "../services/managementTokenService.js";
 import {
+  calculateAvailableSlots,
+  getScheduleConfiguration,
+} from "../services/availabilityService.js";
+import { businessDateKey } from "../utils/timeZone.js";
+import {
   availabilityQuerySchema,
   cancelSchema,
   createBookingSchema,
@@ -29,6 +34,7 @@ import {
   updateBookingSchema,
   validateContact,
   validateSlot,
+  TIME_ZONE,
 } from "../utils/bookingRules.js";
 
 const activeStatusFilter = { status: { $nin: ["Cancelado", "Finalizado"] } };
@@ -206,7 +212,7 @@ const parseAvailabilityRange = (query) => {
     return null;
   }
 
-  return { from, to };
+  return { from, to, duration: parsed.data.duration };
 };
 
 const isValidObjectId = (value) => mongoose.isValidObjectId(value);
@@ -241,7 +247,7 @@ export const createBooking = async (req, res, next) => {
     }
 
     // Check if the day is blocked
-    const dateStr = startTime.toISOString().slice(0, 10);
+    const dateStr = businessDateKey(startTime, TIME_ZONE);
     const isBlocked = await BlockedDate.exists({ date: dateStr });
     if (isBlocked) {
       return badRequest(res, "Ese día no está disponible para reservas.");
@@ -333,7 +339,21 @@ export const getAvailability = async (req, res, next) => {
       );
     }
 
-    const [bookings, blockedRecords, openingHour, closingHour] = await Promise.all([
+    const schedule = await getScheduleConfiguration();
+    const requestedDuration = range.duration ?? schedule.slotDurationMinutes / 60;
+    const requestedDurationMinutes = Math.round(requestedDuration * 60);
+
+    if (
+      requestedDurationMinutes < schedule.slotDurationMinutes ||
+      requestedDurationMinutes % schedule.slotDurationMinutes !== 0
+    ) {
+      return badRequest(
+        res,
+        `La duraciÃ³n debe respetar intervalos de ${schedule.slotDurationMinutes} minutos.`,
+      );
+    }
+
+    const [bookings, blockedRecords] = await Promise.all([
       Booking.find(
         trustedFilter({
           ...activeStatusFilter,
@@ -345,11 +365,16 @@ export const getAvailability = async (req, res, next) => {
         .lean()
         .sort({ timeSlot: 1 }),
       BlockedDate.find().select("date").lean(),
-      getSetting("schedule.openingHour"),
-      getSetting("schedule.closingHour"),
     ]);
 
     const blockedDates = blockedRecords.map((r) => r.date);
+    const slots = calculateAvailableSlots({
+      ...range,
+      bookings,
+      blockedDates,
+      schedule,
+      durationHours: requestedDuration,
+    });
 
     res.status(200).json({
       success: true,
@@ -362,7 +387,10 @@ export const getAvailability = async (req, res, next) => {
         status: booking.status,
       })),
       blockedDates,
-      schedule: { openingHour, closingHour },
+      // Legacy fields are preserved for the deployed frontend. `slots` is the
+      // backend-authoritative availability contract for all future consumers.
+      schedule,
+      slots,
       requestId: req.requestId,
     });
   } catch (error) {
