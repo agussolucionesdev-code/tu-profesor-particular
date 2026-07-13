@@ -6,9 +6,55 @@ import StudentMigrationDryRunObservation from "../models/StudentMigrationDryRunO
 import {
   classifyBookingIdentity,
   linkBookingToStudent,
+  projectStudentCandidateFromBooking,
   recordStudentLinkFailure,
   STUDENT_IDENTITY_ALGORITHM_VERSION,
 } from "./studentIdentityService.js";
+
+const sameIdentityHashes = (left = [], right = []) => {
+  const leftSorted = [...left].sort();
+  const rightSorted = [...right].sort();
+  return leftSorted.length === rightSorted.length &&
+    leftSorted.every((value, index) => value === rightSorted[index]);
+};
+
+const rehydrateDryRunStudents = async (observations) => {
+  if (!observations.length) return [];
+
+  const bookings = await Booking.find({
+    _id: { $in: observations.map(({ bookingId }) => bookingId) },
+  });
+  const byId = new Map(bookings.map((booking) => [String(booking._id), booking]));
+  const virtualStudents = [];
+
+  for (const observation of observations) {
+    const booking = byId.get(String(observation.bookingId));
+    if (
+      !booking ||
+      booking.deletedAt ||
+      booking.studentId ||
+      booking.studentLink?.status === "linked"
+    ) {
+      const error = new Error(
+        `Dry-run source Booking state changed after observation: ${observation.bookingId}.`,
+      );
+      error.code = "STUDENT_DRY_RUN_SOURCE_DRIFT";
+      throw error;
+    }
+    const candidate = projectStudentCandidateFromBooking(booking);
+    if (!sameIdentityHashes(candidate.identityKeys, observation.identityHashes)) {
+      const error = new Error(
+        `Dry-run source Booking identity changed after observation: ${observation.bookingId}.`,
+      );
+      error.code = "STUDENT_DRY_RUN_IDENTITY_DRIFT";
+      throw error;
+    }
+    if (observation.decision === "would-create") {
+      virtualStudents.push(candidate);
+    }
+  }
+  return virtualStudents;
+};
 
 const report = (run) => ({
   runId: run.runId,
@@ -37,6 +83,7 @@ export const migrateStudents = async ({
 } = {}) => {
   const mode = apply ? "apply" : "dry-run";
   const safeBatchSize = Math.min(Math.max(Number(batchSize) || 100, 1), 500);
+  let virtualStudents = [];
   let run = await StudentMigrationRun.findOne({ runId });
 
   if (run) {
@@ -85,6 +132,7 @@ export const migrateStudents = async ({
     run.counts.wouldCreate = observations.filter(({ decision }) => decision === "would-create").length;
     run.counts.wouldLink = observations.filter(({ decision }) => decision === "would-link").length;
     run.counts.reviewCandidates = observations.filter(({ hasReviewCandidates }) => hasReviewCandidates).length;
+    virtualStudents = await rehydrateDryRunStudents(observations);
     if (observations.length) {
       run.checkpoint.lastBookingId = observations.at(-1).bookingId;
       run.checkpoint.processed = observations.length;
@@ -104,15 +152,13 @@ export const migrateStudents = async ({
     for (const booking of bookings) {
       try {
         if (!apply) {
-          const classification = await classifyBookingIdentity(booking);
-          const identityHashes = classification.identity.identityKeys.slice().sort();
-          const priorIdentity = await StudentMigrationDryRunObservation.exists({
-            runId,
-            identityHashes: { $in: identityHashes },
+          const classification = await classifyBookingIdentity(booking, {
+            additionalCandidates: virtualStudents,
           });
+          const identityHashes = classification.identity.identityKeys.slice().sort();
           const decision = classification.classification === "review"
             ? "review"
-            : classification.exactStudent || priorIdentity
+            : classification.exactStudent
               ? "would-link"
               : "would-create";
           const observation = await StudentMigrationDryRunObservation.findOneAndUpdate(
@@ -127,6 +173,9 @@ export const migrateStudents = async ({
           if (observation.decision === "would-link") run.counts.wouldLink += 1;
           if (observation.decision === "would-create") run.counts.wouldCreate += 1;
           if (observation.hasReviewCandidates) run.counts.reviewCandidates += 1;
+          if (observation.decision === "would-create") {
+            virtualStudents.push(projectStudentCandidateFromBooking(booking));
+          }
         } else {
           const result = await linkBookingToStudent(booking, { source: "migration", runId });
           if (result.status === "linked") {

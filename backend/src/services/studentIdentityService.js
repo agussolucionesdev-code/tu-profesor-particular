@@ -4,7 +4,7 @@ import Student from "../models/Student.js";
 import StudentIdentityEvent from "../models/StudentIdentityEvent.js";
 import { normalizeEmail, normalizePhoneDigits } from "../utils/bookingRules.js";
 
-export const STUDENT_IDENTITY_ALGORITHM_VERSION = "student-identity-v1";
+export const STUDENT_IDENTITY_ALGORITHM_VERSION = "student-identity-v2";
 
 export const normalizeIdentityText = (value) =>
   String(value ?? "")
@@ -76,7 +76,85 @@ const editDistance = (left, right) => {
   return row[right.length];
 };
 
-const findReviewCandidates = async (identity, excludedIds = []) => {
+const candidateId = (candidate) => candidate?._id || candidate?.id;
+
+const sharesIdentityKey = (identity, candidate) => {
+  const candidateKeys = Array.isArray(candidate?.identityKeys) ? candidate.identityKeys : [];
+  return identity.identityKeys.some((key) => candidateKeys.includes(key));
+};
+
+const sharesContact = (identity, candidate) => {
+  const aliases = Array.isArray(candidate?.contactAliases) ? candidate.contactAliases : [];
+  const emails = [candidate?.contact?.email, ...aliases.map(({ email }) => email)].filter(Boolean);
+  const phones = [
+    candidate?.contact?.phoneDigits,
+    ...aliases.map(({ phoneDigits }) => phoneDigits),
+  ].filter(Boolean);
+  return Boolean(
+    (identity.email && emails.includes(identity.email)) ||
+    (identity.phoneDigits && phones.includes(identity.phoneDigits)),
+  );
+};
+
+export const isStudentReviewCandidate = (identity, candidate) => {
+  if (!candidate || candidate.studentType !== identity.studentType) return false;
+  if (candidate.normalizedName === identity.normalizedName) return true;
+  if (!sharesContact(identity, candidate)) return false;
+  if (editDistance(candidate.normalizedName || "", identity.normalizedName) > 2) return false;
+  if (identity.studentType === "adult") return true;
+  return candidate.responsible?.normalizedName === identity.responsibleNormalizedName &&
+    normalizeIdentityText(candidate.responsible?.relationship) ===
+      normalizeIdentityText(identity.relationship).split(":")[0];
+};
+
+export const classifyStudentIdentityCandidates = (identity, candidates = []) => {
+  const unique = [];
+  const seen = new Set();
+  for (const candidate of candidates) {
+    const key = String(candidateId(candidate) || candidate?.identityKeys?.join("|") || "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(candidate);
+  }
+
+  const exact = unique.filter((candidate) => sharesIdentityKey(identity, candidate));
+  if (exact.length > 1) {
+    return { classification: "review", exactStudent: null, reviewCandidates: exact.slice(0, 10) };
+  }
+  if (exact.length === 1) {
+    return { classification: "exact", exactStudent: exact[0], reviewCandidates: [] };
+  }
+
+  const reviewCandidates = unique.filter(
+    (candidate) => isStudentReviewCandidate(identity, candidate),
+  ).slice(0, 10);
+  return {
+    classification: reviewCandidates.length ? "new-with-review-candidates" : "new",
+    exactStudent: null,
+    reviewCandidates,
+  };
+};
+
+export const projectStudentCandidateFromBooking = (booking) => {
+  const identity = buildStudentIdentity(booking);
+  return {
+    _id: booking._id,
+    identityKeys: identity.identityKeys,
+    normalizedName: identity.normalizedName,
+    studentType: identity.studentType,
+    responsible: {
+      normalizedName: identity.responsibleNormalizedName,
+      relationship: normalizeIdentityText(booking.responsibleRelationship),
+    },
+    contact: {
+      email: identity.email,
+      phoneDigits: identity.phoneDigits,
+    },
+    contactAliases: [],
+  };
+};
+
+const findReviewCandidatePool = async (identity, excludedIds = []) => {
   const contactOr = [
     ...(identity.email ? [{ "contact.email": identity.email }, { "contactAliases.email": identity.email }] : []),
     ...(identity.phoneDigits ? [{ "contact.phoneDigits": identity.phoneDigits }, { "contactAliases.phoneDigits": identity.phoneDigits }] : []),
@@ -86,48 +164,33 @@ const findReviewCandidates = async (identity, excludedIds = []) => {
     deletedAt: null,
     studentType: identity.studentType,
     $or: [{ normalizedName: identity.normalizedName }, ...contactOr],
-  }).select("_id normalizedName responsible contact contactAliases").limit(50).lean();
+  }).select("_id normalizedName studentType responsible contact contactAliases").limit(50).lean();
 
-  return candidates.filter((candidate) => {
-    if (candidate.normalizedName === identity.normalizedName) return true;
-    if (editDistance(candidate.normalizedName, identity.normalizedName) > 2) return false;
-    if (identity.studentType === "adult") return true;
-    return candidate.responsible?.normalizedName === identity.responsibleNormalizedName &&
-      normalizeIdentityText(candidate.responsible?.relationship) === normalizeIdentityText(identity.relationship).split(":")[0];
-  }).slice(0, 10);
+  return candidates;
 };
 
-export const classifyBookingIdentity = async (booking) => {
+export const classifyBookingIdentity = async (booking, { additionalCandidates = [] } = {}) => {
   const identity = buildStudentIdentity(booking);
   const exact = await Student.find({
     deletedAt: null,
     identityKeys: { $in: identity.identityKeys },
   }).limit(2);
-
-  if (exact.length > 1) {
-    return {
-      identity,
-      exactStudent: null,
-      reviewCandidateIds: exact.map((student) => student._id),
-      classification: "review",
-    };
+  let classified = classifyStudentIdentityCandidates(identity, [
+    ...exact,
+    ...additionalCandidates,
+  ]);
+  if (classified.classification === "new") {
+    const reviewCandidates = await findReviewCandidatePool(identity);
+    classified = classifyStudentIdentityCandidates(identity, [
+      ...reviewCandidates,
+      ...additionalCandidates,
+    ]);
   }
-
-  if (exact.length === 1) {
-    return {
-      identity,
-      exactStudent: exact[0],
-      reviewCandidateIds: [],
-      classification: "exact",
-    };
-  }
-
-  const reviewCandidates = await findReviewCandidates(identity);
   return {
     identity,
-    exactStudent: null,
-    reviewCandidateIds: reviewCandidates.map((candidate) => candidate._id),
-    classification: reviewCandidates.length ? "new-with-review-candidates" : "new",
+    exactStudent: classified.exactStudent,
+    reviewCandidateIds: classified.reviewCandidates.map(candidateId),
+    classification: classified.classification,
   };
 };
 

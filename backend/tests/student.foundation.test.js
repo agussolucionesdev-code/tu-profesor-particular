@@ -19,6 +19,9 @@ let normalizeIdentityText;
 let processPendingStudentLinks;
 let createStudentLinkReconciler;
 let buildStudentIdentity;
+let isStudentReviewCandidate;
+let projectStudentCandidateFromBooking;
+let STUDENT_IDENTITY_ALGORITHM_VERSION;
 
 const bookingSnapshot = (overrides = {}) => ({
   studentName: "Juan Pérez",
@@ -86,9 +89,14 @@ beforeAll(async () => {
     await import("../src/models/StudentMigrationDryRunObservation.js")
   ).default;
   User = (await import("../src/models/User.js")).default;
-  ({ buildStudentIdentity, linkBookingToStudent, normalizeIdentityText } = await import(
-    "../src/services/studentIdentityService.js"
-  ));
+  ({
+    buildStudentIdentity,
+    isStudentReviewCandidate,
+    linkBookingToStudent,
+    normalizeIdentityText,
+    projectStudentCandidateFromBooking,
+    STUDENT_IDENTITY_ALGORITHM_VERSION,
+  } = await import("../src/services/studentIdentityService.js"));
   ({ createStudentLinkReconciler, processPendingStudentLinks } = await import(
     "../src/services/studentLinkWorker.js"
   ));
@@ -130,7 +138,7 @@ describe("student identity foundation", () => {
       source: "migration",
       migrationMetadata: {
         createdByRunId: "private-run",
-        algorithmVersion: "student-identity-v1",
+        algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
       },
     });
 
@@ -321,7 +329,7 @@ describe("student identity foundation", () => {
       studentLink: {
         status: "pending",
         source: "repair",
-        algorithmVersion: "student-identity-v1",
+        algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
         lastAttemptAt: new Date(),
         nextAttemptAt: new Date(),
       },
@@ -369,11 +377,82 @@ describe("student identity foundation", () => {
     expect(await Student.countDocuments()).toBe(1);
   });
 
+  it("treats same-name adults with different contacts as review candidates", () => {
+    const first = bookingSnapshot({
+      studentName: "Alex Sosa",
+      responsibleName: "Alex Sosa",
+      responsibleRelationship: "self",
+      email: "alex.one@example.com",
+      phone: "+54 11 1111 1111",
+    });
+    const second = bookingSnapshot({
+      studentName: "Alex Sosa",
+      responsibleName: "Alex Sosa",
+      responsibleRelationship: "self",
+      email: "alex.two@example.com",
+      phone: "+54 11 2222 2222",
+    });
+
+    expect(
+      isStudentReviewCandidate(
+        buildStudentIdentity(second),
+        projectStudentCandidateFromBooking(first),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps dry-run and apply review counts equal for same-name different-contact bookings", async () => {
+    await Booking.create(bookingSnapshot({
+      studentName: "Alex Sosa",
+      responsibleName: "Alex Sosa",
+      responsibleRelationship: "self",
+      email: "alex.one@example.com",
+      phone: "+54 11 1111 1111",
+    }));
+    await Booking.create(bookingSnapshot({
+      studentName: "Alex Sosa",
+      responsibleName: "Alex Sosa",
+      responsibleRelationship: "self",
+      email: "alex.two@example.com",
+      phone: "+54 11 2222 2222",
+      timeSlot: new Date("2030-06-11T13:00:00.000Z"),
+      endTime: new Date("2030-06-11T14:00:00.000Z"),
+    }));
+
+    const dryRun = await migrateStudents({ runId: "same-name-parity-dry" });
+    expect(dryRun.counts.wouldCreate).toBe(2);
+    expect(dryRun.counts.wouldLink).toBe(0);
+    expect(dryRun.counts.reviewCandidates).toBe(1);
+
+    const applied = await migrateStudents({ runId: "same-name-parity-apply", apply: true });
+    expect(applied.counts.created).toBe(2);
+    expect(applied.counts.linked).toBe(2);
+    expect(applied.counts.reviewCandidates).toBe(dryRun.counts.reviewCandidates);
+  });
+
+  it("keeps dry-run and apply review counts equal for a near-name shared-contact typo", async () => {
+    await Booking.create(bookingSnapshot({ studentName: "Juan Perez" }));
+    await Booking.create(bookingSnapshot({
+      studentName: "Juna Perez",
+      timeSlot: new Date("2030-06-11T13:00:00.000Z"),
+      endTime: new Date("2030-06-11T14:00:00.000Z"),
+    }));
+
+    const dryRun = await migrateStudents({ runId: "near-name-parity-dry" });
+    expect(dryRun.counts.wouldCreate).toBe(2);
+    expect(dryRun.counts.reviewCandidates).toBe(1);
+
+    const applied = await migrateStudents({ runId: "near-name-parity-apply", apply: true });
+    expect(applied.counts.created).toBe(2);
+    expect(applied.counts.linked).toBe(2);
+    expect(applied.counts.reviewCandidates).toBe(dryRun.counts.reviewCandidates);
+  });
+
   it("reconstructs apply checkpoint and processed counts after a crash after the durable link", async () => {
     const booking = await Booking.create(bookingSnapshot());
     await StudentMigrationRun.create({
       runId: "apply-crash-run",
-      algorithmVersion: "student-identity-v1",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
       mode: "apply",
       status: "running",
     });
@@ -408,13 +487,13 @@ describe("student identity foundation", () => {
       source: "migration",
       migrationMetadata: {
         createdByRunId: "orphan-crash-run",
-        algorithmVersion: "student-identity-v1",
+        algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
         sourceBookingId: booking._id,
       },
     });
     await StudentMigrationRun.create({
       runId: "orphan-crash-run",
-      algorithmVersion: "student-identity-v1",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
       mode: "apply",
       status: "running",
     });
@@ -473,7 +552,7 @@ describe("student identity foundation", () => {
     }));
     await StudentMigrationRun.create({
       runId: "dry-crash-run",
-      algorithmVersion: "student-identity-v1",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
       mode: "dry-run",
       status: "running",
     });
@@ -493,6 +572,170 @@ describe("student identity foundation", () => {
     expect(String(resumed.checkpoint.lastBookingId)).toBe(String(second._id));
   });
 
+  it("rehydrates prior would-create Students so fuzzy review parity survives a restart", async () => {
+    const first = await Booking.create(bookingSnapshot({ studentName: "Juan Perez" }));
+    await Booking.create(bookingSnapshot({
+      studentName: "Juna Perez",
+      timeSlot: new Date("2030-06-11T13:00:00.000Z"),
+      endTime: new Date("2030-06-11T14:00:00.000Z"),
+    }));
+    await StudentMigrationRun.create({
+      runId: "dry-fuzzy-restart",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    const identity = buildStudentIdentity(first);
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-fuzzy-restart",
+      bookingId: first._id,
+      identityHashes: identity.identityKeys.slice().sort(),
+      decision: "would-create",
+      hasReviewCandidates: false,
+    });
+
+    const resumed = await migrateStudents({ runId: "dry-fuzzy-restart" });
+    expect(resumed.counts.processed).toBe(2);
+    expect(resumed.counts.wouldCreate).toBe(2);
+    expect(resumed.counts.reviewCandidates).toBe(1);
+  });
+
+  it("fails a resumed dry-run when a source Booking identity drifted after observation", async () => {
+    const first = await Booking.create(bookingSnapshot({ studentName: "Juan Perez" }));
+    await StudentMigrationRun.create({
+      runId: "dry-identity-drift",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    const identity = buildStudentIdentity(first);
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-identity-drift",
+      bookingId: first._id,
+      identityHashes: identity.identityKeys.slice().sort(),
+      decision: "would-create",
+      hasReviewCandidates: false,
+    });
+    await Booking.updateOne(
+      { _id: first._id },
+      { $set: { studentName: "Nombre Modificado" } },
+    );
+
+    await expect(migrateStudents({ runId: "dry-identity-drift" }))
+      .rejects.toThrow(/identity.*changed|cambi.*identidad/i);
+  });
+
+  it("rejects identity drift for a prior would-link observation", async () => {
+    const booking = await Booking.create(bookingSnapshot({ studentName: "Juan Perez" }));
+    await StudentMigrationRun.create({
+      runId: "dry-would-link-drift",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-would-link-drift",
+      bookingId: booking._id,
+      identityHashes: buildStudentIdentity(booking).identityKeys.slice().sort(),
+      decision: "would-link",
+      hasReviewCandidates: false,
+    });
+    await Booking.updateOne(
+      { _id: booking._id },
+      { $set: { studentName: "Nombre Modificado" } },
+    );
+
+    await expect(migrateStudents({ runId: "dry-would-link-drift" }))
+      .rejects.toThrow(/identity.*changed|cambi.*identidad/i);
+  });
+
+  it("rejects identity drift for a prior review observation", async () => {
+    const booking = await Booking.create(bookingSnapshot({ studentName: "Juan Perez" }));
+    await StudentMigrationRun.create({
+      runId: "dry-review-drift",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-review-drift",
+      bookingId: booking._id,
+      identityHashes: buildStudentIdentity(booking).identityKeys.slice().sort(),
+      decision: "review",
+      hasReviewCandidates: true,
+    });
+    await Booking.updateOne(
+      { _id: booking._id },
+      { $set: { studentName: "Nombre Modificado" } },
+    );
+
+    await expect(migrateStudents({ runId: "dry-review-drift" }))
+      .rejects.toThrow(/identity.*changed|cambi.*identidad/i);
+  });
+
+  it("rejects resume when any observed Booking enters trash", async () => {
+    const booking = await Booking.create(bookingSnapshot());
+    await StudentMigrationRun.create({
+      runId: "dry-observed-trash",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-observed-trash",
+      bookingId: booking._id,
+      identityHashes: buildStudentIdentity(booking).identityKeys.slice().sort(),
+      decision: "would-link",
+      hasReviewCandidates: false,
+    });
+    await Booking.updateOne({ _id: booking._id }, { $set: { deletedAt: new Date() } });
+
+    await expect(migrateStudents({ runId: "dry-observed-trash" }))
+      .rejects.toThrow(/state.*changed|estado.*cambi/i);
+  });
+
+  it("rejects resume when an observed Booking becomes linked", async () => {
+    const booking = await Booking.create(bookingSnapshot());
+    await StudentMigrationRun.create({
+      runId: "dry-observed-linked",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      mode: "dry-run",
+      status: "running",
+    });
+    await StudentMigrationDryRunObservation.create({
+      runId: "dry-observed-linked",
+      bookingId: booking._id,
+      identityHashes: buildStudentIdentity(booking).identityKeys.slice().sort(),
+      decision: "review",
+      hasReviewCandidates: true,
+    });
+    await Booking.updateOne(
+      { _id: booking._id },
+      { $set: { studentId: new mongoose.Types.ObjectId() } },
+    );
+
+    await expect(migrateStudents({ runId: "dry-observed-linked" }))
+      .rejects.toThrow(/state.*changed|estado.*cambi/i);
+  });
+
+  it("rejects legacy v1 dry-runs under the v2 simulation semantics", async () => {
+    expect(STUDENT_IDENTITY_ALGORITHM_VERSION).toBe("student-identity-v2");
+    const booking = await Booking.create(bookingSnapshot());
+    await StudentMigrationRun.create({
+      runId: "legacy-v1-dry-run",
+      algorithmVersion: "student-identity-v1",
+      mode: "dry-run",
+      status: "running",
+    });
+
+    await expect(migrateStudents({ runId: "legacy-v1-dry-run" }))
+      .rejects.toThrow(/algorithm version|versi.*algoritmo/i);
+    expect(await StudentMigrationDryRunObservation.countDocuments({
+      runId: "legacy-v1-dry-run",
+    })).toBe(0);
+    expect((await Booking.findById(booking._id).lean()).studentId).toBeNull();
+  });
+
   it("excludes trashed bookings and links them only after restoration queues pending work", async () => {
     const trashed = await Booking.create(bookingSnapshot({ deletedAt: new Date() }));
     const migrated = await migrateStudents({ runId: "trash-scope", apply: true });
@@ -505,7 +748,7 @@ describe("student identity foundation", () => {
         studentLink: {
           status: "pending",
           source: "repair",
-          algorithmVersion: "student-identity-v1",
+          algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
           lastAttemptAt: new Date(),
           nextAttemptAt: new Date(),
           candidateIds: [],
