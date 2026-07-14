@@ -55,6 +55,11 @@ const formatForApi = (date) => {
   return `${day}/${month}/${year} ${hour}:${minutes}`;
 };
 
+// `formatForApi` intentionally emits a wall-clock label. The API owns that
+// label in Buenos Aires regardless of the process TZ, so test expectations
+// must resolve it through the same explicit business-time parser.
+const apiInstant = (date) => parseDateTimeInput(formatForApi(date));
+
 const tomorrowAt = (hour, minute = 0) => {
   const date = new Date();
   date.setDate(date.getDate() + 1);
@@ -877,11 +882,13 @@ describe("booking flows", () => {
 
   it("keeps private availability policy details out of every public DTO", async () => {
     const blockedDate = nextWeekdayAt(2, 10);
+    const exceptionDate = new Date(blockedDate);
+    exceptionDate.setDate(exceptionDate.getDate() + 1);
     await AppSettings.create({
       key: "schedule.availabilityPolicy",
       value: fullWeekPolicy({
         dateExceptions: [{
-          date: dateKey(nextWeekdayAt(3, 10)),
+          date: dateKey(exceptionDate),
           closed: true,
           mode: "override",
           intervals: [],
@@ -903,7 +910,7 @@ describe("booking flows", () => {
       .get("/api/bookings/availability")
       .query({
         from: formatForApi(nextWeekdayAt(2, 7)),
-        to: formatForApi(nextWeekdayAt(3, 22)),
+        to: formatForApi(new Date(exceptionDate.setHours(22, 0, 0, 0))),
         duration: 1,
       })
       .expect(200);
@@ -3203,5 +3210,392 @@ describe("booking flows", () => {
       entityId: stored._id,
       action: "booking.attendance.updated",
     })).toBe(1);
+  });
+
+  describe("admin agenda contract", () => {
+    const adminPayload = (overrides = {}) => {
+      const { tutorName: _tutorName, ...payload } = validBookingPayload(overrides);
+      return payload;
+    };
+
+    it("creates an audited manual booking idempotently without returning management secrets", async () => {
+      const token = await createAdminAndLogin();
+      const timeSlot = formatForApi(nextWeekdayAt(1, 10));
+      const response = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-create-booking-001")
+        .set("X-Request-Id", "admin-create-audit")
+        .send(adminPayload({ timeSlot, status: "Confirmado", price: 12000 }))
+        .expect(201);
+
+      const replay = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-create-booking-001")
+        .send(adminPayload({ timeSlot, status: "Confirmado", price: 12000 }))
+        .expect(201);
+
+      expect(replay.body.data._id).toBe(response.body.data._id);
+      expect(await Booking.countDocuments()).toBe(1);
+      expect(response.body.data).toMatchObject({
+        status: "Confirmado",
+        price: 12000,
+        studentLink: { status: "pending", source: "booking" },
+      });
+      expect(JSON.stringify(response.body)).not.toMatch(
+        /managementToken|slotMutationLock|identityKeys|leaseId/i,
+      );
+
+      const stored = await Booking.findById(response.body.data._id)
+        .select("+managementTokenHash")
+        .lean();
+      expect(stored.managementTokenHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(await AuditEvent.exists({
+        entityId: stored._id,
+        action: "booking.created",
+        requestId: "admin-create-audit",
+      })).toBeTruthy();
+    });
+
+    it("strictly validates manual booking DTOs and always requires idempotency", async () => {
+      const token = await createAdminAndLogin();
+      const payload = adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) });
+
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .send(payload)
+        .expect(400);
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-invalid-extra-001")
+        .send({ ...payload, unexpected: true })
+        .expect(400);
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-invalid-empty-001")
+        .send({ ...payload, subject: "" })
+        .expect(400);
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-invalid-cross-001")
+        .send({
+          ...payload,
+          responsibleRelationship: "otro",
+          responsibleRelationshipOther: "",
+        })
+        .expect(400);
+      expect(await Booking.countDocuments()).toBe(0);
+    });
+
+    it("allows only one of twenty simultaneous manual bookings for a slot", async () => {
+      const token = await createAdminAndLogin();
+      const timeSlot = formatForApi(nextWeekdayAt(1, 11));
+      const attempts = await Promise.all(
+        Array.from({ length: 20 }, (_, index) => request(app)
+          .post("/api/bookings")
+          .set("Authorization", `Bearer ${token}`)
+          .set("Idempotency-Key", `admin-concurrency-${String(index).padStart(3, "0")}`)
+          .send(adminPayload({
+            timeSlot,
+            studentName: `Alumno concurrente ${index}`,
+            email: `concurrente-${index}@example.com`,
+          }))),
+      );
+
+      expect(attempts.filter(({ status }) => status === 201)).toHaveLength(1);
+      expect(attempts.filter(({ status }) => status === 409)).toHaveLength(19);
+      expect(await Booking.countDocuments()).toBe(1);
+      expect(await AuditEvent.countDocuments({ action: "booking.created" })).toBe(1);
+    }, 15000);
+
+    it("calculates authenticated availability and only excludes a validated existing booking", async () => {
+      const token = await createAdminAndLogin();
+      const target = nextWeekdayAt(1, 10);
+      const targetInstant = apiInstant(target);
+      const created = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-availability-create")
+        .send(adminPayload({ timeSlot: formatForApi(target) }))
+        .expect(201);
+      const from = new Date(targetInstant.getTime() - 60 * 60 * 1000);
+      const to = new Date(targetInstant.getTime() + 2 * 60 * 60 * 1000);
+
+      const occupied = await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({ from: from.toISOString(), to: to.toISOString(), duration: 1 })
+        .expect(200);
+      const excluded = await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({
+          from: from.toISOString(),
+          to: to.toISOString(),
+          duration: 1,
+          excludeBookingId: created.body.data._id,
+        })
+        .expect(200);
+
+      expect(occupied.body.data.slots.map(({ timeSlot }) => new Date(timeSlot).getTime()))
+        .not.toContain(targetInstant.getTime());
+      expect(excluded.body.data.slots.map(({ timeSlot }) => new Date(timeSlot).getTime()))
+        .toContain(targetInstant.getTime());
+      expect(excluded.body.data).toMatchObject({
+        range: { from: from.toISOString(), to: to.toISOString(), duration: 1 },
+        excludedBookingId: created.body.data._id,
+      });
+      await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({ from: from.toISOString(), to: to.toISOString(), duration: 1, extra: "no" })
+        .expect(400);
+      await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({
+          from: from.toISOString(),
+          to: to.toISOString(),
+          duration: 1,
+          excludeBookingId: new mongoose.Types.ObjectId().toString(),
+        })
+        .expect(404);
+    });
+
+    it("applies Sunday, blocked-date and frozen-buffer policy to admin agenda flows", async () => {
+      const token = await createAdminAndLogin();
+      const sunday = nextWeekdayAt(0, 10);
+      const sundayInstant = apiInstant(sunday);
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-policy-sunday")
+        .send(adminPayload({ timeSlot: formatForApi(sunday) }))
+        .expect(400);
+
+      const sundayFrom = new Date(sundayInstant.getTime() - 3 * 60 * 60 * 1000);
+      const sundayTo = new Date(sundayInstant.getTime() + 12 * 60 * 60 * 1000);
+      const sundayAvailability = await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({
+          from: sundayFrom.toISOString(),
+          to: sundayTo.toISOString(),
+          duration: 1,
+        })
+        .expect(200);
+      expect(sundayAvailability.body.data.slots).toEqual([]);
+
+      const blocked = nextWeekdayAt(1, 10);
+      await BlockedDate.create({ date: dateKey(blocked), reason: "Bloqueo administrativo" });
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-policy-blocked")
+        .send(adminPayload({ timeSlot: formatForApi(blocked) }))
+        .expect(400);
+
+      await BlockedDate.deleteMany({});
+      await AppSettings.create({
+        key: "schedule.availabilityPolicy",
+        value: fullWeekPolicy({ bufferBeforeMinutes: 30, bufferAfterMinutes: 30 }),
+      });
+      const buffered = nextWeekdayAt(2, 10);
+      const bufferedInstant = apiInstant(buffered);
+      await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-policy-buffered")
+        .send(adminPayload({ timeSlot: formatForApi(buffered) }))
+        .expect(201);
+      const rangeFrom = new Date(bufferedInstant.getTime() - 30 * 60 * 1000);
+      const rangeTo = new Date(bufferedInstant.getTime() + 3 * 60 * 60 * 1000);
+      const bufferAvailability = await request(app)
+        .get("/api/bookings/admin/availability")
+        .set("Authorization", `Bearer ${token}`)
+        .query({
+          from: rangeFrom.toISOString(),
+          to: rangeTo.toISOString(),
+          duration: 1,
+        })
+        .expect(200);
+      const availableTimes = bufferAvailability.body.data.slots
+        .map(({ timeSlot }) => new Date(timeSlot).getTime());
+      expect(availableTimes).not.toContain(rangeFrom.getTime());
+      expect(availableTimes).toContain(bufferedInstant.getTime() + 2 * 60 * 60 * 1000);
+    });
+
+    it("updates operational fields and schedule atomically with canonical endTime and audit", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-update-create")
+        .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+        .expect(201);
+      const nextTime = nextWeekdayAt(1, 13);
+      const nextTimeInstant = apiInstant(nextTime);
+
+      const updated = await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .set("X-Request-Id", "admin-reschedule-audit")
+        .send({
+          timeSlot: formatForApi(nextTime),
+          duration: 1.5,
+          subject: "Fisica",
+          academicSituation: "Preparar examen integrador",
+          school: "Colegio Central",
+          educationLevel: "Secundaria",
+          yearGrade: "4to ano",
+        })
+        .expect(200);
+
+      expect(new Date(updated.body.data.endTime).getTime())
+        .toBe(nextTimeInstant.getTime() + 90 * 60 * 1000);
+      expect(updated.body.data).toMatchObject({
+        duration: 1.5,
+        subject: "Fisica",
+        academicSituation: "Preparar examen integrador",
+      });
+      expect(JSON.stringify(updated.body)).not.toMatch(/managementToken|slotMutationLock|leaseId/i);
+      expect(await BookingSlot.countDocuments({ booking: created.body.data._id })).toBe(3);
+      const audit = await AuditEvent.findOne({
+        entityId: created.body.data._id,
+        action: "booking.rescheduled",
+      }).lean();
+      expect(audit).toMatchObject({
+        requestId: "admin-reschedule-audit",
+        before: { subject: "Matematica", duration: 1 },
+        after: { subject: "Fisica", duration: 1.5 },
+      });
+    });
+
+    it("rejects identity edits, empty updates and schedule changes on terminal bookings", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-terminal-create")
+        .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+        .expect(201);
+
+      await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({})
+        .expect(400);
+      await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "otro@example.com" })
+        .expect(400);
+      await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ subject: "" })
+        .expect(400);
+      await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: "Finalizado" })
+        .expect(200);
+      await request(app)
+        .put(`/api/bookings/${created.body.data._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ timeSlot: formatForApi(nextWeekdayAt(1, 14)) })
+        .expect(422);
+    });
+
+    it("serializes a public reschedule against an admin reschedule", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+        .expect(201);
+      const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+      const [client, admin] = await Promise.all([
+        request(app)
+          .post("/api/bookings/reschedule")
+          .set("X-Booking-Manage-Token", created.body.data.managementToken)
+          .set("Idempotency-Key", "public-admin-race-client")
+          .send({
+            bookingCode: created.body.data.bookingCode,
+            newTimeSlot: formatForApi(nextWeekdayAt(1, 12)),
+            newDuration: 1,
+          }),
+        request(app)
+          .put(`/api/bookings/${stored._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({ timeSlot: formatForApi(nextWeekdayAt(1, 14)), duration: 1 }),
+      ]);
+
+      expect([client.status, admin.status].sort()).toEqual([200, 409]);
+      expect(await AuditEvent.countDocuments({
+        entityId: stored._id,
+        action: "booking.rescheduled",
+      })).toBe(admin.status === 200 ? 1 : 0);
+      expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
+    });
+
+    it("compensates manual creation and updates when auditing fails", async () => {
+      const token = await createAdminAndLogin();
+      const resetCreateWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable");
+      });
+      try {
+        await request(app)
+          .post("/api/bookings")
+          .set("Authorization", `Bearer ${token}`)
+          .set("Idempotency-Key", "admin-audit-failure-create")
+          .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+          .expect(500);
+      } finally {
+        resetCreateWriter();
+      }
+      expect(await Booking.countDocuments()).toBe(0);
+      expect(await BookingSlot.countDocuments()).toBe(0);
+      expect(await IdempotencyKey.countDocuments()).toBe(0);
+
+      const created = await request(app)
+        .post("/api/bookings")
+        .set("Authorization", `Bearer ${token}`)
+        .set("Idempotency-Key", "admin-audit-failure-seed")
+        .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+        .expect(201);
+      const before = await Booking.findById(created.body.data._id).lean();
+      const beforeSlots = await BookingSlot.find({ booking: before._id }).sort({ slotStart: 1 }).lean();
+      const resetUpdateWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable");
+      });
+      try {
+        await request(app)
+          .put(`/api/bookings/${before._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({
+            timeSlot: formatForApi(nextWeekdayAt(1, 14)),
+            duration: 1.5,
+            subject: "Fisica",
+          })
+          .expect(500);
+      } finally {
+        resetUpdateWriter();
+      }
+      const after = await Booking.findById(before._id)
+        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .lean();
+      const afterSlots = await BookingSlot.find({ booking: before._id }).sort({ slotStart: 1 }).lean();
+      expect(after.subject).toBe(before.subject);
+      expect(after.duration).toBe(before.duration);
+      expect(after.timeSlot).toEqual(before.timeSlot);
+      expect(after.slotMutationLock).toBeUndefined();
+      expect(afterSlots.map(({ slotStart }) => slotStart))
+        .toEqual(beforeSlots.map(({ slotStart }) => slotStart));
+    });
   });
 });

@@ -1,7 +1,9 @@
 import express from "express";
 import {
   createBooking,
+  createAdminBooking,
   getAvailability,
+  getAdminAvailability,
   getBookingByCode,
   getAllBookings,
   getBookingStats,
@@ -39,7 +41,9 @@ router.post("/confirm-attendance", publicMutationLimiter, confirmAttendanceClien
 router.put("/:code/notes", publicMutationLimiter, updateStudentNotes);
 
 router.get("/stats", requireAdmin, getBookingStats);
+router.get("/admin/availability", requireAdmin, getAdminAvailability);
 router.get("/", requireAdmin, getAllBookings);
+router.post("/", requireAdmin, createAdminBooking);
 if (process.env.NODE_ENV !== "production") {
   router.delete("/all", requireAdmin, deleteAllBookings);
 }

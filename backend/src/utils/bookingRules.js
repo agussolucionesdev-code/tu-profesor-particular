@@ -158,6 +158,42 @@ export const createBookingSchema = z
     }
   });
 
+// Manual creation deliberately accepts the complete immutable booking
+// snapshot, not a Student id. Identity reconciliation remains asynchronous so
+// an admin request cannot accidentally merge two people by contact data.
+export const adminCreateBookingSchema = z
+  .object({
+    responsibleName: textField(3, 80),
+    responsibleRelationship: z.enum(RESPONSIBLE_RELATIONSHIP_VALUES),
+    responsibleRelationshipOther: optionalRelationshipDetail,
+    studentName: textField(3, 80),
+    email: z.string().optional().default(""),
+    phone: z.string().optional().default(""),
+    school: textField(1, 120),
+    educationLevel: textField(3, 60),
+    yearGrade: textField(2, 60),
+    subject: textField(2, 120),
+    academicSituation: textField(1, 1200),
+    timeSlot: z.union([z.string(), z.date()]),
+    duration: z.coerce.number(),
+    status: z.enum(["Pendiente", "Confirmado"]).optional().default("Confirmado"),
+    price: z.coerce.number().min(0).max(99999999).optional().default(0),
+    notes: z.string().trim().max(2000).optional().default(""),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (
+      data.responsibleRelationship === RESPONSIBLE_RELATIONSHIP_OTHER_VALUE &&
+      data.responsibleRelationshipOther.trim().length < 3
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debes indicar cuál es el vínculo cuando eliges Otro.",
+        path: ["responsibleRelationshipOther"],
+      });
+    }
+  });
+
 export const rescheduleSchema = z.object({
   bookingCode: textField(6, 12),
   newTimeSlot: z.union([z.string(), z.date()]),
@@ -175,9 +211,18 @@ export const updateBookingSchema = z
     notes: z.string().trim().max(2000).optional(),
     studentEvolution: z.string().trim().max(5000).optional(),
     emotionalState: z.string().trim().max(1000).optional(),
+    subject: textField(2, 120).optional(),
+    academicSituation: textField(1, 1200).optional(),
+    school: textField(1, 120).optional(),
+    educationLevel: textField(3, 60).optional(),
+    yearGrade: textField(2, 60).optional(),
     timeSlot: z.union([z.string(), z.date()]).optional(),
+    duration: z.coerce.number().optional(),
   })
-  .strict();
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Debes enviar al menos un campo para actualizar.",
+  });
 
 export const updateAttendanceSchema = z
   .object({
@@ -191,6 +236,15 @@ export const availabilityQuerySchema = z.object({
   to: z.string().optional(),
   duration: z.coerce.number().min(0.5).max(10).optional(),
 });
+
+export const adminAvailabilityQuerySchema = z
+  .object({
+    from: z.string().min(1),
+    to: z.string().min(1),
+    duration: z.coerce.number().min(0.5).max(10),
+    excludeBookingId: z.string().trim().min(1).optional(),
+  })
+  .strict();
 
 export const validateContact = ({ email, phone }) => {
   if (!email && !phone) {

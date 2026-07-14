@@ -39,6 +39,8 @@ import {
   fingerprintRequest,
 } from "../services/idempotencyService.js";
 import {
+  adminAvailabilityQuerySchema,
+  adminCreateBookingSchema,
   availabilityQuerySchema,
   cancelSchema,
   createBookingSchema,
@@ -114,6 +116,68 @@ const managedBooking = (booking) => ({
   endTime: booking.endTime,
   duration: booking.duration,
   status: booking.status,
+});
+
+const adminBooking = (booking) => {
+  const source = typeof booking?.toObject === "function" ? booking.toObject() : booking;
+  return {
+    _id: source._id,
+    bookingCode: source.bookingCode,
+    studentName: source.studentName,
+    responsibleName: source.responsibleName,
+    responsibleRelationship: source.responsibleRelationship,
+    responsibleRelationshipOther: source.responsibleRelationshipOther,
+    tutorName: source.tutorName,
+    email: source.email,
+    phone: source.phone,
+    school: source.school,
+    educationLevel: source.educationLevel,
+    yearGrade: source.yearGrade,
+    subject: source.subject,
+    academicSituation: source.academicSituation,
+    timeSlot: source.timeSlot,
+    endTime: source.endTime,
+    duration: source.duration,
+    bufferBeforeMinutes: source.bufferBeforeMinutes,
+    bufferAfterMinutes: source.bufferAfterMinutes,
+    price: source.price,
+    notes: source.notes,
+    studentNotes: source.studentNotes,
+    studentEvolution: source.studentEvolution,
+    emotionalState: source.emotionalState,
+    notesHistory: source.notesHistory,
+    status: source.status,
+    attendanceStatus: source.attendanceStatus,
+    attendanceRecordedAt: source.attendanceRecordedAt,
+    attendanceNotes: source.attendanceNotes,
+    attendanceUpdatedBy: source.attendanceUpdatedBy,
+    studentId: source.studentId,
+    studentLink: source.studentLink
+      ? {
+        status: source.studentLink.status,
+        source: source.studentLink.source,
+        linkedAt: source.studentLink.linkedAt,
+        errorCode: source.studentLink.errorCode,
+      }
+      : null,
+    deletedAt: source.deletedAt,
+    deletedBy: source.deletedBy,
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
+};
+
+const pendingStudentLink = () => ({
+  status: "pending",
+  source: "booking",
+  algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+  runId: null,
+  linkedAt: null,
+  lastAttemptAt: new Date(),
+  candidateIds: [],
+  errorCode: "",
+  attempts: 0,
+  nextAttemptAt: new Date(),
 });
 
 const setNoStore = (res) => {
@@ -393,6 +457,27 @@ const parseAvailabilityRange = (query) => {
   return { from, to, duration: parsed.data.duration };
 };
 
+const parseAdminAvailabilityRange = (query) => {
+  const parsed = adminAvailabilityQuerySchema.safeParse(query);
+  if (!parsed.success) return null;
+
+  const from = parseDateTimeInput(parsed.data.from);
+  const to = parseDateTimeInput(parsed.data.to);
+  if (!from || !to || from >= to) return null;
+  if (to.getTime() - from.getTime() > MAX_AVAILABILITY_RANGE_MS) return null;
+  if (
+    parsed.data.excludeBookingId &&
+    !mongoose.isValidObjectId(parsed.data.excludeBookingId)
+  ) return null;
+
+  return {
+    from,
+    to,
+    duration: parsed.data.duration,
+    excludeBookingId: parsed.data.excludeBookingId ?? null,
+  };
+};
+
 const parseAdminBookingPagination = (query) => {
   const hasPage = query.page !== undefined;
   const hasLimit = query.limit !== undefined;
@@ -417,6 +502,227 @@ const parseAdminBookingPagination = (query) => {
 };
 
 const isValidObjectId = (value) => mongoose.isValidObjectId(value);
+
+export const createAdminBooking = async (req, res, next) => {
+  let idempotencyRecord = null;
+  let createdBooking = null;
+  let claimedSlots = null;
+  let creationLock = null;
+  let auditCommitted = false;
+
+  try {
+    const idempotencyKey = getIdempotencyKey(req);
+    if (!idempotencyKey || !IDEMPOTENCY_KEY_PATTERN.test(idempotencyKey)) {
+      return badRequest(res, "Debes enviar un Idempotency-Key valido para crear la reserva.");
+    }
+
+    const parsed = adminCreateBookingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return badRequest(res, "Revisa los datos de la reserva.", parsed.error.flatten());
+    }
+    const payload = normalizeBookingPayload(parsed.data);
+    const contactError = validateContact(payload);
+    if (contactError) return badRequest(res, contactError);
+
+    const startTime = parseDateTimeInput(payload.timeSlot);
+    const {
+      error: slotError,
+      schedule,
+      durationMinutes,
+      endTime,
+    } = await validateConfiguredSlot(startTime, Number(payload.duration));
+    if (slotError) return badRequest(res, slotError);
+
+    const duration = durationMinutes / 60;
+    const storageKey = scopedIdempotencyKey("admin-create", idempotencyKey);
+    const requestFingerprint = fingerprintRequest({
+      ...payload,
+      timeSlot: startTime.toISOString(),
+      duration,
+    });
+    try {
+      idempotencyRecord = await IdempotencyKey.create({
+        key: storageKey,
+        fingerprint: requestFingerprint,
+        expiresAt: new Date(Date.now() + IDEMPOTENCY_KEY_TTL_MS),
+      });
+    } catch (error) {
+      if (error?.code !== 11000) throw error;
+      const existing = await IdempotencyKey.findOne({ key: storageKey })
+        .select("+responseCiphertext +responseIv +responseAuthTag")
+        .exec();
+      if (!existing || existing.fingerprint !== requestFingerprint) {
+        return res.status(409).json({
+          success: false,
+          message: "Ese Idempotency-Key ya fue usado con una reserva diferente.",
+          requestId: req.requestId,
+        });
+      }
+      if (
+        existing.status !== "completed" ||
+        !existing.responseStatus ||
+        !existing.responseCiphertext
+      ) {
+        return res.status(409).json({
+          success: false,
+          message: "La reserva con ese Idempotency-Key todavia esta siendo procesada.",
+          requestId: req.requestId,
+        });
+      }
+      try {
+        return res.status(existing.responseStatus).json(decryptIdempotencyResponse(existing));
+      } catch {
+        return res.status(409).json({
+          success: false,
+          message: "No se pudo reutilizar esa reserva de forma segura. Genera una nueva solicitud.",
+          requestId: req.requestId,
+        });
+      }
+    }
+
+    if (await hasConflict(startTime, endTime, null, schedule)) {
+      await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
+      idempotencyRecord = null;
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
+    }
+
+    creationLock = crypto.randomUUID();
+    const leaseExpiresAt = new Date(Date.now() + SLOT_MUTATION_LOCK_MS);
+    createdBooking = new Booking({
+      responsibleName: payload.responsibleName,
+      responsibleRelationship: payload.responsibleRelationship,
+      responsibleRelationshipOther: payload.responsibleRelationshipOther,
+      studentName: payload.studentName,
+      tutorName: payload.tutorName,
+      email: payload.email,
+      phone: payload.phone,
+      school: payload.school,
+      educationLevel: payload.educationLevel,
+      yearGrade: payload.yearGrade,
+      subject: payload.subject,
+      academicSituation: payload.academicSituation,
+      timeSlot: startTime,
+      endTime,
+      duration,
+      bufferBeforeMinutes: schedule.bufferBeforeMinutes,
+      bufferAfterMinutes: schedule.bufferAfterMinutes,
+      price: payload.price,
+      notes: payload.notes,
+      status: payload.status,
+      studentLink: pendingStudentLink(),
+      slotMutationLock: creationLock,
+      slotMutationLockExpiresAt: leaseExpiresAt,
+    });
+    const { managementUrl } = issueManagementToken(createdBooking);
+    const claim = bufferedBounds(startTime, endTime, schedule);
+    const slotStarts = getBookingSlotStarts({
+      startTime: claim.start,
+      endTime: claim.end,
+      slotDurationMinutes: schedule.slotDurationMinutes,
+    });
+    claimedSlots = await claimBookingSlots({
+      bookingId: createdBooking._id,
+      slotStarts,
+      slotDurationMinutes: schedule.slotDurationMinutes,
+    });
+    try {
+      await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
+      await createdBooking.save();
+    } catch (error) {
+      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      claimedSlots = null;
+      throw error;
+    }
+
+    try {
+      await recordBookingAudit({
+        req,
+        action: "booking.created",
+        bookingId: createdBooking._id,
+        before: {},
+        after: createdBooking,
+        leaseExpiresAt,
+      });
+      auditCommitted = true;
+    } catch (auditError) {
+      const removal = await Booking.deleteOne({
+        _id: createdBooking._id,
+        slotMutationLock: creationLock,
+        slotMutationLockExpiresAt: leaseExpiresAt,
+      });
+      if (removal.deletedCount === 1) {
+        await releaseBookingSlots(createdBooking._id);
+        claimedSlots = null;
+        createdBooking = null;
+      } else {
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "booking_create_audit_compensation_lost_lease",
+          bookingId: String(createdBooking._id),
+          requestId: req.requestId,
+        }));
+      }
+      throw auditError;
+    }
+
+    await Booking.updateOne(
+      { _id: createdBooking._id, slotMutationLock: creationLock },
+      { $unset: { slotMutationLock: "", slotMutationLockExpiresAt: "" } },
+    );
+    creationLock = null;
+    claimedSlots = null;
+
+    const responseBody = {
+      success: true,
+      message: "Reserva creada por el administrador.",
+      data: adminBooking(createdBooking),
+      requestId: req.requestId,
+    };
+    Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
+      booking: createdBooking._id,
+      status: "completed",
+      responseStatus: 201,
+    });
+    await idempotencyRecord.save();
+    res.status(201).json(responseBody);
+
+    Promise.allSettled([
+      appendBookingToSheet(createdBooking),
+      sendBookingNotifications({
+        booking: { ...createdBooking.toObject(), managementUrl },
+        event: "created",
+      }),
+      sendPushToAdmin({
+        title: "Reserva creada",
+        body: `${createdBooking.studentName} · ${createdBooking.subject}`,
+        url: "/admin",
+      }),
+    ]).catch((error) => console.error("[createAdminBooking side-effects]", error.message));
+  } catch (error) {
+    if (!auditCommitted && idempotencyRecord?.status !== "completed") {
+      await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id }).catch(() => {});
+    }
+    if (error instanceof BookingSlotConflictError) {
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
+    }
+    if (error instanceof ScheduleGridChangedError) {
+      return scheduleGridChangedResponse(res, req.requestId);
+    }
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
 
 export const createBooking = async (req, res, next) => {
   let idempotencyRecord = null;
@@ -737,6 +1043,84 @@ export const getAvailability = async (req, res, next) => {
   }
 };
 
+export const getAdminAvailability = async (req, res, next) => {
+  try {
+    const range = parseAdminAvailabilityRange(req.query);
+    if (!range) {
+      return badRequest(
+        res,
+        `Rango de disponibilidad invalido. Usa from, to y duration en un intervalo maximo de ${MAX_AVAILABILITY_RANGE_DAYS} dias.`,
+      );
+    }
+
+    let excludedBooking = null;
+    if (range.excludeBookingId) {
+      excludedBooking = await Booking.findOne(
+        withActiveBooking({ _id: range.excludeBookingId }),
+      ).select("_id").lean();
+      if (!excludedBooking) return notFound(res, "Reserva a excluir no encontrada.");
+    }
+
+    const schedule = await getScheduleConfiguration();
+    const durationValidation = normalizeDurationMinutes(
+      range.duration,
+      schedule.slotDurationMinutes,
+    );
+    if (durationValidation.error) return badRequest(res, durationValidation.error);
+
+    const exclusionFilter = excludedBooking
+      ? { _id: { $ne: excludedBooking._id } }
+      : {};
+    const [bookings, blockedRecords] = await Promise.all([
+      Booking.find(trustedFilter({
+        ...activeStatusFilter,
+        ...exclusionFilter,
+        $expr: existingBookingOverlapExpression(range.from, range.to),
+      }))
+        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status")
+        .lean()
+        .sort({ timeSlot: 1 }),
+      BlockedDate.find().select("date").lean(),
+    ]);
+    const slots = calculateAvailableSlots({
+      from: range.from,
+      to: range.to,
+      bookings,
+      blockedDates: blockedRecords.map(({ date }) => date),
+      schedule,
+      durationHours: durationValidation.durationMinutes / 60,
+    });
+
+    setNoStore(res);
+    return res.status(200).json({
+      success: true,
+      data: {
+        timeZone: schedule.timeZone,
+        range: {
+          from: range.from.toISOString(),
+          to: range.to.toISOString(),
+          duration: durationValidation.durationMinutes / 60,
+        },
+        slots,
+        excludedBookingId: excludedBooking ? String(excludedBooking._id) : null,
+        schedule: {
+          slotDurationMinutes: schedule.slotDurationMinutes,
+          bufferBeforeMinutes: schedule.bufferBeforeMinutes,
+          bufferAfterMinutes: schedule.bufferAfterMinutes,
+        },
+      },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
 export const getAllBookings = async (req, res, next) => {
   try {
     setNoStore(res);
@@ -765,7 +1149,7 @@ export const getAllBookings = async (req, res, next) => {
         total,
         page,
         totalPages: Math.ceil(total / limit),
-        data: bookings,
+        data: bookings.map(adminBooking),
         requestId: req.requestId,
       });
     }
@@ -775,7 +1159,7 @@ export const getAllBookings = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: bookings.length,
-      data: bookings,
+      data: bookings.map(adminBooking),
       requestId: req.requestId,
     });
   } catch (error) {
@@ -851,6 +1235,7 @@ export const getBookingByCode = (_req, res) => {
 export const updateBooking = async (req, res, next) => {
   let claimedSlots = null;
   let slotMutationLock = null;
+  let canReleaseClaimedSlotsOnFailure = true;
 
   try {
     if (!isValidObjectId(req.params.id)) {
@@ -864,81 +1249,92 @@ export const updateBooking = async (req, res, next) => {
 
     const updateData = { ...parsed.data };
 
-    // Validate status transition before touching the DB
-    if (updateData.status !== undefined) {
-      const current = await Booking.findOne(withActiveBooking({ _id: req.params.id }))
-        .select("status")
-        .lean();
-      if (!current) return notFound(res, "Reserva no encontrada.");
+    slotMutationLock = await acquireSlotMutationLock(req.params.id);
+    if (!slotMutationLock) {
+      const activeBookingExists = await Booking.exists(withActiveBooking({ _id: req.params.id }));
+      if (!activeBookingExists) return notFound(res, "Reserva no encontrada.");
+      return res.status(409).json({
+        success: false,
+        message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+        requestId: req.requestId,
+      });
+    }
 
-      const allowed = STATUS_TRANSITIONS[current.status] ?? [];
+    const beforeBooking = slotMutationLock.booking.toObject();
+    const scheduleChanged = updateData.timeSlot !== undefined || updateData.duration !== undefined;
+    const currentStatus = beforeBooking.status;
+    if (updateData.status !== undefined) {
+      const allowed = STATUS_TRANSITIONS[currentStatus] ?? [];
       if (!allowed.includes(updateData.status)) {
+        await releaseSlotMutationLock(beforeBooking._id, slotMutationLock.lock);
+        slotMutationLock = null;
         return res.status(422).json({
           success: false,
-          message: `Transición de estado no permitida: ${current.status} → ${updateData.status}.`,
+          message: `Transición de estado no permitida: ${currentStatus} → ${updateData.status}.`,
           requestId: req.requestId,
         });
       }
     }
+    if (
+      scheduleChanged &&
+      (SLOT_RELEASING_STATUSES.has(currentStatus) ||
+        SLOT_RELEASING_STATUSES.has(updateData.status))
+    ) {
+      await releaseSlotMutationLock(beforeBooking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(422).json({
+        success: false,
+        message: "No se puede reprogramar una reserva finalizada o cancelada.",
+        requestId: req.requestId,
+      });
+    }
 
     let slotStarts = null;
-    if (updateData.timeSlot !== undefined) {
-      const existing = await Booking.findOne(withActiveBooking({ _id: req.params.id }))
-        .select("duration")
-        .lean();
-      if (!existing) {
-        return notFound(res, "Reserva no encontrada.");
-      }
-
-      const startTime = parseDateTimeInput(updateData.timeSlot);
-      const existingDuration = Number(existing.duration) || 1;
+    if (scheduleChanged) {
+      const startTime = updateData.timeSlot !== undefined
+        ? parseDateTimeInput(updateData.timeSlot)
+        : new Date(beforeBooking.timeSlot);
+      const requestedDuration = updateData.duration !== undefined
+        ? Number(updateData.duration)
+        : Number(beforeBooking.duration);
       const {
         error: slotError,
         schedule,
         durationMinutes,
         endTime,
-      } = await validateConfiguredSlot(startTime, existingDuration);
+      } = await validateConfiguredSlot(startTime, requestedDuration);
       if (slotError) {
+        await releaseSlotMutationLock(beforeBooking._id, slotMutationLock.lock);
+        slotMutationLock = null;
         return badRequest(res, slotError);
       }
-      const { slotDurationMinutes } = schedule;
-      const duration = durationMinutes / 60;
-      const conflict = await hasConflict(
-        startTime,
-        endTime,
-        req.params.id,
-        schedule,
-      );
-      if (conflict) {
-        return badRequest(res, "El nuevo horario tiene conflicto con otra reserva activa.");
-      }
-
-      slotMutationLock = await acquireSlotMutationLock(req.params.id);
-      if (!slotMutationLock) {
+      if (await hasConflict(startTime, endTime, beforeBooking._id, schedule)) {
+        await releaseSlotMutationLock(beforeBooking._id, slotMutationLock.lock);
+        slotMutationLock = null;
         return res.status(409).json({
           success: false,
-          message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
+          message: "El nuevo horario tiene conflicto con otra reserva activa.",
           requestId: req.requestId,
         });
       }
 
       updateData.timeSlot = startTime;
       updateData.endTime = endTime;
-      updateData.duration = duration;
+      updateData.duration = durationMinutes / 60;
       updateData.bufferBeforeMinutes = schedule.bufferBeforeMinutes;
       updateData.bufferAfterMinutes = schedule.bufferAfterMinutes;
       const claim = bufferedBounds(startTime, endTime, schedule);
       slotStarts = getBookingSlotStarts({
         startTime: claim.start,
         endTime: claim.end,
-        slotDurationMinutes,
+        slotDurationMinutes: schedule.slotDurationMinutes,
       });
       claimedSlots = await claimBookingSlots({
-        bookingId: req.params.id,
+        bookingId: beforeBooking._id,
         slotStarts,
-        slotDurationMinutes,
+        slotDurationMinutes: schedule.slotDurationMinutes,
       });
-      await assertScheduleGridUnchanged(slotDurationMinutes);
+      await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
     }
 
     const NOTE_FIELDS = ["notes", "studentEvolution", "emotionalState"];
@@ -951,43 +1347,67 @@ export const updateBooking = async (req, res, next) => {
       mongoUpdate.$push = { notesHistory: { $each: historyPush } };
     }
 
-    if (!slotMutationLock && SLOT_RELEASING_STATUSES.has(updateData.status)) {
-      slotMutationLock = await acquireSlotMutationLock(req.params.id);
-      if (!slotMutationLock) {
-        return res.status(409).json({
-          success: false,
-          message: "La reserva esta siendo modificada. Reintenta en unos segundos.",
-          requestId: req.requestId,
-        });
-      }
-    }
-
-    const updatedBooking = slotMutationLock
-      ? await Booking.findOneAndUpdate(
-        ownedSlotMutationFilter(slotMutationLock),
-        mongoUpdate,
-        { new: true, runValidators: true },
-      )
-      : await Booking.findOneAndUpdate(withActiveBooking({ _id: req.params.id }), mongoUpdate, {
-        new: true,
-        runValidators: true,
-      });
+    const updatedBooking = await Booking.findOneAndUpdate(
+      ownedSlotMutationFilter(slotMutationLock),
+      mongoUpdate,
+      { new: true, runValidators: true },
+    );
+    if (updatedBooking) canReleaseClaimedSlotsOnFailure = false;
 
     if (!updatedBooking) {
       await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds);
-      if (slotMutationLock) {
-        await releaseSlotMutationLock(
-          slotMutationLock.booking._id,
-          slotMutationLock.lock,
-        );
-        slotMutationLock = null;
-        return res.status(409).json({
-          success: false,
-          message: "La reserva cambio mientras era modificada. Reintenta.",
-          requestId: req.requestId,
-        });
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock);
+      slotMutationLock = null;
+      return res.status(409).json({
+        success: false,
+        message: "La reserva cambio mientras era modificada. Reintenta.",
+        requestId: req.requestId,
+      });
+    }
+
+    try {
+      await recordBookingAudit({
+        req,
+        action: scheduleChanged ? "booking.rescheduled" : "booking.updated",
+        bookingId: updatedBooking._id,
+        before: beforeBooking,
+        after: updatedBooking,
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+    } catch (auditError) {
+      const fieldsToRestore = new Set([
+        ...Object.keys(updateData),
+        ...(historyPush.length > 0 ? ["notesHistory"] : []),
+      ]);
+      const set = {};
+      const unset = {};
+      for (const field of fieldsToRestore) {
+        if (beforeBooking[field] === undefined) unset[field] = "";
+        else set[field] = beforeBooking[field];
       }
-      return notFound(res, "Reserva no encontrada.");
+      const compensationUpdate = {};
+      if (Object.keys(set).length > 0) compensationUpdate.$set = set;
+      if (Object.keys(unset).length > 0) compensationUpdate.$unset = unset;
+      const compensation = await compensateWithinOwnedLease({
+        filter: {
+          _id: updatedBooking._id,
+          ...ACTIVE_BOOKING_FILTER,
+          updatedAt: updatedBooking.updatedAt,
+          slotMutationLock: slotMutationLock.lock,
+        },
+        update: compensationUpdate,
+        leaseExpiresAt: slotMutationLock.expiresAt,
+      });
+      if (compensation.modifiedCount !== 1) {
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "booking_update_audit_compensation_lost_lease",
+          bookingId: String(updatedBooking._id),
+          requestId: req.requestId,
+        }));
+      } else {
+        canReleaseClaimedSlotsOnFailure = true;
+      }
+      throw auditError;
     }
 
     if (SLOT_RELEASING_STATUSES.has(updateData.status)) {
@@ -996,12 +1416,8 @@ export const updateBooking = async (req, res, next) => {
       await releaseBookingSlotsExcept(updatedBooking._id, slotStarts);
     }
     claimedSlots = null;
-    if (slotMutationLock) {
-      await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
-      slotMutationLock = null;
-    }
-
-    await updateBookingInSheet(updatedBooking);
+    await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
+    slotMutationLock = null;
 
     // Fire email side-effects for relevant transitions (non-blocking)
     if (updateData.status === "Cancelado") {
@@ -1013,11 +1429,17 @@ export const updateBooking = async (req, res, next) => {
     setNoStore(res);
     res.status(200).json({
       success: true,
-      data: updatedBooking,
+      data: adminBooking(updatedBooking),
       requestId: req.requestId,
     });
+
+    updateBookingInSheet(updatedBooking).catch(
+      (error) => console.error("[admin-update sheet]", error),
+    );
   } catch (error) {
-    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    if (canReleaseClaimedSlotsOnFailure) {
+      await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    }
     if (slotMutationLock) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
         .catch(() => {});
@@ -1025,6 +1447,14 @@ export const updateBooking = async (req, res, next) => {
 
     if (error instanceof ScheduleGridChangedError) {
       return scheduleGridChangedResponse(res, req.requestId);
+    }
+
+    if (error instanceof BookingSlotConflictError) {
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
     }
 
     if (typeof next === "function") {
