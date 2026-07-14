@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchAllBookings,
+  createAdminBooking as apiCreateAdminBooking,
   updateBooking,
   updateBookingAttendance as apiUpdateBookingAttendance,
   deleteBooking as apiDeleteBooking,
@@ -127,6 +128,26 @@ export const useBookingsData = ({
     [authConfig],
   );
 
+  const createAdminBooking = useCallback(
+    async (payload, idempotencyKey) => {
+      const response = await apiCreateAdminBooking(
+        payload,
+        authConfig,
+        idempotencyKey,
+      );
+      const createdBooking = normalizeCanonicalBooking(
+        response?.data?.data?._id,
+        response?.data?.data,
+      );
+      setBookings((current) => [
+        createdBooking,
+        ...current.filter((booking) => booking._id !== createdBooking._id),
+      ]);
+      return createdBooking;
+    },
+    [authConfig],
+  );
+
   const updateBookingAttendance = useCallback(
     async (id, payload) => {
       const response = await apiUpdateBookingAttendance(id, payload, authConfig);
@@ -179,6 +200,7 @@ export const useBookingsData = ({
     lastRefreshedAt,
     refreshBookings: fetchBookings,
     handleQuickStatusChange,
+    createAdminBooking,
     updateBookingFields,
     updateBookingAttendance,
     deleteBooking: handleDeleteBooking,

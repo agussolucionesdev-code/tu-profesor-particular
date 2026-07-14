@@ -61,6 +61,24 @@ export const confirmAttendance = (bookingCode) =>
 export const fetchAllBookings = (authConfig) =>
   apiClient.get("/api/bookings", authConfig);
 
+export const fetchAdminAvailability = (params, authConfig, signal) =>
+  apiClient.get("/api/bookings/admin/availability", {
+    ...authConfig,
+    params,
+    signal,
+  });
+
+export const createAdminBooking = (
+  data,
+  authConfig,
+  idempotencyKey = createIdempotencyKey(),
+) =>
+  apiClient.post(
+    "/api/bookings",
+    data,
+    withIdempotencyKey(idempotencyKey, authConfig),
+  );
+
 export const updateBooking = (id, data, authConfig) =>
   apiClient.put(`/api/bookings/${id}`, data, authConfig);
 

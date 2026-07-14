@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   FaBan,
   FaBell,
-  FaCalendarAlt,
   FaCalendarCheck,
   FaChartLine,
   FaClipboardList,
@@ -37,7 +36,6 @@ const StudentsView = lazy(() => import("./admin/views/StudentsView"));
 const BookingsView = lazy(() => import("./admin/views/BookingsView"));
 const AvailabilitySettingsView = lazy(() => import("./admin/views/AvailabilitySettingsView"));
 const ScheduleSettingsView = lazy(() => import("./admin/views/ScheduleSettingsView"));
-const CalendarView = lazy(() => import("./admin/views/CalendarView"));
 const HistoryView = lazy(() => import("./admin/views/HistoryView"));
 import { SkeletonKPI } from "./admin/shared/Skeleton";
 import ThemeLogo from "./ui/ThemeLogo";
@@ -50,7 +48,6 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 const VIEW_OPTIONS = [
   { id: "overview", label: "Resumen", icon: FaChartLine },
   { id: "agenda", label: "Agenda", icon: FaCalendarCheck },
-  { id: "calendar", label: "Calendario", icon: FaCalendarAlt },
   { id: "students", label: "Alumnos", icon: FaUsers },
   { id: "bookings", label: "Turnos", icon: FaClipboardList },
   { id: "history", label: "Historial", icon: FaHistory },
@@ -81,6 +78,7 @@ const AdminPanel = () => {
     lastRefreshedAt,
     refreshBookings,
     handleQuickStatusChange,
+    createAdminBooking,
     updateBookingFields,
     updateBookingAttendance,
     deleteBooking,
@@ -451,9 +449,12 @@ const AdminPanel = () => {
 
           {activeView === "agenda" && (
             <AgendaView
-              overviewData={overviewData}
-              onSendWhatsApp={handleSendWhatsApp}
-              onQuickStatusChange={handleQuickStatusChange}
+              sortedBookings={sortedBookings}
+              authConfig={authConfig}
+              onCreateBooking={createAdminBooking}
+              onUpdateBooking={updateBookingFields}
+              onInteractionStateChange={setBulkInteractionActive}
+              onRefreshBookings={refreshBookings}
             />
           )}
 
@@ -499,14 +500,6 @@ const AdminPanel = () => {
             />
           )}
 
-          {activeView === "calendar" && (
-            <CalendarView
-              sortedBookings={sortedBookings}
-              onSelectBooking={setViewBooking}
-              authConfig={authConfig}
-            />
-          )}
-
           {activeView === "availability" && (
             <AvailabilitySettingsView authConfig={authConfig} />
           )}
@@ -543,7 +536,6 @@ const AdminPanel = () => {
           {showMoreNav && (
             <div className="bottom-nav-more-drawer" role="menu" aria-label="Más vistas">
               {[
-                { id: "calendar", label: "Calendario", icon: FaCalendarAlt },
                 { id: "students", label: "Alumnos", icon: FaUsers },
                 { id: "history", label: "Historial", icon: FaHistory },
                 { id: "availability", label: "Disponibilidad", icon: FaBan },
