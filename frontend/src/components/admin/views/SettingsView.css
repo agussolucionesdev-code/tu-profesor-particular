@@ -200,6 +200,165 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
 .settings-sheets-warning span { opacity: 0.85; }
 [data-theme="dark"] .settings-sheets-warning { background: rgba(127, 29, 29, 0.18); border-color: rgba(248, 113, 113, 0.25); }
 
+/* Visual subjects editor */
+.subjects-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.subjects-editor-header,
+.subjects-save-actions,
+.subjects-live,
+.subjects-row,
+.subjects-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.subjects-editor-header,
+.subjects-live {
+  justify-content: space-between;
+}
+
+.subjects-editor-header h3,
+.subjects-editor-header p { margin: 0; }
+
+.subjects-save-actions {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.subjects-mode-fieldset,
+.subjects-level-card {
+  margin: 0;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.2));
+  border-radius: 12px;
+}
+
+.subjects-mode-fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.subjects-mode-fieldset legend,
+.subjects-level-card legend {
+  padding: 0 0.35rem;
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.subjects-mode-fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.subjects-mode-fieldset input { width: 1.05rem; height: 1.05rem; }
+
+.subjects-live {
+  min-height: 2.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.2));
+  border-radius: 10px;
+  font-size: 0.86rem;
+}
+
+.subjects-live.error {
+  border-color: rgba(220, 38, 38, 0.35);
+  color: var(--color-error-deep, #b91c1c);
+}
+
+.subjects-live.success {
+  border-color: rgba(22, 163, 74, 0.35);
+  color: var(--color-success-deep, #166534);
+}
+
+.subjects-default-copy {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--color-surface-2, #f8fafc);
+  color: var(--color-text-secondary, #64748b);
+}
+
+.subjects-level-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 0.9rem;
+}
+
+.subjects-level-card {
+  min-width: 0;
+  padding: 0.9rem;
+  background: var(--color-surface-2, rgba(248, 250, 252, 0.72));
+}
+
+.subjects-level-card legend span { color: var(--color-text-secondary, #64748b); }
+
+.subjects-ordered-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0 0 0.85rem;
+  padding: 0;
+  list-style: none;
+}
+
+.subjects-row {
+  align-items: stretch;
+  flex-direction: column;
+  padding: 0.7rem;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  border-radius: 9px;
+  background: var(--color-surface-1, #fff);
+}
+
+.subjects-row > label {
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.subjects-row-error {
+  margin: 0;
+  color: var(--color-danger, #dc2626);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.subjects-row .settings-input { width: 100%; }
+.subjects-row-actions { flex-wrap: wrap; }
+.subjects-row-actions .inline-action { min-height: 2rem; }
+.subjects-add-btn { margin-top: 0.15rem; }
+
+[data-theme="dark"] .subjects-mode-fieldset,
+[data-theme="dark"] .subjects-level-card,
+[data-theme="dark"] .subjects-live {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="dark"] .subjects-mode-fieldset legend,
+[data-theme="dark"] .subjects-level-card legend,
+[data-theme="dark"] .subjects-mode-fieldset label {
+  color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .subjects-level-card,
+[data-theme="dark"] .subjects-default-copy {
+  background: var(--color-surface-2, #0f172a);
+}
+
+[data-theme="dark"] .subjects-row {
+  background: var(--color-surface-1, #111827);
+}
+
 .blocked-date-reason {
   margin: 0;
   font-size: 0.85rem;
@@ -447,4 +606,9 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
   .availability-save-actions { align-items: stretch; }
   .availability-week-grid { grid-template-columns: 1fr; }
   .availability-interval-row { grid-template-columns: 1fr 1fr auto; }
+  .subjects-editor-header,
+  .subjects-live { align-items: stretch; flex-direction: column; }
+  .subjects-save-actions { align-items: stretch; }
+  .subjects-level-grid { grid-template-columns: 1fr; }
+  .subjects-row-actions .inline-action { flex: 1 1 auto; justify-content: center; }
 }

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   FaBan,
   FaDollarSign,
-  FaGraduationCap,
   FaMapMarkerAlt,
   FaSave,
   FaToggleOff,
   FaToggleOn,
 } from "react-icons/fa";
 import { fetchAdminSettings, updateSetting } from "../../../api/bookingApi";
+import SubjectSettingsEditor from "./SubjectSettingsEditor";
 import "./SettingsView.css";
 
 const SECTIONS = [
@@ -60,21 +60,6 @@ const SECTIONS = [
         hint: "Enlace que se incluye en el email para que el alumno llegue.",
         type: "text",
         maxLength: 500,
-      },
-    ],
-  },
-  {
-    id: "subjects",
-    icon: FaGraduationCap,
-    kicker: "Materias",
-    title: "Lista de materias",
-    fields: [
-      {
-        key: "booking.subjectsByLevel",
-        label: "Materias por nivel (JSON)",
-        hint: "Objeto JSON con claves: Primaria, Secundaria, Secundaria Tecnica, Terciario, Universitario. Dejar vacío para usar el listado predeterminado.",
-        type: "textarea",
-        rows: 10,
       },
     ],
   },
@@ -325,6 +310,7 @@ const ScheduleSettingsView = ({ authConfig }) => {
           </article>
         );
       })}
+      <SubjectSettingsEditor authConfig={authConfig} />
     </div>
   );
 };

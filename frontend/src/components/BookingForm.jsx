@@ -52,6 +52,7 @@ import {
   RESPONSIBLE_RELATIONSHIP_OTHER_VALUE,
 } from "../utils/bookingFormatters";
 import { createIdempotencyKey } from "../utils/idempotencyKey";
+import { parsePublicSubjectsByLevel } from "../utils/subjectSettings";
 import {
   isVoiceMuted,
   primeVoicePlayback,
@@ -138,7 +139,8 @@ const BookingForm = () => {
         const price = Number(data["booking.pricePerHour"] ?? 0);
         if (price > 0) setPricePerHour(price);
         const subjects = data["booking.subjectsByLevel"];
-        if (subjects && typeof subjects === "object") setSubjectsByLevelOverride(subjects);
+        const parsedSubjects = parsePublicSubjectsByLevel(subjects);
+        if (parsedSubjects) setSubjectsByLevelOverride(parsedSubjects);
       })
       .catch(() => {});
   }, []);

@@ -140,6 +140,25 @@ export const updateAdminSchedule = (schedule, revision, authConfig) =>
     },
   );
 
+export const fetchAdminSubjects = (authConfig, signal) =>
+  apiClient.get("/api/settings/admin/subjects", {
+    ...authConfig,
+    signal,
+  });
+
+export const updateAdminSubjects = (subjects, revision, authConfig) =>
+  apiClient.put(
+    "/api/settings/admin/subjects",
+    subjects,
+    {
+      ...authConfig,
+      headers: {
+        ...authConfig?.headers,
+        "If-Match": `"${revision}"`,
+      },
+    },
+  );
+
 export const updateSetting = (key, value, authConfig) =>
   apiClient.put(`/api/settings/${encodeURIComponent(key)}`, { value }, authConfig);
 
