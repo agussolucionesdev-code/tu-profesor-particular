@@ -35,7 +35,7 @@ const OverviewView = lazy(() => import("./admin/views/OverviewView"));
 const AgendaView = lazy(() => import("./admin/views/AgendaView"));
 const StudentsView = lazy(() => import("./admin/views/StudentsView"));
 const BookingsView = lazy(() => import("./admin/views/BookingsView"));
-const BlockedDatesView = lazy(() => import("./admin/views/BlockedDatesView"));
+const AvailabilitySettingsView = lazy(() => import("./admin/views/AvailabilitySettingsView"));
 const ScheduleSettingsView = lazy(() => import("./admin/views/ScheduleSettingsView"));
 const CalendarView = lazy(() => import("./admin/views/CalendarView"));
 const HistoryView = lazy(() => import("./admin/views/HistoryView"));
@@ -508,7 +508,7 @@ const AdminPanel = () => {
           )}
 
           {activeView === "availability" && (
-            <BlockedDatesView authConfig={authConfig} />
+            <AvailabilitySettingsView authConfig={authConfig} />
           )}
 
           {activeView === "settings" && (

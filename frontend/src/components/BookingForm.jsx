@@ -220,6 +220,9 @@ const BookingForm = () => {
     isSelectedTimeVerified,
     availabilityMatchesSelectedDuration,
     availabilityStatus,
+    availabilityMinDate,
+    availabilityMaxDate,
+    availabilityRangeLabel,
     retryAvailability,
   } = useBookingAvailability(formData.timeSlot, formData.duration, showToast);
 
@@ -1273,6 +1276,9 @@ const BookingForm = () => {
                   availableSlotCount={availableSlotCount}
                   hasAnyAvailability={hasAnyAvailability}
                   availabilityStatus={availabilityStatus}
+                  availabilityMinDate={availabilityMinDate}
+                  availabilityMaxDate={availabilityMaxDate}
+                  availabilityRangeLabel={availabilityRangeLabel}
                   retryAvailability={retryAvailability}
                   handleDateSelect={handleDateSelect}
                   clearDateSelection={clearDateSelection}
@@ -1433,7 +1439,8 @@ const BookingForm = () => {
                   selected={formData.timeSlot}
                   onChange={() => {}}
                   onSelect={handleDateSelect}
-                  minDate={new Date()}
+                  minDate={availabilityMinDate ?? undefined}
+                  maxDate={availabilityMaxDate}
                   inline
                   locale="es"
                   fixedHeight

@@ -76,8 +76,12 @@ test.describe("secure booking management links", () => {
     page,
   }) => {
     await mockHealth(page);
-    const timeSlot = "2030-06-15T15:00:00.000Z";
-    const endTime = "2030-06-15T16:00:00.000Z";
+    const slotDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    slotDate.setUTCHours(15, 0, 0, 0);
+    const timeSlot = slotDate.toISOString();
+    const endTime = new Date(slotDate.getTime() + 60 * 60 * 1000).toISOString();
+    const rangeFrom = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const rangeTo = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
     const availabilityHeaders = [];
 
     await page.route("**/api/bookings/manage", (route) =>
@@ -104,12 +108,21 @@ test.describe("secure booking management links", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
+          success: true,
+          count: 0,
           data: [],
           blockedDates: [],
-          schedule: { timeZone: "America/Argentina/Buenos_Aires" },
+          schedule: {
+            timeZone: "America/Argentina/Buenos_Aires",
+            slotDurationMinutes: 30,
+            minimumNoticeMinutes: 0,
+            maximumAdvanceDays: 120,
+          },
+          range: { from: rangeFrom, to: rangeTo },
           // The backend includes this time only for the bearer that owns it.
           // Without the header, a duration change would correctly clear it.
           slots: tokenHeader === token ? [{ timeSlot, endTime, duration: 1.5 }] : [],
+          requestId: "e2e-availability",
         }),
       });
     });

@@ -17,6 +17,7 @@ import { createIdempotencyKey } from "../../utils/idempotencyKey";
 import {
   availabilityRequestParams,
   isSelectedTimeAvailable,
+  parsePublicAvailabilityResponse,
   selectSlotsForDate,
 } from "../../utils/availabilitySlots";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
@@ -44,6 +45,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   const [newDuration, setNewDuration] = useState(editingBooking.duration);
   const [backendSlots, setBackendSlots] = useState(undefined);
   const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
+  const [availabilityMinDate, setAvailabilityMinDate] = useState(null);
+  const [availabilityMaxDate, setAvailabilityMaxDate] = useState(null);
   const [availabilityStatus, setAvailabilityStatus] = useState("loading");
   const [resolvedAvailabilityDuration, setResolvedAvailabilityDuration] = useState(null);
   const [availabilityRequestVersion, setAvailabilityRequestVersion] = useState(0);
@@ -73,29 +76,31 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     const requestParams = availabilityRequestParams(newDuration);
     fetchAvailability(requestParams, managementToken)
       .then((res) => {
+        const parsed = parsePublicAvailabilityResponse(res.data);
         if (!isCurrentRequest) return;
-        const responseSlots = Array.isArray(res.data.slots) ? res.data.slots : undefined;
+        const responseSlots = parsed.slots;
         setBackendSlots(responseSlots);
-        setAvailabilityTimeZone(res.data.schedule?.timeZone);
+        setAvailabilityTimeZone(parsed.schedule.timeZone);
+        setAvailabilityMinDate(parsed.minDate);
+        setAvailabilityMaxDate(parsed.maxDate);
         setResolvedAvailabilityDuration(requestParams?.duration ?? null);
-        setAvailabilityStatus(Array.isArray(responseSlots) ? "ready" : "error");
-        if (Array.isArray(responseSlots)) {
-          setSelectedTime((currentTime) =>
-            isSelectedTimeAvailable({
-              selectedTime: currentTime,
-              backendSlots: responseSlots,
-            })
-              ? currentTime
-              : null,
-          );
-        } else {
-          setSelectedTime(null);
-        }
+        setAvailabilityStatus("ready");
+        setSelectedTime((currentTime) =>
+          isSelectedTimeAvailable({
+            selectedTime: currentTime,
+            backendSlots: responseSlots,
+          })
+            ? currentTime
+            : null,
+        );
       })
       .catch((error) => {
         if (!isCurrentRequest) return;
         console.error(error);
         setBackendSlots(undefined);
+        setAvailabilityTimeZone(undefined);
+        setAvailabilityMinDate(null);
+        setAvailabilityMaxDate(null);
         setResolvedAvailabilityDuration(requestParams?.duration ?? null);
         setAvailabilityStatus("error");
         setSelectedTime(null);
@@ -328,7 +333,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
             <DatePicker
               selected={selectedDay}
               onChange={handleDayChange}
-              minDate={new Date()}
+              minDate={availabilityMinDate ?? undefined}
+              maxDate={availabilityMaxDate}
               locale="es"
               calendarClassName="reschedule-datepicker"
               renderCustomHeader={({
@@ -386,6 +392,8 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
                     onClick={() => {
                       setAvailabilityStatus("loading");
                       setBackendSlots(undefined);
+                      setAvailabilityMinDate(null);
+                      setAvailabilityMaxDate(null);
                       setAvailabilityRequestVersion((version) => version + 1);
                     }}
                   >

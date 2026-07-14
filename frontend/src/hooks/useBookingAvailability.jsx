@@ -8,6 +8,7 @@ import {
   getBusinessDateKey,
   isSelectedTimeAvailable,
   isVerifiedAvailabilitySelection,
+  parsePublicAvailabilityResponse,
   selectSlotsForDate,
 } from "../utils/availabilitySlots";
 
@@ -39,6 +40,9 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
   const [blockedDates, setBlockedDates] = useState([]);
   const [backendSlots, setBackendSlots] = useState(undefined);
   const [availabilityTimeZone, setAvailabilityTimeZone] = useState(undefined);
+  const [availabilityMinDate, setAvailabilityMinDate] = useState(null);
+  const [availabilityMaxDate, setAvailabilityMaxDate] = useState(null);
+  const [availabilityRangeLabel, setAvailabilityRangeLabel] = useState("");
   const [resolvedAvailabilityDuration, setResolvedAvailabilityDuration] = useState(null);
   const [availabilityStatus, setAvailabilityStatus] = useState("loading");
   const [availabilityRequestVersion, setAvailabilityRequestVersion] = useState(0);
@@ -51,21 +55,31 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     const loadBookings = async () => {
       try {
         const res = await fetchAvailability(requestParams);
+        const parsed = parsePublicAvailabilityResponse(res.data);
         if (!isCurrentRequest) return;
         setExistingBookings(
-          (Array.isArray(res.data.data) ? res.data.data : []).filter(
+          parsed.existingBookings.filter(
             (booking) => booking.status !== "Cancelado",
           ),
         );
-        setBlockedDates(Array.isArray(res.data.blockedDates) ? res.data.blockedDates : []);
-        setBackendSlots(Array.isArray(res.data.slots) ? res.data.slots : undefined);
-        setAvailabilityTimeZone(res.data.schedule?.timeZone);
+        setBlockedDates(parsed.blockedDates);
+        setBackendSlots(parsed.slots);
+        setAvailabilityTimeZone(parsed.schedule.timeZone);
+        setAvailabilityMinDate(parsed.minDate);
+        setAvailabilityMaxDate(parsed.maxDate);
+        setAvailabilityRangeLabel(parsed.rangeLabel);
         setResolvedAvailabilityDuration(requestedDuration);
-        setAvailabilityStatus(Array.isArray(res.data.slots) ? "ready" : "error");
+        setAvailabilityStatus("ready");
       } catch (error) {
         if (!isCurrentRequest) return;
         console.error("Error fetching bookings", error);
+        setExistingBookings([]);
+        setBlockedDates([]);
         setBackendSlots(undefined);
+        setAvailabilityTimeZone(undefined);
+        setAvailabilityMinDate(null);
+        setAvailabilityMaxDate(null);
+        setAvailabilityRangeLabel("");
         setResolvedAvailabilityDuration(requestedDuration);
         setAvailabilityStatus("error");
         showToast?.(getBookingApiMessage(error), "warning");
@@ -183,13 +197,30 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
   const isDateAvailable = useCallback(
     (date) => {
       const dayKey = getBusinessDateKey(date, availabilityTimeZone);
+      const minimumKey = availabilityMinDate
+        ? getBusinessDateKey(availabilityMinDate, availabilityTimeZone)
+        : null;
+      const maximumKey = availabilityMaxDate
+        ? getBusinessDateKey(availabilityMaxDate, availabilityTimeZone)
+        : null;
       return (
         effectiveAvailabilityStatus === "ready" &&
+        minimumKey !== null &&
+        maximumKey !== null &&
+        dayKey >= minimumKey &&
+        dayKey <= maximumKey &&
         !blockedDates.includes(dayKey) &&
         Boolean(availableBackendDateKeys?.has(dayKey))
       );
     },
-    [effectiveAvailabilityStatus, blockedDates, availableBackendDateKeys, availabilityTimeZone],
+    [
+      effectiveAvailabilityStatus,
+      blockedDates,
+      availableBackendDateKeys,
+      availabilityTimeZone,
+      availabilityMinDate,
+      availabilityMaxDate,
+    ],
   );
 
   const hasAnyAvailability =
@@ -220,9 +251,16 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     }),
     availabilityMatchesSelectedDuration: resolvedAvailabilityDuration === requestedDuration,
     availabilityStatus: effectiveAvailabilityStatus,
+    availabilityMinDate,
+    availabilityMaxDate,
+    availabilityRangeLabel,
     retryAvailability: () => {
       setAvailabilityStatus("loading");
       setBackendSlots(undefined);
+      setBlockedDates([]);
+      setAvailabilityMinDate(null);
+      setAvailabilityMaxDate(null);
+      setAvailabilityRangeLabel("");
       setAvailabilityRequestVersion((version) => version + 1);
     },
   };

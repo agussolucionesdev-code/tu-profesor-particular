@@ -14,6 +14,9 @@ const DateSelectionStep = ({
   availableSlotCount,
   hasAnyAvailability = true,
   availabilityStatus,
+  availabilityMinDate,
+  availabilityMaxDate,
+  availabilityRangeLabel,
   retryAvailability,
   handleDateSelect,
   clearDateSelection,
@@ -51,7 +54,8 @@ const DateSelectionStep = ({
             selected={formData.timeSlot}
             onChange={() => {}}
             onSelect={handleDateSelect}
-            minDate={new Date()}
+            minDate={availabilityMinDate ?? undefined}
+            maxDate={availabilityMaxDate}
             inline
             locale="es"
             fixedHeight
@@ -90,7 +94,7 @@ const DateSelectionStep = ({
           <div className="calendar-no-availability" role="alert">
             <FaExclamationCircle aria-hidden="true" />
             <span>
-              No hay turnos disponibles en los próximos 90 días. Probá avanzar al mes siguiente o{" "}
+              No hay turnos disponibles en {availabilityRangeLabel || "el período verificado"}. Probá otra fecha o{" "}
               <a href="https://wa.me/5491164236675" target="_blank" rel="noopener noreferrer">
                 contactá al profesor por WhatsApp
               </a>

@@ -106,6 +106,22 @@ export const fetchPublicSettings = () =>
 export const fetchAdminSettings = (authConfig) =>
   apiClient.get("/api/settings/admin", authConfig);
 
+export const fetchAdminSchedule = (authConfig) =>
+  apiClient.get("/api/settings/admin/schedule", authConfig);
+
+export const updateAdminSchedule = (schedule, revision, authConfig) =>
+  apiClient.put(
+    "/api/settings/admin/schedule",
+    { schedule },
+    {
+      ...authConfig,
+      headers: {
+        ...authConfig?.headers,
+        "If-Match": `"${revision}"`,
+      },
+    },
+  );
+
 export const updateSetting = (key, value, authConfig) =>
   apiClient.put(`/api/settings/${encodeURIComponent(key)}`, { value }, authConfig);
 

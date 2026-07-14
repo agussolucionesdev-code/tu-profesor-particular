@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   FaBan,
-  FaClock,
-  FaCog,
   FaDollarSign,
   FaGraduationCap,
   FaMapMarkerAlt,
@@ -14,42 +12,6 @@ import { fetchAdminSettings, updateSetting } from "../../../api/bookingApi";
 import "./SettingsView.css";
 
 const SECTIONS = [
-  {
-    id: "schedule",
-    icon: FaClock,
-    kicker: "Horario",
-    title: "Horario de atención",
-    fields: [
-      {
-        key: "schedule.openingHour",
-        label: "Hora de apertura",
-        hint: "0–23 · ej: 7 = 07:00",
-        min: 0,
-        max: 23,
-      },
-      {
-        key: "schedule.closingHour",
-        label: "Hora de cierre",
-        hint: "0–23 · ej: 22 = 22:00",
-        min: 0,
-        max: 23,
-      },
-      {
-        key: "schedule.advanceNoticeMinutes",
-        label: "Anticipación mínima (min)",
-        hint: "Tiempo mínimo para reservar de antemano",
-        min: 0,
-        max: 1440,
-      },
-      {
-        key: "schedule.slotDurationMinutes",
-        label: "Duración de slot (min)",
-        hint: "30 o 60",
-        min: 15,
-        max: 120,
-      },
-    ],
-  },
   {
     id: "booking",
     icon: FaBan,
