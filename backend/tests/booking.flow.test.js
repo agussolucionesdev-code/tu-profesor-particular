@@ -3212,6 +3212,516 @@ describe("booking flows", () => {
     })).toBe(1);
   });
 
+  describe("subjects settings contract", () => {
+    const levels = (suffix = "") => [
+      { level: "Universitario", subjects: [`Cálculo${suffix}`] },
+      { level: "Primaria", subjects: [` Matemática   Inicial ${suffix} `] },
+      { level: "Terciario", subjects: [`Pedagogía${suffix}`] },
+      { level: "Secundaria Tecnica", subjects: [`Dibujo Técnico${suffix}`] },
+      { level: "Secundaria", subjects: [`Física${suffix}`] },
+    ];
+
+    it("returns a revisioned canonical default while preserving the public legacy null", async () => {
+      const token = await createAdminAndLogin();
+      const admin = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      const publicSettings = await request(app).get("/api/settings").expect(200);
+
+      expect(admin.body.data).toEqual({
+        revision: 0,
+        mode: "default",
+        levels: [
+          { level: "Primaria", subjects: [] },
+          { level: "Secundaria", subjects: [] },
+          { level: "Secundaria Tecnica", subjects: [] },
+          { level: "Terciario", subjects: [] },
+          { level: "Universitario", subjects: [] },
+        ],
+      });
+      expect(publicSettings.body.data["booking.subjectsByLevel"]).toBeNull();
+      expect(JSON.stringify(publicSettings.body)).not.toMatch(/revision|__mode|actor|requestId.*requestId/s);
+    });
+
+    it("requires authentication and If-Match while rejecting malformed subject structures", async () => {
+      const token = await createAdminAndLogin();
+      await request(app).get("/api/settings/admin/subjects").expect(401);
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ mode: "custom", levels: levels() })
+        .expect(428);
+
+      const invalidBodies = [
+        {},
+        { mode: "custom", levels: [] },
+        { mode: "custom", levels: [...levels(), { level: "Otro", subjects: ["Materia"] }] },
+        { mode: "custom", levels: levels().map((entry, index) => index === 0
+          ? { ...entry, subjects: ["Cálculo", " cálculo "] }
+          : entry) },
+        { mode: "custom", levels: levels().map((entry, index) => index === 1
+          ? { ...entry, subjects: [""] }
+          : entry) },
+        { mode: "custom", levels: levels().map((entry, index) => index === 2
+          ? { ...entry, subjects: Array.from({ length: 81 }, (_, subject) => `Materia ${subject}`) }
+          : entry) },
+        { mode: "custom", levels: levels().map((entry, index) => index === 3
+          ? { ...entry, unexpected: true }
+          : entry) },
+        { mode: "default", levels: [] },
+      ];
+      for (const [index, body] of invalidBodies.entries()) {
+        await request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "0")
+          .set("X-Request-Id", `invalid-subjects-${index}`)
+          .send(body)
+          .expect(400);
+      }
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .set("Content-Type", "application/json")
+        .send(JSON.stringify({
+          mode: "custom",
+          levels: levels().map((entry, index) => index === 0
+            ? { level: "__proto__", subjects: ["Materia"] }
+            : entry),
+        }))
+        .expect(400);
+      await request(app)
+        .put("/api/settings/booking.subjectsByLevel")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ value: { Primaria: ["Bypass"] } })
+        .expect(400);
+
+      expect(await AppSettings.exists({ key: "booking.subjectsByLevel" })).toBeNull();
+      expect(await AuditEvent.countDocuments({ action: "settings.subjects.updated" })).toBe(0);
+    });
+
+    it("rejects control and invisible format characters plus NFKC duplicate bypasses", async () => {
+      const token = await createAdminAndLogin();
+      const invalidSubjectLists = [
+        ["Matemática\u0000"],
+        ["Mate\u200Bmática"],
+        ["Matemática\u202E"],
+        ["Matemática\uFE0F"],
+        ["Mate\u034Fmática"],
+        ["Matemática\uD800"],
+        ["Math", "\uFF2Dath"],
+        ["Matemática", "Matemática\uFE0F"],
+        ["Matemática", "Mate\u034Fmática"],
+      ];
+
+      for (const [index, subjects] of invalidSubjectLists.entries()) {
+        const body = {
+          mode: "custom",
+          levels: levels().map((entry, levelIndex) => levelIndex === 0
+            ? { ...entry, subjects }
+            : entry),
+        };
+        await request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "0")
+          .set("X-Request-Id", `invalid-unicode-subject-${index}`)
+          .send(body)
+          .expect(400);
+      }
+
+      expect(await AppSettings.exists({ key: "booking.subjectsByLevel" })).toBeNull();
+      expect(await AuditEvent.countDocuments({ action: "settings.subjects.updated" })).toBe(0);
+    });
+
+    it("enforces exact total and normalized label boundaries", async () => {
+      const token = await createAdminAndLogin();
+      const subjectsByCount = (counts) => levels().map((entry, index) => ({
+        level: entry.level,
+        subjects: Array.from(
+          { length: counts[index] },
+          (_, subjectIndex) => `${entry.level} Materia ${subjectIndex}`,
+        ),
+      }));
+
+      const maximumTotal = await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .send({ mode: "custom", levels: subjectsByCount([60, 60, 60, 60, 60]) })
+        .expect(200);
+      expect(maximumTotal.body.data.levels.reduce(
+        (total, entry) => total + entry.subjects.length,
+        0,
+      )).toBe(300);
+
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "1")
+        .send({ mode: "custom", levels: subjectsByCount([61, 60, 60, 60, 60]) })
+        .expect(400);
+
+      const labelAtMaximum = "a".repeat(80);
+      const maximumLabel = await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "1")
+        .send({
+          mode: "custom",
+          levels: levels().map((entry, index) => index === 0
+            ? { ...entry, subjects: [labelAtMaximum] }
+            : entry),
+        })
+        .expect(200);
+      expect(maximumLabel.body.data.levels.at(-1).subjects).toEqual([labelAtMaximum]);
+
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "2")
+        .send({
+          mode: "custom",
+          levels: levels().map((entry, index) => index === 0
+            ? { ...entry, subjects: ["a".repeat(81)] }
+            : entry),
+        })
+        .expect(400);
+    });
+
+    it("normalizes order and labels while exposing only the backward-compatible public object", async () => {
+      const token = await createAdminAndLogin();
+      const updated = await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .set("X-Request-Id", "subjects-created")
+        .send({ mode: "custom", levels: levels() })
+        .expect(200);
+
+      expect(updated.body.data).toMatchObject({
+        revision: 1,
+        mode: "custom",
+        levels: [
+          { level: "Primaria", subjects: ["Matemática Inicial"] },
+          { level: "Secundaria", subjects: ["Física"] },
+          { level: "Secundaria Tecnica", subjects: ["Dibujo Técnico"] },
+          { level: "Terciario", subjects: ["Pedagogía"] },
+          { level: "Universitario", subjects: ["Cálculo"] },
+        ],
+      });
+      const publicSettings = await request(app).get("/api/settings").expect(200);
+      expect(publicSettings.body.data["booking.subjectsByLevel"]).toEqual({
+        Primaria: ["Matemática Inicial"],
+        Secundaria: ["Física"],
+        "Secundaria Tecnica": ["Dibujo Técnico"],
+        Terciario: ["Pedagogía"],
+        Universitario: ["Cálculo"],
+      });
+      expect(JSON.stringify(publicSettings.body)).not.toMatch(/revision|__mode|updatedBy|actor/i);
+      const audit = await AuditEvent.findOne({ action: "settings.subjects.updated" }).lean();
+      expect(audit).toMatchObject({
+        entityType: "AppSettings",
+        requestId: "subjects-created",
+        before: { revision: 0, mode: "default" },
+        after: { revision: 1, mode: "custom" },
+      });
+      expect(JSON.stringify(audit)).not.toMatch(/mutationLock|password|token/i);
+    });
+
+    it("restores the built-in public defaults without losing revision history", async () => {
+      const token = await createAdminAndLogin();
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .send({ mode: "custom", levels: levels() })
+        .expect(200);
+      const reset = await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "1")
+        .send({ mode: "default" })
+        .expect(200);
+
+      expect(reset.body.data).toMatchObject({ revision: 2, mode: "default" });
+      expect(reset.body.data.levels.every(({ subjects }) => subjects.length === 0)).toBe(true);
+      const publicSettings = await request(app).get("/api/settings").expect(200);
+      expect(publicSettings.body.data["booking.subjectsByLevel"]).toBeNull();
+      expect(JSON.stringify(publicSettings.body)).not.toContain("__mode");
+      expect(await AuditEvent.countDocuments({ action: "settings.subjects.updated" })).toBe(2);
+    });
+
+    it("serializes concurrent revision updates so exactly one writer and audit wins", async () => {
+      const token = await createAdminAndLogin();
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .send({ mode: "custom", levels: levels() })
+        .expect(200);
+
+      const [first, second] = await Promise.all([
+        request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "1")
+          .send({ mode: "custom", levels: levels(" A") }),
+        request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "1")
+          .send({ mode: "custom", levels: levels(" B") }),
+      ]);
+
+      expect([first.status, second.status].sort()).toEqual([200, 409]);
+      const current = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(current.body.data.revision).toBe(2);
+      expect(["Cálculo A", "Cálculo B"]).toContain(
+        current.body.data.levels.at(-1).subjects[0],
+      );
+      expect(await AuditEvent.countDocuments({ action: "settings.subjects.updated" })).toBe(2);
+    });
+
+    it("prevents an expired old writer and compensation from overwriting a newer revision or lock", async () => {
+      const token = await createAdminAndLogin();
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .send({ mode: "custom", levels: levels() })
+        .expect(200);
+
+      let rejectOldAudit;
+      let releaseNewAudit;
+      let markOldAuditStarted;
+      let markNewAuditStarted;
+      const oldAuditGate = new Promise((_, reject) => { rejectOldAudit = reject; });
+      const newAuditGate = new Promise((resolve) => { releaseNewAudit = resolve; });
+      const oldAuditStarted = new Promise((resolve) => { markOldAuditStarted = resolve; });
+      const newAuditStarted = new Promise((resolve) => { markNewAuditStarted = resolve; });
+      let subjectsAuditCall = 0;
+      const resetWriter = setAuditWriterForTests(async (args) => {
+        subjectsAuditCall += 1;
+        if (subjectsAuditCall === 1) {
+          markOldAuditStarted();
+          return oldAuditGate;
+        }
+        if (subjectsAuditCall === 2) {
+          markNewAuditStarted();
+          await newAuditGate;
+        }
+        return writeAuditDocument(args);
+      });
+
+      try {
+        const oldResponsePromise = request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "1")
+          .set("X-Request-Id", "subjects-old-expired-writer")
+          .send({ mode: "custom", levels: levels(" Old") })
+          .then((response) => response);
+        await oldAuditStarted;
+
+        const oldLocked = await AppSettings.findOne({ key: "booking.subjectsByLevel" })
+          .select("+mutationLock +mutationLockExpiresAt")
+          .lean();
+        expect(oldLocked).toMatchObject({ revision: 2 });
+        expect(oldLocked.mutationLock).toBeTruthy();
+        await AppSettings.collection.updateOne(
+          { _id: oldLocked._id, mutationLock: oldLocked.mutationLock },
+          { $set: { mutationLockExpiresAt: new Date(Date.now() - 1) } },
+        );
+
+        const newResponsePromise = request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "2")
+          .set("X-Request-Id", "subjects-new-writer")
+          .send({ mode: "custom", levels: levels(" New") })
+          .then((response) => response);
+        await newAuditStarted;
+
+        const newerLocked = await AppSettings.findOne({ key: "booking.subjectsByLevel" })
+          .select("+mutationLock +mutationLockExpiresAt")
+          .lean();
+        expect(newerLocked).toMatchObject({ revision: 3 });
+        expect(newerLocked.mutationLock).toBeTruthy();
+        expect(newerLocked.mutationLock).not.toBe(oldLocked.mutationLock);
+
+        rejectOldAudit(new Error("old audit failed after lease expiry"));
+        const oldResponse = await oldResponsePromise;
+        expect(oldResponse.status).toBe(500);
+
+        const afterLostCompensation = await AppSettings.findById(newerLocked._id)
+          .select("+mutationLock +mutationLockExpiresAt")
+          .lean();
+        expect(afterLostCompensation).toMatchObject({
+          revision: 3,
+          mutationLock: newerLocked.mutationLock,
+        });
+        expect(afterLostCompensation.value.Universitario).toEqual(["Cálculo New"]);
+
+        releaseNewAudit();
+        const newResponse = await newResponsePromise;
+        expect(newResponse.status).toBe(200);
+        expect(newResponse.body.data.revision).toBe(3);
+        const finalRecord = await AppSettings.findById(newerLocked._id)
+          .select("+mutationLock +mutationLockExpiresAt")
+          .lean();
+        expect(finalRecord).toMatchObject({ revision: 3 });
+        expect(finalRecord.mutationLock).toBeUndefined();
+        expect(finalRecord.value.Universitario).toEqual(["Cálculo New"]);
+      } finally {
+        releaseNewAudit?.();
+        resetWriter();
+      }
+    });
+
+    it("compensates create and update when subject auditing fails", async () => {
+      const token = await createAdminAndLogin();
+      const resetCreateWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable");
+      });
+      try {
+        await request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "0")
+          .send({ mode: "custom", levels: levels() })
+          .expect(500);
+      } finally {
+        resetCreateWriter();
+      }
+      expect(await AppSettings.exists({ key: "booking.subjectsByLevel" })).toBeNull();
+
+      await request(app)
+        .put("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .set("If-Match", "0")
+        .send({ mode: "custom", levels: levels() })
+        .expect(200);
+      const resetUpdateWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable");
+      });
+      try {
+        await request(app)
+          .put("/api/settings/admin/subjects")
+          .set("Authorization", `Bearer ${token}`)
+          .set("If-Match", "1")
+          .send({ mode: "default" })
+          .expect(500);
+      } finally {
+        resetUpdateWriter();
+      }
+      const restored = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(restored.body.data).toMatchObject({ revision: 1, mode: "custom" });
+      expect(await AuditEvent.countDocuments({ action: "settings.subjects.updated" })).toBe(1);
+    });
+
+    it("reads safe legacy objects, sanitizes invalid public values and never mutates bookings", async () => {
+      const token = await createAdminAndLogin();
+      const bookingCreated = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload())
+        .expect(201);
+      const bookingBefore = await Booking.findOne({
+        bookingCode: bookingCreated.body.data.bookingCode,
+      }).lean();
+      await AppSettings.collection.insertOne({
+        key: "booking.subjectsByLevel",
+        value: {
+          Primaria: [" Matemática ", "Lengua"],
+          Secundaria: ["Física"],
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const legacy = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(legacy.body.data).toMatchObject({ revision: 0, mode: "custom" });
+      expect(legacy.body.data.levels[0].subjects).toEqual(["Matemática", "Lengua"]);
+
+      await AppSettings.collection.updateOne(
+        { key: "booking.subjectsByLevel" },
+        { $set: { value: { Primaria: ["Matemática"], rogue: ["Privado"] } } },
+      );
+      const sanitizedPublic = await request(app).get("/api/settings").expect(200);
+      expect(sanitizedPublic.body.data["booking.subjectsByLevel"]).toBeNull();
+
+      const bookingAfter = await Booking.findById(bookingBefore._id).lean();
+      expect(bookingAfter).toEqual(bookingBefore);
+    });
+
+    it("sanitizes empty and prototype-key legacy subject objects", async () => {
+      const token = await createAdminAndLogin();
+      await AppSettings.collection.insertOne({
+        key: "booking.subjectsByLevel",
+        value: { Primaria: [], Secundaria: [] },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const emptyAdmin = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      const emptyPublic = await request(app).get("/api/settings").expect(200);
+      expect(emptyAdmin.body.data).toMatchObject({ revision: 0, mode: "default" });
+      expect(emptyAdmin.body.data.levels.every(({ subjects }) => subjects.length === 0)).toBe(true);
+      expect(emptyPublic.body.data["booking.subjectsByLevel"]).toBeNull();
+
+      const prototypeValue = JSON.parse('{"Primaria":["Matemática"],"__proto__":["Oculta"]}');
+      await AppSettings.collection.updateOne(
+        { key: "booking.subjectsByLevel" },
+        { $set: { value: prototypeValue } },
+      );
+      const prototypeAdmin = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      const prototypePublic = await request(app).get("/api/settings").expect(200);
+      expect(prototypeAdmin.body.data).toMatchObject({ revision: 0, mode: "default" });
+      expect(prototypePublic.body.data["booking.subjectsByLevel"]).toBeNull();
+      expect(JSON.stringify(prototypeAdmin.body)).not.toContain("Oculta");
+      expect(JSON.stringify(prototypePublic.body)).not.toContain("Oculta");
+
+      const oversizedStoredValue = Object.fromEntries(
+        ["Primaria", "Secundaria", "Secundaria Tecnica", "Terciario", "Universitario"]
+          .map((level, index) => [
+            level,
+            Array.from(
+              { length: index === 0 ? 61 : 60 },
+              (_, subjectIndex) => `${level} Materia ${subjectIndex}`,
+            ),
+          ]),
+      );
+      await AppSettings.collection.updateOne(
+        { key: "booking.subjectsByLevel" },
+        { $set: { value: oversizedStoredValue } },
+      );
+      const oversizedAdmin = await request(app)
+        .get("/api/settings/admin/subjects")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      const oversizedPublic = await request(app).get("/api/settings").expect(200);
+      expect(oversizedAdmin.body.data).toMatchObject({ revision: 0, mode: "default" });
+      expect(oversizedPublic.body.data["booking.subjectsByLevel"]).toBeNull();
+    });
+  });
+
   describe("admin agenda contract", () => {
     const adminPayload = (overrides = {}) => {
       const { tutorName: _tutorName, ...payload } = validBookingPayload(overrides);

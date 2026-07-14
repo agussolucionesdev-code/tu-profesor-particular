@@ -21,6 +21,7 @@ const auditEventSchema = new mongoose.Schema(
         "booking.deleted",
         "booking.restored",
         "booking.attendance.updated",
+        "settings.subjects.updated",
       ],
       required: true,
       immutable: true,

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import AppSettings from "../models/AppSettings.js";
 import Booking from "../models/Booking.js";
 import BookingSlot from "../models/BookingSlot.js";
@@ -17,6 +18,16 @@ import {
   acquireScheduleGridChangeLease,
   releaseScheduleGridChangeLease,
 } from "../services/scheduleGridChangeLeaseService.js";
+import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
+import { recordSubjectsSettingsAudit } from "../services/auditService.js";
+import {
+  SUBJECTS_SETTINGS_KEY,
+  SubjectsSettingsValidationError,
+  parseSubjectsSettingsPayload,
+  subjectSettingsAuditSnapshot,
+  toAdminSubjectsDto,
+  toPublicSubjectsByLevel,
+} from "../services/subjectsSettingsService.js";
 
 const SCHEDULE_KEYS = SCHEDULE_SETTING_KEYS;
 
@@ -117,6 +128,114 @@ const blockedSlotDuration = (res, requestId) => res.status(409).json({
   requestId,
 });
 
+const subjectsRevisionFilter = (revision) => revision === 0
+  ? { $or: [{ revision: 0 }, { revision: { $exists: false } }] }
+  : { revision };
+
+const unlockedSettingsFilter = (now) => ({
+  $or: [
+    { mutationLock: null },
+    { mutationLock: { $exists: false } },
+    { mutationLockExpiresAt: { $lte: now } },
+  ],
+});
+
+const releaseSubjectsMutationLock = (settingsId, lock) => AppSettings.updateOne(
+  { _id: settingsId, mutationLock: lock },
+  { $unset: { mutationLock: "", mutationLockExpiresAt: "" } },
+);
+
+const acquireSubjectsMutation = async ({ expectedRevision, storageValue }) => {
+  const now = new Date();
+  const lock = crypto.randomUUID();
+  const expiresAt = new Date(now.getTime() + SLOT_MUTATION_LOCK_MS);
+  const locked = await AppSettings.findOneAndUpdate(
+    {
+      key: SUBJECTS_SETTINGS_KEY,
+      $and: [
+        subjectsRevisionFilter(expectedRevision),
+        unlockedSettingsFilter(now),
+      ],
+    },
+    {
+      $set: {
+        mutationLock: lock,
+        mutationLockExpiresAt: expiresAt,
+      },
+    },
+    { new: true },
+  ).select("+mutationLock +mutationLockExpiresAt");
+
+  if (locked) {
+    const before = {
+      _id: locked._id,
+      key: locked.key,
+      value: locked.value,
+      revision: expectedRevision,
+    };
+    const updated = await AppSettings.findOneAndUpdate(
+      {
+        _id: locked._id,
+        mutationLock: lock,
+        ...subjectsRevisionFilter(expectedRevision),
+      },
+      {
+        $set: {
+          value: storageValue,
+          revision: expectedRevision + 1,
+        },
+      },
+      { new: true, runValidators: true },
+    ).select("+mutationLock +mutationLockExpiresAt");
+    if (!updated) {
+      await releaseSubjectsMutationLock(locked._id, lock);
+      return null;
+    }
+    return { created: false, lock, expiresAt, before, updated };
+  }
+
+  if (expectedRevision !== 0) return null;
+  try {
+    const created = await AppSettings.create({
+      key: SUBJECTS_SETTINGS_KEY,
+      value: storageValue,
+      revision: 1,
+      mutationLock: lock,
+      mutationLockExpiresAt: expiresAt,
+    });
+    return { created: true, lock, expiresAt, before: null, updated: created };
+  } catch (error) {
+    if (error?.code === 11000) return null;
+    throw error;
+  }
+};
+
+const compensateSubjectsMutation = async (mutation) => {
+  if (mutation.created) {
+    const result = await AppSettings.deleteOne({
+      _id: mutation.updated._id,
+      revision: 1,
+      mutationLock: mutation.lock,
+    });
+    return result.deletedCount === 1;
+  }
+  const result = await AppSettings.updateOne(
+    {
+      _id: mutation.updated._id,
+      revision: mutation.before.revision + 1,
+      mutationLock: mutation.lock,
+    },
+    {
+      $set: {
+        value: mutation.before.value,
+        revision: mutation.before.revision,
+      },
+      $unset: { mutationLock: "", mutationLockExpiresAt: "" },
+    },
+  );
+  return result.modifiedCount === 1;
+};
+
 export const getPublicSettings = async (req, res, next) => {
   try {
     const [records, schedule] = await Promise.all([
@@ -127,6 +246,9 @@ export const getPublicSettings = async (req, res, next) => {
       ...Object.fromEntries(PUBLIC_NON_SCHEDULE_KEYS.map((key) => [key, DEFAULTS[key]])),
     };
     records.forEach((r) => { settings[r.key] = r.value; });
+    settings[SUBJECTS_SETTINGS_KEY] = toPublicSubjectsByLevel(
+      settings[SUBJECTS_SETTINGS_KEY],
+    );
 
     res.status(200).json({
       success: true,
@@ -154,6 +276,9 @@ export const getAllSettings = async (req, res, next) => {
     const settings = { ...Object.fromEntries(ALLOWED_KEYS.map((k) => [k, DEFAULTS[k]])) };
     records.forEach((r) => { settings[r.key] = r.value; });
     Object.assign(settings, scheduleSnapshot.settings);
+    settings[SUBJECTS_SETTINGS_KEY] = toPublicSubjectsByLevel(
+      settings[SUBJECTS_SETTINGS_KEY],
+    );
 
     res.status(200).json({
       success: true,
@@ -248,12 +373,128 @@ export const updateAdminSchedule = async (req, res, next) => {
   }
 };
 
+export const getAdminSubjects = async (req, res, next) => {
+  try {
+    const record = await AppSettings.findOne({ key: SUBJECTS_SETTINGS_KEY })
+      .select("value revision")
+      .lean();
+    return res.status(200).json({
+      success: true,
+      data: toAdminSubjectsDto(record),
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+export const updateAdminSubjects = async (req, res, next) => {
+  let mutation = null;
+  let preserveLock = false;
+  try {
+    const expectedRevision = parseIfMatchRevision(req.headers["if-match"]);
+    if (expectedRevision === null) {
+      return res.status(428).json({
+        success: false,
+        code: "SUBJECTS_REVISION_REQUIRED",
+        message: "Debes enviar la revisión actual en If-Match.",
+        requestId: req.requestId,
+      });
+    }
+
+    let parsed;
+    try {
+      parsed = parseSubjectsSettingsPayload(req.body);
+    } catch (error) {
+      if (error instanceof SubjectsSettingsValidationError) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+          requestId: req.requestId,
+        });
+      }
+      throw error;
+    }
+
+    mutation = await acquireSubjectsMutation({
+      expectedRevision,
+      storageValue: parsed.storageValue,
+    });
+    if (!mutation) {
+      return res.status(409).json({
+        success: false,
+        code: "SUBJECTS_REVISION_CONFLICT",
+        message: "La lista de materias cambió. Recargá antes de guardar.",
+        requestId: req.requestId,
+      });
+    }
+
+    const before = mutation.before
+      ? subjectSettingsAuditSnapshot(mutation.before)
+      : subjectSettingsAuditSnapshot(null);
+    const after = subjectSettingsAuditSnapshot(mutation.updated);
+    try {
+      await recordSubjectsSettingsAudit({
+        req,
+        settingsId: mutation.updated._id,
+        before,
+        after,
+        leaseExpiresAt: mutation.expiresAt,
+      });
+    } catch (auditError) {
+      const compensated = await compensateSubjectsMutation(mutation);
+      if (!compensated) {
+        preserveLock = true;
+        console.error("[audit-compensation]", JSON.stringify({
+          event: "subjects_settings_audit_compensation_lost_lease",
+          settingsId: String(mutation.updated._id),
+          requestId: req.requestId,
+        }));
+      } else {
+        mutation = null;
+      }
+      throw auditError;
+    }
+
+    const responseData = toAdminSubjectsDto(mutation.updated);
+    await releaseSubjectsMutationLock(mutation.updated._id, mutation.lock);
+    mutation = null;
+    return res.status(200).json({
+      success: true,
+      data: responseData,
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno.",
+      requestId: req.requestId,
+    });
+  } finally {
+    if (mutation && !preserveLock) {
+      await releaseSubjectsMutationLock(mutation.updated._id, mutation.lock)
+        .catch((error) => console.error("[subjects-lock-release]", error.message));
+    }
+  }
+};
+
 export const updateSetting = async (req, res, next) => {
   let scheduleGridChangeLease = null;
   try {
     const { key } = req.params;
 
-    const WRITABLE_KEYS = [...PUBLIC_KEYS, "booking.requireManualConfirmation", "booking.subjectsByLevel", "teacher.address", "teacher.mapsUrl"];
+    const WRITABLE_KEYS = [
+      ...PUBLIC_KEYS.filter((writableKey) => writableKey !== SUBJECTS_SETTINGS_KEY),
+      "booking.requireManualConfirmation",
+      "teacher.address",
+      "teacher.mapsUrl",
+    ];
     if (!WRITABLE_KEYS.includes(key)) {
       return res.status(400).json({
         success: false,

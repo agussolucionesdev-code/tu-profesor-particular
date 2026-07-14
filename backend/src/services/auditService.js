@@ -131,3 +131,63 @@ export const recordBookingAudit = async ({
 
   return event;
 };
+
+const sanitizeSubjectsSettingsForAudit = (snapshot) => ({
+  key: "booking.subjectsByLevel",
+  revision: Number.isSafeInteger(snapshot?.revision) ? snapshot.revision : 0,
+  mode: snapshot?.mode === "custom" ? "custom" : "default",
+  levels: Array.isArray(snapshot?.levels)
+    ? snapshot.levels.map((entry) => ({
+      level: String(entry?.level || ""),
+      subjects: Array.isArray(entry?.subjects)
+        ? entry.subjects.map((subject) => String(subject))
+        : [],
+    }))
+    : [],
+});
+
+export const recordSubjectsSettingsAudit = async ({
+  req,
+  settingsId,
+  before,
+  after,
+  leaseExpiresAt,
+}) => {
+  const event = new AuditEvent({
+    actor: {
+      id: req.user.id,
+      role: req.user.role,
+      username: req.user.username,
+    },
+    action: "settings.subjects.updated",
+    entityType: "AppSettings",
+    entityId: settingsId,
+    requestId: req.requestId,
+    before: sanitizeSubjectsSettingsForAudit(before),
+    after: sanitizeSubjectsSettingsForAudit(after),
+    createdAt: new Date(),
+  });
+
+  await event.validate();
+  const document = event.toObject({ depopulate: true, versionKey: false });
+  const leaseRemainingMS = new Date(leaseExpiresAt).getTime() - Date.now();
+  const timeoutMS = Math.min(
+    AUDIT_WRITE_TIMEOUT_MS,
+    leaseRemainingMS - SLOT_MUTATION_LEASE_SAFETY_MARGIN_MS,
+  );
+  if (!Number.isFinite(timeoutMS) || timeoutMS <= 0) {
+    throw new Error("Settings mutation lease is too close to expiry for an audit write.");
+  }
+
+  try {
+    await auditWriter({ document, timeoutMS });
+  } catch (error) {
+    const committed = await AuditEvent.collection.findOne(
+      { _id: document._id },
+      { timeoutMS: Math.min(1_000, SLOT_MUTATION_LEASE_SAFETY_MARGIN_MS) },
+    ).catch(() => null);
+    if (!committed) throw error;
+  }
+
+  return event;
+};
