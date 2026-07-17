@@ -53,23 +53,21 @@ test("management-link E2E fixture matches the sanitized public availability cont
   assert.doesNotMatch(fixture, /availabilityPolicy|reason:/);
 });
 
-test("public date selection obeys the backend range instead of a hardcoded horizon", () => {
+test("public slot selection obeys the backend range instead of a hardcoded horizon", () => {
   const hook = readSource("../../src/hooks/useBookingAvailability.jsx");
-  const form = readSource("../../src/components/BookingForm.jsx");
-  const step = readSource("../../src/components/booking/steps/DateSelectionStep.jsx");
+  const kiosk = readSource("../../src/components/BookingKiosk.jsx");
   const reschedule = readSource("../../src/components/portal/RescheduleModal.jsx");
-  const dateStepUsage = form.slice(
-    form.indexOf("<DateSelectionStep"),
-    form.indexOf("<TimeSelectionStep"),
-  );
 
+  // El hook deriva todo de la respuesta del backend, sin horizonte inventado.
   assert.match(hook, /parsePublicAvailabilityResponse/);
   assert.match(hook, /availabilityMaxDate/);
-  assert.match(dateStepUsage, /availabilityMaxDate=\{availabilityMaxDate\}/);
-  assert.match(dateStepUsage, /availabilityRangeLabel=\{availabilityRangeLabel\}/);
-  assert.match(step, /maxDate=\{availabilityMaxDate\}/);
-  assert.doesNotMatch(step, /90 días|90 dias/);
-  assert.match(step, /availabilityRangeLabel/);
+  assert.match(hook, /upcomingSlotsByDay/);
+
+  // El kiosco ofrece turnos a partir de upcomingSlotsByDay (del backend),
+  // nunca de un horizonte hardcodeado.
+  assert.match(kiosk, /upcomingSlotsByDay/);
+  assert.doesNotMatch(kiosk, /90 días|90 dias/);
+
   assert.match(reschedule, /parsePublicAvailabilityResponse/);
   assert.match(reschedule, /minDate=\{availabilityMinDate/);
   assert.match(reschedule, /maxDate=\{availabilityMaxDate\}/);

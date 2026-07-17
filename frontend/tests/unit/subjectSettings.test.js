@@ -238,7 +238,7 @@ test("wires an accessible revisioned visual editor without raw JSON", () => {
   const settings = readSource("../../src/components/admin/views/ScheduleSettingsView.jsx");
   const editor = readSource("../../src/components/admin/views/SubjectSettingsEditor.jsx");
   const model = readSource("../../src/utils/subjectSettings.js");
-  const booking = readSource("../../src/components/BookingForm.jsx");
+  const booking = readSource("../../src/components/BookingKiosk.jsx");
 
   assert.match(api, /fetchAdminSubjects/);
   assert.match(api, /\/api\/settings\/admin\/subjects/);
@@ -261,5 +261,5 @@ test("wires an accessible revisioned visual editor without raw JSON", () => {
   assert.match(model, /SUBJECTS_REVISION_CONFLICT/);
   assert.match(model, /SUBJECTS_REVISION_REQUIRED/);
   assert.match(booking, /parsePublicSubjectsByLevel/);
-  assert.match(booking, /setSubjectsByLevelOverride\(parsedSubjects\)/);
+  assert.match(booking, /setSubjectsByLevelOverride\(parsed\)/);
 });

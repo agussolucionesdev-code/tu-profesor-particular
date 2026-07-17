@@ -196,9 +196,6 @@ const HomePage = () => {
       ════════════════════════════════════════ */}
       <section className="hp-hero" aria-label="Inicio">
         <div className="hp-hero-bg" aria-hidden="true">
-          <span className="hp-blob hp-blob--1" />
-          <span className="hp-blob hp-blob--2" />
-          <span className="hp-blob hp-blob--3" />
           <span className="hp-grid" />
         </div>
 
@@ -471,8 +468,6 @@ const HomePage = () => {
       ════════════════════════════════════════ */}
       <section className="hp-cta-section" aria-label="Reservá tu turno">
         <div className="hp-cta-bg" aria-hidden="true">
-          <span className="hp-blob hp-blob--1" />
-          <span className="hp-blob hp-blob--2" />
           <span className="hp-grid" />
         </div>
 

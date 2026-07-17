@@ -187,12 +187,7 @@ const Navbar = () => {
           aria-label="Tu Profesor Particular — Agustín Elías Sosa"
         >
           <span className="brand-mark" aria-hidden="true">
-            <span className="brand-mark-orbit" />
-            <span className="brand-mark-glow" />
             <ThemeLogo variant="monogram" imgClassName="brand-mark-img" alt="" />
-            <span className="brand-mark-sparkle brand-mark-sparkle--one" />
-            <span className="brand-mark-sparkle brand-mark-sparkle--two" />
-            <span className="brand-mark-sparkle brand-mark-sparkle--three" />
           </span>
           <span className="brand-copy">
             <span className="brand-title">
