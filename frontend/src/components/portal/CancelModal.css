@@ -24,9 +24,7 @@
   background: var(--surface-card, #fff);
   border: 1px solid var(--border-soft, #e2e8f0);
   border-radius: 16px;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.18),
-    0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
   outline: none;
   overflow: hidden;
 }
@@ -124,7 +122,7 @@
   flex-shrink: 0;
   margin-top: 2px;
   font-size: 0.875rem;
-  color: var(--accent-primary, #589860);
+  color: var(--accent-primary, #01953c);
 }
 
 /* Action buttons */
@@ -167,12 +165,12 @@
 
 .cancel-btn-confirm:hover {
   background: var(--color-error-deep);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.22);
 }
 
 .cancel-btn-keep:focus-visible,
 .cancel-btn-confirm:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 

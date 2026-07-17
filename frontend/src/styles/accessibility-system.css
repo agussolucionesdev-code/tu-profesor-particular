@@ -27,14 +27,14 @@ html[data-font-family="readable"] {
 }
 
 html[data-accent-balance="navy"] {
-  --brand-navy: #183858;
+  --brand-navy: #001636;
   --brand-navy-deep: #112f4a;
-  --color-primary: #183858;
+  --color-primary: #001636;
   --color-primary-dark: #112f4a;
-  --nav-accent: #204060;
-  --nav-accent-glow: rgba(32, 64, 96, 0.14);
-  --ft-primary: #204060;
-  --ft-primary-dark: #183858;
+  --nav-accent: #00214c;
+  --nav-accent-glow: rgba(0, 33, 76, 0.14);
+  --ft-primary: #00214c;
+  --ft-primary-dark: #001636;
 }
 
 html[data-accent-balance="green"] {
@@ -57,7 +57,7 @@ html[data-contrast="high"] {
   --border-soft: rgba(17, 40, 63, 0.18);
   --border-strong: rgba(17, 40, 63, 0.28);
   --nav-border: rgba(17, 40, 63, 0.18);
-  --ft-primary-glow: rgba(88, 152, 96, 0.22);
+  --ft-primary-glow: rgba(1, 149, 60, 0.22);
 }
 
 html[data-theme="dark"][data-contrast="high"] {
@@ -74,13 +74,7 @@ html[data-theme="dark"][data-contrast="high"] {
 body {
   font-family: var(--ui-font-family-active);
   background-image:
-    radial-gradient(circle at top, var(--ui-body-glow), transparent 24%),
-    radial-gradient(
-      circle at 100% 0%,
-      var(--ui-body-glow-secondary),
-      transparent 18%
-    ),
-    linear-gradient(180deg, var(--ui-bg-light) 0%, var(--ui-bg-soft) 100%);
+    var(--ui-bg-light);
 }
 
 [data-theme="dark"] body {
@@ -93,7 +87,7 @@ html[data-calm-ui="true"] .client-portal-wrapper,
 html[data-calm-ui="true"] .admin-login-shell,
 html[data-calm-ui="true"] .admin-shell {
   background-image:
-    linear-gradient(180deg, var(--ui-bg-light) 0%, var(--ui-bg-soft) 100%) !important;
+    var(--ui-bg-light) !important;
 }
 
 html[data-theme="dark"][data-calm-ui="true"] body,
@@ -221,7 +215,7 @@ main.main-content {
   line-height: 1.28;
   white-space: normal;
   text-align: center;
-  box-shadow: 0 12px 30px rgba(19, 41, 64, 0.12);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.19);
 }
 
 .voice-hint-bubble::after {
@@ -265,9 +259,7 @@ main.main-content {
 .booking-page-wrapper {
   padding-top: clamp(6.75rem, 8vw, 7.75rem) !important;
   background-image:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.05), transparent 24%),
-    radial-gradient(circle at 100% 0%, rgba(32, 64, 96, 0.05), transparent 18%),
-    linear-gradient(180deg, var(--ui-bg-light) 0%, var(--ui-bg-soft) 100%) !important;
+    var(--ui-bg-light) !important;
 }
 
 [data-theme="dark"] .booking-page-wrapper {
@@ -276,7 +268,7 @@ main.main-content {
 
 .form-card-elevation {
   border-radius: 1.75rem;
-  box-shadow: 0 24px 64px rgba(19, 41, 64, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
 }
 
 .client-portal-wrapper {
@@ -285,8 +277,7 @@ main.main-content {
   padding-top: clamp(6.2rem, 8vw, 7.2rem) !important;
   padding-bottom: clamp(2.5rem, 5vw, 4rem) !important;
   background-image:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.05), transparent 24%),
-    linear-gradient(180deg, var(--ui-bg-light) 0%, var(--ui-bg-soft) 100%) !important;
+    var(--ui-bg-light) !important;
 }
 
 [data-theme="dark"] .client-portal-wrapper {
@@ -309,9 +300,9 @@ main.main-content {
   gap: 0.45rem;
   padding: 1rem 1.05rem;
   border-radius: 1.45rem;
-  border: 1px solid rgba(32, 64, 96, 0.1);
+  border: 1px solid rgba(0, 33, 76, 0.1);
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 16px 34px rgba(19, 41, 64, 0.06);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
 }
 
 .portal-support-card svg {
@@ -334,8 +325,7 @@ main.main-content {
 .portal-support-cta {
   text-decoration: none;
   background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.18), transparent 30%),
-    linear-gradient(135deg, rgba(29, 52, 77, 0.98), rgba(43, 84, 120, 0.98));
+    rgba(29, 52, 77, 0.98);
   border-color: transparent;
 }
 
@@ -356,14 +346,12 @@ main.main-content {
   padding-top: clamp(7rem, 10vw, 8rem);
   padding-bottom: 3rem;
   background-image:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.05), transparent 24%),
-    linear-gradient(180deg, var(--ui-bg-light) 0%, var(--ui-bg-soft) 100%) !important;
+    var(--ui-bg-light) !important;
 }
 
 [data-theme="dark"] .admin-login-shell {
   background-image:
-    radial-gradient(circle at top, rgba(114, 176, 122, 0.08), transparent 24%),
-    linear-gradient(180deg, var(--ui-bg-dark) 0%, var(--ui-bg-dark-soft) 100%) !important;
+    var(--ui-bg-dark) !important;
 }
 
 .admin-login-layout {
@@ -384,11 +372,10 @@ main.main-content {
   align-content: center;
   gap: 1rem;
   padding: clamp(1.4rem, 3vw, 2.1rem);
-  border: 1px solid rgba(32, 64, 96, 0.1);
+  border: 1px solid rgba(0, 33, 76, 0.1);
   background:
-    radial-gradient(circle at top right, rgba(88, 152, 96, 0.16), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 250, 0.96));
-  box-shadow: 0 24px 60px rgba(19, 41, 64, 0.08);
+    rgba(255, 255, 255, 0.98);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
 }
 
 .admin-login-kicker {
@@ -426,7 +413,7 @@ main.main-content {
   gap: 0.45rem;
   padding: 1rem;
   border-radius: 1.3rem;
-  border: 1px solid rgba(32, 64, 96, 0.08);
+  border: 1px solid rgba(0, 33, 76, 0.08);
   background: rgba(255, 255, 255, 0.82);
 }
 
@@ -452,13 +439,13 @@ main.main-content {
   gap: 0.75rem;
   padding: 0.95rem 1rem;
   border-radius: 1.2rem;
-  border: 1px solid rgba(88, 152, 96, 0.14);
+  border: 1px solid rgba(1, 149, 60, 0.14);
   background: rgba(237, 246, 238, 0.82);
 }
 
 .admin-login-trust svg {
   margin-top: 0.1rem;
-  color: #376b54;
+  color: #006d1f;
   flex-shrink: 0;
 }
 
@@ -577,7 +564,7 @@ textarea {
 [data-contrast="high"] .admin-card,
 [data-contrast="high"] .admin-sidebar-shell {
   border-color: var(--border-strong) !important;
-  box-shadow: 0 20px 44px rgba(19, 41, 64, 0.14) !important;
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 [data-theme="dark"][data-contrast="high"] .form-card-elevation,
@@ -620,7 +607,7 @@ textarea {
 [data-theme="dark"] .admin-login-intro {
   border-color: rgba(171, 195, 217, 0.16);
   background: var(--color-surface-1);
-  box-shadow: 0 30px 64px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
 }
 
 [data-theme="dark"] .admin-login-intro h1,
@@ -640,8 +627,8 @@ textarea {
 }
 
 [data-theme="dark"] .admin-login-trust {
-  background: rgba(114, 176, 122, 0.12);
-  border-color: rgba(114, 176, 122, 0.18);
+  background: rgba(136, 206, 147, 0.12);
+  border-color: rgba(136, 206, 147, 0.18);
 }
 
 @media (max-width: 960px) {

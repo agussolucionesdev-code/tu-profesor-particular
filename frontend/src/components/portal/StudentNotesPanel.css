@@ -106,7 +106,7 @@
 }
 
 [data-theme="dark"] .notes-save-btn {
-  background: var(--brand-green, #4a8452);
+  background: var(--brand-green, #006d1f);
 }
 
 [data-theme="dark"] .notes-status-ok {

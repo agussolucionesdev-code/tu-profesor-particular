@@ -5,18 +5,57 @@
    ========================================================================== */
 
 :root {
-  /* ── Brand palette ──────────────────────────────────────────────────── */
-  --brand-navy:           #204060;
-  --brand-navy-deep:      #183858;
-  --brand-navy-ink:       #0f2137;
-  --brand-navy-soft:      #2b5478;
-  --brand-green:          #589860;
-  --brand-green-deep:     #4a8452;
-  --brand-green-strong:   #43794c;
-  --brand-green-soft:     #edf6ee;
+  /* ── Brand palette ──────────────────────────────────────────────────────
+     Muestreados por análisis de píxeles del logo maestro
+     (03_BRAND_ASSETS/01_Logos/01_TPP_Main_Logo_With_Tagline_White_BG.png).
+     El logo manda sobre BRAND_COLORS.docx: el docx declara #10B981, que es
+     un esmeralda ajeno al logo y da 2.54:1 sobre blanco — reprueba WCAG AA.
+
+       navy   #00214C  oklch(25.5% 0.089 256.4)  15.89:1 s/ blanco
+       green  #01953C  oklch(58.4% 0.167 148.3)   3.91:1 s/ blanco
+       gray   #575D64  oklch(47.6% 0.014 252.2)   6.66:1 s/ blanco
+
+     REGLA DEL VERDE: 3.91:1 solo alcanza para AA-large. --brand-green queda
+     reservado a texto ≥18px bold / ≥24px y a decoración. Para texto chico
+     verde sobre blanco usar --brand-green-600 (6.55:1).
+     ──────────────────────────────────────────────────────────────────────── */
+  --brand-navy:           #00214c;
+  --brand-navy-deep:      #001636;
+  --brand-navy-ink:       #000b2b;
+  --brand-navy-soft:      #1c3b64;
+  --brand-green:          #01953c;
+  --brand-green-deep:     #006d1f;
+  --brand-green-strong:   #004b04;
+  --brand-green-soft:     #eafdec;
   --brand-accent-warm:    #f59e0b;
   --brand-accent:         #f59e0b;
   --brand-white:          #ffffff;
+
+  /* ── Rampas de marca ────────────────────────────────────────────────────
+     Generadas en OKLCH conservando el tono del logo, con croma amortiguado
+     hacia los extremos (evita que el navy derive a cyan al aclararse).
+     ──────────────────────────────────────────────────────────────────────── */
+  --brand-navy-50:   #f2f7fe;
+  --brand-navy-100:  #e3ecf8;
+  --brand-navy-200:  #ccd9eb;
+  --brand-navy-300:  #aabcd5;
+  --brand-navy-400:  #849ab9;
+  --brand-navy-500:  #617b9e;   /*  4.34:1 — AA-large  */
+  --brand-navy-600:  #3d5980;   /*  7.15:1 — AA        */
+  --brand-navy-700:  #1c3b64;   /* 11.30:1 — AA        */
+  --brand-navy-800:  #00204a;   /* 16.09:1 — AA        */
+  --brand-navy-900:  #000b2b;   /* 19.40:1 — AA        */
+
+  --brand-green-50:  #eafdec;
+  --brand-green-100: #d5f5d9;
+  --brand-green-200: #b5e6bb;
+  --brand-green-300: #88ce93;
+  --brand-green-400: #50b064;
+  --brand-green-500: #00923a;   /*  4.06:1 — AA-large  */
+  --brand-green-600: #006d1f;   /*  6.55:1 — AA        */
+  --brand-green-700: #004b04;   /* 10.46:1 — AA        */
+  --brand-green-800: #002e00;   /* 15.10:1 — AA        */
+  --brand-green-900: #001600;   /* 18.84:1 — AA        */
 
   /* ── Typography ─────────────────────────────────────────────────────── */
   --font-primary:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -73,18 +112,23 @@
   --radius-full: 9999px;
   --border-radius: 24px;
 
-  /* ── Shadow scale ───────────────────────────────────────────────────── */
-  --shadow-xs:  0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm:  0 1px 3px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow-md:  0 2px 8px rgba(15, 23, 42, 0.07), 0 4px 16px rgba(15, 23, 42, 0.05);
-  --shadow-lg:  0 4px 24px rgba(15, 23, 42, 0.09);
-  --shadow-xl:  0 20px 50px rgba(15, 23, 42, 0.12);
+  /* ── Elevation scale (flat) ─────────────────────────────────────────────
+     Diseño plano: prohibidas las sombras realistas. La jerarquía se expresa
+     con anillo de 1px + espaciado + peso tipográfico, no con profundidad
+     simulada. Se conservan los nombres --shadow-* porque hay consumidores;
+     cambia el VALOR, no la API. Renombrar a --ring-* queda para la fase 4.
+     Los focus rings NO son decoración: siguen siendo anillos visibles.
+     ──────────────────────────────────────────────────────────────────────── */
+  --shadow-xs:  0 0 0 1px rgba(0, 33, 76, 0.06);
+  --shadow-sm:  0 0 0 1px rgba(0, 33, 76, 0.08);
+  --shadow-md:  0 0 0 1px rgba(0, 33, 76, 0.10);
+  --shadow-lg:  0 0 0 1px rgba(0, 33, 76, 0.12);
+  --shadow-xl:  0 0 0 1px rgba(0, 33, 76, 0.16);
 
-  /* semantic shadow aliases */
-  --shadow-card:     0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.05);
-  --shadow-elevated: 0 4px 24px rgba(15, 23, 42, 0.08);
-  --shadow-brand:    0 12px 28px rgba(32, 64, 96, 0.22);
-  --shadow-glow:     0 0 0 3px rgba(88, 152, 96, 0.2);
+  /* semantic elevation aliases */
+  --shadow-card:     0 0 0 1px rgba(0, 33, 76, 0.08);
+  --shadow-elevated: 0 0 0 1px rgba(0, 33, 76, 0.12);
+  --shadow-brand:    0 0 0 1px rgba(1, 149, 60, 0.30);
 
   /* ── Transitions (aliases → motion-system.css is the source of truth) ── */
   --transition-fast:   var(--motion-micro, 150ms ease);
@@ -94,8 +138,8 @@
   --transition-spring: all var(--motion-spring, 0.45s cubic-bezier(0.34, 1.56, 0.64, 1));
 
   /* ── Focus ──────────────────────────────────────────────────────────── */
-  --focus-ring:       0 0 0 3px rgba(88, 152, 96, 0.4);
-  --focus-ring-color: rgba(88, 152, 96, 0.45);
+  --focus-ring:       0 0 0 3px rgba(1, 149, 60, 0.4);
+  --focus-ring-color: rgba(1, 149, 60, 0.45);
 
   /* ── Z-index ────────────────────────────────────────────────────────── */
   --z-dropdown: 100;
@@ -103,13 +147,18 @@
   --z-toast:    1100;
   --z-nav:      9999;
 
-  /* ── Semantic status colors ─────────────────────────────────────────── */
-  --color-success:          #10b981;
-  --color-success-hover:    #34d399;
-  --color-success-emphasis: #059669;
-  --color-success-deep:     #047857;
-  --color-success-bg:       rgba(16, 185, 129, 0.14);
-  --color-on-success:       #06231b;
+  /* ── Semantic status colors ───────────────────────────────────────────
+     "Éxito" es el verde de la marca, no un esmeralda aparte. El #10b981 que
+     estaba acá es el mismo color equivocado que declara BRAND_COLORS.docx.
+     ──────────────────────────────────────────────────────────────────────── */
+  --color-success:          #01953c;
+  --color-success-hover:    #50b064;
+  --color-success-emphasis: #006d1f;
+  --color-success-deep:     #004b04;
+  --color-success-bg:       rgba(1, 149, 60, 0.14);
+  /* texto sobre --color-success. Blanco daría 3.91:1 y reprueba en los chips
+     de estado (texto chico). green-900 sobre el verde de marca da 4.81:1. */
+  --color-on-success:       #001600;
 
   --color-warning-emphasis: #d97706;
   --color-warning-deep:     #b45309;
@@ -124,58 +173,61 @@
   --color-info-bg:          rgba(59, 130, 246, 0.12);
 
   --color-teal:             #0f766e;
-  --color-text-secondary:   #64748b;
-  --color-text-strong:      #334155;
+  --color-text-secondary:   #53595f;
+  --color-text-strong:      #363b41;
 
   /* ── Semantic surface tokens (light) ────────────────────────────────── */
   --color-surface-0:    #ffffff;
   --color-surface-1:    #ffffff;
-  --color-surface-2:    #f7fafd;
-  --color-surface-3:    #eef3f9;
-  --color-on-surface:   #0d2238;
-  --color-border:       rgba(15, 23, 42, 0.12);
+  --color-surface-2:    #f6f7f8;
+  --color-surface-3:    #e9ebed;
+  --color-on-surface:   #00214c;
+  --color-border:       rgba(0, 33, 76, 0.12);
 
   --surface-1:          #ffffff;
-  --surface-2:          #f7fafd;
-  --surface-3:          #eef3f9;
-  --surface-overlay:    rgba(15, 23, 42, 0.55);
+  --surface-2:          #f6f7f8;
+  --surface-3:          #e9ebed;
+  --surface-overlay:    rgba(0, 11, 43, 0.55);
 
-  --text-primary:       #0d2238;
-  --text-secondary:     #4a627d;
-  --text-tertiary:      #7791ac;
+  --text-primary:       #00214c;   /* 15.89:1 */
+  --text-secondary:     #3d5980;   /*  7.15:1 */
+  --text-tertiary:      #617b9e;   /*  4.34:1 — AA-large: solo texto no esencial */
   --text-on-accent:     #ffffff;
 
-  --border-subtle:      rgba(15, 23, 42, 0.06);
-  --border-soft:        rgba(15, 23, 42, 0.08);
-  --border-strong:      rgba(15, 23, 42, 0.15);
+  --border-subtle:      rgba(0, 33, 76, 0.06);
+  --border-soft:        rgba(0, 33, 76, 0.08);
+  --border-strong:      rgba(0, 33, 76, 0.15);
 
   /* ── Legacy color aliases ───────────────────────────────────────────── */
   --color-primary:        var(--brand-navy);
   --color-primary-dark:   var(--brand-navy-deep);
   --color-accent:         var(--brand-green);
   --color-accent-hover:   var(--brand-green-deep);
-  --color-bg-light:       #f6f8fb;
-  --color-surface-soft:   #f1f5f9;
+  --color-bg-light:       #f6f7f8;
+  --color-surface-soft:   #e9ebed;
   --color-surface-muted:  #ffffff;
-  --color-text-main:      #0f172a;
-  --color-text-muted:     #475569;
-  --color-text-soft:      #94a3b8;
+  --color-text-main:      #00214c;
+  --color-text-muted:     #53595f;
+  --color-text-soft:      #747980;
   --color-white:          #ffffff;
 
-  /* gray scale */
-  --brand-gray-50:   #f8fafc;
-  --brand-gray-100:  #f1f5f9;
-  --brand-gray-200:  #e2e8f0;
-  --brand-gray-400:  #94a3b8;
-  --brand-gray-600:  #475569;
-  --brand-gray-800:  #1e293b;
-  --brand-gray-900:  #0f172a;
+  /* gray scale — derivada del gris del logo (#575D64), no de slate genérico */
+  --brand-gray-50:   #f6f7f8;
+  --brand-gray-100:  #e9ebed;
+  --brand-gray-200:  #d5d8db;
+  --brand-gray-300:  #b7bbbf;
+  --brand-gray-400:  #94999e;
+  --brand-gray-500:  #747980;   /*  4.38:1 — AA-large  */
+  --brand-gray-600:  #53595f;   /*  7.09:1 — AA        */
+  --brand-gray-700:  #363b41;   /* 11.30:1 — AA        */
+  --brand-gray-800:  #1e2226;   /* 16.01:1 — AA        */
+  --brand-gray-900:  #0b0e11;   /* 19.35:1 — AA        */
 
   /* ── Scrollbar ──────────────────────────────────────────────────────── */
   --scrollbar-size:        10px;
-  --scrollbar-track:       #f1f5f9;
-  --scrollbar-thumb:       #cbd5e1;
-  --scrollbar-thumb-hover: #94a3b8;
+  --scrollbar-track:       #e9ebed;
+  --scrollbar-thumb:       #b7bbbf;
+  --scrollbar-thumb-hover: #94999e;
   --scrollbar-border:      transparent;
   --scrollbar-shadow:      none;
 
@@ -184,19 +236,19 @@
   --nav-height-scrolled: 76px;
   --nav-radius-outer:   22px;
   --nav-radius-inner:   14px;
-  --nav-bg-outer:       linear-gradient(180deg, rgba(248, 251, 253, 0.92) 0%, rgba(237, 246, 238, 0.78) 100%);
+  --nav-bg-outer:       #f7f9fc;
   --nav-glass:          rgba(255, 255, 255, 0.82);
   --nav-glass-strong:   #ffffff;
-  --nav-border:         rgba(32, 64, 96, 0.14);
-  --nav-border-soft:    rgba(32, 64, 96, 0.08);
-  --nav-text:           #17324d;
-  --nav-text-strong:    #0f2137;
-  --nav-muted:          #5d7184;
-  --nav-icon-bg:        rgba(88, 152, 96, 0.14);
-  --nav-icon-color:     #2f6336;
-  --nav-shadow-rest:    0 10px 28px rgba(24, 56, 88, 0.10);
-  --nav-shadow-lift:    0 20px 44px rgba(24, 56, 88, 0.14);
-  --nav-inner-light:    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --nav-border:         rgba(0, 33, 76, 0.14);
+  --nav-border-soft:    rgba(0, 33, 76, 0.08);
+  --nav-text:           #00214c;
+  --nav-text-strong:    #000b2b;
+  --nav-muted:          #53595f;
+  --nav-icon-bg:        rgba(1, 149, 60, 0.14);
+  --nav-icon-color:     #006d1f;
+  --nav-shadow-rest:    0 0 0 1px rgba(0, 33, 76, 0.10);
+  --nav-shadow-lift:    0 0 0 1px rgba(0, 33, 76, 0.18);
+  --nav-inner-light:    none;
   --nav-ease:           cubic-bezier(0.2, 0.8, 0.2, 1);
   --nav-ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
   --nav-t-fast:         180ms var(--nav-ease);
@@ -208,104 +260,109 @@
   --bi-ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
   --bi-ease-in:     cubic-bezier(0.4, 0, 0.8, 0.4);
 
-  /* slot availability colors (light) */
-  --bi-slot-avail-bg:     rgba(88, 152, 96, 0.08);
-  --bi-slot-avail-border: rgba(88, 152, 96, 0.22);
-  --bi-slot-avail-color:  #345e3a;
-  --bi-slot-hover-bg:     rgba(88, 152, 96, 0.18);
-  --bi-slot-hover-border: #589860;
-  --bi-slot-sel-from:     #1a3550;
-  --bi-slot-sel-to:       #204060;
-  --bi-slot-dis-bg:       rgba(148, 163, 184, 0.07);
-  --bi-slot-dis-border:   rgba(148, 163, 184, 0.22);
-  --bi-slot-dis-color:    rgba(100, 116, 139, 0.5);
-  --bi-cta-from:          #0f172a;
-  --bi-cta-to:            #1e4d6e;
-  --bi-cta-hover:         #0d2238;
-  --bi-check-bg:          rgba(88, 152, 96, 0.92);
+  /* slot availability colors (light)
+     -sel-from/-to y -cta-from/-to alimentan degradados en booking-interactions.
+     Se igualan los dos extremos: mismo par, cero transición = superficie plana.
+     La fase 4 borra el linear-gradient() del call site y deja un color. */
+  --bi-slot-avail-bg:     rgba(1, 149, 60, 0.08);
+  --bi-slot-avail-border: rgba(1, 149, 60, 0.22);
+  --bi-slot-avail-color:  #006d1f;
+  --bi-slot-hover-bg:     rgba(1, 149, 60, 0.18);
+  --bi-slot-hover-border: #01953c;
+  --bi-slot-sel-from:     #00214c;
+  --bi-slot-sel-to:       #00214c;
+  --bi-slot-dis-bg:       rgba(83, 89, 95, 0.07);
+  --bi-slot-dis-border:   rgba(83, 89, 95, 0.22);
+  --bi-slot-dis-color:    rgba(83, 89, 95, 0.55);
+  --bi-cta-from:          #00214c;
+  --bi-cta-to:            #00214c;
+  --bi-cta-hover:         #001636;
+  --bi-check-bg:          rgba(1, 149, 60, 0.92);
 
   /* ── Polish surface tokens (light) ─────────────────────────────────── */
   --polish-surface-0:     rgba(255, 255, 255, 0.98);
   --polish-surface-1:     rgba(248, 251, 253, 0.96);
   --polish-surface-2:     rgba(237, 243, 247, 0.92);
-  --polish-border-soft:   rgba(32, 64, 96, 0.12);
-  --polish-border-strong: rgba(32, 64, 96, 0.18);
-  --polish-shadow-soft:   0 16px 36px rgba(19, 41, 64, 0.08);
-  --polish-shadow-card:   0 24px 56px rgba(19, 41, 64, 0.1);
-  --polish-accent-ring:   rgba(88, 152, 96, 0.14);
-  --polish-info-wash:     rgba(43, 84, 120, 0.08);
+  --polish-border-soft:   rgba(0, 33, 76, 0.12);
+  --polish-border-strong: rgba(0, 33, 76, 0.18);
+  --polish-shadow-soft:   0 0 0 1px rgba(0, 33, 76, 0.10);
+  --polish-shadow-card:   0 0 0 1px rgba(0, 33, 76, 0.12);
+  --polish-accent-ring:   rgba(1, 149, 60, 0.14);
+  --polish-info-wash:     rgba(0, 33, 76, 0.06);
 
   /* ── Accessibility UI tokens ────────────────────────────────────────── */
   --ui-font-family-base:     'Inter', system-ui, sans-serif;
   --ui-font-family-readable: 'Segoe UI', 'Noto Sans', system-ui, sans-serif;
   --ui-font-family-active:   var(--ui-font-family-base);
-  --ui-focus-color:          #376b54;
-  --ui-focus-ring:           rgba(88, 152, 96, 0.22);
-  --ui-bg-light:             #f4f8fb;
-  --ui-bg-soft:              #eef4f8;
+  --ui-focus-color:          #006d1f;
+  --ui-focus-ring:           rgba(1, 149, 60, 0.22);
+  --ui-bg-light:             #f6f7f8;
+  --ui-bg-soft:              #e9ebed;
   --ui-bg-dark:              #07111d;
   --ui-bg-dark-soft:         #0a1726;
-  --ui-body-glow:            rgba(88, 152, 96, 0.06);
-  --ui-body-glow-secondary:  rgba(32, 64, 96, 0.05);
+  --ui-body-glow:            rgba(1, 149, 60, 0.06);
+  --ui-body-glow-secondary:  rgba(0, 33, 76, 0.05);
   --ui-text-micro:           clamp(0.84rem, 0.8rem + 0.14vw, 0.94rem);
   --ui-text-small:           clamp(0.96rem, 0.93rem + 0.12vw, 1.03rem);
   --ui-text-body:            clamp(1rem, 0.98rem + 0.14vw, 1.08rem);
 
   /* ── Booking form local tokens ──────────────────────────────────────── */
-  --bg-page:            #f6f8fb;
+  --bg-page:            #f6f7f8;
   --surface-card:       #ffffff;
-  --accent-primary:     #589860;
-  --accent-hover:       #4a8452;
-  --accent-deep:        #345e3a;
-  --accent-light:       #edf6ee;
-  --accent-glow:        rgba(88, 152, 96, 0.22);
-  --brand-selected:     #204060;
+  --accent-primary:     #01953c;
+  --accent-hover:       #006d1f;
+  --accent-deep:        #004b04;
+  --accent-light:       #eafdec;
+  --accent-glow:        rgba(1, 149, 60, 0.22);
   --brand-today:        #f59e0b;
-  --border-color:       rgba(32, 64, 96, 0.12);
-  --input-bg:           #fbfdfe;
+  --border-color:       rgba(0, 33, 76, 0.12);
+  --input-bg:           #ffffff;
   --error-color:        #b4231f;
   --error-bg:           rgba(180, 35, 24, 0.08);
   --warning-color:      #b45309;
   --warning-bg:         rgba(245, 158, 11, 0.12);
-  --success-color:      #43794c;
-  --success-bg:         rgba(88, 152, 96, 0.12);
-  --shadow-focus:       0 0 0 4px rgba(88, 152, 96, 0.22);
+  --success-color:      #006d1f;
+  --success-bg:         rgba(1, 149, 60, 0.12);
+  --shadow-focus:       0 0 0 4px rgba(1, 149, 60, 0.22);
 
   /* ── Brand extras used in minimalist-design layer ───────────────────── */
-  --brand-blue:           #204060;
-  --brand-blue-strong:    #183858;
-  --brand-green-action:   #4f8f5a;
-  --brand-page:           #f6f8fb;
+  --brand-blue:           #00214c;
+  --brand-blue-strong:    #001636;
+  --brand-green-action:   #006d1f;
+  --brand-page:           #f6f7f8;
   --brand-surface:        #ffffff;
-  --brand-surface-soft:   #f9fbfd;
-  --brand-border:         #d8e2ea;
-  --brand-text:           #17324d;
-  --brand-muted:          #5d7184;
+  --brand-surface-soft:   #f6f7f8;
+  --brand-border:         #d5d8db;
+  --brand-text:           #00214c;
+  --brand-muted:          #53595f;
   --brand-danger:         #b42318;
-  --shadow-soft-brand:    0 10px 28px rgba(24, 56, 88, 0.08);
+  --shadow-soft-brand:    0 0 0 1px rgba(0, 33, 76, 0.10);
 
-  /* ── Gradients ──────────────────────────────────────────────────────── */
-  --grad-brand:       linear-gradient(135deg, #589860 0%, #43794c 100%);
-  --grad-navy:        linear-gradient(135deg, #204060 0%, #183858 100%);
-  --grad-accent-line: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(88, 152, 96, 0.0) 8%,
-    rgba(88, 152, 96, 0.55) 35%,
-    rgba(32, 64, 96, 0.65) 50%,
-    rgba(88, 152, 96, 0.55) 65%,
-    rgba(88, 152, 96, 0.0) 92%,
-    transparent 100%
-  );
+  /* ── Superficies de marca (planas) ──────────────────────────────────────
+     Antes eran degradados. El brief prohíbe degradados, así que estos tokens
+     ahora son colores sólidos. Se conserva el nombre --grad-* porque hay 3
+     consumidores; la fase 4 los renombra a --surface-brand / --surface-navy.
+     --grad-accent-line era una línea decorativa de 7 paradas: se retira a un
+     borde plano de 1px.
+     ──────────────────────────────────────────────────────────────────────── */
+  --grad-brand:       #01953c;
+  --grad-navy:        #00214c;
+  --grad-accent-line: rgba(0, 33, 76, 0.12);
 }
 
 /* ==========================================================================
    Dark theme overrides
    ========================================================================== */
 [data-theme="dark"] {
-  /* ── Brand palette (dark) ────────────────────────────────────────────── */
-  --brand-navy:       #aac1d8;
-  --brand-navy-deep:  #c5d5e5;
+  /* ── Brand palette (dark) ──────────────────────────────────────────────
+     En dark el navy invierte su rol: deja de ser fondo y pasa a ser texto,
+     así que toma los peldaños claros de su propia rampa en vez de un azul
+     grisáceo inventado. Mismo tono del logo, distinta luminosidad.
+     ──────────────────────────────────────────────────────────────────────── */
+  --brand-navy:       #aabcd5;   /* navy-300 */
+  --brand-navy-deep:  #ccd9eb;   /* navy-200 */
+  --brand-green:      #88ce93;   /* green-300 */
+  --brand-green-deep: #b5e6bb;   /* green-200 */
 
   /* ── Semantic surface tokens (dark) ──────────────────────────────────── */
   --color-surface-0:    #16243a;
@@ -320,37 +377,37 @@
   --surface-3:          #0b1424;
   --surface-overlay:    rgba(2, 6, 16, 0.7);
 
-  --text-primary:       #f1f5f9;
-  --text-secondary:     #b5c2d2;
-  --text-tertiary:      #8aa0b8;
-  --text-on-accent:     #06140a;
+  --text-primary:       #f2f7fb;
+  --text-secondary:     #ccd9eb;   /* navy-200 */
+  --text-tertiary:      #aabcd5;   /* navy-300 */
+  --text-on-accent:     #001600;
 
-  --border-subtle:      rgba(248, 250, 252, 0.08);
-  --border-soft:        rgba(248, 250, 252, 0.10);
-  --border-strong:      rgba(248, 250, 252, 0.20);
+  --border-subtle:      rgba(204, 217, 235, 0.08);
+  --border-soft:        rgba(204, 217, 235, 0.10);
+  --border-strong:      rgba(204, 217, 235, 0.20);
 
-  --focus-ring-color:   rgba(114, 176, 122, 0.55);
+  --focus-ring-color:   rgba(136, 206, 147, 0.55);
 
   /* ── Legacy overrides ────────────────────────────────────────────────── */
-  --color-primary:        #e2e8f0;
-  --color-primary-dark:   #cbd5e1;
-  --color-accent:         #72b07a;
-  --color-accent-hover:   #8bc392;
+  --color-primary:        #ccd9eb;
+  --color-primary-dark:   #e3ecf8;
+  --color-accent:         #88ce93;
+  --color-accent-hover:   #b5e6bb;
   --color-bg-light:       #0b1424;
   --color-surface-soft:   #16243a;
   --color-surface-muted:  #0f1b2e;
-  --color-text-main:      #f1f5f9;
-  --color-text-muted:     #b5c2d2;
-  --color-text-soft:      #8aa0b8;
+  --color-text-main:      #f2f7fb;
+  --color-text-muted:     #ccd9eb;
+  --color-text-soft:      #aabcd5;
   --color-white:          #16243a;
 
   /* ── Status color overrides (dark) ───────────────────────────────────── */
-  --color-success:          #34d399;
-  --color-success-hover:    #6ee7b7;
-  --color-success-emphasis: #6ee7b7;
-  --color-success-deep:     #a7f3d0;
-  --color-success-bg:       rgba(16, 185, 129, 0.2);
-  --color-on-success:       #022c1e;
+  --color-success:          #88ce93;
+  --color-success-hover:    #b5e6bb;
+  --color-success-emphasis: #b5e6bb;
+  --color-success-deep:     #d5f5d9;
+  --color-success-bg:       rgba(1, 149, 60, 0.2);
+  --color-on-success:       #001600;
   --color-warning-emphasis: #fbbf24;
   --color-warning-deep:     #fcd34d;
   --color-warning-bg:       rgba(245, 158, 11, 0.2);
@@ -361,100 +418,92 @@
   --color-info-deep:        #93c5fd;
   --color-info-bg:          rgba(59, 130, 246, 0.18);
   --color-teal:             #5eead4;
-  --color-text-secondary:   #94a3b8;
-  --color-text-strong:      #dbeafe;
+  --color-text-secondary:   #aabcd5;
+  --color-text-strong:      #e3ecf8;
 
   /* ── Scrollbar (dark) ────────────────────────────────────────────────── */
-  --scrollbar-track:       #0f172a;
-  --scrollbar-thumb:       #334155;
-  --scrollbar-thumb-hover: #475569;
+  --scrollbar-track:       #0b1424;
+  --scrollbar-thumb:       #3d5980;
+  --scrollbar-thumb-hover: #617b9e;
 
-  /* ── Shadow overrides (dark) ─────────────────────────────────────────── */
-  --shadow-card:     0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-brand:    0 4px 14px rgba(114, 176, 122, 0.18);
+  /* ── Elevation overrides (dark) ──────────────────────────────────────── */
+  --shadow-card:     0 0 0 1px rgba(204, 217, 235, 0.14);
+  --shadow-elevated: 0 0 0 1px rgba(204, 217, 235, 0.20);
+  --shadow-brand:    0 0 0 1px rgba(136, 206, 147, 0.35);
 
   /* ── Navbar (dark) ───────────────────────────────────────────────────── */
-  --nav-bg-outer:       rgba(13, 20, 32, 0.95);
-  --nav-glass:          rgba(23, 34, 45, 0.78);
-  --nav-glass-strong:   #1c2a3a;
-  --nav-border:         rgba(216, 226, 234, 0.16);
-  --nav-border-soft:    rgba(216, 226, 234, 0.09);
+  --nav-bg-outer:       #0b1424;
+  --nav-glass:          rgba(22, 36, 58, 0.78);
+  --nav-glass-strong:   #16243a;
+  --nav-border:         rgba(204, 217, 235, 0.16);
+  --nav-border-soft:    rgba(204, 217, 235, 0.09);
   --nav-text:           #f2f7fb;
   --nav-text-strong:    #ffffff;
-  --nav-muted:          #b9c7d3;
-  --nav-icon-bg:        rgba(128, 201, 138, 0.18);
-  --nav-icon-color:     #a5e3ad;
-  --nav-shadow-rest:    0 2px 8px rgba(0, 0, 0, 0.3);
-  --nav-shadow-lift:    0 4px 16px rgba(0, 0, 0, 0.4);
-  --nav-inner-light:    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --grad-brand:         linear-gradient(135deg, #80c98a 0%, #589860 100%);
-  --grad-navy:          linear-gradient(135deg, #2a4f72 0%, #183858 100%);
-  --grad-accent-line:   linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(128, 201, 138, 0.0) 8%,
-    rgba(128, 201, 138, 0.55) 35%,
-    rgba(215, 232, 248, 0.55) 50%,
-    rgba(128, 201, 138, 0.55) 65%,
-    rgba(128, 201, 138, 0.0) 92%,
-    transparent 100%
-  );
+  --nav-muted:          #aabcd5;
+  --nav-icon-bg:        rgba(136, 206, 147, 0.18);
+  --nav-icon-color:     #b5e6bb;
+  --nav-shadow-rest:    0 0 0 1px rgba(204, 217, 235, 0.12);
+  --nav-shadow-lift:    0 0 0 1px rgba(204, 217, 235, 0.22);
+  --nav-inner-light:    none;
+  --grad-brand:         #88ce93;
+  --grad-navy:          #1c3b64;
+  --grad-accent-line:   rgba(204, 217, 235, 0.16);
 
   /* ── Booking-interactions (dark) ────────────────────────────────────── */
-  --bi-slot-avail-bg:     rgba(114, 176, 122, 0.09);
-  --bi-slot-avail-border: rgba(114, 176, 122, 0.22);
-  --bi-slot-avail-color:  #a8ddb0;
-  --bi-slot-hover-bg:     rgba(114, 176, 122, 0.2);
-  --bi-slot-hover-border: #72b07a;
-  --bi-slot-sel-from:     #1e4d6e;
-  --bi-slot-sel-to:       #2a6898;
+  --bi-slot-avail-bg:     rgba(136, 206, 147, 0.09);
+  --bi-slot-avail-border: rgba(136, 206, 147, 0.22);
+  --bi-slot-avail-color:  #b5e6bb;
+  --bi-slot-hover-bg:     rgba(136, 206, 147, 0.2);
+  --bi-slot-hover-border: #88ce93;
+  /* sel/cta llevan `color: #ffffff` fijo en el call site -> el fondo NO puede
+     aclararse. navy-600 da 7.15:1 con blanco; navy-300 daría 1.8:1. */
+  --bi-slot-sel-from:     #3d5980;
+  --bi-slot-sel-to:       #3d5980;
   --bi-slot-dis-bg:       rgba(255, 255, 255, 0.03);
-  --bi-slot-dis-border:   rgba(180, 195, 215, 0.14);
-  --bi-slot-dis-color:    rgba(180, 195, 215, 0.35);
-  --bi-cta-from:          #1e4d6e;
-  --bi-cta-to:            #2a6898;
-  --bi-check-bg:          rgba(114, 176, 122, 0.9);
+  --bi-slot-dis-border:   rgba(170, 188, 213, 0.14);
+  --bi-slot-dis-color:    rgba(170, 188, 213, 0.4);
+  --bi-cta-from:          #3d5980;
+  --bi-cta-to:            #3d5980;
+  --bi-check-bg:          rgba(136, 206, 147, 0.9);
 
   /* ── Polish tokens (dark) ────────────────────────────────────────────── */
   --polish-surface-0:     rgba(10, 20, 33, 0.98);
   --polish-surface-1:     rgba(13, 26, 41, 0.96);
   --polish-surface-2:     rgba(17, 32, 50, 0.94);
-  --polish-border-soft:   rgba(171, 195, 217, 0.14);
-  --polish-border-strong: rgba(171, 195, 217, 0.22);
-  --polish-shadow-soft:   0 18px 40px rgba(0, 0, 0, 0.26);
-  --polish-shadow-card:   0 28px 62px rgba(0, 0, 0, 0.32);
-  --polish-accent-ring:   rgba(114, 176, 122, 0.18);
-  --polish-info-wash:     rgba(29, 52, 77, 0.26);
+  --polish-border-soft:   rgba(204, 217, 235, 0.14);
+  --polish-border-strong: rgba(204, 217, 235, 0.22);
+  --polish-shadow-soft:   0 0 0 1px rgba(204, 217, 235, 0.12);
+  --polish-shadow-card:   0 0 0 1px rgba(204, 217, 235, 0.16);
+  --polish-accent-ring:   rgba(136, 206, 147, 0.18);
+  --polish-info-wash:     rgba(170, 188, 213, 0.08);
 
   /* ── Brand extras (dark) ─────────────────────────────────────────────── */
-  --brand-page:         #111820;
-  --brand-surface:      #17222d;
-  --brand-surface-soft: #1c2a36;
-  --brand-border:       rgba(205, 220, 232, 0.18);
+  --brand-page:         #0b1424;
+  --brand-surface:      #16243a;
+  --brand-surface-soft: #0f1b2e;
+  --brand-border:       rgba(204, 217, 235, 0.18);
   --brand-text:         #f2f7fb;
-  --brand-muted:        #b9c7d3;
-  --shadow-soft-brand:  0 10px 28px rgba(0, 0, 0, 0.28);
+  --brand-muted:        #aabcd5;
+  --shadow-soft-brand:  0 0 0 1px rgba(204, 217, 235, 0.12);
 
   /* ── Booking form local tokens (dark) ────────────────────────────────── */
   --bg-page:          #08111d;
-  --surface-card:     rgba(13, 26, 41, 0.96);
-  --accent-primary:   #72b07a;
-  --accent-hover:     #8ec795;
-  --accent-deep:      #589860;
-  --accent-light:     rgba(88, 152, 96, 0.18);
-  --accent-glow:      rgba(114, 176, 122, 0.3);
-  --brand-selected:   linear-gradient(135deg, #aac1d8, #72b07a);
+  --surface-card:     #16243a;
+  --accent-primary:   #88ce93;
+  --accent-hover:     #b5e6bb;
+  --accent-deep:      #50b064;
+  --accent-light:     rgba(1, 149, 60, 0.18);
+  --accent-glow:      rgba(136, 206, 147, 0.3);
   --brand-today:      #f5c268;
-  --border-color:     rgba(171, 195, 217, 0.18);
-  --input-bg:         rgba(17, 32, 50, 0.68);
+  --border-color:     rgba(204, 217, 235, 0.18);
+  --input-bg:         #0f1b2e;
   --error-color:      #fca5a5;
   --error-bg:         rgba(180, 35, 24, 0.2);
   --warning-color:    #fcd34d;
   --warning-bg:       rgba(245, 158, 11, 0.16);
-  --success-color:    #86efac;
-  --success-bg:       rgba(88, 152, 96, 0.18);
-  --shadow-focus:     0 0 0 4px rgba(114, 176, 122, 0.35);
+  --success-color:    #b5e6bb;
+  --success-bg:       rgba(1, 149, 60, 0.18);
+  --shadow-focus:     0 0 0 4px rgba(136, 206, 147, 0.35);
 }
 
 /* ==========================================================================
