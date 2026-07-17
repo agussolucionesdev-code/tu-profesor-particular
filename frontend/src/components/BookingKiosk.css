@@ -101,6 +101,9 @@
   color: var(--text-primary);
   margin: 0 0 0.35rem;
 }
+/* Recibe foco programático al cambiar de paso (lo anuncia el lector de
+   pantalla). No es un control interactivo, así que no lleva anillo visible. */
+.kiosk-title:focus { outline: none; }
 .kiosk-subtitle {
   font-size: 0.98rem;
   color: var(--text-secondary);
