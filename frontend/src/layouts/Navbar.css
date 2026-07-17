@@ -1,7 +1,7 @@
 /* ==========================================================================
    Navbar Elite — diseño premium, vivo y respirado
    Marca: Tu Profesor Particular · Agustín Elías Sosa
-   Paleta: Navy (#204060 / #183858) + Green (#589860 / #43794c)
+   Paleta: Navy (#00214c / #001636) + Green (#01953c / #004b04)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -37,19 +37,19 @@
   border-bottom-color: var(--nav-border);
 }
 
-/* línea aurora inferior — fina, gradiente viajero */
+/* Antes: "aurora" — un degradado de 7 paradas viajando en bucle cada 9s a lo
+   ancho del navbar. Ahora es lo que siempre debió ser: una hairline de 1px que
+   separa el navbar del contenido. El background-size y la animación se retiran
+   porque sobre un color sólido no desplazan nada. */
 .navbar-aurora {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px;
+  height: 1px;
   background: var(--grad-accent-line);
-  background-size: 220% 100%;
-  background-position: 0% 50%;
   opacity: 0.72;
   pointer-events: none;
-  animation: navbarAurora 9s ease-in-out infinite;
 }
 
 .navbar-elite.scrolled .navbar-aurora {
@@ -82,12 +82,9 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(88, 152, 96, 0.28),
-    rgba(32, 64, 96, 0.18) 45%,
-    rgba(255, 255, 255, 0) 75%
-  );
+  /* Antes: borde de 1px pintado con un degradado de 3 paradas que se desvanecía
+     a transparente. Ahora color sólido — el mask sigue recortando el anillo. */
+  background: rgba(0, 33, 76, 0.14);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -99,12 +96,7 @@
 }
 
 [data-theme="dark"] .navbar-container::before {
-  background: linear-gradient(
-    135deg,
-    rgba(128, 201, 138, 0.36),
-    rgba(215, 232, 248, 0.18) 45%,
-    rgba(255, 255, 255, 0) 75%
-  );
+  background: rgba(204, 217, 235, 0.18);
 }
 
 .navbar-elite.scrolled .navbar-container {
@@ -128,13 +120,13 @@
 }
 
 .navbar-brand:hover {
-  background: rgba(88, 152, 96, 0.07);
+  background: rgba(1, 149, 60, 0.07);
   transform: translateY(-1px);
 }
 
 .navbar-brand:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.35);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.35);
 }
 
 /* Mark: contenedor del ícono */
@@ -145,12 +137,9 @@
   width: 62px;
   height: 62px;
   border-radius: 18px;
-  background:
-    radial-gradient(120% 120% at 30% 20%, #ffffff 0%, #f3faf4 55%, #e8f4ea 100%);
-  border: 1px solid rgba(88, 152, 96, 0.26);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 10px 24px rgba(32, 64, 96, 0.14);
+  background: #ffffff;
+  border: 1px solid rgba(0, 33, 76, 0.12);
+  box-shadow: none;
   overflow: visible;
   flex-shrink: 0;
   transition:
@@ -161,15 +150,13 @@
 
 [data-theme="dark"] .brand-mark {
   background: rgba(216, 238, 220, 0.88);
-  border-color: rgba(114, 176, 122, 0.30);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border-color: rgba(136, 206, 147, 0.30);
+  box-shadow: none;
 }
 
 .navbar-brand:hover .brand-mark {
   transform: rotate(-3deg) scale(1.04);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 16px 32px rgba(32, 64, 96, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 /* imagen del logo (ícono “A” con compás + check) */
@@ -179,7 +166,6 @@
   width: 46px;
   height: 46px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(24, 56, 88, 0.22));
   transition: transform var(--nav-t-slow);
 }
 
@@ -188,92 +174,17 @@
 }
 
 /* halo pulsante detrás del ícono */
-.brand-mark-glow {
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(88, 152, 96, 0.35) 0%,
-    rgba(88, 152, 96, 0.12) 40%,
-    transparent 70%
-  );
-  filter: blur(8px);
-  opacity: 0.85;
-  pointer-events: none;
-  animation: brandGlowPulse 3.6s ease-in-out infinite;
-  z-index: 0;
-}
-
-[data-theme="dark"] .brand-mark-glow {
-  background: radial-gradient(
-    circle,
-    rgba(128, 201, 138, 0.18) 0%,
-    rgba(128, 201, 138, 0.06) 40%,
-    transparent 70%
-  );
-  opacity: 0.5;
-}
-
-/* órbita sutil (anillo rotatorio) */
-.brand-mark-orbit {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px dashed rgba(88, 152, 96, 0.45);
-  opacity: 0.6;
-  pointer-events: none;
-  animation: brandOrbit 14s linear infinite;
-  z-index: 1;
-}
-
-[data-theme="dark"] .brand-mark-orbit {
-  border-color: rgba(128, 201, 138, 0.55);
-}
-
-/* chispas alrededor del logo */
+/* Ornamentos del logo: retirados.
+   Eran tres capas animadas en bucle alrededor del monograma — un glow radial
+   con blur(8px) pulsando cada 3.6s, un anillo punteado rotando cada 14s, y
+   tres chispas verdes con doble resplandor titilando en loop.
+   Nada de eso es plano, ni minimalista, ni premium: es precisamente el
+   "artificial AI look" que el brandbook pide evitar. El logo se sostiene solo.
+   Los nodos siguen en Navbar.jsx; la fase 4 los borra del DOM. */
+.brand-mark-glow,
+.brand-mark-orbit,
 .brand-mark-sparkle {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: var(--brand-green);
-  border-radius: 50%;
-  box-shadow:
-    0 0 6px rgba(88, 152, 96, 0.7),
-    0 0 14px rgba(88, 152, 96, 0.35);
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0;
-  animation: brandSparkle 4s ease-in-out infinite;
-}
-
-.brand-mark-sparkle--one {
-  top: -4px;
-  right: 4px;
-  animation-delay: 0s;
-}
-
-.brand-mark-sparkle--two {
-  top: 14px;
-  right: -6px;
-  width: 4px;
-  height: 4px;
-  animation-delay: 1.3s;
-}
-
-.brand-mark-sparkle--three {
-  top: -2px;
-  right: 18px;
-  width: 5px;
-  height: 5px;
-  animation-delay: 2.6s;
-}
-
-[data-theme="dark"] .brand-mark-sparkle {
-  background: #b5ebbf;
-  box-shadow:
-    0 0 8px rgba(181, 235, 191, 0.9),
-    0 0 16px rgba(181, 235, 191, 0.5);
+  display: none;
 }
 
 /* tipografía de marca */
@@ -301,10 +212,12 @@
   height: 6px;
   border-radius: 50%;
   background: var(--brand-green);
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.18);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.18);
   animation: brandDotPulse 2.2s ease-in-out infinite;
 }
 
+/* Antes: degradado navy->verde recortado al texto. El nombre de la marca no
+   es un adorno: es texto, y va en un solo color legible. */
 .brand-title {
   color: var(--nav-text-strong);
   font-family: "Playfair Display", "Georgia", serif;
@@ -312,28 +225,11 @@
   font-weight: 900;
   letter-spacing: -0.01em;
   line-height: 1;
-  background: linear-gradient(
-    135deg,
-    var(--brand-navy-deep) 0%,
-    var(--brand-navy) 50%,
-    var(--brand-green-strong) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: filter var(--nav-t-base);
+  transition: color var(--nav-t-base);
 }
 
 [data-theme="dark"] .brand-title {
-  background: linear-gradient(
-    135deg,
-    #ffffff 0%,
-    #cfe3f6 45%,
-    #a5e3ad 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #f2f7fb;
 }
 
 .brand-title-accent {
@@ -345,7 +241,7 @@
 }
 
 [data-theme="dark"] .brand-title-accent {
-  color: #a5e3ad;
+  color: #b5e6bb;
 }
 
 .navbar-brand:hover .brand-title {
@@ -380,8 +276,8 @@
   margin: 0;
   list-style: none;
   border-radius: 14px;
-  background: rgba(32, 64, 96, 0.045);
-  border: 1px solid rgba(32, 64, 96, 0.08);
+  background: rgba(0, 33, 76, 0.045);
+  border: 1px solid rgba(0, 33, 76, 0.08);
   backdrop-filter: blur(6px);
 }
 
@@ -416,18 +312,12 @@
 }
 
 .nav-link-btn::before {
-  /* barrido luminoso en hover */
+  /* Era un barrido luminoso que cruzaba el botón en hover. El hover ya se
+     comunica con el cambio de fondo; el destello es adorno. Retirado. */
+  display: none;
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    120deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.45) 50%,
-    transparent 80%
-  );
-  transform: translateX(-110%);
-  transition: transform 720ms var(--nav-ease);
   pointer-events: none;
   opacity: 0;
 }
@@ -457,41 +347,35 @@
   color: var(--nav-text-strong);
   background: var(--nav-glass-strong);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(32, 64, 96, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.12);
 }
 
 .nav-link-btn:hover .nav-icon {
   transform: scale(1.12) rotate(-6deg);
   color: #ffffff;
   background: var(--brand-green);
-  box-shadow: 0 6px 14px rgba(88, 152, 96, 0.38);
+  box-shadow: none;
 }
 
 .nav-link-btn:focus-visible {
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.4);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
 }
 
 .nav-link-btn.active {
   color: #ffffff;
   background: var(--grad-brand);
   box-shadow:
-    0 12px 26px rgba(88, 152, 96, 0.35),
+    0 12px 26px rgba(1, 149, 60, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .nav-link-btn.active::after {
-  /* shimmer diagonal sobre el pill activo */
+  /* Era un shimmer diagonal recorriendo el pill activo. El estado activo ya se
+     lee por color de fondo y peso tipográfico. Retirado. */
+  display: none;
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    120deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.22) 50%,
-    transparent 65%
-  );
-  background-size: 220% 100%;
-  background-position: 120% 0;
   pointer-events: none;
   animation: activePillShimmer 3.8s ease-in-out infinite;
 }
@@ -524,8 +408,8 @@
   gap: 0.36rem;
   padding: 0.3rem;
   border-radius: 14px;
-  background: rgba(32, 64, 96, 0.05);
-  border: 1px solid rgba(32, 64, 96, 0.1);
+  background: rgba(0, 33, 76, 0.05);
+  border: 1px solid rgba(0, 33, 76, 0.1);
 }
 
 [data-theme="dark"] .navbar-utility-cluster {
@@ -557,13 +441,13 @@
 
 .nav-utility-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(88, 152, 96, 0.4);
-  box-shadow: 0 12px 22px rgba(32, 64, 96, 0.12);
+  border-color: rgba(1, 149, 60, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.14);
 }
 
 .nav-utility-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.4);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
 }
 
 .nav-utility-icon {
@@ -614,12 +498,12 @@
 .voice-toggle-btn.active {
   color: #ffffff;
   background: var(--grad-navy);
-  border-color: rgba(88, 152, 96, 0.38);
-  box-shadow: 0 12px 24px rgba(32, 64, 96, 0.22);
+  border-color: rgba(1, 149, 60, 0.38);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.20);
 }
 
 .voice-toggle-btn.active .nav-utility-icon {
-  background: rgba(128, 201, 138, 0.3);
+  background: rgba(136, 206, 147, 0.3);
   color: #ffffff;
 }
 
@@ -638,24 +522,14 @@
   padding: 0 8px;
   margin-left: 0.15rem;
   border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.18),
-    rgba(128, 201, 138, 0.32)
-  );
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 0 10px rgba(128, 201, 138, 0.35);
+  background: rgba(1, 149, 60, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .voice-wave-bar {
   width: 3px;
   border-radius: 2px;
-  background: linear-gradient(
-    to top,
-    #dff8e4 0%,
-    #ffffff 100%
-  );
+  background: #ffffff;
   transform-origin: center bottom;
   animation: voiceWavePulse 1.05s ease-in-out infinite;
   will-change: transform, opacity;
@@ -681,9 +555,9 @@
 /* Estado bloqueado (el navegador rechaza reproducir voz) */
 .voice-toggle-btn.blocked {
   color: #ffffff;
-  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  background: #b45309;
   border-color: rgba(245, 158, 11, 0.5);
-  box-shadow: 0 12px 24px rgba(180, 83, 9, 0.3);
+  box-shadow: none;
 }
 
 .voice-toggle-btn.blocked .nav-utility-icon {
@@ -703,12 +577,12 @@
   z-index: 30;
   transform: translateY(-50%);
   min-height: 38px;
-  border: 1px solid rgba(88, 152, 96, 0.3);
+  border: 1px solid rgba(1, 149, 60, 0.3);
   border-radius: 11px;
   padding: 0.55rem 0.82rem;
   background: #ffffff;
   color: var(--nav-text-strong);
-  box-shadow: 0 14px 28px rgba(32, 64, 96, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.18);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 900;
@@ -723,8 +597,8 @@
   top: 50%;
   width: 0.72rem;
   height: 0.72rem;
-  border-top: 1px solid rgba(88, 152, 96, 0.28);
-  border-right: 1px solid rgba(88, 152, 96, 0.28);
+  border-top: 1px solid rgba(1, 149, 60, 0.28);
+  border-right: 1px solid rgba(1, 149, 60, 0.28);
   background: inherit;
   transform: translateY(-50%) rotate(45deg);
 }
@@ -732,7 +606,7 @@
 [data-theme="dark"] .voice-hint-bubble {
   background: #f7fbf7;
   color: #17324d;
-  border-color: rgba(128, 201, 138, 0.44);
+  border-color: rgba(136, 206, 147, 0.44);
 }
 
 /* --- Theme toggle --- */
@@ -757,7 +631,6 @@
 
 .theme-toggle-btn .theme-icon--sun {
   color: #f59e0b;
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.45));
   transform: rotate(-140deg) scale(0.4);
   opacity: 0;
 }
@@ -774,7 +647,7 @@
 }
 
 [data-theme="dark"] .theme-toggle-btn .theme-icon--moon {
-  color: #cfe3f6;
+  color: #ccd9eb;
   transform: rotate(140deg) scale(0.4);
   opacity: 0;
 }
@@ -802,13 +675,13 @@
 
 .menu-toggle-icon:hover {
   transform: translateY(-1px);
-  border-color: rgba(88, 152, 96, 0.4);
-  box-shadow: 0 10px 20px rgba(32, 64, 96, 0.12);
+  border-color: rgba(1, 149, 60, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.14);
 }
 
 .menu-toggle-icon:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.4);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
 }
 
 /* --------------------------------------------------------------------------
@@ -876,10 +749,10 @@
 @keyframes brandDotPulse {
   0%,
   100% {
-    box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.18);
+    box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.18);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(88, 152, 96, 0.04);
+    box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.04);
   }
 }
 
@@ -941,10 +814,10 @@
 @keyframes voiceHintPulse {
   0%,
   100% {
-    box-shadow: 0 12px 26px rgba(32, 64, 96, 0.14);
+    box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.14);
   }
   50% {
-    box-shadow: 0 12px 28px rgba(88, 152, 96, 0.3);
+    box-shadow: none;
   }
 }
 

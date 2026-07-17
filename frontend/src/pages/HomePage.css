@@ -11,17 +11,23 @@
    --green-lt guarda el verde de marca para superficies grandes.
 ══════════════════════════════════════════════════════ */
 
+/* OJO al elegir el token de origen. --brand-navy y --brand-green CAMBIAN DE ROL
+   entre temas: en light son superficie, en dark se invierten a texto y valen un
+   tono claro (#aabcd5 / #88ce93). Los peldaños de la rampa (--brand-navy-800,
+   --brand-green-600, ...) NO se overridean nunca: valen igual en los dos temas.
+   El hero y las secciones oscuras deben seguir oscuras en dark, así que toman
+   la rampa. Aliasearlas a --brand-navy volvía el hero celeste en dark mode. */
 .hp {
-  --navy:       var(--brand-navy);        /* #00214c */
+  --navy:       var(--brand-navy-800);    /* #00204a — estable en ambos temas */
   --navy-2:     var(--brand-navy-700);    /* #1c3b64 */
   --navy-3:     var(--brand-navy-600);    /* #3d5980 */
   --green:      var(--brand-green-600);   /* #006d1f — 6.55:1 sobre blanco */
-  --green-lt:   var(--brand-green);       /* #01953c — verde de marca */
+  --green-lt:   var(--brand-green);       /* #01953c — sigue el tema a propósito */
   --green-on-dark: var(--brand-green-300);/* #88ce93 — 8.55:1 sobre el navy */
   --green-pale: var(--brand-green-50);    /* #eafdec */
   --white:      var(--brand-white);
   --off:        var(--brand-gray-50);     /* #f6f7f8 */
-  --text:       var(--brand-navy);
+  --text:       var(--brand-navy-800);    /* el override de dark lo reapunta */
   --muted:      var(--brand-gray-600);    /* #53595f — 7.09:1 */
   --border:     rgba(0, 33, 76, .1);
   min-height: 100vh;
