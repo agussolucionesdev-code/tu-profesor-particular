@@ -139,17 +139,30 @@ const BookingKiosk = () => {
       .catch(() => {});
   }, []);
 
-  // Al cambiar de paso, llevar la tarjeta al tope del viewport SOLO si quedó por
-  // encima. Nada de fijar campos al 28% ni auto-scroll agresivo (ese era el bug).
+  // Al cambiar de paso: (1) llevar la tarjeta al tope del viewport solo si quedó
+  // por encima —nada de auto-scroll agresivo, ese era el bug—, y (2) mover el
+  // foco al título del paso para que teclado y lectores de pantalla no queden
+  // huérfanos cuando la tarjeta anterior se desmonta. Se saltea en el primer
+  // render (isMounted) para no robar el foco al cargar la página.
+  const isMountedRef = useRef(false);
   useEffect(() => {
     const node = cardRef.current;
     if (!node) return;
+
+    const prefersReduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
     const top = node.getBoundingClientRect().top;
     if (top < 0 || top > 160) {
       const navH = document.querySelector(".navbar-elite")?.getBoundingClientRect().height ?? 0;
       const y = node.getBoundingClientRect().top + window.scrollY - navH - 16;
-      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+      window.scrollTo({ top: Math.max(0, y), behavior: prefersReduced ? "auto" : "smooth" });
     }
+
+    if (isMountedRef.current) {
+      const heading = node.querySelector(".kiosk-title");
+      heading?.focus?.({ preventScroll: true });
+    }
+    isMountedRef.current = true;
   }, [step]);
 
   const subjectsForLevel = useMemo(() => {
@@ -423,7 +436,7 @@ const BookingKiosk = () => {
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s1-title">
             {!formData.educationLevel ? (
               <>
-                <h1 id="kiosk-s1-title" className="kiosk-title">¿Qué estás cursando?</h1>
+                <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué estás cursando?</h1>
                 <p className="kiosk-subtitle">Elegí el nivel para ver las materias.</p>
                 <div className="kiosk-grid kiosk-grid-levels">
                   {LEVEL_OPTIONS.map((lvl) => (
@@ -443,7 +456,7 @@ const BookingKiosk = () => {
               <>
                 <div className="kiosk-title-row">
                   <div>
-                    <h1 id="kiosk-s1-title" className="kiosk-title">¿Qué materia?</h1>
+                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué materia?</h1>
                     <p className="kiosk-subtitle">
                       Nivel: <strong>{formData.educationLevel}</strong>
                     </p>
@@ -476,7 +489,7 @@ const BookingKiosk = () => {
         {/* ─── PASO 2: MODALIDAD ─── */}
         {step === 2 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s2-title">
-            <h1 id="kiosk-s2-title" className="kiosk-title">¿Cómo preferís la clase?</h1>
+            <h1 id="kiosk-s2-title" className="kiosk-title" tabIndex={-1}>¿Cómo preferís la clase?</h1>
             <p className="kiosk-subtitle">
               {formData.subject} · {formData.educationLevel}
             </p>
@@ -507,7 +520,7 @@ const BookingKiosk = () => {
         {/* ─── PASO 3: TURNO ─── */}
         {step === 3 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s3-title">
-            <h1 id="kiosk-s3-title" className="kiosk-title">¿Cuánto dura y cuándo?</h1>
+            <h1 id="kiosk-s3-title" className="kiosk-title" tabIndex={-1}>¿Cuánto dura y cuándo?</h1>
             <p className="kiosk-subtitle">Elegí la duración y después el horario que más te sirva.</p>
 
             <div className="kiosk-field-label">Duración</div>
@@ -526,7 +539,7 @@ const BookingKiosk = () => {
             </div>
 
             {formData.duration ? (
-              <>
+              <div role="status" aria-live="polite">
                 <div className="kiosk-field-label">Próximos turnos disponibles</div>
                 {availabilityStatus === "loading" && (
                   <p className="kiosk-muted">Buscando horarios libres…</p>
@@ -578,7 +591,7 @@ const BookingKiosk = () => {
                       Ver más fechas ({upcomingSlotsByDay.length - KIOSK_UPCOMING_DAYS})
                     </button>
                   )}
-              </>
+              </div>
             ) : (
               <p className="kiosk-muted">Elegí una duración para ver los horarios.</p>
             )}
@@ -594,7 +607,7 @@ const BookingKiosk = () => {
         {/* ─── PASO 4: DATOS ─── */}
         {step === 4 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s4-title">
-            <h1 id="kiosk-s4-title" className="kiosk-title">Tus datos</h1>
+            <h1 id="kiosk-s4-title" className="kiosk-title" tabIndex={-1}>Tus datos</h1>
             <p className="kiosk-subtitle">Solo lo necesario para confirmar y avisarte.</p>
 
             <div className="kiosk-form-grid">
@@ -730,7 +743,7 @@ const BookingKiosk = () => {
         {/* ─── PASO 5: CONFIRMAR ─── */}
         {step === 5 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s5-title">
-            <h1 id="kiosk-s5-title" className="kiosk-title">Revisá y confirmá</h1>
+            <h1 id="kiosk-s5-title" className="kiosk-title" tabIndex={-1}>Revisá y confirmá</h1>
             <p className="kiosk-subtitle">Si algo no está bien, tocá el paso de arriba para editarlo.</p>
 
             <dl className="kiosk-summary">
