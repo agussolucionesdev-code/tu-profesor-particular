@@ -6,7 +6,7 @@ services:
     plan: starter           # $7/mo — never sleeps; upgrade from free to keep backend always-on
     buildCommand: npm ci
     startCommand: npm start
-    healthCheckPath: /health
+    healthCheckPath: /ready
     envVars:
       - key: NODE_VERSION
         value: 22.14.0
@@ -66,4 +66,8 @@ services:
       - key: EMAIL_PASS
         sync: false
       - key: OWNER_NOTIFICATION_EMAIL
+        sync: false
+      - key: NOTIFICATION_OUTBOX_ENCRYPTION_KEYS
+        sync: false
+      - key: NOTIFICATION_OUTBOX_ACTIVE_KEY_VERSION
         sync: false

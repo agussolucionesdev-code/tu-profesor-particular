@@ -13,6 +13,8 @@ import {
   BookingSlotConflictError,
   claimBookingSlots,
   getBookingSlotStarts,
+  releaseClaimedBookingSlots,
+  releaseBookingSlotsExcept,
 } from "../src/services/bookingSlotService.js";
 
 const sendManagementLinkEmailMock = vi.hoisted(() => vi.fn());
@@ -35,13 +37,17 @@ let User;
 let AppSettings;
 let BlockedDate;
 let AuditEvent;
+let NotificationOutbox;
+let ManagementLinkRequest;
 let requestManagementLink;
+let processBlindManagementLinkRequests;
 let processReminders;
 let ensureOperationalIndexes;
 let setAuditWriterForTests;
 let writeAuditDocument;
 let AUDIT_WRITE_TIMEOUT_MS;
 let SLOT_MUTATION_LOCK_MS;
+let reconcilePendingBookingAudits;
 
 const getMemoryLaunchTimeout = () =>
   Number(process.env.MONGO_MEMORY_LAUNCH_TIMEOUT_MS || 90000);
@@ -172,6 +178,8 @@ beforeAll(async () => {
   process.env.RATE_LIMIT_MAX = "1000";
   process.env.PUBLIC_MUTATION_RATE_LIMIT_MAX = "1000";
   process.env.FRONTEND_URL = "https://frontend.example.com";
+  process.env.NOTIFICATION_OUTBOX_ENCRYPTION_KEYS = `v1:${Buffer.alloc(32, 7).toString("base64url")}`;
+  process.env.NOTIFICATION_OUTBOX_ACTIVE_KEY_VERSION = "v1";
   mongoServer = await MongoMemoryServer.create({
     instance: {
       launchTimeout: getMemoryLaunchTimeout(),
@@ -187,6 +195,9 @@ beforeAll(async () => {
   AppSettings = (await import("../src/models/AppSettings.js")).default;
   BlockedDate = (await import("../src/models/BlockedDate.js")).default;
   AuditEvent = (await import("../src/models/AuditEvent.js")).default;
+  NotificationOutbox = (await import("../src/models/NotificationOutbox.js")).default;
+  ManagementLinkRequest = (await import("../src/models/ManagementLinkRequest.js")).default;
+  ({ processBlindManagementLinkRequests } = await import("../src/services/managementLinkRequestService.js"));
   processReminders = (await import("../src/services/reminderService.js")).processReminders;
   ensureOperationalIndexes = (
     await import("../src/config/operationalIndexes.js")
@@ -195,6 +206,7 @@ beforeAll(async () => {
     setAuditWriterForTests,
     writeAuditDocument,
     AUDIT_WRITE_TIMEOUT_MS,
+    reconcilePendingBookingAudits,
   } = await import("../src/services/auditService.js"));
   ({ SLOT_MUTATION_LOCK_MS } = await import("../src/config/bookingMutationLease.js"));
   requestManagementLink = (
@@ -204,6 +216,7 @@ beforeAll(async () => {
   await Promise.all([
     BookingSlot.syncIndexes(),
     IdempotencyKey.syncIndexes(),
+    NotificationOutbox.syncIndexes(),
   ]);
 }, Math.max(30000, getMemoryLaunchTimeout() + 15000));
 
@@ -220,6 +233,8 @@ beforeEach(async () => {
   await AppSettings.deleteMany({});
   await BlockedDate.deleteMany({});
   await AuditEvent.deleteMany({});
+  await NotificationOutbox.deleteMany({});
+  await ManagementLinkRequest.deleteMany({});
 });
 
 afterAll(async () => {
@@ -228,12 +243,10 @@ afterAll(async () => {
 });
 
 describe("booking flows", () => {
-  it("forwards the original failure when requesting a management link", async () => {
+  it("keeps the generic 202 contract when management-link lookup fails", async () => {
     const originalError = new Error("booking lookup failed");
-    const findOneSpy = vi.spyOn(Booking, "findOne").mockReturnValueOnce({
-      select: () => ({
-        exec: () => Promise.reject(originalError),
-      }),
+    const findOneSpy = vi.spyOn(Booking, "findOneAndUpdate").mockReturnValueOnce({
+      select: () => Promise.reject(originalError),
     });
     const next = vi.fn();
     const res = {
@@ -251,9 +264,12 @@ describe("booking flows", () => {
         next,
       );
 
-      expect(next).toHaveBeenCalledOnce();
-      expect(next).toHaveBeenCalledWith(originalError);
-      expect(res.status).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(202);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        message: "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
+      });
     } finally {
       findOneSpy.mockRestore();
     }
@@ -272,6 +288,33 @@ describe("booking flows", () => {
     const defaults = getDefaultAvailabilityRange();
     expect(businessDateAndClock(defaults.from)).toMatchObject({ hour: 0, minute: 0 });
     expect(businessDateAndClock(defaults.to)).toMatchObject({ hour: 23, minute: 59 });
+  });
+
+  it("enables Mongoose update pipelines when acquiring a booking mutation lease", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const booking = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const originalFindOneAndUpdate = Booking.findOneAndUpdate;
+    const updateSpy = vi.spyOn(Booking, "findOneAndUpdate")
+      .mockImplementation(function observePipelineOptions(filter, update, options) {
+        return originalFindOneAndUpdate.call(this, filter, update, options);
+      });
+
+    try {
+      await request(app)
+        .put(`/api/bookings/${booking._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ notes: "Pipeline lease regression" })
+        .expect(200);
+
+      const pipelineCall = updateSpy.mock.calls.find(([, update]) => Array.isArray(update));
+      expect(pipelineCall?.[2]).toMatchObject({ new: true, updatePipeline: true });
+    } finally {
+      updateSpy.mockRestore();
+    }
   });
 
   it("does not generate public availability slots on Sundays", async () => {
@@ -1607,7 +1650,7 @@ describe("booking flows", () => {
     expect(slotStarts.every((slot) => new Date(slot.slotStart) >= new Date(persisted.timeSlot))).toBe(true);
   });
 
-  it("keeps slots in sync for admin reschedule, cancellation, delete and reset", async () => {
+  it("keeps slots in sync for admin reschedule, cancellation and audited delete", async () => {
     const token = await createAdminAndLogin();
     const created = await request(app)
       .post("/api/bookings/reserve")
@@ -1640,15 +1683,17 @@ describe("booking flows", () => {
       .expect(200);
     expect(await BookingSlot.countDocuments({ booking: deletableStored._id })).toBe(0);
 
-    await request(app)
+    const protectedBooking = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload({ studentName: "Alumno para reiniciar", timeSlot: formatForApi(tomorrowAt(16)) }))
       .expect(201);
     await request(app)
       .delete("/api/bookings/all")
       .set("Authorization", `Bearer ${token}`)
-      .expect(200);
-    expect(await BookingSlot.countDocuments()).toBe(0);
+      .expect(405);
+    const protectedStored = await Booking.findOne({ bookingCode: protectedBooking.body.data.bookingCode });
+    expect(protectedStored).toBeTruthy();
+    expect(await BookingSlot.countDocuments({ booking: protectedStored._id })).toBe(2);
   }, 15000);
 
   it("releases claimed slots and the mutation lock when an admin update fails", async () => {
@@ -1724,6 +1769,27 @@ describe("booking flows", () => {
     }
   });
 
+  it("disables destructive bulk deletion without mutating bookings or slots", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const slotsBefore = await BookingSlot.find({ booking: stored._id }).sort({ slotStart: 1 }).lean();
+
+    const response = await request(app)
+      .delete("/api/bookings/all")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(405);
+
+    expect(response.body.message).toMatch(/deshabilitada|papelera/i);
+    expect(await Booking.countDocuments({ _id: stored._id })).toBe(1);
+    const slotsAfter = await BookingSlot.find({ booking: stored._id }).sort({ slotStart: 1 }).lean();
+    expect(slotsAfter.map((slot) => slot._id.toString()))
+      .toEqual(slotsBefore.map((slot) => slot._id.toString()));
+  });
+
   it("atomically reserves slot blocks so concurrent bookings cannot overlap", async () => {
     expect(await Booking.countDocuments()).toBe(0);
     expect(await BookingSlot.countDocuments()).toBe(0);
@@ -1750,6 +1816,7 @@ describe("booking flows", () => {
       expect(await Booking.countDocuments()).toBe(0);
       expect(await BookingSlot.countDocuments()).toBe(0);
       expect(await IdempotencyKey.countDocuments()).toBe(0);
+      expect(await AuditEvent.countDocuments({ action: "booking.created" })).toBe(0);
     }
   }, 30000);
 
@@ -1759,8 +1826,15 @@ describe("booking flows", () => {
       endTime: tomorrowAt(19),
       slotDurationMinutes: 30,
     });
+    const occupiedOwner = await Booking.create({
+      ...validBookingPayload(),
+      timeSlot: slotStarts[1],
+      endTime: new Date(slotStarts[1].getTime() + 30 * 60 * 1000),
+      duration: 0.5,
+      creationState: "active",
+    });
     await BookingSlot.create({
-      booking: new mongoose.Types.ObjectId(),
+      booking: occupiedOwner._id,
       slotStart: slotStarts[1],
       slotDurationMinutes: 30,
     });
@@ -1775,6 +1849,194 @@ describe("booking flows", () => {
 
     expect(await BookingSlot.countDocuments()).toBe(1);
     expect(await BookingSlot.exists({ slotStart: slotStarts[0] })).toBeNull();
+  });
+
+  it("fences a stalled creation after its database lease expires before a competitor claims", async () => {
+    const originalFindOneAndUpdate = Booking.collection.findOneAndUpdate.bind(Booking.collection);
+    let releaseFirstActivation;
+    let signalFirstActivation;
+    const firstActivationStarted = new Promise((resolve) => { signalFirstActivation = resolve; });
+    const activationGate = new Promise((resolve) => { releaseFirstActivation = resolve; });
+    let firstDraftId = null;
+    let gated = false;
+    const activationSpy = vi.spyOn(Booking.collection, "findOneAndUpdate")
+      .mockImplementation(async (filter, update, options) => {
+        const activatesDraft = filter?.creationState === "claiming" && update?.$set?.creationState === "active";
+        if (!gated && activatesDraft) {
+          gated = true;
+          firstDraftId = filter._id;
+          signalFirstActivation();
+          await activationGate;
+        }
+        return originalFindOneAndUpdate(filter, update, options);
+      });
+
+    const first = request(app)
+      .post("/api/bookings/reserve")
+      .set("Idempotency-Key", "stalled-creation-first")
+      .send(validBookingPayload({ studentName: "Creacion detenida" }))
+      .then((response) => response);
+
+    let second;
+    let firstResult;
+    try {
+      await firstActivationStarted;
+      await Booking.collection.updateOne(
+        { _id: firstDraftId, creationState: "claiming" },
+        { $set: { slotMutationLockExpiresAt: new Date(0) } },
+      );
+      second = await request(app)
+        .post("/api/bookings/reserve")
+        .set("Idempotency-Key", "stalled-creation-second")
+        .send(validBookingPayload({ studentName: "Creacion sucesora" }));
+    } finally {
+      releaseFirstActivation();
+      firstResult = await first;
+      activationSpy.mockRestore();
+    }
+
+    expect(second.status).toBe(201);
+    expect(firstResult.status).toBe(409);
+    const active = await Booking.find({ creationState: { $nin: ["claiming", "abandoned"] } }).lean();
+    expect(active).toHaveLength(1);
+    expect(active[0].studentName).toBe("Creacion sucesora");
+    const slots = await BookingSlot.find({}).lean();
+    expect(slots).toHaveLength(2);
+    expect(slots.every((slot) => String(slot.booking) === String(active[0]._id))).toBe(true);
+  }, 15000);
+
+  it("returns operation-owned claim descriptors and never releases a successor adoption", async () => {
+    const bookingId = new mongoose.Types.ObjectId();
+    const slotStart = tomorrowAt(17);
+    const predecessor = await claimBookingSlots({
+      bookingId,
+      slotStarts: [slotStart],
+      slotDurationMinutes: 30,
+      claimGeneration: 3,
+    });
+    expect(predecessor).toMatchObject({
+      claimGeneration: 3,
+      claimToken: expect.any(String),
+      claimedSlots: [expect.objectContaining({
+        booking: bookingId,
+        claimGeneration: 3,
+        claimToken: expect.any(String),
+      })],
+    });
+
+    const successor = await claimBookingSlots({
+      bookingId,
+      slotStarts: [slotStart],
+      slotDurationMinutes: 30,
+      claimGeneration: 3,
+    });
+    expect(successor.claimToken).not.toBe(predecessor.claimToken);
+
+    await releaseClaimedBookingSlots(predecessor.claimedSlots);
+
+    const retained = await BookingSlot.findOne({ booking: bookingId }).lean();
+    expect(retained.claimToken).toBe(successor.claimToken);
+    expect(retained.claimGeneration).toBe(3);
+  });
+
+  it("CAS-protects stale eviction when the observed claim is adopted before delete", async () => {
+    const staleBookingId = new mongoose.Types.ObjectId();
+    const contenderBookingId = new mongoose.Types.ObjectId();
+    const slotStart = tomorrowAt(16);
+    const inserted = await BookingSlot.collection.insertOne({
+      booking: staleBookingId,
+      slotStart,
+      slotDurationMinutes: 30,
+      claimGeneration: 1,
+      claimToken: "predecessor-token",
+      createdAt: new Date(Date.now() - 120_000),
+      updatedAt: new Date(Date.now() - 120_000),
+    });
+    const originalDeleteOne = BookingSlot.deleteOne.bind(BookingSlot);
+    const deleteSpy = vi.spyOn(BookingSlot, "deleteOne").mockImplementation(async (filter) => {
+      await BookingSlot.collection.updateOne(
+        { _id: inserted.insertedId },
+        { $set: { claimGeneration: 2, claimToken: "successor-token" } },
+      );
+      return originalDeleteOne(filter);
+    });
+
+    try {
+      await expect(claimBookingSlots({
+        bookingId: contenderBookingId,
+        slotStarts: [slotStart],
+        slotDurationMinutes: 30,
+      })).rejects.toBeInstanceOf(BookingSlotConflictError);
+    } finally {
+      deleteSpy.mockRestore();
+    }
+
+    expect(await BookingSlot.findById(inserted.insertedId).lean()).toMatchObject({
+      booking: staleBookingId,
+      claimGeneration: 2,
+      claimToken: "successor-token",
+    });
+  });
+
+  it("preserves successor slot claims when stale generation cleanup resumes", async () => {
+    const bookingId = new mongoose.Types.ObjectId();
+    const baselineStarts = getBookingSlotStarts({
+      startTime: tomorrowAt(9),
+      endTime: tomorrowAt(10),
+      slotDurationMinutes: 30,
+    });
+    const predecessorStarts = getBookingSlotStarts({
+      startTime: tomorrowAt(10),
+      endTime: tomorrowAt(11),
+      slotDurationMinutes: 30,
+    });
+
+    await claimBookingSlots({
+      bookingId,
+      slotStarts: baselineStarts,
+      slotDurationMinutes: 30,
+      claimGeneration: 0,
+    });
+    await claimBookingSlots({
+      bookingId,
+      slotStarts: predecessorStarts,
+      slotDurationMinutes: 30,
+      claimGeneration: 1,
+    });
+    // The predecessor lease expires. A successor moves back onto the retained
+    // baseline and stamps those overlapping documents with generation 2.
+    await claimBookingSlots({
+      bookingId,
+      slotStarts: baselineStarts,
+      slotDurationMinutes: 30,
+      claimGeneration: 2,
+    });
+
+    await releaseBookingSlotsExcept(bookingId, predecessorStarts, 1);
+
+    const claims = await BookingSlot.find({ booking: bookingId }).sort({ slotStart: 1 }).lean();
+    expect(claims.map((slot) => slot.slotStart)).toEqual([...baselineStarts, ...predecessorStarts]);
+    expect(claims.filter((slot) => baselineStarts.some((start) => start.getTime() === slot.slotStart.getTime())))
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ claimGeneration: 2, scheduleRevision: 2 }),
+        expect.objectContaining({ claimGeneration: 2, scheduleRevision: 2 }),
+      ]));
+  });
+
+  it("treats legacy generation-zero claims as cleanup-compatible", async () => {
+    const bookingId = new mongoose.Types.ObjectId();
+    const legacyStart = tomorrowAt(18);
+    await BookingSlot.collection.insertOne({
+      booking: bookingId,
+      slotStart: legacyStart,
+      slotDurationMinutes: 30,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await releaseBookingSlotsExcept(bookingId, [], 1);
+
+    expect(await BookingSlot.countDocuments({ booking: bookingId })).toBe(0);
   });
 
   it("replays a completed response for the same idempotency key without duplicating the booking", async () => {
@@ -1957,7 +2219,7 @@ describe("booking flows", () => {
     expect(persisted.studentNotes).toBe("");
   });
 
-  it("returns the same 202 response for every management-link request and only rotates on a match", async () => {
+  it("returns the same 202 response and atomically queues a durable management-link intent on a match", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload())
@@ -1987,30 +2249,96 @@ describe("booking flows", () => {
       .post("/api/bookings/manage/request-link")
       .send({ bookingCode, email: "familia@example.com" })
       .expect(202);
+    await processBlindManagementLinkRequests({ workerId: "booking-flow-match" });
     const afterMatch = await Booking.findOne({ bookingCode })
       .select("+managementTokenHash +managementLinkLastSentAt")
       .lean();
     expect(matched.body).toEqual(wrongEmail.body);
     expect(afterMatch.managementTokenHash).not.toBe(initial.managementTokenHash);
     expect(afterMatch.managementTokenRevokedAt).toBeNull();
-    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
-    const sentUrl = sendManagementLinkEmailMock.mock.calls[0][0].managementUrl;
-    expect(sentUrl).toMatch(
-      /^https:\/\/frontend\.example\.com\/m#token=[A-Za-z0-9_-]{43}$/,
-    );
+    expect(sendManagementLinkEmailMock).not.toHaveBeenCalled();
+    expect(await NotificationOutbox.findOne({
+      booking: afterMatch._id,
+      type: "management_link_requested",
+    }).lean()).toMatchObject({
+      type: "management_link_requested",
+      status: "queued",
+    });
 
-    await request(app)
+    const cooldown = await request(app)
       .post("/api/bookings/manage/request-link")
       .send({ bookingCode, email: "familia@example.com" })
       .expect(202);
+    expect(cooldown.body).toEqual(wrongEmail.body);
     const afterCooldown = await Booking.findOne({ bookingCode })
       .select("+managementTokenHash +managementLinkLastSentAt")
       .lean();
     expect(afterCooldown.managementTokenHash).toBe(afterMatch.managementTokenHash);
-    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
+    expect(sendManagementLinkEmailMock).not.toHaveBeenCalled();
+    expect(await NotificationOutbox.countDocuments({
+      booking: afterMatch._id,
+      type: "management_link_requested",
+    })).toBe(1);
   });
 
-  it("restores the previous token when management-link email delivery fails", async () => {
+  it("serializes twenty concurrent management-link requests into one durable token and intent", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const bookingCode = created.body.data.bookingCode;
+    const initial = await Booking.findOne({ bookingCode }).select("+managementTokenHash").lean();
+
+    const responses = await Promise.all(Array.from({ length: 20 }, () => request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "familia@example.com" })));
+    await processBlindManagementLinkRequests({ workerId: "booking-flow-20" });
+    expect(responses.every((response) => response.status === 202)).toBe(true);
+    expect(new Set(responses.map((response) => JSON.stringify(response.body))).size).toBe(1);
+
+    const persisted = await Booking.findOne({ bookingCode })
+      .select("+managementTokenHash +managementLinkRequestLock +notificationIntents")
+      .lean();
+    expect(persisted.managementTokenHash).not.toBe(initial.managementTokenHash);
+    expect(persisted.managementLinkRequestLock).toBeUndefined();
+    expect(await NotificationOutbox.countDocuments({
+      booking: persisted._id,
+      type: "management_link_requested",
+    })).toBe(1);
+  });
+
+  it("returns the same generic 202 when the final management-link CAS is lost", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const bookingCode = created.body.data.bookingCode;
+    const initial = await Booking.findOne({ bookingCode }).select("+managementTokenHash").lean();
+    const baseline = await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode: "ABC234", email: "unknown@example.com" })
+      .expect(202);
+    const originalUpdateOne = Booking.updateOne.bind(Booking);
+    const updateSpy = vi.spyOn(Booking, "updateOne").mockImplementation((filter, update, options) => {
+      if (update?.$push?.notificationIntents) {
+        return Promise.resolve({ acknowledged: true, matchedCount: 1, modifiedCount: 0 });
+      }
+      return originalUpdateOne(filter, update, options);
+    });
+    try {
+      const response = await request(app)
+        .post("/api/bookings/manage/request-link")
+        .send({ bookingCode, email: "familia@example.com" })
+        .expect(202);
+      expect(response.body).toEqual(baseline.body);
+    } finally {
+      updateSpy.mockRestore();
+    }
+    expect((await Booking.findOne({ bookingCode }).select("+managementTokenHash").lean()).managementTokenHash)
+      .toBe(initial.managementTokenHash);
+  });
+
+  it("keeps the new token valid while durable management-link delivery is pending", async () => {
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload())
@@ -2019,21 +2347,82 @@ describe("booking flows", () => {
     const initial = await Booking.findOne({ bookingCode })
       .select("+managementTokenHash +managementLinkLastSentAt")
       .lean();
-    sendManagementLinkEmailMock.mockResolvedValueOnce(false);
-
     await request(app)
       .post("/api/bookings/manage/request-link")
       .send({ bookingCode, email: "familia@example.com" })
       .expect(202);
+    await processBlindManagementLinkRequests({ workerId: "booking-flow-pending" });
 
     const afterFailure = await Booking.findOne({ bookingCode })
       .select("+managementTokenHash +managementLinkLastSentAt")
       .lean();
-    expect(afterFailure.managementTokenHash).toBe(initial.managementTokenHash);
-    expect(afterFailure.managementTokenExpiresAt).toEqual(
-      initial.managementTokenExpiresAt,
-    );
+    expect(afterFailure.managementTokenHash).not.toBe(initial.managementTokenHash);
+    expect(afterFailure.managementTokenRevokedAt).toBeNull();
+    expect(await NotificationOutbox.findOne({
+      booking: afterFailure._id,
+      type: "management_link_requested",
+    }).lean()).toMatchObject({
+      type: "management_link_requested",
+      status: "queued",
+    });
   });
+
+  it("does not rotate a current token whose original confirmation delivery is ambiguous", async () => {
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const { bookingCode, managementToken } = created.body.data;
+    const tokenHash = crypto.createHash("sha256").update(managementToken).digest("hex");
+    const booking = await Booking.findOne({ bookingCode }).select("+managementTokenHash").lean();
+    expect(booking.managementTokenHash).toBe(tokenHash);
+
+    const confirmation = await NotificationOutbox.findOne({
+      booking: booking._id,
+      type: "booking_confirmation",
+      recipientKind: "client",
+    }).select("+managementTokenFingerprint");
+    expect(confirmation.managementTokenFingerprint).toBe(tokenHash);
+    await NotificationOutbox.collection.updateOne(
+      { _id: confirmation._id },
+      { $set: { status: "delivery_unknown", deliveryPhase: "provider_started" } },
+    );
+
+    const response = await request(app)
+      .post("/api/bookings/manage/request-link")
+      .send({ bookingCode, email: "familia@example.com" })
+      .expect(202);
+    expect(response.body).toEqual({
+      success: true,
+      message: "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
+    });
+    expect((await Booking.findById(booking._id).select("+managementTokenHash").lean()).managementTokenHash)
+      .toBe(tokenHash);
+  });
+
+  it("drains 1200 legacy reminder candidates with a stable compound cursor and remains idempotent", async () => {
+    const now = new Date();
+    const sharedSlot = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const documents = Array.from({ length: 1200 }, (_, index) => ({
+      ...validBookingPayload({
+        studentName: `Alumno ${String(index).padStart(4, "0")}`,
+        email: `familia${index}@example.com`,
+      }),
+      bookingCode: `R${String(index).padStart(5, "0")}`,
+      timeSlot: sharedSlot,
+      endTime: new Date(sharedSlot.getTime() + 60 * 60 * 1000),
+      status: "Confirmado",
+    }));
+    await Booking.insertMany(documents);
+
+    const first = await processReminders({ now });
+    expect(first).toMatchObject({ processed: 1200, queued: 1200, failed: 0 });
+    expect(await NotificationOutbox.countDocuments({ type: "booking_reminder" })).toBe(1200);
+
+    const second = await processReminders({ now });
+    expect(second).toMatchObject({ processed: 1200, queued: 1200, failed: 0 });
+    expect(await NotificationOutbox.countDocuments({ type: "booking_reminder" })).toBe(1200);
+  }, 60_000);
 
   it("provisions a management token for a matching legacy booking", async () => {
     const start = tomorrowAt(16);
@@ -2055,12 +2444,17 @@ describe("booking flows", () => {
         email: "familia@example.com",
       })
       .expect(202);
+    await processBlindManagementLinkRequests({ workerId: "booking-flow-legacy" });
 
     const after = await Booking.findById(legacy._id)
       .select("+managementTokenHash")
       .lean();
     expect(after.managementTokenHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(sendManagementLinkEmailMock).toHaveBeenCalledTimes(1);
+    expect(sendManagementLinkEmailMock).not.toHaveBeenCalled();
+    expect(await NotificationOutbox.findOne({ booking: after._id }).lean()).toMatchObject({
+      type: "management_link_requested",
+      status: "queued",
+    });
   });
 
   it("authorizes management reads without exposing private or token fields", async () => {
@@ -2842,6 +3236,7 @@ describe("booking flows", () => {
     await ensureOperationalIndexes(mongoose.connection);
 
     const bookingIndexNames = (await Booking.collection.indexes()).map((index) => index.name);
+    const bookingSlotIndexNames = (await BookingSlot.collection.indexes()).map((index) => index.name);
     const auditIndexNames = (await AuditEvent.collection.indexes()).map((index) => index.name);
     expect(bookingIndexNames).toEqual(expect.arrayContaining([
       "deletedAt_1",
@@ -2851,6 +3246,10 @@ describe("booking flows", () => {
       "entityId_1",
       "entityType_1_entityId_1_createdAt_-1",
       "action_1_createdAt_-1",
+    ]));
+    expect(bookingSlotIndexNames).toEqual(expect.arrayContaining([
+      "booking_1_claimGeneration_1_slotStart_1",
+      "booking_1_scheduleRevision_1_slotStart_1",
     ]));
   });
 
@@ -3029,6 +3428,71 @@ describe("booking flows", () => {
     const finalBooking = await Booking.findById(stored._id).lean();
     expect(finalBooking.deletedAt).toBeInstanceOf(Date);
     expect(await AuditEvent.countDocuments()).toBe(0);
+  });
+
+  it("retains pending audit and authoritative mutation when audit timeout read-back is ambiguous", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const resetWriter = setAuditWriterForTests(async () => {
+      const error = new Error("simulated audit socket timeout");
+      error.name = "MongoNetworkTimeoutError";
+      throw error;
+    });
+    const readbackSpy = vi.spyOn(AuditEvent.collection, "findOne")
+      .mockResolvedValueOnce(null)
+      .mockRejectedValue(new Error("audit read-back unavailable"));
+
+    try {
+      await request(app)
+        .delete(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(500);
+    } finally {
+      readbackSpy.mockRestore();
+      resetWriter();
+    }
+
+    const stranded = await Booking.findById(stored._id).select("+pendingAudit").lean();
+    expect(stranded.deletedAt).toBeInstanceOf(Date);
+    expect(stranded.pendingAudit).toMatchObject({ action: "booking.deleted" });
+    expect(await BookingSlot.countDocuments({ booking: stored._id })).toBeGreaterThan(0);
+  });
+
+  it("does not reconcile a pending audit while its booking mutation lease is active", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const admin = await User.findOne({ username: "admin@example.com" }).lean();
+    await Booking.collection.updateOne({ _id: stored._id }, {
+      $set: {
+        slotMutationLock: "active-recovery-fence",
+        slotMutationLockExpiresAt: new Date(Date.now() + 60_000),
+        pendingAudit: {
+          operationId: crypto.randomUUID(),
+          actor: { id: admin._id, role: "admin", username: admin.username },
+          action: "booking.updated",
+          before: { status: stored.status },
+          after: { status: stored.status },
+          meta: {
+            requestId: "active-recovery-fence",
+            entityType: "Booking",
+            createdAt: new Date(),
+          },
+        },
+      },
+    });
+
+    expect(await reconcilePendingBookingAudits()).toMatchObject({ scanned: 0, committed: 0 });
+    expect(await AuditEvent.countDocuments({ requestId: "active-recovery-fence" })).toBe(0);
+    expect((await Booking.findById(stored._id).select("+pendingAudit").lean()).pendingAudit)
+      .toMatchObject({ action: "booking.updated" });
   });
 
   it("reports modifiedCount zero and never reactivates after the server lease expired", async () => {
@@ -3210,6 +3674,82 @@ describe("booking flows", () => {
       entityId: stored._id,
       action: "booking.attendance.updated",
     })).toBe(1);
+  });
+
+  it("recovers a durable attendance audit after a crash immediately after booking CAS", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+    const resetWriter = setAuditWriterForTests(async ({ document }) => {
+      if (document.action !== "booking.attendance.updated") {
+        return writeAuditDocument({ document });
+      }
+      await Booking.collection.updateOne(
+        { _id: document.entityId },
+        { $set: { slotMutationLockExpiresAt: new Date(Date.now() - 1_000) } },
+      );
+      throw new Error("crash after attendance CAS");
+    });
+    try {
+      await request(app)
+        .patch(`/api/bookings/${stored._id}/attendance`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ attendanceStatus: "Presente" })
+        .expect(500);
+    } finally {
+      resetWriter();
+    }
+
+    const stranded = await Booking.findById(stored._id).select("+pendingAudit").lean();
+    expect(stranded.attendanceStatus).toBe("Presente");
+    expect(stranded.pendingAudit).toMatchObject({ action: "booking.attendance.updated" });
+    expect(await AuditEvent.countDocuments({ action: "booking.attendance.updated" })).toBe(0);
+
+    await reconcilePendingBookingAudits();
+
+    expect(await AuditEvent.countDocuments({ action: "booking.attendance.updated" })).toBe(1);
+    expect((await Booking.findById(stored._id).select("+pendingAudit").lean()).pendingAudit)
+      .toBeUndefined();
+  });
+
+  it("recovers durable soft-delete and restore audits after an exact post-CAS crash", async () => {
+    const token = await createAdminAndLogin();
+    const created = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload())
+      .expect(201);
+    const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+
+    for (const operation of ["booking.deleted", "booking.restored"]) {
+      const resetWriter = setAuditWriterForTests(async ({ document }) => {
+        if (document.action !== operation) return writeAuditDocument({ document });
+        await Booking.collection.updateOne(
+          { _id: document.entityId },
+          { $set: { slotMutationLockExpiresAt: new Date(Date.now() - 1_000) } },
+        );
+        throw new Error(`crash after ${operation} CAS`);
+      });
+      try {
+        const mutation = operation === "booking.deleted"
+          ? request(app).delete(`/api/bookings/${stored._id}`)
+          : request(app).post(`/api/bookings/${stored._id}/restore`);
+        await mutation.set("Authorization", `Bearer ${token}`).expect(500);
+      } finally {
+        resetWriter();
+      }
+
+      const stranded = await Booking.findById(stored._id).select("+pendingAudit").lean();
+      expect(stranded.pendingAudit).toMatchObject({ action: operation });
+      expect(Boolean(stranded.deletedAt)).toBe(operation === "booking.deleted");
+
+      await reconcilePendingBookingAudits();
+      expect(await AuditEvent.countDocuments({ action: operation })).toBe(1);
+      expect((await Booking.findById(stored._id).select("+pendingAudit").lean()).pendingAudit)
+        .toBeUndefined();
+    }
   });
 
   describe("subjects settings contract", () => {
@@ -4053,6 +4593,68 @@ describe("booking flows", () => {
       expect(await BookingSlot.countDocuments({ booking: stored._id })).toBe(2);
     });
 
+    it("preserves generation-two successor claims when predecessor cleanup resumes after lease expiry", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+        .expect(201);
+      const stored = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+      const realDeleteMany = BookingSlot.deleteMany.bind(BookingSlot);
+      let releaseCleanup;
+      let signalCleanup;
+      let gated = false;
+      const cleanupStarted = new Promise((resolve) => { signalCleanup = resolve; });
+      const cleanupGate = new Promise((resolve) => { releaseCleanup = resolve; });
+      const deleteSpy = vi.spyOn(BookingSlot, "deleteMany").mockImplementation((filter, ...args) => {
+        const isReleaseExcept = filter?.slotStart?.$nin && filter?.$or;
+        if (!gated && isReleaseExcept) {
+          gated = true;
+          signalCleanup();
+          return cleanupGate.then(() => realDeleteMany(filter, ...args));
+        }
+        return realDeleteMany(filter, ...args);
+      });
+
+      const predecessor = request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .set("Idempotency-Key", "generation-predecessor-reschedule")
+        .send({
+          bookingCode: created.body.data.bookingCode,
+          newTimeSlot: formatForApi(nextWeekdayAt(1, 12)),
+          newDuration: 1,
+        })
+        .then((response) => response);
+
+      let successor;
+      let predecessorResult;
+      try {
+        await cleanupStarted;
+        await Booking.collection.updateOne(
+          { _id: stored._id },
+          { $set: { slotMutationLockExpiresAt: new Date(Date.now() - 1_000) } },
+        );
+        successor = await request(app)
+          .put(`/api/bookings/${stored._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({ timeSlot: formatForApi(nextWeekdayAt(1, 14)), duration: 1 });
+      } finally {
+        releaseCleanup();
+        predecessorResult = await predecessor;
+        deleteSpy.mockRestore();
+      }
+
+      expect(successor.status).toBe(200);
+      expect(predecessorResult.status).toBe(200);
+      const finalBooking = await Booking.findById(stored._id).lean();
+      expect(finalBooking.scheduleRevision).toBe(2);
+      expect(finalBooking.timeSlot).toEqual(apiInstant(nextWeekdayAt(1, 14)));
+      const finalClaims = await BookingSlot.find({ booking: stored._id }).lean();
+      expect(finalClaims).toHaveLength(2);
+      expect(finalClaims.every((slot) => slot.claimGeneration === 2)).toBe(true);
+    }, 15000);
+
     it("compensates manual creation and updates when auditing fails", async () => {
       const token = await createAdminAndLogin();
       const resetCreateWriter = setAuditWriterForTests(async () => {
@@ -4097,15 +4699,229 @@ describe("booking flows", () => {
         resetUpdateWriter();
       }
       const after = await Booking.findById(before._id)
-        .select("+slotMutationLock +slotMutationLockExpiresAt")
+        .select("+slotMutationLock +slotMutationLockExpiresAt +pendingAudit")
         .lean();
       const afterSlots = await BookingSlot.find({ booking: before._id }).sort({ slotStart: 1 }).lean();
       expect(after.subject).toBe(before.subject);
       expect(after.duration).toBe(before.duration);
       expect(after.timeSlot).toEqual(before.timeSlot);
       expect(after.slotMutationLock).toBeUndefined();
+      expect(after.pendingAudit).toBeUndefined();
       expect(afterSlots.map(({ slotStart }) => slotStart))
         .toEqual(beforeSlots.map(({ slotStart }) => slotStart));
+      expect(await AuditEvent.countDocuments({ action: "booking.updated" })).toBe(0);
     });
+
+    it("uses database time for an admin creation lease despite a skewed app clock", async () => {
+      const token = await createAdminAndLogin();
+      const realNow = Date.now();
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date(realNow - 60 * 60 * 1000));
+      const resetWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable after lease expiry");
+      });
+      try {
+        await request(app)
+          .post("/api/bookings")
+          .set("Authorization", `Bearer ${token}`)
+          .set("Idempotency-Key", "admin-audit-expired-create")
+          .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+          .expect(500);
+      } finally {
+        resetWriter();
+        vi.useRealTimers();
+      }
+
+      expect(await Booking.countDocuments()).toBe(0);
+      expect(await BookingSlot.countDocuments()).toBe(0);
+      expect(errorSpy).not.toHaveBeenCalledWith(
+        "[audit-compensation]",
+        expect.stringContaining("booking_create_audit_compensation_lost_lease"),
+      );
+      errorSpy.mockRestore();
+    });
+
+    it("never deletes an admin-created booking after another owner takes its lease", async () => {
+      const token = await createAdminAndLogin();
+      const resetWriter = setAuditWriterForTests(async ({ document }) => {
+        await Booking.collection.updateOne(
+          { _id: document.entityId },
+          {
+            $set: {
+              slotMutationLock: "takeover-owner",
+              slotMutationLockExpiresAt: new Date(Date.now() + 60_000),
+            },
+          },
+        );
+        throw new Error("audit unavailable after lease takeover");
+      });
+      try {
+        await request(app)
+          .post("/api/bookings")
+          .set("Authorization", `Bearer ${token}`)
+          .set("Idempotency-Key", "admin-audit-takeover-create")
+          .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+          .expect(500);
+      } finally {
+        resetWriter();
+      }
+
+      const retained = await Booking.findOne({})
+        .select("+slotMutationLock +slotMutationLockExpiresAt +pendingAudit")
+        .lean();
+      expect(retained).toMatchObject({ slotMutationLock: "takeover-owner" });
+      expect(retained.pendingAudit).toMatchObject({ action: "booking.created" });
+    });
+
+    it("reconciles slots when create compensation commits before a timeout is observed", async () => {
+      const token = await createAdminAndLogin();
+      const actualDeleteOne = Booking.deleteOne.bind(Booking);
+      const deleteSpy = vi.spyOn(Booking, "deleteOne").mockImplementationOnce(async (...args) => {
+        await actualDeleteOne(...args);
+        const timeout = new Error("delete acknowledgement timed out after commit");
+        timeout.name = "MongoOperationTimeoutError";
+        throw timeout;
+      });
+      const resetWriter = setAuditWriterForTests(async () => {
+        throw new Error("audit unavailable");
+      });
+      try {
+        await request(app)
+          .post("/api/bookings")
+          .set("Authorization", `Bearer ${token}`)
+          .set("Idempotency-Key", "admin-audit-timeout-after-delete")
+          .send(adminPayload({ timeSlot: formatForApi(nextWeekdayAt(1, 10)) }))
+          .expect(500);
+      } finally {
+        resetWriter();
+        deleteSpy.mockRestore();
+      }
+
+      expect(await Booking.countDocuments()).toBe(0);
+      expect(await BookingSlot.countDocuments()).toBe(0);
+    });
+  });
+
+  describe("notification outbox booking integration", () => {
+    it("commits the encrypted intent with the booking when immediate reconciliation fails", async () => {
+      const reconcileFailure = vi.spyOn(NotificationOutbox, "findOneAndUpdate")
+        .mockRejectedValueOnce(new Error("outbox temporarily unavailable"));
+      let created;
+      try {
+        created = await request(app)
+          .post("/api/bookings/reserve")
+          .set("Idempotency-Key", "notification-intent-crash-recovery")
+          .send(validBookingPayload())
+          .expect(201);
+      } finally {
+        reconcileFailure.mockRestore();
+      }
+      const booking = await Booking.findOne({ bookingCode: created.body.data.bookingCode })
+        .select("+notificationIntents")
+        .lean();
+      expect(booking.notificationIntents.length).toBeGreaterThan(0);
+      expect(booking.notificationIntents.every((intent) => intent.payloadCiphertext)).toBe(true);
+      expect(await NotificationOutbox.countDocuments({ booking: booking._id })).toBe(0);
+      expect(await BookingSlot.countDocuments({ booking: booking._id })).toBeGreaterThan(0);
+    });
+
+    it("persists confirmation, admin reschedule and cancellation intents before success", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .set("Idempotency-Key", "notification-integration-create")
+        .send(validBookingPayload())
+        .expect(201);
+      const booking = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_confirmation",
+      })).toBe(1);
+      const initialReminder = await NotificationOutbox.findOne({
+        booking: booking._id,
+        type: "booking_reminder",
+        status: "queued",
+      }).lean();
+      expect(initialReminder).toBeTruthy();
+      const expectedReminderAt = Math.max(
+        initialReminder.createdAt.getTime(),
+        new Date(booking.timeSlot).getTime() - 24 * 60 * 60 * 1000,
+      );
+      expect(Math.abs(initialReminder.nextAttemptAt.getTime() - expectedReminderAt))
+        .toBeLessThan(2_000);
+
+      await request(app)
+        .post("/api/bookings/reserve")
+        .set("Idempotency-Key", "notification-integration-create")
+        .send(validBookingPayload())
+        .expect(201);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_confirmation",
+      })).toBe(1);
+
+      const movedSlot = formatForApi(nextWeekdayAt(3, 11));
+      await request(app)
+        .put(`/api/bookings/${booking._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ timeSlot: movedSlot, duration: 1 })
+        .expect(200);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_rescheduled",
+      })).toBe(1);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_reminder",
+        status: "superseded",
+      })).toBe(1);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_reminder",
+        status: "queued",
+      })).toBe(1);
+
+      await request(app)
+        .put(`/api/bookings/${booking._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ status: "Cancelado" })
+        .expect(200);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_cancelled",
+      })).toBe(1);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        status: "queued",
+        type: { $ne: "booking_cancelled" },
+      })).toBe(0);
+    }, 20_000);
+
+    it("queues reminders idempotently across overlapping scans without direct mail", async () => {
+      const now = new Date();
+      const timeSlot = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const booking = await Booking.create({
+        ...validBookingPayload({
+          timeSlot: formatForApi(timeSlot),
+          status: "Confirmado",
+        }),
+        timeSlot,
+        endTime: new Date(timeSlot.getTime() + 60 * 60 * 1000),
+        duration: 1,
+      });
+
+      const [first, second] = await Promise.all([
+        processReminders({ now }),
+        processReminders({ now }),
+      ]);
+      expect(first.processed).toBe(1);
+      expect(second.processed).toBe(1);
+      expect(await NotificationOutbox.countDocuments({
+        booking: booking._id,
+        type: "booking_reminder",
+      })).toBe(1);
+      expect(sendReminderNotificationMock).not.toHaveBeenCalled();
+    }, 20_000);
   });
 });

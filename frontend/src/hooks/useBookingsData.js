@@ -5,7 +5,6 @@ import {
   updateBooking,
   updateBookingAttendance as apiUpdateBookingAttendance,
   deleteBooking as apiDeleteBooking,
-  deleteAllBookings as apiDeleteAllBookings,
 } from "../api/bookingApi";
 import { toSafeDate as toDate } from "../utils/bookingFormatters";
 import {
@@ -175,22 +174,6 @@ export const useBookingsData = ({
     [authConfig],
   );
 
-  const handleDeleteAll = useCallback(
-    async () => {
-      setDataLoading(true);
-      try {
-        await apiDeleteAllBookings(authConfig);
-        setBookings([]);
-      } catch {
-        console.error("No se pudo limpiar la base de reservas.");
-        throw new Error("No se pudo limpiar la base.");
-      } finally {
-        setDataLoading(false);
-      }
-    },
-    [authConfig],
-  );
-
   const clearBookings = useCallback(() => setBookings([]), []);
 
   return {
@@ -204,7 +187,6 @@ export const useBookingsData = ({
     updateBookingFields,
     updateBookingAttendance,
     deleteBooking: handleDeleteBooking,
-    deleteAllBookings: handleDeleteAll,
     clearBookings,
   };
 };

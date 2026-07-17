@@ -1,5 +1,6 @@
 import BookingSlot from "../models/BookingSlot.js";
 import Booking from "../models/Booking.js";
+import crypto from "node:crypto";
 
 export class BookingSlotConflictError extends Error {
   constructor() {
@@ -10,9 +11,6 @@ export class BookingSlotConflictError extends Error {
 
 const SLOT_MS = 60 * 1000;
 const SLOT_CLEANUP_ATTEMPTS = 3;
-const ORPHAN_SLOT_GRACE_MS = Number(
-  process.env.BOOKING_SLOT_ORPHAN_GRACE_MS || 60 * 1000,
-);
 
 const cleanupLog = ({ level = "error", operation, bookingId, attempt, error }) => {
   const payload = {
@@ -61,14 +59,45 @@ const deleteManyWithRetry = async ({ filter, operation, bookingId = null }) => {
 
 const isStaleBookingSlot = async (slot) => {
   const owner = await Booking.findById(slot.booking)
-    .select("status timeSlot endTime bufferBeforeMinutes bufferAfterMinutes deletedAt slotMutationLockExpiresAt")
+    .select("status timeSlot endTime bufferBeforeMinutes bufferAfterMinutes deletedAt +creationState +slotMutationLock +slotMutationLockExpiresAt")
     .lean();
 
   if (!owner) {
-    // A new reservation claims slots immediately before saving its Booking.
-    // The grace period prevents another request from deleting those in-flight
-    // claims, while still making hard-delete orphans recoverable.
-    return Date.now() - new Date(slot.createdAt).getTime() >= ORPHAN_SLOT_GRACE_MS;
+    // New reservations persist a fenced draft before claiming. Therefore an
+    // absent owner is unambiguously orphaned; no wall-clock grace/race exists.
+    return true;
+  }
+
+  if (owner.creationState === "abandoned") return true;
+
+  if (owner.creationState === "claiming") {
+    // The database clock both expires the creator and makes that decision
+    // durable. A stalled creator's later activation CAS can no longer win.
+    const abandoned = await Booking.collection.findOneAndUpdate(
+      {
+        _id: owner._id,
+        creationState: "claiming",
+        slotMutationLock: owner.slotMutationLock,
+        $expr: {
+          $lte: [
+            { $ifNull: ["$slotMutationLockExpiresAt", new Date(0)] },
+            "$$NOW",
+          ],
+        },
+      },
+      { $set: { creationState: "abandoned" } },
+      { returnDocument: "after", projection: { _id: 1, creationState: 1 } },
+    );
+    const abandonedDocument = abandoned && Object.prototype.hasOwnProperty.call(abandoned, "value")
+      ? abandoned.value
+      : abandoned;
+    if (abandonedDocument?.creationState === "abandoned") return true;
+
+    const current = await Booking.collection.findOne(
+      { _id: owner._id },
+      { projection: { creationState: 1 } },
+    );
+    return current?.creationState === "abandoned";
   }
 
   if (
@@ -101,6 +130,12 @@ const evictStaleSlot = async (slot) => {
     _id: slot._id,
     booking: slot.booking,
     slotStart: slot.slotStart,
+    ...(Object.prototype.hasOwnProperty.call(slot, "claimGeneration")
+      ? { claimGeneration: slot.claimGeneration }
+      : { claimGeneration: { $exists: false } }),
+    ...(Object.prototype.hasOwnProperty.call(slot, "claimToken")
+      ? { claimToken: slot.claimToken }
+      : { claimToken: { $exists: false } }),
   });
   if (result.deletedCount === 1) {
     console.info("[booking-slot-reconciliation]", JSON.stringify({
@@ -137,6 +172,36 @@ export const getBookingSlotStarts = ({ startTime, endTime, slotDurationMinutes }
 };
 
 const isDuplicateKeyError = (error) => error?.code === 11000;
+const normalizedGeneration = (value) => {
+  const generation = Number(value);
+  return Number.isSafeInteger(generation) && generation >= 0 ? generation : 0;
+};
+
+const observedOwnershipFilter = (slot) => ({
+  _id: slot._id,
+  booking: slot.booking,
+  ...(Object.prototype.hasOwnProperty.call(slot, "claimGeneration")
+    ? { claimGeneration: slot.claimGeneration }
+    : { claimGeneration: { $exists: false } }),
+  ...(Object.prototype.hasOwnProperty.call(slot, "claimToken")
+    ? { claimToken: slot.claimToken }
+    : { claimToken: { $exists: false } }),
+});
+
+const claimDescriptor = ({ slot, bookingId, generation, claimToken }) => ({
+  _id: slot._id,
+  booking: bookingId,
+  slotStart: slot.slotStart,
+  claimGeneration: generation,
+  claimToken,
+});
+
+const descriptorFilter = (descriptor) => ({
+  _id: descriptor._id,
+  booking: descriptor.booking,
+  claimGeneration: normalizedGeneration(descriptor.claimGeneration),
+  claimToken: descriptor.claimToken,
+});
 
 // Claiming each block through its unique index is safe on a standalone Mongo
 // server too. A transaction can improve cleanup, but is not required for the
@@ -145,43 +210,83 @@ export const claimBookingSlots = async ({
   bookingId,
   slotStarts,
   slotDurationMinutes,
+  claimGeneration = 0,
 }) => {
   const insertedSlotIds = [];
+  const insertedSlots = [];
+  const claimedSlots = [];
+  const generation = normalizedGeneration(claimGeneration);
+  const claimToken = crypto.randomUUID();
 
   try {
     for (const slotStart of slotStarts) {
-      let existing = await BookingSlot.findOne({ slotStart })
-        .select("booking slotStart createdAt")
-        .lean();
+      let claimed = false;
+      for (let attempt = 0; attempt < 8 && !claimed; attempt += 1) {
+        const existing = await BookingSlot.findOne({ slotStart })
+          .select("booking slotStart createdAt claimGeneration claimToken")
+          .lean();
 
-      if (existing) {
-        if (String(existing.booking) === String(bookingId)) continue;
-        if (await evictStaleSlot(existing)) {
-          existing = await BookingSlot.findOne({ slotStart })
-            .select("booking slotStart createdAt")
-            .lean();
+        if (!existing) {
+          try {
+            const slot = await BookingSlot.create({
+              booking: bookingId,
+              slotStart,
+              slotDurationMinutes,
+              scheduleRevision: generation,
+              claimGeneration: generation,
+              claimToken,
+            });
+            const descriptor = claimDescriptor({ slot, bookingId, generation, claimToken });
+            insertedSlotIds.push(slot._id);
+            insertedSlots.push(descriptor);
+            claimedSlots.push(descriptor);
+            claimed = true;
+            continue;
+          } catch (error) {
+            if (isDuplicateKeyError(error)) continue;
+            throw error;
+          }
         }
-        if (existing) throw new BookingSlotConflictError();
-      }
 
-      try {
-        const slot = await BookingSlot.create({
-          booking: bookingId,
-          slotStart,
-          slotDurationMinutes,
-        });
-        insertedSlotIds.push(slot._id);
-      } catch (error) {
-        if (isDuplicateKeyError(error)) throw new BookingSlotConflictError();
-        throw error;
+        if (String(existing.booking) === String(bookingId)) {
+          if (normalizedGeneration(existing.claimGeneration) > generation) {
+            throw new BookingSlotConflictError();
+          }
+          const adopted = await BookingSlot.collection.updateOne(
+            observedOwnershipFilter(existing),
+            { $set: { claimGeneration: generation, scheduleRevision: generation, claimToken } },
+          );
+          if (adopted.modifiedCount === 1) {
+            claimedSlots.push(claimDescriptor({
+              slot: existing,
+              bookingId,
+              generation,
+              claimToken,
+            }));
+            claimed = true;
+          }
+          // A failed CAS means another operation adopted the document between
+          // read and write. Re-read and either adopt that exact observation or
+          // abort if it advanced beyond this generation.
+          continue;
+        }
+
+        if (!(await evictStaleSlot(existing))) throw new BookingSlotConflictError();
       }
+      if (!claimed) throw new BookingSlotConflictError();
     }
 
-    return { insertedSlotIds };
+    return {
+      insertedSlotIds,
+      insertedSlots,
+      claimedSlots,
+      claimGeneration: generation,
+      claimToken,
+    };
   } catch (error) {
-    if (insertedSlotIds.length > 0) {
+    if (insertedSlots.length > 0) {
       await deleteManyWithRetry({
-        filter: { _id: { $in: insertedSlotIds } },
+        filter: { $or: insertedSlots.map(descriptorFilter) },
         operation: "compensate-partial-claim",
         bookingId,
       });
@@ -190,32 +295,44 @@ export const claimBookingSlots = async ({
   }
 };
 
-export const releaseBookingSlots = async (bookingId) =>
+export const releaseBookingSlots = async (bookingId, claimGeneration = 0) =>
   deleteManyWithRetry({
-    filter: { booking: bookingId },
+    filter: {
+      booking: bookingId,
+      $or: [
+        { claimGeneration: { $exists: false } },
+        { claimGeneration: { $lte: normalizedGeneration(claimGeneration) } },
+      ],
+    },
     operation: "release-all",
     bookingId,
   });
 
-export const clearBookingSlots = async () => deleteManyWithRetry({
-  filter: {},
-  operation: "clear-all",
-});
-
-export const releaseBookingSlotsExcept = async (bookingId, slotStarts) =>
+export const releaseBookingSlotsExcept = async (
+  bookingId,
+  slotStarts,
+  claimGeneration = 0,
+) =>
   deleteManyWithRetry({
     filter: {
       booking: bookingId,
       slotStart: { $nin: slotStarts },
+      $or: [
+        { claimGeneration: { $exists: false } },
+        { claimGeneration: { $lte: normalizedGeneration(claimGeneration) } },
+      ],
     },
     operation: "release-except",
     bookingId,
   });
 
-export const releaseClaimedBookingSlots = async (insertedSlotIds) => {
-  if (!insertedSlotIds?.length) return;
+export const releaseClaimedBookingSlots = async (claims) => {
+  const descriptors = Array.isArray(claims)
+    ? claims
+    : claims?.insertedSlots;
+  if (!descriptors?.length) return;
   return deleteManyWithRetry({
-    filter: { _id: { $in: insertedSlotIds } },
+    filter: { $or: descriptors.map(descriptorFilter) },
     operation: "release-claimed",
   });
 };

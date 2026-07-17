@@ -76,6 +76,8 @@ const createAdminAndLogin = async () => {
 
 beforeAll(async () => {
   process.env.JWT_SECRET = "student-test-secret";
+  process.env.NOTIFICATION_OUTBOX_ENCRYPTION_KEYS = `v1:${Buffer.alloc(32, 9).toString("base64url")}`;
+  process.env.NOTIFICATION_OUTBOX_ACTIVE_KEY_VERSION = "v1";
   process.env.RATE_LIMIT_MAX = "1000";
   mongoServer = await MongoMemoryServer.create();
   await mongoose.connect(mongoServer.getUri());

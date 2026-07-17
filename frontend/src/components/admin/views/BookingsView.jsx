@@ -57,7 +57,6 @@ const BookingsView = ({
   onSelectBooking,
   onEditBooking,
   onDeleteBooking,
-  onDeleteAll,
   onQuickStatusChange,
   onInteractionStateChange,
 }) => {
@@ -149,11 +148,7 @@ const BookingsView = ({
   const handleConfirmedDelete = async () => {
     setDeleteError("");
     try {
-      if (confirmDelete === "all") {
-        await onDeleteAll();
-      } else {
-        await onDeleteBooking(confirmDelete.id);
-      }
+      await onDeleteBooking(confirmDelete.id);
       setConfirmDelete(null);
     } catch (err) {
       setDeleteError(err.message || "No se pudo completar la acción.");
@@ -571,37 +566,13 @@ const BookingsView = ({
         </>
       )}
 
-      {bookings.length > 0 && import.meta.env.DEV && (
-        <div className="admin-danger-zone">
-          <div>
-            <strong>Zona de resguardo</strong>
-            <p>Solo para limpiar datos de prueba. Pide doble confirmación.</p>
-          </div>
-          <button type="button" className="admin-danger-btn" onClick={() => setConfirmDelete("all")} disabled={dataLoading}>
-            <FaTrashAlt /> Limpiar base de prueba
-          </button>
-        </div>
-      )}
-
       <ConfirmDialog
-        isOpen={confirmDelete !== null && confirmDelete !== "all"}
+        isOpen={confirmDelete !== null}
         title="Eliminar reserva"
         message={`¿Eliminás la reserva de ${confirmDelete?.name ?? "este alumno"}? Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         cancelLabel="Cancelar"
         danger
-        onConfirm={handleConfirmedDelete}
-        onCancel={() => { setConfirmDelete(null); setDeleteError(""); }}
-      />
-
-      <ConfirmDialog
-        isOpen={confirmDelete === "all"}
-        title="Limpiar base de reservas"
-        message={`Se eliminarán permanentemente todos los ${bookings.length} turnos. Usá esto solo para datos de prueba.`}
-        confirmLabel="Eliminar todo"
-        cancelLabel="Cancelar"
-        danger
-        typeToConfirm="ELIMINAR"
         onConfirm={handleConfirmedDelete}
         onCancel={() => { setConfirmDelete(null); setDeleteError(""); }}
       />

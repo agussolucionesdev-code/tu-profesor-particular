@@ -12,6 +12,91 @@ import {
 const BOOKING_STATUS = ["Confirmado", "Pendiente", "Cancelado", "Finalizado"];
 const BOOKING_CODE_CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const BOOKING_CODE_LENGTH = 6;
+const PENDING_AUDIT_MAX_BYTES = 64 * 1024;
+
+const pendingAuditActorSchema = new mongoose.Schema(
+  {
+    id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    role: { type: String, required: true, maxlength: 40 },
+    username: { type: String, required: true, maxlength: 160 },
+  },
+  { _id: false },
+);
+
+const pendingAuditMetaSchema = new mongoose.Schema(
+  {
+    requestId: { type: String, required: true, maxlength: 100 },
+    entityType: { type: String, required: true, enum: ["Booking"], default: "Booking" },
+    createdAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
+const pendingAuditSchema = new mongoose.Schema(
+  {
+    operationId: { type: String, required: true, maxlength: 80 },
+    actor: { type: pendingAuditActorSchema, required: true },
+    action: {
+      type: String,
+      required: true,
+      enum: [
+        "booking.created",
+        "booking.updated",
+        "booking.rescheduled",
+        "booking.attendance.updated",
+        "booking.deleted",
+        "booking.restored",
+      ],
+    },
+    before: { type: mongoose.Schema.Types.Mixed, required: true },
+    after: { type: mongoose.Schema.Types.Mixed, required: true },
+    meta: { type: pendingAuditMetaSchema, required: true },
+  },
+  { _id: false, strict: "throw", minimize: false },
+);
+
+pendingAuditSchema.path("operationId").validate(function boundedPendingAudit() {
+  const value = this?.toObject?.({ depopulate: true }) ?? this;
+  return Buffer.byteLength(JSON.stringify(value), "utf8") <= PENDING_AUDIT_MAX_BYTES;
+}, `La auditoria pendiente no puede superar ${PENDING_AUDIT_MAX_BYTES} bytes.`);
+
+const notificationIntentSchema = new mongoose.Schema(
+  {
+    eventId: { type: String, required: true, maxlength: 64 },
+    dedupeKey: { type: String, required: true, maxlength: 64 },
+    type: {
+      type: String,
+      enum: [
+        "booking_confirmation",
+        "booking_received_pending",
+        "booking_pending_updated",
+        "booking_rescheduled",
+        "booking_cancelled",
+        "booking_reminder",
+        "management_link_requested",
+      ],
+      required: true,
+    },
+    channel: { type: String, enum: ["email"], default: "email" },
+    recipientKind: { type: String, enum: ["client", "owner"], required: true },
+    recipientMasked: { type: String, required: true, maxlength: 200 },
+    managementTokenFingerprint: { type: String, default: null, maxlength: 64 },
+    templateVersion: { type: Number, required: true, default: 1 },
+    payloadCiphertext: { type: String, required: true },
+    payloadIv: { type: String, required: true },
+    payloadAuthTag: { type: String, required: true },
+    encryptionKeyVersion: { type: String, required: true, maxlength: 40 },
+    scheduledFor: { type: Date, required: true },
+    expiresAt: { type: Date, required: true },
+    maxAttempts: { type: Number, default: 5, min: 1, max: 20 },
+    occurredAt: { type: Date, default: Date.now },
+    auditCommitOperationId: { type: String, default: null, maxlength: 80 },
+    bookingRevision: { type: Number, default: 0, min: 0 },
+    reminderRevision: { type: Number, default: 0, min: 0 },
+    scheduleRevision: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false },
+);
 
 const hasValidPhoneDigits = (value) => {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -127,6 +212,60 @@ const bookingSchema = new mongoose.Schema(
     managementTokenExpiresAt: { type: Date, default: null },
     managementTokenRevokedAt: { type: Date, default: null },
     managementLinkLastSentAt: { type: Date, default: null, select: false },
+    managementLinkRequestLock: { type: String, default: null, select: false, maxlength: 80 },
+    managementLinkRequestLockExpiresAt: { type: Date, default: null, select: false },
+    managementTokenDeliveryLock: { type: String, default: null, select: false, maxlength: 100 },
+    managementTokenDeliveryLockOutbox: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+      select: false,
+    },
+    managementTokenDeliveryLockFingerprint: { type: String, default: null, select: false, maxlength: 64 },
+    managementTokenDeliveryLockExpiresAt: { type: Date, default: null, select: false },
+    notificationDeliveryFence: {
+      type: new mongoose.Schema(
+        {
+          outboxId: { type: mongoose.Schema.Types.ObjectId, required: true },
+          revision: { type: Number, required: true, min: 0 },
+          fingerprint: { type: String, default: null, maxlength: 64 },
+          owner: { type: String, required: true, maxlength: 100 },
+          expiresAt: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+      select: false,
+    },
+    managementTokenSupersessionPending: {
+      type: new mongoose.Schema(
+        {
+          fingerprint: { type: String, required: true, maxlength: 64 },
+          tokenExpired: { type: Boolean, default: false },
+          tokenInactive: { type: Boolean, default: false },
+          requestKey: { type: String, required: true, maxlength: 64 },
+          createdAt: { type: Date, required: true },
+        },
+        { _id: false },
+      ),
+      default: null,
+      select: false,
+    },
+    notificationRevision: { type: Number, default: 0, min: 0 },
+    // Reminder freshness is intentionally independent from management-token
+    // rotation. Only reminder-visible content, recipient/schedule, or an
+    // invalidating lifecycle transition advances this generation.
+    reminderRevision: { type: Number, default: 0, min: 0 },
+    scheduleRevision: { type: Number, default: 0, min: 0 },
+
+    // Creation is a durable, fenced state. Persisting the draft before slot
+    // claims means a claim never has an absent owner; an expired creator can
+    // be abandoned atomically without allowing it to commit afterwards.
+    creationState: {
+      type: String,
+      enum: ["claiming", "active", "abandoned"],
+      default: "active",
+      select: false,
+    },
 
     // Short-lived ownership lock for operations that need to replace multiple
     // BookingSlot documents without allowing another reprogramming request to
@@ -181,6 +320,16 @@ const bookingSchema = new mongoose.Schema(
         { _id: false },
       ),
       default: null,
+    },
+    notificationIntents: {
+      type: [notificationIntentSchema],
+      default: [],
+      select: false,
+    },
+    pendingAudit: {
+      type: pendingAuditSchema,
+      default: null,
+      select: false,
     },
     deletedAt: { type: Date, default: null, index: true },
     deletedBy: {
@@ -241,6 +390,7 @@ bookingSchema.pre("validate", async function validateBookingDocument() {
 bookingSchema.index({ timeSlot: 1, status: 1 });
 bookingSchema.index({ status: 1, timeSlot: 1, endTime: 1 }); // for hasConflict + getAvailability
 bookingSchema.index({ deletedAt: 1, timeSlot: -1 });
+bookingSchema.index({ deletedAt: 1, status: 1, timeSlot: 1, _id: 1 });
 bookingSchema.index({ email: 1 });
 bookingSchema.index({ phone: 1 });
 bookingSchema.index({ studentId: 1, timeSlot: -1 });
@@ -248,6 +398,22 @@ bookingSchema.index({ "studentLink.runId": 1 });
 bookingSchema.index(
   { managementTokenHash: 1 },
   { unique: true, sparse: true },
+);
+bookingSchema.index(
+  { "notificationIntents.managementTokenFingerprint": 1 },
+  {
+    name: "notificationIntents_managementTokenFingerprint_active",
+    partialFilterExpression: {
+      "notificationIntents.managementTokenFingerprint": { $type: "string" },
+    },
+  },
+);
+bookingSchema.index(
+  { "pendingAudit.operationId": 1 },
+  {
+    name: "pendingAudit_operationId_recovery",
+    partialFilterExpression: { "pendingAudit.operationId": { $type: "string" } },
+  },
 );
 
 bookingSchema.set("toJSON", {

@@ -1,70 +1,87 @@
 import Booking from "../models/Booking.js";
 import AppSettings from "../models/AppSettings.js";
-import { sendReminderNotification } from "../config/mailer.js";
+import { enqueueBookingNotifications } from "./notificationOutboxService.js";
 import { ACTIVE_BOOKING_FILTER } from "../utils/bookingFilters.js";
 
-// Find bookings whose timeSlot falls 20–28 hours from now.
-// Running at 09:00 AM daily catches classes from 05:00 tomorrow to 13:00 tomorrow,
-// which covers the full practical range without double-sending.
-const WINDOW_START_HOURS = 20;
-const WINDOW_END_HOURS = 28;
-
-export const processReminders = async () => {
-  const now = new Date();
-  const windowStart = new Date(now.getTime() + WINDOW_START_HOURS * 3_600_000);
-  const windowEnd = new Date(now.getTime() + WINDOW_END_HOURS * 3_600_000);
-
-  let bookings;
-  try {
-    bookings = await Booking.find({
-      ...ACTIVE_BOOKING_FILTER,
-      status: "Confirmado",
-      email: { $exists: true, $ne: "" },
-      timeSlot: { $gte: windowStart, $lte: windowEnd },
-    }).lean();
-  } catch (err) {
-    console.error("REMINDERS: DB query failed:", err.message);
-    return { processed: 0, sent: 0, failed: 0 };
-  }
-
-  if (bookings.length === 0) {
-    console.log("REMINDERS: no bookings in window — nothing to send.");
-    return { processed: 0, sent: 0, failed: 0 };
-  }
-
-  console.log(`REMINDERS: ${bookings.length} booking(s) in window — sending...`);
-
-  let sent = 0;
+export const processReminders = async ({ now = new Date(), batchSize = 500 } = {}) => {
+  const boundedBatchSize = Math.max(1, Math.min(500, Number(batchSize) || 500));
+  let processed = 0;
+  let queued = 0;
   let failed = 0;
-
-  for (const booking of bookings) {
+  let cursor = null;
+  for (;;) {
+    let bookings;
     try {
-      const result = await sendReminderNotification(booking);
-      if (result.sent) {
-        sent++;
-        console.log(`REMINDERS: ✓ ${booking.bookingCode} → ${result.recipient}`);
-      } else {
-        failed++;
-        console.log(`REMINDERS: – ${booking.bookingCode} skipped (email disabled or missing)`);
-      }
-    } catch (err) {
-      failed++;
-      console.error(`REMINDERS: ✗ ${booking.bookingCode} error:`, err.message);
+      bookings = await Booking.find({
+        ...ACTIVE_BOOKING_FILTER,
+        status: "Confirmado",
+        email: { $exists: true, $ne: "" },
+        timeSlot: { $gt: now },
+        ...(cursor ? {
+          $or: [
+            { timeSlot: { $gt: cursor.timeSlot } },
+            { timeSlot: cursor.timeSlot, _id: { $gt: cursor._id } },
+          ],
+        } : {}),
+      })
+        .sort({ timeSlot: 1, _id: 1 })
+        .limit(boundedBatchSize)
+        .lean();
+    } catch (error) {
+      console.error("REMINDERS: DB query failed:", error.message);
+      failed += 1;
+      break;
     }
+    if (!bookings.length) break;
+    cursor = {
+      timeSlot: bookings.at(-1).timeSlot,
+      _id: bookings.at(-1)._id,
+    };
+    processed += bookings.length;
+    // Bound concurrency so legacy backfills finish promptly without opening
+    // hundreds of simultaneous DB operations on a small production instance.
+    for (let offset = 0; offset < bookings.length; offset += 20) {
+      await Promise.all(bookings.slice(offset, offset + 20).map(async (booking) => {
+        try {
+          const records = await enqueueBookingNotifications({
+            booking,
+            type: "booking_reminder",
+            eventKey: new Date(booking.timeSlot).toISOString(),
+            includeOwner: false,
+          });
+          if (records.length > 0) queued += 1;
+        } catch (error) {
+          failed += 1;
+          console.error("REMINDERS: durable enqueue failed:", error.message);
+        }
+      }));
+    }
+    if (bookings.length < boundedBatchSize) break;
   }
 
-  const summary = { processed: bookings.length, sent, failed, date: new Date().toISOString() };
-  console.log(`REMINDERS: done — sent: ${sent}, skipped/failed: ${failed}`);
-
+  const summary = {
+    processed,
+    queued,
+    failed,
+    date: new Date().toISOString(),
+  };
   try {
     await AppSettings.findOneAndUpdate(
       { key: "cron.lastReminderRun" },
       { key: "cron.lastReminderRun", value: summary },
       { upsert: true },
     );
-  } catch (err) {
-    console.error("REMINDERS: could not persist run log:", err.message);
+  } catch (error) {
+    console.error("REMINDERS: could not persist run log:", error.message);
   }
-
   return summary;
+};
+
+export const createReminderRunner = ({ processor = processReminders } = {}) => {
+  let active = null;
+  return () => {
+    if (active) return active;
+    active = Promise.resolve(processor()).finally(() => { active = null; });
+    return active;
+  };
 };

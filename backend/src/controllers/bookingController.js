@@ -4,20 +4,28 @@ import Booking from "../models/Booking.js";
 import IdempotencyKey from "../models/IdempotencyKey.js";
 import BlockedDate from "../models/BlockedDate.js";
 import { getSetting } from "./settingsController.js";
-import { sendBookingNotifications } from "../config/mailer.js";
+import {
+  buildBookingNotificationIntents,
+  reconcileNotificationIntents,
+} from "../services/notificationOutboxService.js";
+import { enqueueBlindManagementLinkRequest } from "../services/managementLinkRequestService.js";
 import {
   appendBookingToSheet,
   deleteBookingFromSheet,
-  resetBookingSheet,
   updateBookingInSheet,
 } from "../services/sheetsService.js";
 import { sendPushToAdmin } from "../services/pushService.js";
-import { sendManagementLinkEmail } from "../config/mailer.js";
 import {
   hashManagementToken,
   issueManagementToken,
   MANAGEMENT_TOKEN_PATTERN,
 } from "../services/managementTokenService.js";
+import {
+  combineMutationGuards,
+  withoutActiveManagementLinkRequest,
+  withoutActiveNotificationDeliveryFence,
+  withoutActiveSlotMutation,
+} from "../services/bookingMutationFenceService.js";
 import {
   calculateAvailableSlots,
   getScheduleConfiguration,
@@ -26,7 +34,6 @@ import {
 } from "../services/availabilityService.js";
 import {
   BookingSlotConflictError,
-  clearBookingSlots,
   claimBookingSlots,
   getBookingSlotStarts,
   releaseClaimedBookingSlots,
@@ -60,7 +67,11 @@ import {
   TRASHED_BOOKING_FILTER,
   withActiveBooking,
 } from "../utils/bookingFilters.js";
-import { recordBookingAudit } from "../services/auditService.js";
+import {
+  buildPendingBookingAudit,
+  isAmbiguousAuditWriteError,
+  recordBookingAudit,
+} from "../services/auditService.js";
 import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
 import { STUDENT_IDENTITY_ALGORITHM_VERSION } from "../services/studentIdentityService.js";
 import { isScheduleGridChangeInProgress } from "../services/scheduleGridChangeLeaseService.js";
@@ -81,7 +92,6 @@ const MAX_AVAILABILITY_RANGE_MS =
 const DEFAULT_ADMIN_BOOKING_PAGE_SIZE = 50;
 const MAX_ADMIN_BOOKING_PAGE_SIZE = 200;
 const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
-const MANAGEMENT_LINK_COOLDOWN_MS = 5 * 60 * 1000;
 const IDEMPOTENCY_KEY_TTL_MS = 24 * 60 * 60 * 1000;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/;
 const INVALID_MANAGEMENT_LINK_MESSAGE = "El enlace de gestión no es válido o venció.";
@@ -231,33 +241,205 @@ const acquireSlotMutationLock = async (
   scopeFilter = ACTIVE_BOOKING_FILTER,
 ) => {
   const lock = crypto.randomUUID();
-  const now = new Date();
-  const booking = await Booking.findOneAndUpdate(
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const booking = await Booking.findOneAndUpdate(
+      {
+        _id: bookingId,
+        ...scopeFilter,
+        ...combineMutationGuards(
+          withoutActiveSlotMutation(),
+          withoutActiveManagementLinkRequest(),
+          withoutActiveNotificationDeliveryFence(),
+          { pendingAudit: null },
+        ),
+      },
+      [{
+        $set: {
+          slotMutationLock: lock,
+          slotMutationLockExpiresAt: {
+            $dateAdd: {
+              startDate: "$$NOW",
+              unit: "millisecond",
+              amount: SLOT_MUTATION_LOCK_MS,
+            },
+          },
+        },
+      }],
+      { new: true, updatePipeline: true },
+    ).select("+notificationIntents +slotMutationLock +slotMutationLockExpiresAt");
+
+    if (booking) {
+      return { booking, lock, expiresAt: booking.slotMutationLockExpiresAt };
+    }
+    if (attempt < 5) {
+      const now = new Date();
+      const blocker = await Booking.findById(bookingId)
+        .select("+slotMutationLock +slotMutationLockExpiresAt +managementLinkRequestLock +managementLinkRequestLockExpiresAt +notificationDeliveryFence +pendingAudit")
+        .lean();
+      const activeSlotMutation = blocker?.slotMutationLock &&
+        new Date(blocker.slotMutationLockExpiresAt || 0) > now;
+      if (activeSlotMutation) return null;
+      if (blocker?.pendingAudit?.operationId) return null;
+      const activeSharedFence = (
+        blocker?.managementLinkRequestLock &&
+        new Date(blocker.managementLinkRequestLockExpiresAt || 0) > now
+      ) || (
+        blocker?.notificationDeliveryFence &&
+        new Date(blocker.notificationDeliveryFence.expiresAt || 0) > now
+      );
+      if (!activeSharedFence) return null;
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+  return null;
+};
+
+const unwrapFindOneAndUpdate = (result) => (
+  result && Object.prototype.hasOwnProperty.call(result, "value") ? result.value : result
+);
+
+const persistCreationDraft = async (booking) => {
+  const lock = crypto.randomUUID();
+  booking.creationState = "claiming";
+  await booking.save();
+
+  const result = await Booking.collection.findOneAndUpdate(
     {
-      _id: bookingId,
-      ...scopeFilter,
+      _id: booking._id,
+      creationState: "claiming",
       $or: [
         { slotMutationLock: null },
         { slotMutationLock: { $exists: false } },
-        { slotMutationLockExpiresAt: { $lte: now } },
       ],
     },
-    {
+    [{
       $set: {
         slotMutationLock: lock,
-        slotMutationLockExpiresAt: new Date(now.getTime() + SLOT_MUTATION_LOCK_MS),
+        slotMutationLockExpiresAt: {
+          $dateAdd: {
+            startDate: "$$NOW",
+            unit: "millisecond",
+            amount: SLOT_MUTATION_LOCK_MS,
+          },
+        },
       },
+    }],
+    {
+      returnDocument: "after",
+      projection: { _id: 1, slotMutationLock: 1, slotMutationLockExpiresAt: 1 },
     },
-    { new: true },
   );
-
-  return booking ? {
-    booking,
-    lock,
-    expiresAt: new Date(now.getTime() + SLOT_MUTATION_LOCK_MS),
-  } : null;
+  const owner = unwrapFindOneAndUpdate(result);
+  if (!owner) throw new Error("Could not acquire booking creation lease.");
+  return { lock, expiresAt: owner.slotMutationLockExpiresAt };
 };
+
+const activateCreationDraft = async ({ bookingId, lock, unsetPendingAudit = false }) => {
+  const unset = {
+    slotMutationLock: "",
+    slotMutationLockExpiresAt: "",
+    ...(unsetPendingAudit ? { pendingAudit: "" } : {}),
+  };
+  const result = await Booking.collection.findOneAndUpdate(
+    {
+      _id: bookingId,
+      creationState: "claiming",
+      slotMutationLock: lock,
+      $expr: { $gt: ["$slotMutationLockExpiresAt", "$$NOW"] },
+    },
+    {
+      $set: { creationState: "active" },
+      $unset: unset,
+    },
+    { returnDocument: "after" },
+  );
+  return unwrapFindOneAndUpdate(result);
+};
+
+const discardOwnedCreationDraft = ({ bookingId, lock }) => Booking.deleteOne({
+  _id: bookingId,
+  creationState: { $in: ["claiming", "abandoned"] },
+  slotMutationLock: lock,
+});
 const SLOT_RELEASING_STATUSES = new Set(["Cancelado", "Finalizado"]);
+const REMINDER_RELEVANT_FIELDS = new Set([
+  "studentName",
+  "responsibleName",
+  "responsibleRelationship",
+  "responsibleRelationshipOther",
+  "tutorName",
+  "phone",
+  "email",
+  "school",
+  "educationLevel",
+  "yearGrade",
+  "subject",
+  "academicSituation",
+  "duration",
+  "timeSlot",
+  "status",
+]);
+const CLIENT_NOTIFICATION_CONTENT_FIELDS = new Set([
+  "studentName",
+  "responsibleName",
+  "responsibleRelationship",
+  "responsibleRelationshipOther",
+  "phone",
+  "email",
+  "school",
+  "educationLevel",
+  "yearGrade",
+  "subject",
+  "academicSituation",
+]);
+const reminderValueChanged = (before, after) => {
+  if (before instanceof Date || after instanceof Date) {
+    return new Date(before).getTime() !== new Date(after).getTime();
+  }
+  return before !== after;
+};
+
+const buildDurableBookingNotificationIntents = ({
+  booking,
+  type,
+  previousTimeSlot,
+  managementUrl,
+  auditCommitOperationId = null,
+}) => {
+  const eventKey = crypto.randomUUID();
+  const now = new Date();
+  const primary = buildBookingNotificationIntents({
+    booking,
+    type,
+    eventKey,
+    previousTimeSlot,
+    managementUrl,
+    now,
+    auditCommitOperationId,
+  });
+  const reminder = type !== "booking_cancelled" && booking.status === "Confirmado"
+    ? buildBookingNotificationIntents({
+      booking,
+      type: "booking_reminder",
+      eventKey,
+      includeOwner: false,
+      now,
+      auditCommitOperationId,
+    })
+    : [];
+  return [...primary, ...reminder];
+};
+
+const reconcileBookingNotifications = async (bookingId) => {
+  try {
+    await reconcileNotificationIntents({ bookingId });
+  } catch (error) {
+    console.error("[notification-outbox reconcile]", JSON.stringify({
+      bookingId: String(bookingId),
+      message: "Reconciliation deferred to worker.",
+    }));
+  }
+};
 
 class ScheduleGridChangedError extends Error {
   constructor() {
@@ -291,6 +473,36 @@ const releaseSlotMutationLock = async (bookingId, lock) =>
     { $unset: { slotMutationLock: 1, slotMutationLockExpiresAt: 1 } },
   );
 
+export const renewSlotMutationLock = async (slotMutationLock) => {
+  const renewed = await Booking.collection.findOneAndUpdate(
+    trustedFilter({
+      _id: slotMutationLock.booking._id,
+      slotMutationLock: slotMutationLock.lock,
+      $expr: { $gt: ["$slotMutationLockExpiresAt", "$$NOW"] },
+    }),
+    [{
+      $set: {
+        slotMutationLockExpiresAt: {
+          $dateAdd: {
+            startDate: "$$NOW",
+            unit: "millisecond",
+            amount: SLOT_MUTATION_LOCK_MS,
+          },
+        },
+      },
+    }],
+    {
+      returnDocument: "after",
+      projection: { _id: 1, slotMutationLock: 1, slotMutationLockExpiresAt: 1 },
+    },
+  );
+  const owner = renewed && Object.prototype.hasOwnProperty.call(renewed, "value")
+    ? renewed.value
+    : renewed;
+  if (!owner) throw new Error("Booking mutation lease was lost before slot cleanup.");
+  slotMutationLock.expiresAt = owner.slotMutationLockExpiresAt;
+};
+
 const AUDIT_COMPENSATION_TIMEOUT_CAP_MS = 1_000;
 const AUDIT_COMPENSATION_SAFETY_MS = 100;
 
@@ -316,9 +528,48 @@ const compensateWithinOwnedLease = async ({ filter, update, leaseExpiresAt }) =>
   );
 };
 
+const deleteWithinOwnedLease = async ({ filter, leaseExpiresAt }) => {
+  const remainingLeaseMS = new Date(leaseExpiresAt).getTime() - Date.now();
+  const timeoutMS = Math.min(
+    AUDIT_COMPENSATION_TIMEOUT_CAP_MS,
+    remainingLeaseMS - AUDIT_COMPENSATION_SAFETY_MS,
+  );
+  if (!Number.isFinite(timeoutMS) || timeoutMS <= 0) {
+    return { acknowledged: true, deletedCount: 0 };
+  }
+
+  try {
+    return await Booking.deleteOne(
+      trustedFilter({
+        ...filter,
+        // Exact lock ownership is necessary but not sufficient: an unchanged
+        // owner value is stale once the database server observes lease expiry.
+        $expr: { $gt: ["$slotMutationLockExpiresAt", "$$NOW"] },
+      }),
+      { timeoutMS },
+    );
+  } catch {
+    // Driver timeouts are ambiguous: MongoDB may have committed the delete
+    // before the acknowledgement was lost. A bounded authoritative read-back
+    // distinguishes that case so its durable slot claims are also released.
+    const persisted = await Booking.collection.findOne(
+      { _id: filter._id },
+      { projection: { _id: 1 }, timeoutMS: AUDIT_COMPENSATION_TIMEOUT_CAP_MS },
+    ).catch(() => undefined);
+    if (persisted === null) {
+      return { acknowledged: false, deletedCount: 1, reconciledAfterError: true };
+    }
+    // If the booking is present, pendingAudit remains the recovery marker. If
+    // read-back is itself uncertain, retain the durable slot claims: their
+    // orphan reconciler can safely evict them once booking absence is proven.
+    return { acknowledged: false, deletedCount: 0, readbackUncertain: persisted === undefined };
+  }
+};
+
 const ownedSlotMutationFilter = ({ booking, lock }) => ({
   _id: booking._id,
   slotMutationLock: lock,
+  $expr: { $gt: ["$slotMutationLockExpiresAt", "$$NOW"] },
   ...(booking.updatedAt ? { updatedAt: booking.updatedAt } : {}),
 });
 
@@ -509,6 +760,8 @@ export const createAdminBooking = async (req, res, next) => {
   let claimedSlots = null;
   let creationLock = null;
   let auditCommitted = false;
+  let auditOutcomeAmbiguous = false;
+  let auditStarted = false;
 
   try {
     const idempotencyKey = getIdempotencyKey(req);
@@ -590,8 +843,7 @@ export const createAdminBooking = async (req, res, next) => {
       });
     }
 
-    creationLock = crypto.randomUUID();
-    const leaseExpiresAt = new Date(Date.now() + SLOT_MUTATION_LOCK_MS);
+    const auditOperationId = crypto.randomUUID();
     createdBooking = new Booking({
       responsibleName: payload.responsibleName,
       responsibleRelationship: payload.responsibleRelationship,
@@ -614,10 +866,27 @@ export const createAdminBooking = async (req, res, next) => {
       notes: payload.notes,
       status: payload.status,
       studentLink: pendingStudentLink(),
-      slotMutationLock: creationLock,
-      slotMutationLockExpiresAt: leaseExpiresAt,
+      creationState: "claiming",
     });
+    await createdBooking.validate();
     const { managementUrl } = issueManagementToken(createdBooking);
+    createdBooking.notificationIntents = buildDurableBookingNotificationIntents({
+      booking: createdBooking,
+      type: "booking_confirmation",
+      managementUrl,
+      auditCommitOperationId: auditOperationId,
+    });
+    const pendingAudit = buildPendingBookingAudit({
+      req,
+      action: "booking.created",
+      before: {},
+      after: createdBooking,
+      operationId: auditOperationId,
+    });
+    createdBooking.pendingAudit = pendingAudit;
+    const creationLease = await persistCreationDraft(createdBooking);
+    creationLock = creationLease.lock;
+    const leaseExpiresAt = creationLease.expiresAt;
     const claim = bufferedBounds(startTime, endTime, schedule);
     const slotStarts = getBookingSlotStarts({
       startTime: claim.start,
@@ -631,14 +900,14 @@ export const createAdminBooking = async (req, res, next) => {
     });
     try {
       await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
-      await createdBooking.save();
     } catch (error) {
-      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      await releaseClaimedBookingSlots(claimedSlots);
       claimedSlots = null;
       throw error;
     }
 
     try {
+      auditStarted = true;
       await recordBookingAudit({
         req,
         action: "booking.created",
@@ -646,13 +915,22 @@ export const createAdminBooking = async (req, res, next) => {
         before: {},
         after: createdBooking,
         leaseExpiresAt,
+        operationId: auditOperationId,
+        pendingAudit,
       });
       auditCommitted = true;
     } catch (auditError) {
-      const removal = await Booking.deleteOne({
-        _id: createdBooking._id,
-        slotMutationLock: creationLock,
-        slotMutationLockExpiresAt: leaseExpiresAt,
+      if (isAmbiguousAuditWriteError(auditError)) {
+        auditOutcomeAmbiguous = true;
+        throw auditError;
+      }
+      const removal = await deleteWithinOwnedLease({
+        filter: {
+          _id: createdBooking._id,
+          slotMutationLock: creationLock,
+          slotMutationLockExpiresAt: leaseExpiresAt,
+        },
+        leaseExpiresAt,
       });
       if (removal.deletedCount === 1) {
         await releaseBookingSlots(createdBooking._id);
@@ -668,10 +946,15 @@ export const createAdminBooking = async (req, res, next) => {
       throw auditError;
     }
 
-    await Booking.updateOne(
-      { _id: createdBooking._id, slotMutationLock: creationLock },
-      { $unset: { slotMutationLock: "", slotMutationLockExpiresAt: "" } },
-    );
+    const activated = await activateCreationDraft({
+      bookingId: createdBooking._id,
+      lock: creationLock,
+      unsetPendingAudit: true,
+    });
+    if (!activated) {
+      throw new BookingSlotConflictError();
+    }
+    createdBooking = Booking.hydrate(activated);
     creationLock = null;
     claimedSlots = null;
 
@@ -681,6 +964,7 @@ export const createAdminBooking = async (req, res, next) => {
       data: adminBooking(createdBooking),
       requestId: req.requestId,
     };
+    await reconcileBookingNotifications(createdBooking._id);
     Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
       booking: createdBooking._id,
       status: "completed",
@@ -691,10 +975,6 @@ export const createAdminBooking = async (req, res, next) => {
 
     Promise.allSettled([
       appendBookingToSheet(createdBooking),
-      sendBookingNotifications({
-        booking: { ...createdBooking.toObject(), managementUrl },
-        event: "created",
-      }),
       sendPushToAdmin({
         title: "Reserva creada",
         body: `${createdBooking.studentName} · ${createdBooking.subject}`,
@@ -702,7 +982,13 @@ export const createAdminBooking = async (req, res, next) => {
       }),
     ]).catch((error) => console.error("[createAdminBooking side-effects]", error.message));
   } catch (error) {
-    if (!auditCommitted && idempotencyRecord?.status !== "completed") {
+    if (!auditStarted && createdBooking?._id && creationLock) {
+      await discardOwnedCreationDraft({
+        bookingId: createdBooking._id,
+        lock: creationLock,
+      }).catch(() => {});
+    }
+    if (!auditCommitted && !auditOutcomeAmbiguous && idempotencyRecord?.status !== "completed") {
       await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id }).catch(() => {});
     }
     if (error instanceof BookingSlotConflictError) {
@@ -726,6 +1012,9 @@ export const createAdminBooking = async (req, res, next) => {
 
 export const createBooking = async (req, res, next) => {
   let idempotencyRecord = null;
+  let claimedSlots = null;
+  let newBooking = null;
+  let creationLock = null;
 
   try {
     const idempotencyKey = getIdempotencyKey(req);
@@ -828,7 +1117,7 @@ export const createBooking = async (req, res, next) => {
       return badRequest(res, "Horario ocupado.");
     }
 
-    const newBooking = new Booking({
+    newBooking = new Booking({
       responsibleName: payload.responsibleName,
       responsibleRelationship: payload.responsibleRelationship,
       responsibleRelationshipOther: payload.responsibleRelationshipOther,
@@ -848,6 +1137,7 @@ export const createBooking = async (req, res, next) => {
       bufferAfterMinutes: schedule.bufferAfterMinutes,
       notes: "",
       status: bookingStatus,
+      creationState: "claiming",
       studentLink: {
         status: "pending",
         source: "booking",
@@ -861,23 +1151,39 @@ export const createBooking = async (req, res, next) => {
         nextAttemptAt: new Date(),
       },
     });
+    await newBooking.validate();
     const { managementToken, managementUrl } = issueManagementToken(newBooking);
+    newBooking.notificationIntents = buildDurableBookingNotificationIntents({
+      booking: newBooking,
+      type: "booking_confirmation",
+      managementUrl,
+    });
+    const creationLease = await persistCreationDraft(newBooking);
+    creationLock = creationLease.lock;
     const claim = bufferedBounds(startTime, endTime, schedule);
     const slotStarts = getBookingSlotStarts({
       startTime: claim.start,
       endTime: claim.end,
       slotDurationMinutes,
     });
-    await claimBookingSlots({
+    claimedSlots = await claimBookingSlots({
       bookingId: newBooking._id,
       slotStarts,
       slotDurationMinutes,
     });
     try {
       await assertScheduleGridUnchanged(slotDurationMinutes);
-      await newBooking.save();
+      const activated = await activateCreationDraft({
+        bookingId: newBooking._id,
+        lock: creationLock,
+      });
+      if (!activated) throw new BookingSlotConflictError();
+      newBooking = Booking.hydrate(activated);
+      creationLock = null;
+      claimedSlots = null;
     } catch (error) {
-      await releaseBookingSlots(newBooking._id);
+      await releaseClaimedBookingSlots(claimedSlots);
+      claimedSlots = null;
       throw error;
     }
 
@@ -894,6 +1200,8 @@ export const createBooking = async (req, res, next) => {
       requestId: req.requestId,
     };
 
+    await reconcileBookingNotifications(newBooking._id);
+
     if (idempotencyRecord) {
       Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
         booking: newBooking._id,
@@ -907,10 +1215,6 @@ export const createBooking = async (req, res, next) => {
 
     Promise.allSettled([
       appendBookingToSheet(newBooking),
-      sendBookingNotifications({
-        booking: { ...newBooking.toObject(), managementUrl },
-        event: "created",
-      }),
       sendPushToAdmin({
         title: "Nueva reserva",
         body: `${newBooking.studentName} · ${newBooking.subject}`,
@@ -918,6 +1222,12 @@ export const createBooking = async (req, res, next) => {
       }),
     ]).catch((err) => console.error("[createBooking side-effects]", err.message));
   } catch (error) {
+    if (newBooking?._id && creationLock) {
+      await discardOwnedCreationDraft({
+        bookingId: newBooking._id,
+        lock: creationLock,
+      }).catch(() => {});
+    }
     if (idempotencyRecord && idempotencyRecord.status !== "completed") {
       await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id }).catch(() => {});
     }
@@ -1290,7 +1600,9 @@ export const updateBooking = async (req, res, next) => {
     }
 
     let slotStarts = null;
+    let claimGeneration = Number(beforeBooking.scheduleRevision || 0);
     if (scheduleChanged) {
+      claimGeneration += 1;
       const startTime = updateData.timeSlot !== undefined
         ? parseDateTimeInput(updateData.timeSlot)
         : new Date(beforeBooking.timeSlot);
@@ -1329,24 +1641,100 @@ export const updateBooking = async (req, res, next) => {
         endTime: claim.end,
         slotDurationMinutes: schedule.slotDurationMinutes,
       });
+      await renewSlotMutationLock(slotMutationLock);
       claimedSlots = await claimBookingSlots({
         bookingId: beforeBooking._id,
         slotStarts,
         slotDurationMinutes: schedule.slotDurationMinutes,
+        claimGeneration,
       });
       await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
     }
+
+    await renewSlotMutationLock(slotMutationLock);
 
     const NOTE_FIELDS = ["notes", "studentEvolution", "emotionalState"];
     const historyPush = NOTE_FIELDS
       .filter((f) => updateData[f] !== undefined)
       .map((f) => ({ field: f, text: updateData[f], savedAt: new Date() }));
 
-    const mongoUpdate = { $set: updateData };
+    const clientContentChanged = Object.entries(updateData).some(([field, value]) =>
+      CLIENT_NOTIFICATION_CONTENT_FIELDS.has(field) && reminderValueChanged(beforeBooking[field], value));
+    // Operational/admin-only fields (notes, evolution, emotional state and
+    // price) must not invalidate mail already queued for the family.
+    const notificationChanged = scheduleChanged || updateData.status !== undefined || clientContentChanged;
+    const nextNotificationRevision = Number(beforeBooking.notificationRevision || 0) +
+      (notificationChanged ? 1 : 0);
+    const reminderChanged = Object.entries(updateData).some(([field, value]) =>
+      REMINDER_RELEVANT_FIELDS.has(field) && reminderValueChanged(beforeBooking[field], value));
+    const nextReminderRevision = Number(beforeBooking.reminderRevision || 0) + (reminderChanged ? 1 : 0);
+    const nextScheduleRevision = Number(beforeBooking.scheduleRevision || 0) + (scheduleChanged ? 1 : 0);
+    const mongoUpdate = {
+      $set: { ...updateData },
+      $inc: {
+        ...(notificationChanged ? { notificationRevision: 1 } : {}),
+        ...(reminderChanged ? { reminderRevision: 1 } : {}),
+        ...(scheduleChanged ? { scheduleRevision: 1 } : {}),
+      },
+    };
     if (historyPush.length > 0) {
       mongoUpdate.$push = { notesHistory: { $each: historyPush } };
     }
+    const finalStatus = updateData.status ?? currentStatus;
+    const notificationType = updateData.status === "Cancelado"
+      ? "booking_cancelled"
+      : scheduleChanged
+        ? "booking_rescheduled"
+        : updateData.status === "Confirmado" && currentStatus !== "Confirmado"
+          ? "booking_confirmation"
+          : clientContentChanged && finalStatus === "Pendiente"
+            ? "booking_pending_updated"
+            : clientContentChanged && finalStatus === "Confirmado"
+              ? "booking_confirmation"
+              : null;
+    const shouldQueueReminder = reminderChanged && finalStatus === "Confirmado";
+    const hasNotificationIntent = Boolean(notificationType || shouldQueueReminder);
+    const auditOperationId = crypto.randomUUID();
+    if (hasNotificationIntent) {
+      const notificationBooking = {
+        ...beforeBooking,
+        ...updateData,
+        notificationRevision: nextNotificationRevision,
+        reminderRevision: nextReminderRevision,
+        scheduleRevision: nextScheduleRevision,
+      };
+      const notificationIntents = notificationType
+        ? buildDurableBookingNotificationIntents({
+          booking: notificationBooking,
+          type: notificationType,
+          previousTimeSlot: scheduleChanged ? beforeBooking.timeSlot : undefined,
+          auditCommitOperationId: auditOperationId,
+        })
+        : buildBookingNotificationIntents({
+          booking: notificationBooking,
+          type: "booking_reminder",
+          includeOwner: false,
+          auditCommitOperationId: auditOperationId,
+        });
+      mongoUpdate.$push ||= {};
+      mongoUpdate.$push.notificationIntents = { $each: notificationIntents };
+    }
+    const pendingAudit = buildPendingBookingAudit({
+      req,
+      action: scheduleChanged ? "booking.rescheduled" : "booking.updated",
+      before: beforeBooking,
+      after: {
+        ...beforeBooking,
+        ...updateData,
+        notificationRevision: nextNotificationRevision,
+        reminderRevision: nextReminderRevision,
+        scheduleRevision: nextScheduleRevision,
+      },
+      operationId: auditOperationId,
+    });
+    mongoUpdate.$set.pendingAudit = pendingAudit;
 
+    await renewSlotMutationLock(slotMutationLock);
     const updatedBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
       mongoUpdate,
@@ -1355,7 +1743,7 @@ export const updateBooking = async (req, res, next) => {
     if (updatedBooking) canReleaseClaimedSlotsOnFailure = false;
 
     if (!updatedBooking) {
-      await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds);
+      await releaseClaimedBookingSlots(claimedSlots);
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock);
       slotMutationLock = null;
       return res.status(409).json({
@@ -1373,8 +1761,11 @@ export const updateBooking = async (req, res, next) => {
         before: beforeBooking,
         after: updatedBooking,
         leaseExpiresAt: slotMutationLock.expiresAt,
+        operationId: auditOperationId,
+        pendingAudit,
       });
     } catch (auditError) {
+      if (isAmbiguousAuditWriteError(auditError)) throw auditError;
       const fieldsToRestore = new Set([
         ...Object.keys(updateData),
         ...(historyPush.length > 0 ? ["notesHistory"] : []),
@@ -1388,6 +1779,18 @@ export const updateBooking = async (req, res, next) => {
       const compensationUpdate = {};
       if (Object.keys(set).length > 0) compensationUpdate.$set = set;
       if (Object.keys(unset).length > 0) compensationUpdate.$unset = unset;
+      if (hasNotificationIntent) {
+        compensationUpdate.$pull = {
+          notificationIntents: { auditCommitOperationId: auditOperationId },
+        };
+      }
+      compensationUpdate.$unset ||= {};
+      compensationUpdate.$unset.pendingAudit = "";
+      compensationUpdate.$inc = {
+        ...(notificationChanged ? { notificationRevision: -1 } : {}),
+        ...(reminderChanged ? { reminderRevision: -1 } : {}),
+        ...(scheduleChanged ? { scheduleRevision: -1 } : {}),
+      };
       const compensation = await compensateWithinOwnedLease({
         filter: {
           _id: updatedBooking._id,
@@ -1410,21 +1813,21 @@ export const updateBooking = async (req, res, next) => {
       throw auditError;
     }
 
+    await renewSlotMutationLock(slotMutationLock);
     if (SLOT_RELEASING_STATUSES.has(updateData.status)) {
-      await releaseBookingSlots(updatedBooking._id);
+      await releaseBookingSlots(updatedBooking._id, nextScheduleRevision);
     } else if (slotStarts) {
-      await releaseBookingSlotsExcept(updatedBooking._id, slotStarts);
+      await releaseBookingSlotsExcept(updatedBooking._id, slotStarts, claimGeneration);
     }
     claimedSlots = null;
+    await Booking.collection.updateOne(
+      { _id: updatedBooking._id, "pendingAudit.operationId": auditOperationId },
+      { $unset: { pendingAudit: "" } },
+    );
     await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
 
-    // Fire email side-effects for relevant transitions (non-blocking)
-    if (updateData.status === "Cancelado") {
-      sendBookingNotifications({ booking: updatedBooking, event: "cancelled" }).catch(
-        (err) => console.error("[status-transition email cancelled]", err),
-      );
-    }
+    if (hasNotificationIntent) await reconcileBookingNotifications(updatedBooking._id);
 
     setNoStore(res);
     res.status(200).json({
@@ -1438,7 +1841,7 @@ export const updateBooking = async (req, res, next) => {
     );
   } catch (error) {
     if (canReleaseClaimedSlotsOnFailure) {
-      await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+      await releaseClaimedBookingSlots(claimedSlots).catch(() => {});
     }
     if (slotMutationLock) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
@@ -1505,6 +1908,20 @@ export const updateBookingAttendance = async (req, res, next) => {
     const attendanceNotes = parsed.data.attendanceStatus === "Sin registrar"
       ? ""
       : parsed.data.attendanceNotes;
+    const attendanceUpdate = {
+      attendanceStatus: parsed.data.attendanceStatus,
+      attendanceRecordedAt,
+      attendanceNotes,
+      attendanceUpdatedBy: req.user.id,
+    };
+    const auditOperationId = crypto.randomUUID();
+    const pendingAudit = buildPendingBookingAudit({
+      req,
+      action: "booking.attendance.updated",
+      before: beforeAttendance,
+      after: { ...beforeAttendance, ...attendanceUpdate },
+      operationId: auditOperationId,
+    });
     const updatedBooking = await Booking.findOneAndUpdate(
       {
         ...ownedSlotMutationFilter(slotMutationLock),
@@ -1512,10 +1929,8 @@ export const updateBookingAttendance = async (req, res, next) => {
       },
       {
         $set: {
-          attendanceStatus: parsed.data.attendanceStatus,
-          attendanceRecordedAt,
-          attendanceNotes,
-          attendanceUpdatedBy: req.user.id,
+          ...attendanceUpdate,
+          pendingAudit,
         },
       },
       { new: true, runValidators: true },
@@ -1539,8 +1954,11 @@ export const updateBookingAttendance = async (req, res, next) => {
         before: beforeAttendance,
         after: updatedBooking,
         leaseExpiresAt: slotMutationLock.expiresAt,
+        operationId: auditOperationId,
+        pendingAudit,
       });
     } catch (auditError) {
+      if (isAmbiguousAuditWriteError(auditError)) throw auditError;
       const compensation = await compensateWithinOwnedLease({
         filter: {
           _id: updatedBooking._id,
@@ -1555,6 +1973,7 @@ export const updateBookingAttendance = async (req, res, next) => {
             attendanceNotes: beforeAttendance.attendanceNotes,
             attendanceUpdatedBy: beforeAttendance.attendanceUpdatedBy,
           },
+          $unset: { pendingAudit: "" },
         },
         leaseExpiresAt: slotMutationLock.expiresAt,
       });
@@ -1568,6 +1987,10 @@ export const updateBookingAttendance = async (req, res, next) => {
       throw auditError;
     }
 
+    await Booking.collection.updateOne(
+      { _id: updatedBooking._id, "pendingAudit.operationId": auditOperationId },
+      { $unset: { pendingAudit: "" } },
+    );
     await releaseSlotMutationLock(updatedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
     setNoStore(res);
@@ -1612,13 +2035,28 @@ export const deleteBooking = async (req, res, next) => {
 
     const beforeDeletion = slotMutationLock.booking;
     const deletedAt = new Date();
+    const auditOperationId = crypto.randomUUID();
+    const pendingAudit = buildPendingBookingAudit({
+      req,
+      action: "booking.deleted",
+      before: beforeDeletion,
+      after: {
+        ...beforeDeletion.toObject(),
+        deletedAt,
+        deletedBy: req.user.id,
+        notificationRevision: Number(beforeDeletion.notificationRevision || 0) + 1,
+        reminderRevision: Number(beforeDeletion.reminderRevision || 0) + 1,
+      },
+      operationId: auditOperationId,
+    });
     const deletedBooking = await Booking.findOneAndUpdate(
       {
         ...ownedSlotMutationFilter(slotMutationLock),
         ...ACTIVE_BOOKING_FILTER,
       },
       {
-        $set: { deletedAt, deletedBy: req.user.id },
+        $set: { deletedAt, deletedBy: req.user.id, pendingAudit },
+        $inc: { notificationRevision: 1, reminderRevision: 1 },
       },
       { new: true },
     );
@@ -1640,8 +2078,11 @@ export const deleteBooking = async (req, res, next) => {
         before: beforeDeletion,
         after: deletedBooking,
         leaseExpiresAt: slotMutationLock.expiresAt,
+        operationId: auditOperationId,
+        pendingAudit,
       });
     } catch (auditError) {
+      if (isAmbiguousAuditWriteError(auditError)) throw auditError;
       // Standalone MongoDB cannot make the booking and audit writes atomic.
       // Compensate before releasing slots; deleted documents cannot be changed
       // through normal mutations while this compare-and-set runs.
@@ -1653,7 +2094,11 @@ export const deleteBooking = async (req, res, next) => {
           updatedAt: deletedBooking.updatedAt,
           slotMutationLock: slotMutationLock.lock,
         },
-        update: { $set: { deletedAt: null, deletedBy: null } },
+        update: {
+          $set: { deletedAt: null, deletedBy: null },
+          $unset: { pendingAudit: "" },
+          $inc: { notificationRevision: -1, reminderRevision: -1 },
+        },
         leaseExpiresAt: slotMutationLock.expiresAt,
       });
       if (compensation.modifiedCount !== 1) {
@@ -1665,7 +2110,12 @@ export const deleteBooking = async (req, res, next) => {
       }
       throw auditError;
     }
-    await releaseBookingSlots(deletedBooking._id);
+    await Booking.collection.updateOne(
+      { _id: deletedBooking._id, "pendingAudit.operationId": auditOperationId },
+      { $unset: { pendingAudit: "" } },
+    );
+    await renewSlotMutationLock(slotMutationLock);
+    await releaseBookingSlots(deletedBooking._id, deletedBooking.scheduleRevision);
     await releaseSlotMutationLock(deletedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
     await deleteBookingFromSheet(deletedBooking.bookingCode);
@@ -1762,13 +2212,47 @@ export const restoreBooking = async (req, res, next) => {
       endTime: restoredClaim.end,
       slotDurationMinutes: schedule.slotDurationMinutes,
     });
+    const claimGeneration = Number(trashedBooking.scheduleRevision || 0) + 1;
+    await renewSlotMutationLock(slotMutationLock);
     claimedSlots = await claimBookingSlots({
       bookingId: trashedBooking._id,
       slotStarts,
       slotDurationMinutes: schedule.slotDurationMinutes,
+      claimGeneration,
     });
     await assertScheduleGridUnchanged(schedule.slotDurationMinutes);
+    await renewSlotMutationLock(slotMutationLock);
 
+    const restoredStudentLink = !trashedBooking.studentId ? {
+      status: "pending",
+      source: "repair",
+      algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
+      runId: null,
+      linkedAt: null,
+      lastAttemptAt: new Date(),
+      candidateIds: [],
+      errorCode: "",
+      attempts: 0,
+      nextAttemptAt: new Date(),
+    } : trashedBooking.studentLink;
+    const auditOperationId = crypto.randomUUID();
+    const pendingAudit = buildPendingBookingAudit({
+      req,
+      action: "booking.restored",
+      before: trashedBooking,
+      after: {
+        ...trashedBooking.toObject(),
+        deletedAt: null,
+        deletedBy: null,
+        studentLink: restoredStudentLink,
+        notificationRevision: Number(trashedBooking.notificationRevision || 0) + 1,
+        reminderRevision: Number(trashedBooking.reminderRevision || 0) + 1,
+        scheduleRevision: claimGeneration,
+      },
+      operationId: auditOperationId,
+    });
+
+    await renewSlotMutationLock(slotMutationLock);
     const restoredBooking = await Booking.findOneAndUpdate(
       {
         ...ownedSlotMutationFilter(slotMutationLock),
@@ -1778,24 +2262,15 @@ export const restoreBooking = async (req, res, next) => {
         $set: {
           deletedAt: null,
           deletedBy: null,
-          ...(!trashedBooking.studentId ? { studentLink: {
-            status: "pending",
-            source: "repair",
-            algorithmVersion: STUDENT_IDENTITY_ALGORITHM_VERSION,
-            runId: null,
-            linkedAt: null,
-            lastAttemptAt: new Date(),
-            candidateIds: [],
-            errorCode: "",
-            attempts: 0,
-            nextAttemptAt: new Date(),
-          } } : {}),
+          ...(!trashedBooking.studentId ? { studentLink: restoredStudentLink } : {}),
+          pendingAudit,
         },
+        $inc: { notificationRevision: 1, reminderRevision: 1, scheduleRevision: 1 },
       },
       { new: true, runValidators: true },
     );
     if (!restoredBooking) {
-      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      await releaseClaimedBookingSlots(claimedSlots);
       claimedSlots = null;
       await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
       slotMutationLock = null;
@@ -1816,8 +2291,11 @@ export const restoreBooking = async (req, res, next) => {
         before: trashedBooking,
         after: restoredBooking,
         leaseExpiresAt: slotMutationLock.expiresAt,
+        operationId: auditOperationId,
+        pendingAudit,
       });
     } catch (auditError) {
+      if (isAmbiguousAuditWriteError(auditError)) throw auditError;
       const compensation = await compensateWithinOwnedLease({
         filter: {
           _id: restoredBooking._id,
@@ -1831,11 +2309,13 @@ export const restoreBooking = async (req, res, next) => {
             deletedBy: trashedBooking.deletedBy,
             studentLink: trashedBooking.studentLink || null,
           },
+          $unset: { pendingAudit: "" },
+          $inc: { notificationRevision: -1, reminderRevision: -1, scheduleRevision: -1 },
         },
         leaseExpiresAt: slotMutationLock.expiresAt,
       });
       if (compensation.modifiedCount === 1) {
-        await releaseBookingSlots(restoredBooking._id);
+        await releaseBookingSlots(restoredBooking._id, claimGeneration);
       } else {
         console.error("[audit-compensation]", JSON.stringify({
           event: "booking_restore_audit_compensation_failed",
@@ -1846,7 +2326,12 @@ export const restoreBooking = async (req, res, next) => {
       }
       throw auditError;
     }
-    await releaseBookingSlotsExcept(restoredBooking._id, slotStarts);
+    await renewSlotMutationLock(slotMutationLock);
+    await releaseBookingSlotsExcept(restoredBooking._id, slotStarts, claimGeneration);
+    await Booking.collection.updateOne(
+      { _id: restoredBooking._id, "pendingAudit.operationId": auditOperationId },
+      { $unset: { pendingAudit: "" } },
+    );
     await releaseSlotMutationLock(restoredBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
     await updateBookingInSheet(restoredBooking);
@@ -1859,7 +2344,7 @@ export const restoreBooking = async (req, res, next) => {
       requestId: req.requestId,
     });
   } catch (error) {
-    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    await releaseClaimedBookingSlots(claimedSlots).catch(() => {});
     if (slotMutationLock) {
       await releaseSlotMutationLock(
         slotMutationLock.booking._id,
@@ -1888,92 +2373,37 @@ export const restoreBooking = async (req, res, next) => {
   }
 };
 
-export const deleteAllBookings = async (req, res, next) => {
-  try {
-    await Booking.deleteMany({});
-    await clearBookingSlots();
-    await resetBookingSheet();
-
-    setNoStore(res);
-    res.status(200).json({
-      success: true,
-      message: "Sistema reiniciado completamente.",
-      requestId: req.requestId,
-    });
-  } catch (error) {
-    if (typeof next === "function") {
-      return next(error);
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Error interno del servidor.",
-      requestId: req.requestId,
-    });
-  }
+export const deleteAllBookings = async (req, res) => {
+  setNoStore(res);
+  res.setHeader("Allow", "GET, POST");
+  return res.status(405).json({
+    success: false,
+    code: "BULK_DELETE_DISABLED",
+    message: "La eliminacion masiva esta deshabilitada. Usa la papelera auditada por reserva.",
+    requestId: req.requestId,
+  });
 };
 
 export const requestManagementLink = async (req, res, next) => {
-  const acceptedResponse = () =>
-    res.status(202).json({
-      success: true,
-      message:
-        "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
-    });
-
   try {
     const bookingCode = normalizeCode(req.body?.bookingCode);
     const email = normalizeEmail(req.body?.email);
-
-    // Always return the same response. This endpoint must not become an
-    // account/booking enumeration oracle.
-    if (!BOOKING_CODE_PATTERN.test(bookingCode) || !email) {
-      return acceptedResponse();
+    // Crucially, this request path never queries Booking. Known and unknown
+    // identities perform the same normalization, HMAC, encryption and durable
+    // upsert before receiving the same response. Resolution happens later in a
+    // background worker.
+    if (BOOKING_CODE_PATTERN.test(bookingCode) && email) {
+      await enqueueBlindManagementLinkRequest({ bookingCode, email });
     }
-
-    const booking = await Booking.findOne(withActiveBooking({ bookingCode, email }))
-      .select("+managementTokenHash +managementLinkLastSentAt")
-      .exec();
-    if (!booking) return acceptedResponse();
-
-    const sentRecently =
-      booking.managementLinkLastSentAt &&
-      Date.now() - new Date(booking.managementLinkLastSentAt).getTime() <
-        MANAGEMENT_LINK_COOLDOWN_MS;
-    if (sentRecently) return acceptedResponse();
-
-    const previousTokenState = {
-      managementTokenHash: booking.managementTokenHash,
-      managementTokenExpiresAt: booking.managementTokenExpiresAt,
-      managementTokenRevokedAt: booking.managementTokenRevokedAt,
-      managementLinkLastSentAt: booking.managementLinkLastSentAt,
-    };
-    const { managementUrl } = issueManagementToken(booking);
-    booking.managementLinkLastSentAt = new Date();
-    await booking.save();
-
-    const delivered = await sendManagementLinkEmail({ booking, managementUrl });
-    if (!delivered) {
-      booking.managementTokenHash = previousTokenState.managementTokenHash;
-      booking.managementTokenExpiresAt = previousTokenState.managementTokenExpiresAt;
-      booking.managementTokenRevokedAt = previousTokenState.managementTokenRevokedAt;
-      booking.managementLinkLastSentAt = previousTokenState.managementLinkLastSentAt;
-      await booking.save();
-    }
-
-    return acceptedResponse();
   } catch (error) {
-    if (error instanceof BookingSlotConflictError) {
-      return res.status(409).json({
-        success: false,
-        message: "El nuevo horario tiene conflicto con otra reserva activa.",
-        requestId: req.requestId,
-      });
-    }
-
-    if (typeof next === "function") return next(error);
-    return acceptedResponse();
+    console.error("[management-link request] request could not be completed", {
+      requestId: req.requestId,
+    });
   }
+  return res.status(202).json({
+    success: true,
+    message: "Si los datos coinciden con una reserva, vas a recibir un enlace seguro por email.",
+  });
 };
 
 export const getManagedBooking = async (req, res, next) => {
@@ -1998,12 +2428,35 @@ export const getManagedBooking = async (req, res, next) => {
 };
 
 export const revokeManagementAccess = async (req, res, next) => {
+  let slotMutationLock = null;
   try {
     const booking = await findManagedBooking(req);
     if (!booking) return unauthorizedManagementLink(res);
 
-    booking.managementTokenRevokedAt = new Date();
-    await booking.save();
+    slotMutationLock = await acquireSlotMutationLock(booking._id, {
+      ...ACTIVE_BOOKING_FILTER,
+      managementTokenHash: hashManagementToken(getManagementToken(req)),
+      managementTokenRevokedAt: null,
+      managementTokenExpiresAt: { $gt: new Date() },
+    });
+    if (!slotMutationLock) {
+      return res.status(409).json({
+        success: false,
+        message: "La reserva está siendo actualizada. Reintentá.",
+        requestId: req.requestId,
+      });
+    }
+    const revoked = await Booking.findOneAndUpdate(
+      ownedSlotMutationFilter(slotMutationLock),
+      {
+        $set: { managementTokenRevokedAt: new Date() },
+        $inc: { notificationRevision: 1 },
+      },
+      { new: true },
+    );
+    if (!revoked) throw new Error("Management-token revocation lost its mutation lease.");
+    await releaseSlotMutationLock(booking._id, slotMutationLock.lock);
+    slotMutationLock = null;
     setNoStore(res);
     return res.status(204).send();
   } catch (error) {
@@ -2013,6 +2466,11 @@ export const revokeManagementAccess = async (req, res, next) => {
       message: "Error interno del servidor.",
       requestId: req.requestId,
     });
+  } finally {
+    if (slotMutationLock) {
+      await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
+        .catch(() => {});
+    }
   }
 };
 
@@ -2141,13 +2599,33 @@ export const rescheduleBooking = async (req, res, next) => {
       endTime: claim.end,
       slotDurationMinutes,
     });
+    const claimGeneration = Number(lockedBooking.scheduleRevision || 0) + 1;
+    await renewSlotMutationLock(slotMutationLock);
     claimedSlots = await claimBookingSlots({
       bookingId: lockedBooking._id,
       slotStarts,
       slotDurationMinutes,
+      claimGeneration,
     });
     await assertScheduleGridUnchanged(slotDurationMinutes);
+    await renewSlotMutationLock(slotMutationLock);
 
+    const rescheduledNotificationIntents = buildDurableBookingNotificationIntents({
+      booking: {
+        ...lockedBooking.toObject(),
+        timeSlot: startTime,
+        endTime,
+        duration,
+        status: "Confirmado",
+        notificationRevision: Number(lockedBooking.notificationRevision || 0) + 1,
+        reminderRevision: Number(lockedBooking.reminderRevision || 0) + 1,
+        scheduleRevision: Number(lockedBooking.scheduleRevision || 0) + 1,
+      },
+      type: "booking_rescheduled",
+      previousTimeSlot,
+    });
+
+    await renewSlotMutationLock(slotMutationLock);
     lockedBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
       {
@@ -2159,11 +2637,13 @@ export const rescheduleBooking = async (req, res, next) => {
           bufferAfterMinutes: schedule.bufferAfterMinutes,
           status: "Confirmado",
         },
+        $push: { notificationIntents: { $each: rescheduledNotificationIntents } },
+        $inc: { notificationRevision: 1, reminderRevision: 1, scheduleRevision: 1 },
       },
       { new: true, runValidators: true },
     );
     if (!lockedBooking) {
-      await releaseClaimedBookingSlots(claimedSlots.insertedSlotIds);
+      await releaseClaimedBookingSlots(claimedSlots);
       await releaseSlotMutationLock(
         slotMutationLock.booking._id,
         slotMutationLock.lock,
@@ -2178,7 +2658,9 @@ export const rescheduleBooking = async (req, res, next) => {
         requestId: req.requestId,
       });
     }
-    await releaseBookingSlotsExcept(lockedBooking._id, slotStarts);
+    await renewSlotMutationLock(slotMutationLock);
+    await releaseBookingSlotsExcept(lockedBooking._id, slotStarts, claimGeneration);
+    claimedSlots = null;
     await releaseSlotMutationLock(lockedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
 
@@ -2189,6 +2671,7 @@ export const rescheduleBooking = async (req, res, next) => {
       notifications: null,
       requestId: req.requestId,
     };
+    await reconcileBookingNotifications(lockedBooking._id);
     if (idempotencyRecord) {
       Object.assign(idempotencyRecord, encryptIdempotencyResponse(responseBody), {
         booking: lockedBooking._id,
@@ -2202,10 +2685,9 @@ export const rescheduleBooking = async (req, res, next) => {
 
     Promise.allSettled([
       updateBookingInSheet(lockedBooking),
-      sendBookingNotifications({ booking: lockedBooking, event: "rescheduled", previousTimeSlot }),
     ]).catch((err) => console.error("[rescheduleBooking side-effects]", err.message));
   } catch (error) {
-    await releaseClaimedBookingSlots(claimedSlots?.insertedSlotIds).catch(() => {});
+    await releaseClaimedBookingSlots(claimedSlots).catch(() => {});
     if (slotMutationLock) {
       await releaseSlotMutationLock(slotMutationLock.booking._id, slotMutationLock.lock)
         .catch(() => {});
@@ -2324,9 +2806,24 @@ export const cancelBookingClient = async (req, res, next) => {
       );
     }
 
+    const cancellationNotificationIntents = buildDurableBookingNotificationIntents({
+      booking: {
+        ...slotMutationLock.booking.toObject(),
+        status: "Cancelado",
+        notificationRevision: Number(slotMutationLock.booking.notificationRevision || 0) + 1,
+        reminderRevision: Number(slotMutationLock.booking.reminderRevision || 0) + 1,
+      },
+      type: "booking_cancelled",
+    });
     const cancelledBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
-      { $set: { status: "Cancelado" } },
+      {
+        $set: {
+          status: "Cancelado",
+        },
+        $push: { notificationIntents: { $each: cancellationNotificationIntents } },
+        $inc: { notificationRevision: 1, reminderRevision: 1 },
+      },
       { new: true, runValidators: true },
     );
     if (!cancelledBooking) {
@@ -2339,9 +2836,12 @@ export const cancelBookingClient = async (req, res, next) => {
       });
     }
 
-    await releaseBookingSlots(cancelledBooking._id);
+    await renewSlotMutationLock(slotMutationLock);
+    await releaseBookingSlots(cancelledBooking._id, cancelledBooking.scheduleRevision);
     await releaseSlotMutationLock(cancelledBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
+
+    await reconcileBookingNotifications(cancelledBooking._id);
 
     res.status(200).json({
       success: true,
@@ -2353,7 +2853,6 @@ export const cancelBookingClient = async (req, res, next) => {
 
     Promise.allSettled([
       updateBookingInSheet(cancelledBooking),
-      sendBookingNotifications({ booking: cancelledBooking, event: "cancelled" }),
     ]).catch((err) => console.error("[cancelBooking side-effects]", err.message));
   } catch (error) {
     if (slotMutationLock) {
@@ -2418,9 +2917,24 @@ export const confirmAttendanceClient = async (req, res, next) => {
       return badRequest(res, "Este turno ya no se puede modificar.");
     }
 
+    const confirmationNotificationIntents = buildDurableBookingNotificationIntents({
+      booking: {
+        ...lockedBooking.toObject(),
+        status: "Confirmado",
+        notificationRevision: Number(lockedBooking.notificationRevision || 0) + 1,
+        reminderRevision: Number(lockedBooking.reminderRevision || 0) + 1,
+      },
+      type: "booking_confirmation",
+    });
     const confirmedBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
-      { $set: { status: "Confirmado" } },
+      {
+        $set: {
+          status: "Confirmado",
+        },
+        $push: { notificationIntents: { $each: confirmationNotificationIntents } },
+        $inc: { notificationRevision: 1, reminderRevision: 1 },
+      },
       { new: true, runValidators: true },
     );
     if (!confirmedBooking) {
@@ -2435,6 +2949,7 @@ export const confirmAttendanceClient = async (req, res, next) => {
 
     await releaseSlotMutationLock(confirmedBooking._id, slotMutationLock.lock);
     slotMutationLock = null;
+    await reconcileBookingNotifications(confirmedBooking._id);
 
     setNoStore(res);
     res.status(200).json({

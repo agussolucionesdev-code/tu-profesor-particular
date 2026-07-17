@@ -10,8 +10,12 @@ import blockedDatesRoutes from "./routes/blockedDatesRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+import { getRuntimeSchedulerHealth } from "./services/runtimeScheduler.js";
 import { globalApiLimiter } from "./middleware/rateLimiters.js";
 import { requestContextMiddleware } from "./middleware/requestContext.js";
+import { getNotificationEncryptionHealth } from "./services/notificationPayloadCrypto.js";
+import { getEmailDeliveryHealth } from "./config/mailer.js";
 
 if (process.env.NODE_ENV !== "test") {
   dotenv.config();
@@ -141,7 +145,6 @@ app.use(
     maxAge: 60 * 60 * 12,
   }),
 );
-app.use(globalApiLimiter);
 app.use(express.json({ limit: MAX_JSON_BODY_SIZE, strict: true }));
 app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 
@@ -151,6 +154,7 @@ app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 app.get("/health", (req, res) => {
   const dbHealth = getDbHealth();
   const dbMeta = getDbConnectionMeta();
+  const notificationEncryption = getNotificationEncryptionHealth();
 
   // Always return 200 so Render's health check passes even while DB is
   // still connecting. DB health is visible in the response body.
@@ -168,15 +172,46 @@ app.get("/health", (req, res) => {
       source: dbMeta.source,
       target: dbMeta.target,
     },
+    notifications: notificationEncryption,
   });
 });
 
+app.get("/live", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+  });
+});
+
+app.get("/ready", (req, res) => {
+  const database = getDbHealth();
+  const notifications = getNotificationEncryptionHealth();
+  const email = getEmailDeliveryHealth();
+  const workers = getRuntimeSchedulerHealth();
+  const ready = database.isConnected && notifications.configured && email.configured &&
+    (!workers.required || workers.registrationsComplete);
+  res.status(ready ? 200 : 503).json({
+    status: ready ? "ready" : "not_ready",
+    timestamp: new Date().toISOString(),
+    requestId: req.requestId,
+    database,
+    notifications,
+    email,
+    workers,
+  });
+});
+
+// Infrastructure probes must never consume or be rejected by the public API
+// budget. The limiter protects application routes only.
+app.use(globalApiLimiter);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/blocked-dates", blockedDatesRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/push", pushRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

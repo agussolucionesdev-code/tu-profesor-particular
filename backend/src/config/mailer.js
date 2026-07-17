@@ -59,17 +59,156 @@ const escapeHtml = (value) =>
     .replaceAll("'", "&#39;");
 
 const canSendEmail = () =>
-  process.env.NODE_ENV !== "test" &&
+  (process.env.NODE_ENV !== "test" || Boolean(transporterForTests)) &&
   Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
 
-const getTransporter = () =>
-  nodemailer.createTransport({
+let transporter = null;
+let transporterForTests = null;
+
+const getTransporter = () => {
+  if (transporterForTests) return transporterForTests;
+  if (transporter) return transporter;
+  transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
       pass: String(process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
     },
   });
+  return transporter;
+};
+
+const EMAIL_VERIFY_TIMEOUT_MS = 10_000;
+const EMAIL_VERIFY_TTL_MS = 10 * 60 * 1000;
+let verificationPromise = null;
+let verificationState = {
+  verified: false,
+  status: "unknown",
+  checkedAt: null,
+  expiresAt: null,
+};
+
+const getEmailConfiguration = () => {
+  const userConfigured = Boolean(String(process.env.EMAIL_USER || "").trim());
+  const passwordConfigured = Boolean(String(process.env.EMAIL_PASS || "").replace(/\s+/g, ""));
+  let transporterConfigured = false;
+  if (userConfigured && passwordConfigured) {
+    try {
+      const candidate = getTransporter();
+      transporterConfigured = typeof candidate?.sendMail === "function" &&
+        typeof candidate?.verify === "function";
+    } catch {
+      transporterConfigured = false;
+    }
+  }
+  return { userConfigured, passwordConfigured, transporterConfigured };
+};
+
+const resetVerificationState = () => {
+  verificationPromise = null;
+  verificationState = {
+    verified: false,
+    status: "unknown",
+    checkedAt: null,
+    expiresAt: null,
+  };
+};
+
+export const setEmailTransporterForTests = (next) => {
+  if (next != null && (typeof next?.sendMail !== "function" || typeof next?.verify !== "function")) {
+    throw new TypeError("Email transporter must expose sendMail and verify.");
+  }
+  transporterForTests = next;
+  transporter = null;
+  resetVerificationState();
+};
+
+export const resetEmailDeliveryHealthForTests = resetVerificationState;
+
+export const refreshEmailDeliveryHealth = async ({
+  force = false,
+  timeoutMs = EMAIL_VERIFY_TIMEOUT_MS,
+  ttlMs = EMAIL_VERIFY_TTL_MS,
+} = {}) => {
+  const config = getEmailConfiguration();
+  if (!config.userConfigured || !config.passwordConfigured || !config.transporterConfigured) {
+    resetVerificationState();
+    verificationState.status = "unconfigured";
+    return getEmailDeliveryHealth();
+  }
+  const currentTime = Date.now();
+  if (!force && verificationState.verified && verificationState.expiresAt?.getTime() > currentTime) {
+    return getEmailDeliveryHealth();
+  }
+  if (verificationPromise) return verificationPromise;
+  verificationPromise = (async () => {
+    const checkedAt = new Date();
+    let timeoutId;
+    try {
+      await Promise.race([
+        Promise.resolve(getTransporter().verify()),
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            const error = new Error("SMTP verification timed out.");
+            error.code = "EMAIL_VERIFY_TIMEOUT";
+            reject(error);
+          }, Math.max(1, Number(timeoutMs) || EMAIL_VERIFY_TIMEOUT_MS));
+          timeoutId.unref?.();
+        }),
+      ]);
+      verificationState = {
+        verified: true,
+        status: "healthy",
+        checkedAt,
+        expiresAt: new Date(checkedAt.getTime() + Math.max(1, Number(ttlMs) || EMAIL_VERIFY_TTL_MS)),
+      };
+    } catch (error) {
+      verificationState = {
+        verified: false,
+        status: error?.code === "EMAIL_VERIFY_TIMEOUT" ? "timeout" : "unhealthy",
+        checkedAt,
+        expiresAt: new Date(checkedAt.getTime() + Math.max(1, Number(ttlMs) || EMAIL_VERIFY_TTL_MS)),
+      };
+    } finally {
+      clearTimeout(timeoutId);
+      verificationPromise = null;
+    }
+    return getEmailDeliveryHealth();
+  })();
+  return verificationPromise;
+};
+
+export const getEmailDeliveryHealth = () => {
+  const { userConfigured, passwordConfigured, transporterConfigured } = getEmailConfiguration();
+  if (!userConfigured || !passwordConfigured || !transporterConfigured) {
+    return {
+      configured: false,
+      userConfigured,
+      passwordConfigured,
+      transporterConfigured,
+      verified: false,
+      status: "unconfigured",
+      checkedAt: null,
+      expiresAt: null,
+    };
+  }
+  const stale = Boolean(
+    verificationState.checkedAt &&
+    verificationState.expiresAt &&
+    verificationState.expiresAt.getTime() <= Date.now(),
+  );
+  const verified = verificationState.verified && !stale;
+  return {
+    configured: verified,
+    userConfigured,
+    passwordConfigured,
+    transporterConfigured,
+    verified,
+    status: stale ? "stale" : verificationState.status,
+    checkedAt: verificationState.checkedAt?.toISOString() || null,
+    expiresAt: verificationState.expiresAt?.toISOString() || null,
+  };
+};
 
 const getFrontendUrl = () =>
   String(process.env.FRONTEND_URL || "https://tu-profesor-particular.com").replace(
@@ -100,10 +239,48 @@ const EVENT_THEMES = {
       "Se confirmó una nueva reserva. Te dejo abajo los datos de la familia y del turno para que los tengas a mano.",
     clientCtaLabel: "Ir a Mis Turnos",
     nextAction:
-      "Guardá el código. Te sirve para revisar, reprogramar o cancelar el turno desde Mis Turnos.",
+      "Entrá a Mis Turnos para revisar la reserva. Si no recibiste un acceso directo, solicitá uno nuevo por email. El código es solo una referencia.",
     footerNote:
-      "Guardá este correo como respaldo. La gestión principal se hace con el código del turno.",
+      "Guardá este correo como respaldo. La gestión se autoriza únicamente mediante el enlace seguro.",
     showAddress: true,
+  },
+  pending: {
+    accent: BRAND.amber,
+    accentDeep: BRAND.amberDeep,
+    accentSoft: BRAND.amberSoft,
+    badgeLabel: "Solicitud recibida",
+    badgeIcon: "•",
+    clientTitle: "Recibimos tu solicitud de turno",
+    ownerTitle: "Nueva solicitud pendiente",
+    clientIntro:
+      "Recibimos tu solicitud. El horario todavía está pendiente de confirmación y te avisaremos cuando quede confirmado.",
+    ownerIntro:
+      "Ingresó una solicitud pendiente. Revisala antes de confirmar el horario.",
+    clientCtaLabel: "Ir a Mis Turnos",
+    nextAction:
+      "Este mensaje no confirma el turno. Podés consultar su estado desde Mis Turnos y solicitar un acceso nuevo por email.",
+    footerNote:
+      "Esperá la confirmación antes de asistir. El código es solo una referencia.",
+    showAddress: false,
+  },
+  pending_updated: {
+    accent: BRAND.amber,
+    accentDeep: BRAND.amberDeep,
+    accentSoft: BRAND.amberSoft,
+    badgeLabel: "Solicitud actualizada",
+    badgeIcon: "↻",
+    clientTitle: "Actualizamos tu solicitud pendiente",
+    ownerTitle: "Solicitud pendiente actualizada",
+    clientIntro:
+      "Actualizamos los datos solicitados. El turno sigue pendiente de confirmación y te avisaremos cuando quede confirmado.",
+    ownerIntro:
+      "Se modificó una solicitud pendiente. Revisala antes de confirmar el horario.",
+    clientCtaLabel: "Ir a Mis Turnos",
+    nextAction:
+      "Este mensaje no confirma el turno. Podés consultar su estado desde Mis Turnos.",
+    footerNote:
+      "Esperá la confirmación antes de asistir. El código es solo una referencia.",
+    showAddress: false,
   },
   rescheduled: {
     accent: BRAND.amber,
@@ -138,7 +315,7 @@ const EVENT_THEMES = {
       "Se canceló un turno. Dejo los datos de referencia por si querés contactar a la familia o liberar el espacio en tu agenda.",
     clientCtaLabel: "Reservar otro turno",
     nextAction:
-      "El código queda como referencia de gestión. Para una nueva clase, reservá otro horario desde la web.",
+      "El código queda solo como referencia. Para una nueva clase, reservá otro horario desde la web.",
     footerNote:
       "Si la cancelación fue un error, escribime y lo resolvemos al instante.",
     showAddress: false,
@@ -149,17 +326,17 @@ const EVENT_THEMES = {
     accentSoft: BRAND.amberSoft,
     badgeLabel: "Recordatorio de clase",
     badgeIcon: "⏰",
-    clientTitle: "Recordatorio: tu clase es mañana",
-    ownerTitle: "Recordatorio de clase — mañana",
+    clientTitle: "Recordatorio de tu próxima clase",
+    ownerTitle: "Recordatorio de próxima clase",
     clientIntro:
-      "Te recordamos que mañana tenés una clase agendada. Si necesitás reprogramar o cancelar, avisanos con anticipación.",
+      "Te recordamos que tenés una próxima clase agendada. Revisá abajo la fecha y el horario exactos.",
     ownerIntro:
-      "Recordatorio automático generado 24 horas antes de la clase.",
+      "Recordatorio automático generado dentro de la ventana previa a la clase.",
     clientCtaLabel: "Ver mi turno en Mis Turnos",
     nextAction:
-      "Si necesitás reprogramar o cancelar, entrá a Mis Turnos con tu código, email o teléfono.",
+      "Si necesitás reprogramar o cancelar, entrá a Mis Turnos y solicitá un enlace seguro nuevo por email.",
     footerNote:
-      "Este recordatorio se envía automáticamente 24 horas antes de la clase.",
+      "Este recordatorio se envía automáticamente dentro de la ventana previa a la clase.",
     showAddress: true,
   },
 };
@@ -214,6 +391,7 @@ const buildSafeBooking = (booking = {}, dateStr = "", previousDateStr = "") => {
     managementUrl: booking.managementUrl
       ? escapeHtml(booking.managementUrl)
       : "",
+    portalUrl: escapeHtml(booking.portalUrl || `${getFrontendUrl()}/portal`),
     contactPhone: escapeHtml(getContactPhone()),
     whatsappSelfUrl: escapeHtml(getWhatsappSelfUrl()),
   };
@@ -437,11 +615,11 @@ export const buildBookingEmailHtml = ({
   const cancelled = event === "cancelled";
   const ctaHref = cancelled
     ? escapeHtml(`${getFrontendUrl()}/`)
-    : safe.managementUrl;
+    : safe.managementUrl || safe.portalUrl;
   const ctaBg = cancelled
     ? `linear-gradient(135deg, ${BRAND.navy} 0%, ${BRAND.green} 100%)`
     : `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDeep} 100%)`;
-  const showClientCta = cancelled || Boolean(safe.managementUrl);
+  const showClientCta = cancelled || Boolean(safe.managementUrl || safe.portalUrl);
 
   const nivelValue = `${safe.educationLevel}${safe.yearGrade ? ` · ${safe.yearGrade}` : ""}`;
 
@@ -487,7 +665,7 @@ export const buildBookingEmailHtml = ({
             <tr>
               <td class="tpp-pad" style="padding:18px 28px 4px;">
                 <div class="tpp-code-panel" style="text-align:center;padding:22px 18px;border:1px dashed ${theme.accent};background:${theme.accentSoft};border-radius:14px;">
-                  <p style="margin:0 0 6px;color:${theme.accentDeep};font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-family:Arial,Helvetica,sans-serif;">Código de gestión</p>
+                  <p style="margin:0 0 6px;color:${theme.accentDeep};font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;font-family:Arial,Helvetica,sans-serif;">Código de referencia</p>
                   <p class="tpp-code" style="margin:0;font-family:Consolas,Menlo,'Courier New',monospace;font-size:30px;letter-spacing:.24em;font-weight:800;color:${BRAND.navyDeep};">${safe.code}</p>
                   <p style="margin:10px 0 0;color:${BRAND.muted};font-size:13px;line-height:1.55;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(theme.nextAction)}</p>
                 </div>
@@ -552,7 +730,7 @@ export const buildBookingEmailText = ({
     `Alumno/a: ${safe.studentName}`,
     responsibleLine,
     `Materia: ${safe.subject}`,
-    `Código de gestión: ${safe.rawCode}`,
+    `Código de referencia: ${safe.rawCode}`,
     "",
   );
 
@@ -560,9 +738,7 @@ export const buildBookingEmailText = ({
     lines.push(`Lugar: ${address}`, `Mapa: ${mapsUrl}`, "");
   }
 
-  if (safe.managementUrl) {
-    lines.push(`Mis Turnos: ${safe.managementUrl}`, "");
-  }
+  lines.push(`Mis Turnos: ${safe.managementUrl || safe.portalUrl}`, "");
 
   lines.push(
     `${BRAND.teacher} — ${BRAND.name}`,
@@ -880,4 +1056,129 @@ export const sendReminderNotification = async (booking) => {
   );
 
   return { sent, recipient: booking.email };
+};
+
+export const prepareNotificationOutboxMessage = async ({
+  recipient,
+  recipientKind,
+  booking,
+  type,
+  previousTimeSlot,
+  managementUrl,
+  portalUrl,
+  correlationKey,
+}) => {
+  const eventByType = {
+    booking_confirmation: "created",
+    booking_received_pending: "pending",
+    booking_pending_updated: "pending_updated",
+    booking_rescheduled: "rescheduled",
+    booking_cancelled: "cancelled",
+    booking_reminder: "reminder",
+    management_link_requested: "management_link",
+  };
+  const event = eventByType[type];
+  if (!event || !recipient) return { sent: false, messageId: null };
+  if (!getEmailDeliveryHealth().configured || !canSendEmail()) {
+    const error = new Error("Email delivery is not configured.");
+    error.code = "EMAIL_CONFIGURATION_ERROR";
+    throw error;
+  }
+  const transporter = getTransporter();
+  if (type === "management_link_requested") {
+    if (recipientKind !== "client" || !managementUrl) {
+      const error = new Error("Management link notification payload is invalid.");
+      error.code = "EMAIL_CONFIGURATION_ERROR";
+      throw error;
+    }
+    const mail = {
+      from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+      to: recipient,
+      subject: "Tu enlace seguro para gestionar el turno",
+      html: buildManagementLinkEmailHtml({ booking, managementUrl }),
+      text: buildManagementLinkEmailText({ booking, managementUrl }),
+      attachments: buildMailAttachments(),
+    };
+    return {
+      send: async () => {
+        const info = await transporter.sendMail(mail);
+        return { sent: true, messageId: info?.messageId || null };
+      },
+    };
+  }
+  const dateStr = formatDate(booking.timeSlot);
+  const previousDateStr = previousTimeSlot ? formatDate(previousTimeSlot) : "";
+  // Message-ID provides traceability only. SMTP does not guarantee idempotent
+  // delivery; the outbox state machine owns duplicate prevention.
+  const messageId = /^[a-f0-9]{64}$/u.test(String(correlationKey || ""))
+    ? `<${correlationKey}@outbox.tuprofesorparticular.com.ar>`
+    : undefined;
+
+  if (recipientKind === "client") {
+    const [teacherAddress, teacherMapsUrl] = await Promise.all([
+      getSetting("teacher.address"),
+      getSetting("teacher.mapsUrl"),
+    ]);
+    const theme = getTheme(event);
+    const mailBooking = { ...booking, bookingCode: booking.bookingCode, managementUrl, portalUrl };
+    const mail = {
+      from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+      to: recipient,
+      subject: `${theme.clientTitle}: ${booking.subject || "Clase particular"} - ${dateStr}`,
+      html: buildBookingEmailHtml({
+        booking: mailBooking,
+        event,
+        dateStr,
+        previousDateStr,
+        managementUrl,
+        teacherAddress,
+        teacherMapsUrl,
+      }),
+      text: buildBookingEmailText({
+        booking: mailBooking,
+        event,
+        dateStr,
+        previousDateStr,
+        managementUrl,
+        teacherAddress,
+        teacherMapsUrl,
+      }),
+      attachments: buildMailAttachments(),
+      ...(messageId ? { messageId } : {}),
+    };
+    return {
+      send: async () => {
+        const info = await transporter.sendMail(mail);
+        return { sent: true, messageId: info?.messageId || messageId || null };
+      },
+    };
+  }
+
+  if (recipientKind !== "owner") return { sent: false, messageId: null };
+  const theme = getTheme(event);
+  const mail = {
+      from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+      to: recipient,
+      subject: `${theme.ownerTitle}: ${booking.studentName} · ${booking.subject || "Clase"} · ${dateStr}`,
+      html: buildOwnerEmailHtml({ booking, event, dateStr, previousDateStr }),
+      text: buildBookingEmailText({ booking, event, dateStr, previousDateStr }),
+      attachments: buildMailAttachments(),
+      ...(messageId ? { messageId } : {}),
+  };
+  return {
+    send: async () => {
+      try {
+        const info = await transporter.sendMail(mail);
+        return { sent: true, messageId: info?.messageId || messageId || null };
+      } catch (error) {
+        error.code ||= "EMAIL_PROVIDER_ERROR";
+        throw error;
+      }
+    },
+  };
+};
+
+export const sendNotificationOutboxMessage = async (payload) => {
+  const prepared = await prepareNotificationOutboxMessage(payload);
+  return prepared.send();
 };
