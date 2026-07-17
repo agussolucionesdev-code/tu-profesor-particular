@@ -42,7 +42,7 @@
   height: 100%;
   width: 40%;
   border-radius: 3px;
-  background: var(--brand-green, #589860);
+  background: var(--brand-green, #01953c);
   animation: barSlide 1.4s ease-in-out infinite;
 }
 

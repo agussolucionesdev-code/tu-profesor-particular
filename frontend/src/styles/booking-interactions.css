@@ -62,8 +62,8 @@
 
 /* Pulse del halo del CTA */
 @keyframes bi-cta-halo {
-  0%, 100% { box-shadow: 0 18px 40px rgba(32, 64, 96, 0.28), 0 0 0 0   rgba(88, 152, 96, 0); }
-  50%       { box-shadow: 0 22px 44px rgba(32, 64, 96, 0.36), 0 0 0 6px rgba(88, 152, 96, 0.1); }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(1, 149, 60, 0); }
+  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.1); }
 }
 
 /* Entrada en cascada de secciones de horario */
@@ -86,8 +86,8 @@
 
 /* Pulsación suave del banner activo */
 @keyframes bi-banner-pulse {
-  0%, 100% { box-shadow: 0 20px 40px rgba(15, 23, 42, 0.07), 0 0 0 4px rgba(88, 152, 96, 0.06); }
-  50%       { box-shadow: 0 24px 48px rgba(15, 23, 42, 0.1),  0 0 0 6px rgba(88, 152, 96, 0.12); }
+  0%, 100% { box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.06); }
+  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.12); }
 }
 
 /* =====================================================================
@@ -105,20 +105,16 @@
 
 /* Hover en día disponible: levitación + halo verde */
 .neuro-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected):not(.react-datepicker__day--outside-month):hover {
-  background: rgba(88, 152, 96, 0.13) !important;
-  color: var(--brand-green-deep, #4a8452) !important;
+  background: rgba(1, 149, 60, 0.13) !important;
+  color: var(--brand-green-deep, #006d1f) !important;
   transform: scale(1.14) !important;
-  box-shadow:
-    0 0 0 2.5px rgba(88, 152, 96, 0.3),
-    0 4px 12px rgba(88, 152, 96, 0.16) !important;
+  box-shadow: 0 0 0 2.5px rgba(1, 149, 60, 0.3);
 }
 
 /* Día hoy hover: mantener borde ámbar pero añadir lift */
 .neuro-calendar .react-datepicker__day.custom-today:not(.react-datepicker__day--selected):hover {
   transform: scale(1.12) !important;
-  box-shadow:
-    0 0 0 2.5px rgba(245, 158, 11, 0.45),
-    0 4px 12px rgba(245, 158, 11, 0.18) !important;
+  box-shadow: 0 0 0 2.5px rgba(245, 158, 11, 0.45);
 }
 
 /* Día seleccionado: pop animado */
@@ -171,12 +167,12 @@
   justify-content: space-between !important;
   padding-bottom: 0.7rem !important;
   margin-bottom: 0.9rem !important;
-  border-bottom: 1px solid rgba(88, 152, 96, 0.1) !important;
+  border-bottom: 1px solid rgba(1, 149, 60, 0.1) !important;
   gap: 0.5rem !important;
 }
 
 [data-theme="dark"] .slot-section-header {
-  border-bottom-color: rgba(114, 176, 122, 0.12) !important;
+  border-bottom-color: rgba(136, 206, 147, 0.12) !important;
 }
 
 .slot-section-header h4 {
@@ -199,23 +195,23 @@
 /* Pill de contador (N libres) */
 .slot-section-header > span {
   flex-shrink: 0;
-  background: rgba(88, 152, 96, 0.1) !important;
-  color: var(--brand-green-deep, #4a8452) !important;
+  background: rgba(1, 149, 60, 0.1) !important;
+  color: var(--brand-green-deep, #006d1f) !important;
   font-size: 0.66rem !important;
   font-weight: 900 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.07em !important;
   padding: 4px 11px !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(88, 152, 96, 0.22) !important;
+  border: 1px solid rgba(1, 149, 60, 0.22) !important;
   line-height: 1.4 !important;
   transition: background 0.2s ease !important;
 }
 
 [data-theme="dark"] .slot-section-header > span {
-  background: rgba(114, 176, 122, 0.12) !important;
+  background: rgba(136, 206, 147, 0.12) !important;
   color: #9fd0a4 !important;
-  border-color: rgba(114, 176, 122, 0.22) !important;
+  border-color: rgba(136, 206, 147, 0.22) !important;
 }
 
 /* Indicador visual de período por data-period */
@@ -279,7 +275,7 @@
   top: 0; left: 16px; right: 16px;
   height: 2px;
   border-radius: 0 0 2px 2px;
-  background: linear-gradient(90deg, transparent, rgba(88, 152, 96, 0.5), transparent);
+  background: rgba(1, 149, 60, 0.5);
   opacity: 0;
   transition: opacity 0.2s ease !important;
 }
@@ -295,25 +291,18 @@
   border-color: var(--bi-slot-hover-border) !important;
   color: var(--bi-slot-avail-color) !important;
   transform: translateY(-4px) scale(1.04) !important;
-  box-shadow:
-    0 8px 22px rgba(88, 152, 96, 0.2),
-    0 2px 6px  rgba(88, 152, 96, 0.12) !important;
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
 }
 
 /* Estado SELECCIONADO */
 .slot-stage-shell .slot-btn.selected,
 .booking-page-wrapper .slot-stage-shell .slot-btn.selected {
-  background: linear-gradient(148deg,
-    var(--bi-slot-sel-from) 0%,
-    var(--bi-slot-sel-to) 100%) !important;
+  background: var(--bi-slot-sel-from) !important;
   color: #ffffff !important;
   border: none !important;
-  outline: 3px solid rgba(88, 152, 96, 0.35) !important;
+  outline: 3px solid rgba(1, 149, 60, 0.35) !important;
   outline-offset: 2px !important;
-  box-shadow:
-    0 10px 28px rgba(32, 64, 96, 0.38),
-    0 3px 8px   rgba(32, 64, 96, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
   animation: bi-slot-select 0.42s var(--bi-ease-spring) forwards !important;
 }
 
@@ -383,7 +372,7 @@
 
 /* Focus ring accesible */
 .slot-stage-shell .slot-btn:focus-visible {
-  outline: 3px solid rgba(88, 152, 96, 0.55) !important;
+  outline: 3px solid rgba(1, 149, 60, 0.55) !important;
   outline-offset: 3px !important;
 }
 
@@ -418,15 +407,10 @@
 
 /* Estado LISTO — CTA vivo */
 .btn-stage-next.is-ready {
-  background: linear-gradient(138deg,
-    var(--bi-cta-from) 0%,
-    var(--bi-cta-to) 100%) !important;
+  background: var(--bi-cta-from) !important;
   color: #ffffff !important;
   border: none !important;
-  box-shadow:
-    0 16px 36px rgba(15, 23, 42, 0.3),
-    0 4px 10px  rgba(15, 23, 42, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
   animation:
     bi-cta-reveal 0.48s var(--bi-ease-spring) both,
     bi-cta-halo   3.2s ease-in-out 0.6s infinite !important;
@@ -439,10 +423,7 @@
   top: 0; bottom: 0;
   left: -110%;
   width: 55%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.06) 50%,
-    transparent 100%);
+  background: rgba(255, 255, 255, 0.06);
   animation: bi-shine 2.8s ease-in-out 1s infinite !important;
   pointer-events: none;
 }
@@ -451,10 +432,7 @@
 .btn-stage-next.is-ready:hover,
 .btn-stage-next.is-ready:focus-visible {
   transform: translateY(-3px) !important;
-  box-shadow:
-    0 20px 44px rgba(15, 23, 42, 0.38),
-    0 6px 14px  rgba(15, 23, 42, 0.22),
-    0 0 0 4px rgba(88, 152, 96, 0.14) !important;
+  box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.14) !important;
   animation: bi-cta-reveal 0.48s var(--bi-ease-spring) both !important; /* pausa el halo en hover */
 }
 
@@ -482,26 +460,24 @@
 
 .stage-sidebar-cards .selection-insight-card:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
 }
 
 [data-theme="dark"] .stage-sidebar-cards .selection-insight-card:hover {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
 }
 
 /* Tarjeta "accent" (Próximo paso) — brillo suave */
 .stage-sidebar-cards .selection-insight-card.accent {
   background:
-    radial-gradient(circle at top right, rgba(88, 152, 96, 0.12), transparent 38%),
-    linear-gradient(135deg, rgba(88, 152, 96, 0.08) 0%, rgba(255,255,255,0.98) 100%) !important;
-  border-color: rgba(88, 152, 96, 0.2) !important;
+    rgba(1, 149, 60, 0.08) !important;
+  border-color: rgba(1, 149, 60, 0.2) !important;
 }
 
 [data-theme="dark"] .stage-sidebar-cards .selection-insight-card.accent {
   background:
-    radial-gradient(circle at top right, rgba(114, 176, 122, 0.14), transparent 38%),
-    linear-gradient(135deg, rgba(114, 176, 122, 0.1) 0%, rgba(13, 26, 41, 0.96) 100%) !important;
-  border-color: rgba(114, 176, 122, 0.2) !important;
+    rgba(136, 206, 147, 0.1) !important;
+  border-color: rgba(136, 206, 147, 0.2) !important;
 }
 
 /* =====================================================================
@@ -515,7 +491,7 @@
 
 .stage-actions-mobile .btn-neuro-primary.btn-ready:hover {
   transform: translateY(-3px) !important;
-  box-shadow: 0 14px 30px rgba(32, 64, 96, 0.3) !important;
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 /* =====================================================================

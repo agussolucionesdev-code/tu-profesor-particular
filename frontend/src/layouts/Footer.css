@@ -50,13 +50,8 @@
   transform: translateX(-50%);
   width: 80%;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--ft-primary),
-    transparent
-  );
-  box-shadow: 0 0 30px var(--ft-primary);
+  background: var(--ft-primary);
+  box-shadow: none;
   opacity: 0.6;
 }
 
@@ -95,11 +90,7 @@
   position: absolute;
   width: 130%;
   height: 130%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.15) 0%,
-    transparent 65%
-  );
+  background: none;
   z-index: 0;
   border-radius: 50%;
   pointer-events: none;
@@ -112,24 +103,15 @@
   width: 100%;
   height: auto;
   object-fit: contain;
-  /* Drop Shadow blanco muy sutil para despegar el compás oscuro del fondo */
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2))
-    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
   transition: var(--transition-smooth);
 }
 
 .logo-premium-wrapper:hover::before {
-  background: radial-gradient(
-    circle,
-    rgba(16, 185, 129, 0.2) 0%,
-    transparent 70%
-  );
+  background: none;
   transform: scale(1.1);
 }
 .logo-premium-wrapper:hover .logo-img-transparent {
   transform: scale(1.05);
-  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.4))
-    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
 }
 /* ======================================================================= */
 
@@ -255,7 +237,7 @@
 .footer-link-item:hover .link-icon-box {
   background: var(--ft-primary);
   color: white;
-  box-shadow: 0 4px 10px var(--ft-primary-glow);
+  box-shadow: 0 0 0 1px var(--ft-primary-glow);
 }
 .footer-link-item:hover .link-arrow {
   opacity: 1;
@@ -327,7 +309,7 @@
 .contact-card.wp-card:hover .contact-icon {
   background: #25d366;
   color: white;
-  box-shadow: 0 5px 15px rgba(37, 211, 102, 0.2);
+  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.22);
 }
 .contact-card.wp-card:hover .contact-value {
   color: #25d366;
@@ -336,7 +318,7 @@
 .contact-card.email-card:hover .contact-icon {
   background: var(--ft-primary);
   color: white;
-  box-shadow: 0 5px 15px var(--ft-primary-glow);
+  box-shadow: 0 0 0 1px var(--ft-primary-glow);
 }
 .contact-card.email-card:hover .contact-value {
   color: var(--text-pure);
@@ -345,7 +327,7 @@
 .contact-card.location-card:hover .contact-icon {
   background: #3b82f6;
   color: white;
-  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.22);
 }
 .contact-card.location-card:hover .contact-value {
   color: #3b82f6;
@@ -406,23 +388,16 @@
   color: white;
 }
 .social-bubble.insta:hover {
-  background: linear-gradient(
-    45deg,
-    #f09433,
-    #e6683c,
-    #dc2743,
-    #cc2366,
-    #bc1888
-  );
-  box-shadow: 0 8px 20px rgba(225, 48, 108, 0.3);
+  background: #f09433;
+  box-shadow: 0 0 0 1px rgba(225, 48, 108, 0.22);
 }
 .social-bubble.fb:hover {
   background: #1877f2;
-  box-shadow: 0 8px 20px rgba(24, 119, 242, 0.3);
+  box-shadow: 0 0 0 1px rgba(24, 119, 242, 0.22);
 }
 .social-bubble.in:hover {
   background: #0a66c2;
-  box-shadow: 0 8px 20px rgba(10, 102, 194, 0.3);
+  box-shadow: 0 0 0 1px rgba(10, 102, 194, 0.22);
 }
 
 /* =========================================
@@ -460,13 +435,13 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-  box-shadow: 0 10px 25px var(--ft-primary-glow);
+  box-shadow: 0 0 0 1px var(--ft-primary-glow);
 }
 
 .btn-up-floating:hover {
   background: var(--ft-primary-dark);
   transform: translateY(-5px);
-  box-shadow: 0 15px 35px var(--ft-primary-glow);
+  box-shadow: 0 0 0 1px var(--ft-primary-glow);
 }
 
 /* =========================================

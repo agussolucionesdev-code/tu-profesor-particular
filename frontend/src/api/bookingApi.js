@@ -94,11 +94,22 @@ export const fetchStudentById = (id, authConfig, signal) =>
     signal,
   });
 
+export const fetchAdminNotifications = (params, authConfig, signal) =>
+  apiClient.get("/api/notifications", {
+    ...authConfig,
+    params,
+    signal,
+  });
+
+export const retryAdminNotification = (id, authConfig) =>
+  apiClient.post(
+    `/api/notifications/${encodeURIComponent(id)}/retry`,
+    {},
+    authConfig,
+  );
+
 export const deleteBooking = (id, authConfig) =>
   apiClient.delete(`/api/bookings/${id}`, authConfig);
-
-export const deleteAllBookings = (authConfig) =>
-  apiClient.delete("/api/bookings/all", authConfig);
 
 export const loginAdmin = (credentials) =>
   apiClient.post("/api/auth/login", credentials);

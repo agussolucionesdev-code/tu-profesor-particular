@@ -1,0 +1,402 @@
+/* ==========================================================================
+   BookingKiosk — flujo de reserva estilo kiosco de autoservicio.
+   Diseño plano: color sólido + borde de 1px + espaciado. Sin degradados ni
+   sombras difusas. Colores desde los tokens de marca (logo).
+   ========================================================================== */
+
+.kiosk-wrapper {
+  min-height: 100vh;
+  padding: clamp(6.5rem, 9vw, 8rem) 1rem 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--bg-page);
+}
+
+.kiosk-card {
+  width: min(100%, 760px);
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.kiosk-card-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.kiosk-portal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brand-navy);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+}
+.kiosk-portal-link:hover { background: var(--brand-navy-50); }
+
+/* ── Stepper honesto ─────────────────────────────────────────────────────── */
+.kiosk-stepper {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+.kiosk-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+.kiosk-step.is-done { cursor: pointer; }
+.kiosk-step-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-tertiary);
+  background: var(--surface-card);
+}
+.kiosk-step.is-current .kiosk-step-dot {
+  background: var(--brand-navy);
+  border-color: var(--brand-navy);
+  color: #fff;
+}
+.kiosk-step.is-done .kiosk-step-dot {
+  background: var(--brand-green);
+  border-color: var(--brand-green);
+  color: #fff;
+}
+.kiosk-step-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.kiosk-step.is-current .kiosk-step-label { color: var(--brand-navy); }
+.kiosk-step.is-done .kiosk-step-label { color: var(--brand-green-600); }
+.kiosk-step:focus-visible { outline: none; }
+.kiosk-step:focus-visible .kiosk-step-dot { box-shadow: var(--shadow-focus); }
+
+/* ── Títulos ─────────────────────────────────────────────────────────────── */
+.kiosk-title {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+.kiosk-subtitle {
+  font-size: 0.98rem;
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem;
+}
+.kiosk-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.kiosk-title-row .kiosk-subtitle { margin-bottom: 0; }
+
+/* ── Grillas de tarjetas ─────────────────────────────────────────────────── */
+.kiosk-grid { display: grid; gap: 0.75rem; }
+.kiosk-grid-levels { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.kiosk-grid-subjects { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.kiosk-grid-modality { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+.kiosk-choice-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: left;
+  padding: 1.1rem 1.15rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.kiosk-choice-card:hover {
+  border-color: var(--brand-green);
+  background: var(--brand-green-50);
+}
+.kiosk-choice-card:active { transform: translateY(1px); }
+.kiosk-choice-card:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kiosk-choice-card.is-selected {
+  border-color: var(--brand-navy);
+  background: var(--brand-navy-50);
+}
+.kiosk-choice-compact { padding: 0.85rem 1rem; }
+
+.kiosk-choice-label {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.kiosk-choice-compact .kiosk-choice-label { font-size: 0.98rem; }
+.kiosk-choice-hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.kiosk-choice-icon {
+  font-size: 1.6rem;
+  color: var(--brand-green-600);
+  margin-bottom: 0.25rem;
+}
+.kiosk-choice-modality {
+  align-items: flex-start;
+  padding: 1.4rem 1.25rem;
+}
+
+/* ── Chips (duración) ────────────────────────────────────────────────────── */
+.kiosk-field-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: 1.25rem 0 0.6rem;
+}
+.kiosk-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.kiosk-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background: var(--surface-card);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.kiosk-chip:hover { border-color: var(--brand-green); }
+.kiosk-chip:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kiosk-chip.is-selected {
+  border-color: var(--brand-navy);
+  background: var(--brand-navy);
+  color: #fff;
+}
+.kiosk-chip-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-green);
+  color: #fff;
+}
+.kiosk-chip.is-selected .kiosk-chip-tag { background: rgba(255, 255, 255, 0.24); }
+
+/* ── Turnos ──────────────────────────────────────────────────────────────── */
+.kiosk-day-group { margin-bottom: 1.1rem; }
+.kiosk-day-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--brand-navy);
+  text-transform: capitalize;
+  margin-bottom: 0.5rem;
+}
+.kiosk-slots { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.kiosk-slot {
+  min-width: 74px;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-base);
+  background: var(--surface-card);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.kiosk-slot:hover { border-color: var(--brand-green); background: var(--brand-green-50); }
+.kiosk-slot:active { transform: translateY(1px); }
+.kiosk-slot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.kiosk-slot-more { font-size: 0.85rem; color: var(--text-tertiary); }
+
+/* ── Formulario ──────────────────────────────────────────────────────────── */
+.kiosk-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.kiosk-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.kiosk-field .kiosk-field-label { margin: 0; }
+.kiosk-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-base);
+  background: var(--input-bg);
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.kiosk-input:focus-visible { outline: none; border-color: var(--brand-green); box-shadow: var(--shadow-focus); }
+.kiosk-input.is-valid { border-color: var(--brand-green); }
+.kiosk-input.error { border-color: var(--error-color); }
+.kiosk-textarea { resize: vertical; min-height: 76px; }
+
+.kiosk-adult-toggle { margin: 0.5rem 0 1rem; }
+.kiosk-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.kiosk-check input { width: 18px; height: 18px; accent-color: var(--brand-green); }
+
+/* ── Resumen final ───────────────────────────────────────────────────────── */
+.kiosk-summary {
+  margin: 0 0 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.kiosk-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.kiosk-summary > div:last-child { border-bottom: none; }
+.kiosk-summary dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.kiosk-summary dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+  text-transform: capitalize;
+}
+
+/* ── Navegación ──────────────────────────────────────────────────────────── */
+.kiosk-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+.kiosk-nav:only-child { margin-top: 0; }
+.kiosk-back,
+.kiosk-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 0.98rem;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  padding: 0.75rem 1.4rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.kiosk-back {
+  background: none;
+  border: 1.5px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.kiosk-back:hover { border-color: var(--brand-navy); color: var(--brand-navy); }
+.kiosk-primary {
+  background: var(--brand-green);
+  border: 1.5px solid var(--brand-green);
+  color: #fff;
+  margin-left: auto;
+}
+.kiosk-primary:hover:not(:disabled) { background: var(--brand-green-deep); border-color: var(--brand-green-deep); }
+.kiosk-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.kiosk-confirm { padding: 0.8rem 1.8rem; }
+.kiosk-back:focus-visible,
+.kiosk-primary:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* ── Utilidades ──────────────────────────────────────────────────────────── */
+.kiosk-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--brand-green-600);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.3rem 0;
+}
+.kiosk-inline-btn:hover { text-decoration: underline; }
+.kiosk-more-days { margin-top: 0.5rem; }
+.kiosk-muted { color: var(--text-secondary); font-size: 0.95rem; }
+.kiosk-empty { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+.kiosk-error {
+  color: var(--error-color);
+  background: var(--error-bg);
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius-base);
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+.kiosk-toast {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-140%);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(92vw, 440px);
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  border: 1px solid var(--border-color);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  opacity: 0;
+}
+.kiosk-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.kiosk-toast-icon { font-size: 1.25rem; flex-shrink: 0; }
+.kiosk-toast.success .kiosk-toast-icon { color: var(--brand-green-600); }
+.kiosk-toast.warning .kiosk-toast-icon { color: var(--warning-color); }
+.kiosk-toast.error .kiosk-toast-icon { color: var(--error-color); }
+.kiosk-toast.info .kiosk-toast-icon { color: var(--brand-navy); }
+.kiosk-toast-copy { display: flex; flex-direction: column; gap: 0.1rem; }
+.kiosk-toast-copy strong { font-size: 0.92rem; color: var(--text-primary); }
+.kiosk-toast-copy span { font-size: 0.85rem; color: var(--text-secondary); }
+
+@media (max-width: 560px) {
+  .kiosk-step-label { display: none; }
+  .kiosk-nav { flex-direction: row; }
+}

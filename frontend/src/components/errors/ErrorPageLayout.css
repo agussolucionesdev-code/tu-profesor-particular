@@ -12,14 +12,14 @@
   text-align: center;
   font-family: var(--font-primary, "Inter", system-ui, sans-serif);
   background: var(--color-bg-light, #eef3f9);
-  color: var(--color-text-primary, #0d2238);
+  color: var(--color-text-primary, #00214c);
 }
 
 .error-page-illustration {
   width: 220px;
   height: 220px;
   margin-bottom: 1.75rem;
-  color: var(--brand-navy, #204060);
+  color: var(--brand-navy, #00214c);
   opacity: 0.85;
 }
 
@@ -32,7 +32,7 @@
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--brand-navy, #204060);
+  color: var(--brand-navy, #00214c);
   line-height: 1.2;
 }
 
@@ -73,19 +73,19 @@
 }
 
 .error-page-btn:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 
 .error-page-btn--primary {
   border: none;
-  background: var(--brand-navy, #204060);
+  background: var(--brand-navy, #00214c);
   color: #fff;
 }
 
 .error-page-btn--primary:hover {
   background: #183350;
-  box-shadow: 0 4px 16px rgba(32, 64, 96, 0.3);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 .error-page-btn--secondary {
@@ -96,8 +96,8 @@
 
 .error-page-btn--secondary:hover {
   background: var(--color-surface-2, #f1f5f9);
-  border-color: var(--brand-navy, #204060);
-  color: var(--brand-navy, #204060);
+  border-color: var(--brand-navy, #00214c);
+  color: var(--brand-navy, #00214c);
 }
 
 .error-page-code {
@@ -116,7 +116,7 @@
 }
 
 [data-theme="dark"] .error-page-illustration {
-  color: var(--brand-green, #589860);
+  color: var(--brand-green, #01953c);
   opacity: 0.75;
 }
 
@@ -129,11 +129,11 @@
 }
 
 [data-theme="dark"] .error-page-btn--primary {
-  background: var(--brand-green, #589860);
+  background: var(--brand-green, #01953c);
 }
 
 [data-theme="dark"] .error-page-btn--primary:hover {
-  background: #4a8452;
+  background: #006d1f;
 }
 
 [data-theme="dark"] .error-page-btn--secondary {
@@ -143,8 +143,8 @@
 
 [data-theme="dark"] .error-page-btn--secondary:hover {
   background: var(--color-surface-2, #1e293b);
-  border-color: var(--brand-green, #589860);
-  color: var(--brand-green, #589860);
+  border-color: var(--brand-green, #01953c);
+  color: var(--brand-green, #01953c);
 }
 
 /* ── Mobile ── */

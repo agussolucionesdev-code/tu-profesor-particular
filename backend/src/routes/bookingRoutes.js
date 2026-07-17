@@ -44,9 +44,9 @@ router.get("/stats", requireAdmin, getBookingStats);
 router.get("/admin/availability", requireAdmin, getAdminAvailability);
 router.get("/", requireAdmin, getAllBookings);
 router.post("/", requireAdmin, createAdminBooking);
-if (process.env.NODE_ENV !== "production") {
-  router.delete("/all", requireAdmin, deleteAllBookings);
-}
+// Keep this explicit tombstone before /:id in every environment. Otherwise
+// production interprets "all" as a booking id and changes the API contract.
+router.delete("/all", requireAdmin, deleteAllBookings);
 router.delete("/:id", requireAdmin, deleteBooking);
 router.post("/:id/restore", requireAdmin, restoreBooking);
 router.patch("/:id/attendance", requireAdmin, updateBookingAttendance);

@@ -37,6 +37,7 @@ const BookingsView = lazy(() => import("./admin/views/BookingsView"));
 const AvailabilitySettingsView = lazy(() => import("./admin/views/AvailabilitySettingsView"));
 const ScheduleSettingsView = lazy(() => import("./admin/views/ScheduleSettingsView"));
 const HistoryView = lazy(() => import("./admin/views/HistoryView"));
+const NotificationsView = lazy(() => import("./admin/views/NotificationsView"));
 import { SkeletonKPI } from "./admin/shared/Skeleton";
 import ThemeLogo from "./ui/ThemeLogo";
 import "../styles/tokens.css";
@@ -51,6 +52,7 @@ const VIEW_OPTIONS = [
   { id: "students", label: "Alumnos", icon: FaUsers },
   { id: "bookings", label: "Turnos", icon: FaClipboardList },
   { id: "history", label: "Historial", icon: FaHistory },
+  { id: "notifications", label: "Notificaciones", icon: FaBell },
   { id: "availability", label: "Disponibilidad", icon: FaBan },
   { id: "settings", label: "Ajustes", icon: FaCog },
 ];
@@ -82,7 +84,6 @@ const AdminPanel = () => {
     updateBookingFields,
     updateBookingAttendance,
     deleteBooking,
-    deleteAllBookings,
     clearBookings,
   } = useBookingsData({
     authConfig,
@@ -484,7 +485,6 @@ const AdminPanel = () => {
               onSelectBooking={setViewBooking}
               onEditBooking={openEditBooking}
               onDeleteBooking={deleteBooking}
-              onDeleteAll={deleteAllBookings}
               onQuickStatusChange={handleQuickStatusChange}
               onInteractionStateChange={setBulkInteractionActive}
             />
@@ -498,6 +498,10 @@ const AdminPanel = () => {
               onSendWhatsApp={handleSendWhatsApp}
               onSelectBooking={setViewBooking}
             />
+          )}
+
+          {activeView === "notifications" && (
+            <NotificationsView authConfig={authConfig} />
           )}
 
           {activeView === "availability" && (
@@ -538,6 +542,7 @@ const AdminPanel = () => {
               {[
                 { id: "students", label: "Alumnos", icon: FaUsers },
                 { id: "history", label: "Historial", icon: FaHistory },
+                { id: "notifications", label: "Notificaciones", icon: FaBell },
                 { id: "availability", label: "Disponibilidad", icon: FaBan },
               ].map((item) => {
                 const Icon = item.icon;

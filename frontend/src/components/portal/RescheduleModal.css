@@ -27,9 +27,7 @@
   background: var(--surface-card, #fff);
   border: 1px solid var(--border-soft, #e2e8f0);
   border-radius: 16px;
-  box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.18),
-    0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
   outline: none;
   overflow: hidden;
 }
@@ -51,8 +49,8 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  background: rgba(88, 152, 96, 0.12);
-  color: var(--accent-primary, #589860);
+  background: rgba(1, 149, 60, 0.12);
+  color: var(--accent-primary, #01953c);
   font-size: 0.9375rem;
   flex-shrink: 0;
 }
@@ -98,7 +96,7 @@
 }
 
 .reschedule-close-btn:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 
@@ -182,14 +180,14 @@
 
 .reschedule-datepicker .react-datepicker__day--selected,
 .reschedule-datepicker .react-datepicker__day--keyboard-selected {
-  background: var(--brand-navy, #204060) !important;
+  background: var(--brand-navy, #00214c) !important;
   color: var(--brand-white) !important;
   border-radius: 6px;
 }
 
 .reschedule-datepicker .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
-  background: rgba(88, 152, 96, 0.12);
-  color: var(--accent-primary, #589860);
+  background: rgba(1, 149, 60, 0.12);
+  color: var(--accent-primary, #01953c);
 }
 
 .reschedule-datepicker .react-datepicker__day--disabled {
@@ -309,14 +307,14 @@
 }
 
 .reschedule-slot-btn:hover:not(:disabled) {
-  border-color: var(--accent-primary, #589860);
-  color: var(--accent-primary, #589860);
-  background: rgba(88, 152, 96, 0.06);
+  border-color: var(--accent-primary, #01953c);
+  color: var(--accent-primary, #01953c);
+  background: rgba(1, 149, 60, 0.06);
 }
 
 .reschedule-slot-btn--selected {
-  border-color: var(--accent-primary, #589860);
-  background: var(--accent-primary, #589860);
+  border-color: var(--accent-primary, #01953c);
+  background: var(--accent-primary, #01953c);
   color: var(--brand-white);
 }
 
@@ -331,7 +329,7 @@
 }
 
 .reschedule-slot-btn:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 
@@ -365,14 +363,14 @@
 }
 
 .reschedule-duration-btn:hover {
-  border-color: var(--accent-primary, #589860);
-  color: var(--accent-primary, #589860);
-  background: rgba(88, 152, 96, 0.06);
+  border-color: var(--accent-primary, #01953c);
+  color: var(--accent-primary, #01953c);
+  background: rgba(1, 149, 60, 0.06);
 }
 
 .reschedule-duration-btn--active {
-  border-color: var(--accent-primary, #589860);
-  background: var(--accent-primary, #589860);
+  border-color: var(--accent-primary, #01953c);
+  background: var(--accent-primary, #01953c);
   color: var(--brand-white);
 }
 
@@ -382,7 +380,7 @@
 }
 
 .reschedule-duration-btn:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 
@@ -456,13 +454,13 @@
 
 .reschedule-btn-confirm {
   border: none;
-  background: var(--brand-navy, #204060);
+  background: var(--brand-navy, #00214c);
   color: var(--brand-white);
 }
 
 .reschedule-btn-confirm:hover:not(:disabled) {
   background: var(--brand-navy-ink);
-  box-shadow: 0 2px 8px rgba(32, 64, 96, 0.35);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 .reschedule-btn-confirm:disabled {
@@ -472,7 +470,7 @@
 
 .reschedule-btn-cancel:focus-visible,
 .reschedule-btn-confirm:focus-visible {
-  outline: 2px solid var(--brand-navy, #204060);
+  outline: 2px solid var(--brand-navy, #00214c);
   outline-offset: 2px;
 }
 
@@ -507,7 +505,7 @@
 }
 
 [data-theme="dark"] .reschedule-header-icon {
-  background: rgba(88, 152, 96, 0.18);
+  background: rgba(1, 149, 60, 0.18);
 }
 
 [data-theme="dark"] .reschedule-slot-btn {
@@ -516,7 +514,7 @@
 }
 
 [data-theme="dark"] .reschedule-slot-btn:hover:not(:disabled) {
-  background: rgba(88, 152, 96, 0.1);
+  background: rgba(1, 149, 60, 0.1);
 }
 
 [data-theme="dark"] .reschedule-duration-btn {

@@ -1,14 +1,33 @@
 import "dotenv/config";
-import cron from "node-cron";
 import app from "./src/app.js";
 import connectDB, { disconnectDB } from "./src/config/db.js";
 import { ensureConfiguredAdmin } from "./src/config/adminSeed.js";
-import { processReminders } from "./src/services/reminderService.js";
-import Booking from "./src/models/Booking.js";
+import { createReminderRunner, processReminders } from "./src/services/reminderService.js";
+import {
+  createNotificationOutboxRunner,
+  processNotificationOutbox,
+} from "./src/services/notificationOutboxService.js";
+import { assertNotificationEncryptionConfigured } from "./src/services/notificationPayloadCrypto.js";
+import {
+  createManagementLinkRequestRunner,
+  processBlindManagementLinkRequests,
+} from "./src/services/managementLinkRequestService.js";
+import { refreshEmailDeliveryHealth } from "./src/config/mailer.js";
+import { autoFinalizeBookings } from "./src/services/bookingLifecycleService.js";
 import {
   createStudentLinkReconciler,
   processPendingStudentLinks,
 } from "./src/services/studentLinkWorker.js";
+import {
+  createRuntimeScheduler,
+  registerPendingAuditReconciliationJob,
+  stopRuntimeScheduler,
+} from "./src/services/runtimeScheduler.js";
+import { reconcilePendingBookingAudits } from "./src/services/auditService.js";
+import {
+  createRetrySagaRunner,
+  reconcileRetrySagas,
+} from "./src/controllers/notificationController.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const REQUEST_TIMEOUT_MS = Number(process.env.SERVER_REQUEST_TIMEOUT_MS || 15000);
@@ -17,6 +36,9 @@ const KEEP_ALIVE_TIMEOUT_MS = Number(process.env.SERVER_KEEP_ALIVE_TIMEOUT_MS ||
 
 let server = null;
 let shuttingDown = false;
+let notificationOutboxRunner = null;
+let managementLinkRequestRunner = null;
+const runtimeScheduler = createRuntimeScheduler({ trackReadiness: true });
 
 const logServerBanner = () => {
   console.log("==================================================");
@@ -52,6 +74,11 @@ const shutdown = async (signal, exitCode = 0) => {
   console.warn(`SERVER: shutdown requested by ${signal}`);
 
   try {
+    const drained = await stopRuntimeScheduler({
+      scheduler: runtimeScheduler,
+      timeoutMs: 25_000,
+    });
+    if (!drained) console.warn("WORKER: notification outbox drain timed out; persisted delivery phase will govern recovery.");
     await closeServer();
     await disconnectDB();
     process.exit(exitCode);
@@ -79,6 +106,7 @@ const connectWithRetry = async (maxAttempts = 5, delayMs = 5000) => {
 };
 
 const launch = async () => {
+  assertNotificationEncryptionConfigured();
   // Start listening immediately so Render's health check can reach /health
   // while we attempt the database connection in the background.
   server = app.listen(PORT, () => {
@@ -87,6 +115,20 @@ const launch = async () => {
   server.requestTimeout = REQUEST_TIMEOUT_MS;
   server.headersTimeout = Math.max(HEADERS_TIMEOUT_MS, REQUEST_TIMEOUT_MS + 1000);
   server.keepAliveTimeout = KEEP_ALIVE_TIMEOUT_MS;
+
+  const probeEmailDelivery = async () => {
+    const health = await refreshEmailDeliveryHealth({ force: true });
+    if (!health.configured) {
+      console.warn(`EMAIL: SMTP verification is ${health.status}.`);
+    }
+    return health;
+  };
+  runtimeScheduler.register({
+    name: "SMTP delivery health",
+    expression: "*/5 * * * *",
+    task: probeEmailDelivery,
+    runInitially: true,
+  });
 
   try {
     await connectWithRetry(5, 5000);
@@ -102,39 +144,80 @@ const launch = async () => {
         return { processed: 0, failed: 1 };
       }
     } });
-    await reconcileStudentLinks();
-    cron.schedule("* * * * *", reconcileStudentLinks);
-    console.log("WORKER: durable Student link reconciliation scheduled every minute.");
-
-    // Daily reminder: runs at 09:00 AM local time.
-    // Finds confirmed bookings with email that start 20–28 hours from now
-    // and sends a "tu clase es mañana" notification.
-    cron.schedule("0 9 * * *", async () => {
-      console.log("CRON: running daily reminder check...");
-      try {
-        await processReminders();
-      } catch (err) {
-        console.error("CRON: reminder job error:", err.message);
-      }
+    runtimeScheduler.register({
+      name: "Student link reconciliation",
+      expression: "* * * * *",
+      task: reconcileStudentLinks,
+      runInitially: true,
     });
-    console.log("CRON: daily reminder scheduled for 09:00 AM.");
+
+    registerPendingAuditReconciliationJob({
+      scheduler: runtimeScheduler,
+      reconcile: reconcilePendingBookingAudits,
+    });
+
+    // Durable delivery runs frequently; reminder intents themselves are scheduled
+    // for exactly 24 hours before each class and survive process restarts.
+    notificationOutboxRunner = createNotificationOutboxRunner({
+      processor: processNotificationOutbox,
+    });
+    runtimeScheduler.register({
+      name: "notification outbox",
+      expression: "* * * * *",
+      task: notificationOutboxRunner,
+      options: { timezone: "America/Argentina/Buenos_Aires" },
+      runInitially: true,
+    });
+
+    managementLinkRequestRunner = createManagementLinkRequestRunner({
+      processor: processBlindManagementLinkRequests,
+    });
+    runtimeScheduler.register({
+      name: "blind management-link requests",
+      expression: "* * * * *",
+      task: managementLinkRequestRunner,
+      runInitially: true,
+    });
+
+    const runReminders = createReminderRunner({ processor: processReminders });
+    runtimeScheduler.register({
+      name: "reminder intent reconciliation",
+      expression: "0 */6 * * *",
+      task: async () => {
+      console.log("CRON: reconciling durable reminder intents...");
+        await runReminders();
+      },
+      options: { timezone: "America/Argentina/Buenos_Aires" },
+      runInitially: true,
+    });
+
+    const retrySagaRunner = createRetrySagaRunner({ processor: reconcileRetrySagas });
+    runtimeScheduler.register({
+      name: "notification retry saga reconciliation",
+      expression: "* * * * *",
+      task: retrySagaRunner,
+      runInitially: true,
+    });
 
     // Hourly: auto-finalize confirmed bookings whose end time has passed
-    cron.schedule("0 * * * *", async () => {
+    runtimeScheduler.register({
+      name: "booking auto-finalize",
+      expression: "0 * * * *",
+      task: async () => {
       try {
         const now = new Date();
-        const result = await Booking.updateMany(
-          { status: "Confirmado", endTime: { $lt: now } },
-          { $set: { status: "Finalizado" } },
-        );
-        if (result.modifiedCount > 0) {
-          console.log(`CRON: auto-finalized ${result.modifiedCount} booking(s).`);
+        const finalized = await autoFinalizeBookings({ now });
+        if (finalized > 0) {
+          console.log(`CRON: auto-finalized ${finalized} booking(s).`);
         }
       } catch (err) {
         console.error("CRON: auto-finalize job error:", err.message);
       }
+      },
     });
-    console.log("CRON: auto-finalize scheduled every hour.");
+    runtimeScheduler.startInitialRuns().catch((error) => {
+      console.error(`RUNTIME: initial jobs failed: ${error.message}`);
+    });
   } catch (error) {
     // DB connection exhausted all retries. The server stays alive so Render
     // keeps it running — a misconfigured MONGO_URI or a paused Atlas cluster

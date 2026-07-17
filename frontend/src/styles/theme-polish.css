@@ -74,11 +74,11 @@ body {
 }
 
 .navbar-elite {
-  box-shadow: 0 10px 34px rgba(19, 41, 64, 0.06);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
 }
 
 [data-theme="dark"] .navbar-elite {
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .nav-link-btn {
@@ -88,17 +88,15 @@ body {
 }
 
 .nav-link-btn.active {
-  box-shadow:
-    inset 0 0 0 1px rgba(88, 152, 96, 0.24),
-    0 10px 22px rgba(19, 41, 64, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(1, 149, 60, 0.24);
 }
 
 [data-theme="dark"] .nav-link-btn.active {
-  box-shadow: inset 0 0 0 1px rgba(114, 176, 122, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(136, 206, 147, 0.28);
 }
 
 .navbar-utility-cluster {
-  box-shadow: 0 14px 30px rgba(19, 41, 64, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
 }
 
 .booking-page-wrapper {
@@ -187,16 +185,16 @@ body {
 
 [data-theme="dark"] .neuro-toggle-wrapper.active-box {
   background: var(--color-surface-2);
-  border-color: rgba(114, 176, 122, 0.26);
+  border-color: rgba(136, 206, 147, 0.26);
 }
 
 [data-theme="dark"] .toggle-pill {
-  background: rgba(171, 195, 217, 0.12);
+  background: rgba(204, 217, 235, 0.12);
   color: #c5d4e2;
 }
 
 [data-theme="dark"] .toggle-pill.active {
-  background: rgba(114, 176, 122, 0.18);
+  background: rgba(136, 206, 147, 0.18);
   color: #d8f0dc;
 }
 
@@ -212,11 +210,11 @@ body {
 }
 
 [data-theme="dark"] .toggle-control-shell {
-  border-top-color: rgba(171, 195, 217, 0.12);
+  border-top-color: rgba(204, 217, 235, 0.12);
 }
 
 [data-theme="dark"] .select-input-wrapper::after {
-  background: rgba(171, 195, 217, 0.18);
+  background: rgba(204, 217, 235, 0.18);
 }
 
 .stepper-nav-hint,
@@ -247,7 +245,7 @@ body {
 }
 
 .stepper-item.is-locked {
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(241, 245, 249, 0.98));
+  background: rgba(248, 250, 252, 0.96);
 }
 
 [data-theme="dark"] .stepper-nav-hint,
@@ -275,7 +273,7 @@ body {
 
 [data-theme="dark"] .stepper-item.is-completed {
   background: var(--color-surface-1);
-  border-color: rgba(114, 176, 122, 0.24);
+  border-color: rgba(136, 206, 147, 0.24);
 }
 
 [data-theme="dark"] .stepper-item.is-upcoming {
@@ -295,7 +293,7 @@ body {
 }
 
 [data-theme="dark"] .step-status-pill.is-current {
-  background: rgba(171, 195, 217, 0.16);
+  background: rgba(204, 217, 235, 0.16);
   color: #edf4fb;
 }
 
@@ -367,7 +365,7 @@ body {
 [data-theme="dark"] .btn-ws-secondary {
   background: rgba(17, 32, 50, 0.94);
   color: #edf4fb;
-  border-color: rgba(114, 176, 122, 0.22);
+  border-color: rgba(136, 206, 147, 0.22);
 }
 
 .client-portal-wrapper {
@@ -406,7 +404,7 @@ body {
 .client-portal-wrapper .value-tertiary,
 .client-portal-wrapper .search-input,
 .client-portal-wrapper .btn-reschedule {
-  background: linear-gradient(180deg, var(--polish-surface-0), var(--polish-surface-1));
+  background: var(--polish-surface-0);
 }
 
 .client-portal-wrapper .search-container {
@@ -424,7 +422,7 @@ body {
 
 .client-portal-wrapper .ticket-header,
 .client-portal-wrapper .ticket-footer {
-  background: linear-gradient(180deg, var(--polish-surface-1), var(--polish-surface-2));
+  background: var(--polish-surface-1);
 }
 
 .client-portal-wrapper .value-tertiary {
@@ -434,7 +432,7 @@ body {
 .client-portal-wrapper .contact-signature {
   padding: 1rem 1.05rem;
   border-radius: 20px;
-  background: linear-gradient(180deg, var(--polish-surface-0), var(--polish-surface-1));
+  background: var(--polish-surface-0);
 }
 
 .client-portal-wrapper .contact-item svg {
@@ -461,12 +459,12 @@ body {
 }
 
 .client-portal-wrapper .btn-cancel {
-  background: linear-gradient(180deg, rgba(255, 246, 246, 0.98), rgba(254, 242, 242, 0.96));
+  background: rgba(255, 246, 246, 0.98);
   border-color: rgba(248, 113, 113, 0.22);
 }
 
 .client-portal-wrapper .btn-delete-forever {
-  background: linear-gradient(135deg, #1d344d, #2b5478);
+  background: #1d344d;
 }
 
 .client-portal-wrapper .portal-results-summary {
@@ -474,9 +472,9 @@ body {
 }
 
 .client-portal-wrapper .arrow-box {
-  background: linear-gradient(135deg, #204060, #589860);
+  background: #00214c;
   color: #ffffff;
-  box-shadow: 0 18px 34px rgba(19, 41, 64, 0.14);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 .client-portal-wrapper .empty-state-icon {
@@ -512,8 +510,8 @@ body {
 }
 
 [data-theme="dark"] .client-portal-wrapper .portal-results-summary {
-  background: rgba(114, 176, 122, 0.14);
-  border-color: rgba(114, 176, 122, 0.22);
+  background: rgba(136, 206, 147, 0.14);
+  border-color: rgba(136, 206, 147, 0.22);
   color: #c8f0cf;
 }
 
@@ -554,22 +552,20 @@ body {
 
 [data-theme="dark"] .client-portal-wrapper .btn-search {
   background: var(--brand-navy) !important;
-  border-color: rgba(114, 176, 122, 0.22) !important;
+  border-color: rgba(136, 206, 147, 0.22) !important;
   color: #edf4fb !important;
-  box-shadow:
-    0 18px 34px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px rgba(114, 176, 122, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(136, 206, 147, 0.12);
 }
 
 [data-theme="dark"] .client-portal-wrapper .date-box.new {
   background: rgba(20, 42, 30, 0.7);
-  border-color: rgba(114, 176, 122, 0.22);
+  border-color: rgba(136, 206, 147, 0.22);
 }
 
 [data-theme="dark"] .client-portal-wrapper .arrow-box {
   background: var(--color-surface-2);
   color: var(--color-accent);
-  border-color: rgba(114, 176, 122, 0.2);
+  border-color: rgba(136, 206, 147, 0.2);
 }
 
 [data-theme="dark"] .client-portal-wrapper .teacher-contact-email {
@@ -778,22 +774,20 @@ body {
 
 .journey-meter,
 .stepper-nav-hint {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(244, 248, 251, 0.88));
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .stepper-progress-fill {
-  box-shadow: 0 14px 28px rgba(32, 64, 96, 0.16);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 .step-circle.current {
-  box-shadow:
-    0 20px 40px rgba(24, 56, 88, 0.2),
-    0 0 0 10px rgba(88, 152, 96, 0.12);
+  box-shadow: 0 0 0 10px rgba(1, 149, 60, 0.12);
 }
 
 .stepper-item.is-locked .step-circle,
 .stepper-item.is-upcoming .step-circle {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 246, 249, 0.94));
+  background: rgba(255, 255, 255, 0.98);
 }
 
 [data-theme="dark"] .journey-compass,
@@ -808,7 +802,7 @@ body {
 }
 
 [data-theme="dark"] .stepper-progress-fill {
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
 }
 
 [data-theme="dark"] .stepper-item.is-locked .step-circle,
@@ -827,7 +821,7 @@ body {
   border-radius: 26px !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   background: var(--color-surface-2) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
   overflow: hidden;
 }
 
@@ -843,8 +837,7 @@ body {
 
 .admin-login-shell {
   background:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.08), transparent 26%),
-    linear-gradient(180deg, rgba(247, 250, 252, 0.96), rgba(236, 244, 248, 0.98));
+    rgba(247, 250, 252, 0.96);
 }
 
 [data-theme="dark"] .admin-login-shell {
@@ -860,9 +853,8 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at top right, rgba(88, 152, 96, 0.12), transparent 28%),
-    radial-gradient(circle at bottom left, rgba(43, 84, 120, 0.08), transparent 26%);
+  /* Dos lavados radiales tiñendo esquinas opuestas. Superficie plana: fuera. */
+  background: none;
   pointer-events: none;
 }
 
@@ -872,8 +864,7 @@ body {
 
 .footer-elite {
   background:
-    radial-gradient(circle at top, rgba(88, 152, 96, 0.06), transparent 22%),
-    linear-gradient(180deg, rgba(248, 251, 253, 0.98), rgba(241, 245, 249, 0.98));
+    rgba(248, 251, 253, 0.98);
 }
 
 [data-theme="dark"] .footer-elite {
@@ -899,7 +890,7 @@ body {
 
 .footer-link-item:hover,
 .contact-card:hover {
-  box-shadow: 0 18px 34px rgba(19, 41, 64, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
 }
 
 .social-bubble {
@@ -907,11 +898,11 @@ body {
 }
 
 [data-theme="dark"] .social-bubble {
-  border-color: rgba(171, 195, 217, 0.12);
+  border-color: rgba(204, 217, 235, 0.12);
 }
 
 .btn-up-floating {
-  background: linear-gradient(135deg, #2b5478, #589860);
+  background: #1c3b64;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
 }
@@ -921,7 +912,7 @@ body {
 }
 
 .journey-meter {
-  background: linear-gradient(145deg, #1d344d, #2b5478 62%, #589860) !important;
+  background: #1d344d !important;
   color: #eef4fb;
 }
 
