@@ -25,7 +25,7 @@ import "./styles/brand-identity-refresh.css";
 import "./styles/motion-system.css";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
-const BookingForm = lazy(() => import("./components/BookingForm"));
+const BookingKiosk = lazy(() => import("./components/BookingKiosk"));
 const AdminPanel = lazy(() => import("./components/AdminPanel"));
 const ClientPortal = lazy(() => import("./components/ClientPortal"));
 const ManageBooking = lazy(() => import("./components/ManageBooking"));
@@ -103,7 +103,7 @@ const AppContent = () => {
         <Suspense fallback={<BrandLoader />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/reservar" element={<BookingForm />} />
+            <Route path="/reservar" element={<BookingKiosk />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/portal" element={<ClientPortal />} />
             <Route path="/m" element={<ManageBooking />} />

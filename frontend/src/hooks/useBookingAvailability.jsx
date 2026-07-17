@@ -170,6 +170,27 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     [availableSlots],
   );
 
+  // Kiosco: los próximos turnos agrupados por día, ordenados de más cercano a
+  // más lejano. Permite "elegí y listo" sin obligar a navegar un calendario.
+  // Aditivo: el flujo clásico lo ignora.
+  const upcomingSlotsByDay = useMemo(() => {
+    if (effectiveAvailabilityStatus !== "ready" || !Array.isArray(backendSlots)) {
+      return [];
+    }
+    const sorted = backendSlots
+      .map((slot) => ({ ...slot, timeObj: new Date(slot.timeSlot) }))
+      .filter((slot) => !Number.isNaN(slot.timeObj.getTime()))
+      .sort((a, b) => a.timeObj - b.timeObj);
+
+    const byDay = new Map();
+    for (const slot of sorted) {
+      const key = getBusinessDateKey(slot.timeObj, availabilityTimeZone);
+      if (!byDay.has(key)) byDay.set(key, { dateKey: key, dayObj: slot.timeObj, slots: [] });
+      byDay.get(key).slots.push(slot);
+    }
+    return [...byDay.values()];
+  }, [effectiveAvailabilityStatus, backendSlots, availabilityTimeZone]);
+
   const slotSections = useMemo(
     () =>
       SLOT_SECTIONS_DEFINITION.map((section) => {
@@ -240,6 +261,7 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     availableSlotCount,
     nextFreeSlot,
     selectedDayOnly,
+    upcomingSlotsByDay,
     isSelectedTimeAvailable: isSelectedTimeAvailable({
       selectedTime: selectedDate,
       backendSlots,
