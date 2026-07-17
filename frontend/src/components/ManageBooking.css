@@ -16,7 +16,7 @@
 }
 
 .manage-page-state--invalid svg,
-.manage-booking-lock { color: var(--accent-primary, #589860); }
+.manage-booking-lock { color: var(--accent-primary, #01953c); }
 
 .manage-booking-container > .ticket-card { max-width: 48rem; margin: 0 auto 1rem; }
 

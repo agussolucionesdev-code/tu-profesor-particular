@@ -1,6 +1,6 @@
 /* ============================================================
    confirmation-ux.css — Loading panel + Duration selector
-   Brand: navy #204060, green #589860, amber #f59e0b
+   Brand: navy #00214c, green #01953c, amber #f59e0b
    ============================================================ */
 
 /* ============================================================
@@ -12,8 +12,8 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  background: rgba(88, 152, 96, 0.06);
-  border: 1.5px solid rgba(88, 152, 96, 0.22);
+  background: rgba(1, 149, 60, 0.06);
+  border: 1.5px solid rgba(1, 149, 60, 0.22);
   border-radius: 14px;
   min-width: 280px;
   max-width: 100%;
@@ -38,14 +38,14 @@
 
 .booking-loading-phase.phase-active {
   opacity: 1;
-  background: rgba(88, 152, 96, 0.1);
-  color: #345e3a;
+  background: rgba(1, 149, 60, 0.1);
+  color: #004b04;
   font-weight: 600;
 }
 
 .booking-loading-phase.phase-done {
   opacity: 0.62;
-  color: #589860;
+  color: #01953c;
 }
 
 .booking-loading-phase.phase-pending {
@@ -65,8 +65,8 @@
 .phase-spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(88, 152, 96, 0.3);
-  border-top-color: #589860;
+  border: 2px solid rgba(1, 149, 60, 0.3);
+  border-top-color: #01953c;
   border-radius: 50%;
   animation: phase-spin 0.8s linear infinite;
   flex-shrink: 0;
@@ -77,7 +77,7 @@
 }
 
 .phase-check {
-  color: #589860;
+  color: #01953c;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -88,21 +88,21 @@
   text-align: center;
   margin: 0;
   padding-top: 0.25rem;
-  border-top: 1px solid rgba(32, 64, 96, 0.08);
+  border-top: 1px solid rgba(0, 33, 76, 0.08);
 }
 
 [data-theme="dark"] .booking-loading-panel {
-  background: rgba(114, 176, 122, 0.08);
-  border-color: rgba(114, 176, 122, 0.25);
+  background: rgba(136, 206, 147, 0.08);
+  border-color: rgba(136, 206, 147, 0.25);
 }
 
 [data-theme="dark"] .booking-loading-phase.phase-active {
-  background: rgba(114, 176, 122, 0.12);
+  background: rgba(136, 206, 147, 0.12);
   color: #a8ddb0;
 }
 
 [data-theme="dark"] .booking-loading-phase.phase-done {
-  color: #72b07a;
+  color: #88ce93;
 }
 
 [data-theme="dark"] .booking-loading-note {
@@ -145,7 +145,7 @@
 @media (prefers-reduced-motion: reduce) {
   .phase-spinner {
     animation: none;
-    border-top-color: #589860;
+    border-top-color: #01953c;
   }
 }
 
@@ -180,7 +180,7 @@
   gap: 0.25rem;
   padding: 1rem 0.75rem 0.875rem;
   background: #ffffff;
-  border: 1.5px solid rgba(32, 64, 96, 0.14);
+  border: 1.5px solid rgba(0, 33, 76, 0.14);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
@@ -191,16 +191,16 @@
 }
 
 .duration-chip:hover:not(:disabled) {
-  border-color: rgba(88, 152, 96, 0.5);
-  background: rgba(88, 152, 96, 0.04);
+  border-color: rgba(1, 149, 60, 0.5);
+  background: rgba(1, 149, 60, 0.04);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(88, 152, 96, 0.12);
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.19);
 }
 
 .duration-chip.selected {
-  border-color: #589860;
-  background: rgba(88, 152, 96, 0.08);
-  box-shadow: 0 0 0 3px rgba(88, 152, 96, 0.18), 0 4px 16px rgba(88, 152, 96, 0.14);
+  border-color: #01953c;
+  background: rgba(1, 149, 60, 0.08);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.18);
   transform: translateY(-2px);
 }
 
@@ -235,19 +235,19 @@
 }
 
 .duration-chip.is-recommended.selected {
-  border-color: #589860;
+  border-color: #01953c;
 }
 
 .duration-chip-main {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #204060;
+  color: #00214c;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .duration-chip.selected .duration-chip-main {
-  color: #345e3a;
+  color: #004b04;
 }
 
 .duration-chip-sub {
@@ -258,14 +258,14 @@
 }
 
 .duration-chip.selected .duration-chip-sub {
-  color: #589860;
+  color: #01953c;
 }
 
 .duration-chip-check {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  color: #589860;
+  color: #01953c;
   font-size: 0.75rem;
   line-height: 1;
   display: flex;
@@ -280,18 +280,18 @@
 }
 
 [data-theme="dark"] .duration-chip:hover:not(:disabled) {
-  border-color: rgba(114, 176, 122, 0.45);
-  background: rgba(114, 176, 122, 0.07);
+  border-color: rgba(136, 206, 147, 0.45);
+  background: rgba(136, 206, 147, 0.07);
 }
 
 [data-theme="dark"] .duration-chip.selected {
-  border-color: #72b07a;
-  background: rgba(114, 176, 122, 0.12);
-  box-shadow: 0 0 0 3px rgba(114, 176, 122, 0.2), 0 4px 16px rgba(114, 176, 122, 0.1);
+  border-color: #88ce93;
+  background: rgba(136, 206, 147, 0.12);
+  box-shadow: 0 0 0 3px rgba(136, 206, 147, 0.2);
 }
 
 [data-theme="dark"] .duration-chip-main {
-  color: #aac1d8;
+  color: #aabcd5;
 }
 
 [data-theme="dark"] .duration-chip.selected .duration-chip-main {
@@ -303,11 +303,11 @@
 }
 
 [data-theme="dark"] .duration-chip.selected .duration-chip-sub {
-  color: #72b07a;
+  color: #88ce93;
 }
 
 [data-theme="dark"] .duration-chip-check {
-  color: #72b07a;
+  color: #88ce93;
 }
 
 [data-theme="dark"] .duration-chip-badge {

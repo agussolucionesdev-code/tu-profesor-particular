@@ -106,11 +106,11 @@
 /* Día seleccionado: contraste fuerte y reconocible al instante */
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: var(--brand-green, #589860) !important;
+  background: var(--brand-green, #01953c) !important;
   color: var(--brand-white) !important;
   font-weight: 900 !important;
-  border: 2px solid var(--brand-green-deep, #4a8452) !important;
-  box-shadow: 0 4px 12px rgba(88, 152, 96, 0.35) !important;
+  border: 2px solid var(--brand-green-deep, #006d1f) !important;
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
   transform: scale(1.05) !important;
 }
 
@@ -151,13 +151,13 @@
 
 /* Asegurar que el outline al focusear el día sea claro */
 .react-datepicker__day:focus-visible {
-  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5)) !important;
+  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5)) !important;
   outline-offset: 2px !important;
 }
 
 /* Header navegación: botones más finos y consistentes */
 .booking-month-nav:focus-visible {
-  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5));
+  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5));
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -173,7 +173,7 @@
 
 /* Separador sutil entre secciones */
 .slot-section-header {
-  border-bottom: 1px solid var(--border-subtle, rgba(15, 23, 42, 0.06));
+  border-bottom: 1px solid var(--border-subtle, rgba(0, 33, 76, 0.06));
   padding-bottom: 0.6rem;
   margin-bottom: 0.8rem;
 }
@@ -190,28 +190,24 @@
 }
 
 .slot-btn:not(.disabled):not(.selected) {
-  background: rgba(88, 152, 96, 0.06) !important;
-  border: 1.5px solid rgba(88, 152, 96, 0.20) !important;
-  color: var(--brand-green-deep, #4a8452) !important;
+  background: rgba(1, 149, 60, 0.06) !important;
+  border: 1.5px solid rgba(1, 149, 60, 0.20) !important;
+  color: var(--brand-green-deep, #006d1f) !important;
 }
 
 .slot-btn:not(.disabled):not(.selected):hover {
-  background: rgba(88, 152, 96, 0.14) !important;
-  border-color: var(--brand-green, #589860) !important;
-  color: var(--brand-green-deep, #4a8452) !important;
+  background: rgba(1, 149, 60, 0.14) !important;
+  border-color: var(--brand-green, #01953c) !important;
+  color: var(--brand-green-deep, #006d1f) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 16px rgba(88, 152, 96, 0.18) !important;
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
 }
 
 .slot-btn.selected {
-  background: linear-gradient(
-    135deg,
-    var(--brand-green, #589860),
-    var(--brand-green-deep, #4a8452)
-  ) !important;
+  background: var(--brand-green, #01953c) !important;
   color: var(--brand-white) !important;
-  border: 1.5px solid var(--brand-green-deep, #4a8452) !important;
-  box-shadow: 0 8px 22px rgba(88, 152, 96, 0.32) !important;
+  border: 1.5px solid var(--brand-green-deep, #006d1f) !important;
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
   transform: translateY(-2px) !important;
 }
 
@@ -234,13 +230,13 @@
 }
 
 [data-theme="dark"] .slot-btn:not(.disabled):not(.selected) {
-  background: rgba(114, 176, 122, 0.10) !important;
-  border-color: rgba(114, 176, 122, 0.28) !important;
+  background: rgba(136, 206, 147, 0.10) !important;
+  border-color: rgba(136, 206, 147, 0.28) !important;
   color: #b6e0bb !important;
 }
 
 [data-theme="dark"] .slot-btn:not(.disabled):not(.selected):hover {
-  background: rgba(114, 176, 122, 0.20) !important;
+  background: rgba(136, 206, 147, 0.20) !important;
   border-color: var(--color-accent) !important;
 }
 
@@ -251,14 +247,14 @@
 }
 
 [data-theme="dark"] .slot-btn.selected {
-  background: linear-gradient(135deg, var(--color-accent), #5e9a66) !important;
+  background: var(--color-accent) !important;
   color: var(--color-on-success) !important;
   border-color: var(--color-accent-hover) !important;
 }
 
 /* Focus ring claro en slots */
 .slot-btn:focus-visible {
-  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.5)) !important;
+  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5)) !important;
   outline-offset: 2px !important;
 }
 
@@ -293,7 +289,7 @@ textarea:focus-visible,
 select:focus-visible {
   outline: none;
   border-color: var(--brand-green) !important;
-  box-shadow: 0 0 0 3px var(--focus-ring-color, rgba(88, 152, 96, 0.4)) !important;
+  box-shadow: 0 0 0 3px var(--focus-ring-color, rgba(1, 149, 60, 0.4)) !important;
 }
 
 /* =====================================================================
@@ -317,13 +313,13 @@ select:focus-visible {
 }
 
 a:focus-visible {
-  outline: 3px solid var(--focus-ring-color, rgba(88, 152, 96, 0.4));
+  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.4));
   outline-offset: 3px;
   border-radius: 4px;
 }
 
 .neuro-modal-overlay {
-  background: var(--surface-overlay, rgba(15, 23, 42, 0.55));
+  background: var(--surface-overlay, rgba(0, 33, 76, 0.55));
 }
 
 /* Mobile compacto del calendario */
@@ -364,8 +360,8 @@ a:focus-visible {
   gap: 0.4rem;
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
-  background: rgba(88, 152, 96, 0.12);
-  color: var(--brand-green-deep, #4a8452);
+  background: rgba(1, 149, 60, 0.12);
+  color: var(--brand-green-deep, #006d1f);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -373,7 +369,7 @@ a:focus-visible {
 }
 
 [data-theme="dark"] .step-voice-indicator {
-  background: rgba(114, 176, 122, 0.18);
+  background: rgba(136, 206, 147, 0.18);
   color: #9fd0a4;
 }
 
@@ -401,13 +397,13 @@ a:focus-visible {
 }
 
 .calendar-legend .legend-icon.available {
-  background: rgba(88, 152, 96, 0.14);
-  border-color: var(--brand-green, #589860);
+  background: rgba(1, 149, 60, 0.14);
+  border-color: var(--brand-green, #01953c);
 }
 
 .calendar-legend .legend-icon.selected {
-  background: var(--brand-green, #589860);
-  border-color: var(--brand-green-deep, #4a8452);
+  background: var(--brand-green, #01953c);
+  border-color: var(--brand-green-deep, #006d1f);
 }
 
 [data-theme="dark"] .calendar-legend .legend-icon.disabled {
@@ -421,7 +417,7 @@ a:focus-visible {
 }
 
 [data-theme="dark"] .calendar-legend .legend-icon.available {
-  background: rgba(114, 176, 122, 0.20);
+  background: rgba(136, 206, 147, 0.20);
   border-color: var(--color-accent);
 }
 

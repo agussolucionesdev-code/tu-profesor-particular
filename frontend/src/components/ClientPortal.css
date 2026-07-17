@@ -8,8 +8,8 @@
    0. Local design tokens (scoped to .client-portal-wrapper)
    --------------------------------------------------------------------------- */
 .client-portal-wrapper {
-  --cp-primary:      var(--brand-navy, #204060);
-  --cp-accent:       var(--accent-primary, #589860);
+  --cp-primary:      var(--brand-navy, #00214c);
+  --cp-accent:       var(--accent-primary, #01953c);
   --cp-danger:       #cf4f4f;
   --cp-warning:      #d08a2e;
   --cp-surface:      var(--surface-card, #ffffff);
@@ -18,7 +18,7 @@
   --cp-text-muted:   var(--text-secondary, #64748b);
   --cp-text-faint:   var(--text-tertiary,  #94a3b8);
   --cp-bg:           var(--bg-page, #f1f5f9);
-  --cp-shadow:       0 4px 24px rgba(19, 41, 64, 0.08);
+  --cp-shadow:       0 4px 24px rgba(0, 33, 76, 0.08);
   --cp-radius-card:  12px;
   --cp-radius-btn:   8px;
   --cp-radius-input: 8px;
@@ -68,7 +68,7 @@
   width: 200px;
   height: 200px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(88, 152, 96, 0.12), transparent 68%);
+  background: none;
   pointer-events: none;
 }
 
@@ -80,7 +80,6 @@
   object-fit: contain;
   margin: 0 auto 0.6rem;
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.18));
 }
 
 .client-portal-wrapper .portal-title {
@@ -109,7 +108,7 @@
   width: 64px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--cp-primary), var(--cp-accent));
+  background: var(--cp-primary);
   margin: 1.2rem auto 0;
 }
 
@@ -146,7 +145,7 @@
   padding: 0 1.5rem;
   border: none;
   border-radius: var(--cp-radius-btn);
-  background: linear-gradient(135deg, #1d344d, #204060);
+  background: #1d344d;
   color: var(--brand-white);
   font-weight: 700;
   cursor: pointer;
@@ -155,8 +154,8 @@
 }
 
 .client-portal-wrapper .btn-search:hover {
-  background: linear-gradient(135deg, #183858, #1a3352);
-  box-shadow: 0 8px 20px rgba(29, 52, 77, 0.22);
+  background: #001636;
+  box-shadow: 0 0 0 1px rgba(29, 52, 77, 0.22);
 }
 
 /* ---------------------------------------------------------------------------
@@ -180,8 +179,8 @@
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
   border-radius: var(--cp-radius-card);
-  border: 1px solid rgba(88, 152, 96, 0.22);
-  background: rgba(88, 152, 96, 0.08);
+  border: 1px solid rgba(1, 149, 60, 0.22);
+  background: rgba(1, 149, 60, 0.08);
   color: #2d6b34;
   font-weight: 700;
   font-size: 0.95rem;
@@ -218,7 +217,7 @@
 }
 
 .client-portal-wrapper .portal-message--success {
-  border: 1px solid rgba(88, 152, 96, 0.32);
+  border: 1px solid rgba(1, 149, 60, 0.32);
   border-left: 5px solid var(--cp-success, #3d8a47);
   background: rgba(220, 252, 231, 0.72);
   color: #25652d;
@@ -331,8 +330,8 @@
 }
 
 .portal-history-section { margin-top: 1.5rem; display: grid; gap: 0.75rem; }
-.portal-history-toggle { background: none; border: 1px dashed rgba(32, 64, 96, 0.3); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; transition: background 0.18s; width: 100%; text-align: center; }
-.portal-history-toggle:hover { background: rgba(32, 64, 96, 0.04); }
+.portal-history-toggle { background: none; border: 1px dashed rgba(0, 33, 76, 0.3); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; transition: background 0.18s; width: 100%; text-align: center; }
+.portal-history-toggle:hover { background: rgba(0, 33, 76, 0.04); }
 .ticket-wrapper--history { opacity: 0.7; }
 .ticket-wrapper--history:hover { opacity: 1; transition: opacity 0.2s; }
 .tickets-grid--history { margin-top: 0.5rem; }
@@ -353,7 +352,7 @@
 
 .client-portal-wrapper .ticket-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 16px 40px rgba(19, 41, 64, 0.12);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.19);
 }
 
 /* Status accent stripe */
@@ -411,7 +410,7 @@
 }
 
 .client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(88, 152, 96, 0.14);
+  background: rgba(1, 149, 60, 0.14);
   color: #2d6b34;
 }
 .client-portal-wrapper .status-badge.Pendiente {
@@ -487,7 +486,7 @@
 
 .client-portal-wrapper .duration-badge {
   display: inline-block;
-  background: rgba(88, 152, 96, 0.1);
+  background: rgba(1, 149, 60, 0.1);
   color: var(--cp-accent);
   font-size: 0.75rem;
   font-weight: 700;
@@ -602,8 +601,8 @@
 
 /* Confirm attendance = green outline */
 .client-portal-wrapper .btn-confirm-attendance {
-  background: rgba(88, 152, 96, 0.06);
-  border-color: rgba(88, 152, 96, 0.4);
+  background: rgba(1, 149, 60, 0.06);
+  border-color: rgba(1, 149, 60, 0.4);
   color: var(--cp-success, #3d8a47);
 }
 .client-portal-wrapper .btn-confirm-attendance:hover {
@@ -653,7 +652,7 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(255, 255, 255, 0.97);
   color: var(--cp-text-main);
-  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
   backdrop-filter: blur(12px);
   animation: toastSlideIn 0.35s ease-out both;
 }
@@ -693,8 +692,8 @@
 }
 
 /* Toast variants */
-.portal-toast.success { border-color: rgba(88, 152, 96, 0.22); }
-.portal-toast.success .portal-toast-icon { background: rgba(88, 152, 96, 0.1); color: #2d6b34; }
+.portal-toast.success { border-color: rgba(1, 149, 60, 0.22); }
+.portal-toast.success .portal-toast-icon { background: rgba(1, 149, 60, 0.1); color: #2d6b34; }
 
 .portal-toast.warning { border-color: rgba(208, 138, 46, 0.24); }
 .portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.12); color: #7c4e0d; }
@@ -702,8 +701,8 @@
 .portal-toast.error { border-color: rgba(207, 79, 79, 0.22); }
 .portal-toast.error .portal-toast-icon { background: rgba(207, 79, 79, 0.1); color: #8b2020; }
 
-.portal-toast.info { border-color: rgba(32, 64, 96, 0.18); }
-.portal-toast.info .portal-toast-icon { background: rgba(32, 64, 96, 0.08); color: var(--brand-navy); }
+.portal-toast.info { border-color: rgba(0, 33, 76, 0.18); }
+.portal-toast.info .portal-toast-icon { background: rgba(0, 33, 76, 0.08); color: var(--brand-navy); }
 
 /* ---------------------------------------------------------------------------
    15. Focus-visible outlines (accessibility)
@@ -711,7 +710,7 @@
 .client-portal-wrapper .search-input:focus-visible,
 .client-portal-wrapper .btn-search:focus-visible,
 .client-portal-wrapper .btn-action:focus-visible {
-  outline: 3px solid rgba(88, 152, 96, 0.4);
+  outline: 3px solid rgba(1, 149, 60, 0.4);
   outline-offset: 2px;
 }
 
@@ -738,7 +737,7 @@
 
 [data-theme="dark"] .client-portal-wrapper .portal-header-logo {
   background: rgba(216, 238, 220, 0.88) !important;
-  border-color: rgba(114, 176, 122, 0.25) !important;
+  border-color: rgba(136, 206, 147, 0.25) !important;
   box-shadow: none !important;
   filter: none;
 }
@@ -758,13 +757,13 @@
   background: var(--brand-navy);
 }
 [data-theme="dark"] .client-portal-wrapper .btn-search:hover {
-  background: #183858;
+  background: #001636;
 }
 
 /* Results summary */
 [data-theme="dark"] .client-portal-wrapper .portal-results-summary {
-  background: rgba(88, 152, 96, 0.12);
-  border-color: rgba(114, 176, 122, 0.24);
+  background: rgba(1, 149, 60, 0.12);
+  border-color: rgba(136, 206, 147, 0.24);
   color: #9ad2a1;
 }
 
@@ -781,8 +780,8 @@
 }
 
 [data-theme="dark"] .client-portal-wrapper .portal-message--success {
-  background: rgba(88, 152, 96, 0.16);
-  border-color: rgba(114, 176, 122, 0.3);
+  background: rgba(1, 149, 60, 0.16);
+  border-color: rgba(136, 206, 147, 0.3);
   color: #a8dbae;
 }
 
@@ -804,7 +803,7 @@
 }
 
 [data-theme="dark"] .client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(114, 176, 122, 0.16);
+  background: rgba(136, 206, 147, 0.16);
   color: #9ad2a1;
 }
 [data-theme="dark"] .client-portal-wrapper .status-badge.Pendiente {
@@ -832,7 +831,7 @@
   color: #edf4fb;
 }
 [data-theme="dark"] .client-portal-wrapper .btn-reschedule:hover {
-  background: rgba(32, 64, 96, 0.5);
+  background: rgba(0, 33, 76, 0.5);
   border-color: rgba(171, 195, 217, 0.6);
 }
 
@@ -848,10 +847,10 @@
   border-color: rgba(148, 163, 184, 0.2);
 }
 [data-theme="dark"] .portal-toast-copy strong { color: #edf4fb; }
-[data-theme="dark"] .portal-toast.success .portal-toast-icon { background: rgba(88, 152, 96, 0.16); color: #9ad2a1; }
+[data-theme="dark"] .portal-toast.success .portal-toast-icon { background: rgba(1, 149, 60, 0.16); color: #9ad2a1; }
 [data-theme="dark"] .portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.16); color: #fcd34d; }
 [data-theme="dark"] .portal-toast.error   .portal-toast-icon { background: rgba(207, 79, 79, 0.16); color: var(--color-error-deep); }
-[data-theme="dark"] .portal-toast.info    .portal-toast-icon { background: rgba(32, 64, 96, 0.18); color: var(--color-info-deep); }
+[data-theme="dark"] .portal-toast.info    .portal-toast-icon { background: rgba(0, 33, 76, 0.18); color: var(--color-info-deep); }
 
 /* Support strip */
 [data-theme="dark"] .client-portal-wrapper .portal-support-card {
@@ -895,7 +894,7 @@
 .portal-help-line:hover {
   background: rgba(37, 211, 102, 0.14);
   border-color: rgba(37, 211, 102, 0.35);
-  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.12);
+  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.19);
   text-decoration: none;
 }
 
@@ -912,7 +911,7 @@
 [data-theme="dark"] .portal-help-line:hover {
   background: rgba(37, 211, 102, 0.12);
   border-color: rgba(37, 211, 102, 0.3);
-  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.1);
+  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.16);
 }
 
 /* ---------------------------------------------------------------------------

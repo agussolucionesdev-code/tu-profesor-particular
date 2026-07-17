@@ -58,7 +58,7 @@
 
 .cal-nav-btn:hover {
   background: var(--surface-2, #f1f5f9);
-  border-color: var(--color-primary, #204060);
+  border-color: var(--color-primary, #00214c);
 }
 
 .cal-today-btn {
@@ -183,12 +183,12 @@
 }
 
 .cal-day-header.is-today .cal-day-num {
-  background: var(--accent-primary, #589860);
+  background: var(--accent-primary, #01953c);
   color: var(--brand-white);
 }
 
 .cal-day-header.is-today .cal-day-name {
-  color: var(--accent-primary, #589860);
+  color: var(--accent-primary, #01953c);
 }
 
 /* Body: time gutter + columns */
@@ -224,7 +224,7 @@
 .cal-day-col:last-child { border-right: none; }
 
 .cal-day-col.is-today {
-  background: rgba(88, 152, 96, 0.03);
+  background: rgba(1, 149, 60, 0.03);
 }
 
 .cal-day-col.is-full {
@@ -247,7 +247,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--accent-primary, #589860);
+  background: var(--accent-primary, #01953c);
   z-index: 3;
   pointer-events: none;
 }
@@ -260,7 +260,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--accent-primary, #589860);
+  background: var(--accent-primary, #01953c);
 }
 
 /* ─────────────────────────────────────
@@ -335,8 +335,8 @@
 }
 
 .cal-confirmed {
-  background: rgba(88, 152, 96, 0.14);
-  border-left: 3px solid var(--accent-primary, #589860);
+  background: rgba(1, 149, 60, 0.14);
+  border-left: 3px solid var(--accent-primary, #01953c);
   color: var(--color-success-emphasis);
 }
 
@@ -355,7 +355,7 @@
 
 /* Legend dots */
 .cal-legend-item.cal-pending { background: rgba(245,158,11,0.14); color: var(--color-warning-deep); }
-.cal-legend-item.cal-confirmed { background: rgba(88,152,96,0.14); color: var(--color-success-emphasis); }
+.cal-legend-item.cal-confirmed { background: rgba(1, 149, 60,0.14); color: var(--color-success-emphasis); }
 .cal-legend-item.cal-finalized { background: rgba(59,130,246,0.12); color: var(--color-info-deep); }
 .cal-legend-item.cal-cancelled { background: rgba(148,163,184,0.12); color: var(--color-text-secondary); }
 
@@ -378,7 +378,7 @@
 [data-theme="dark"] .cal-hour-label { color: var(--color-text-tertiary, #64748b); }
 [data-theme="dark"] .cal-hour-line { background: var(--border-subtle, rgba(148, 163, 184, 0.1)); }
 [data-theme="dark"] .cal-day-col { border-color: var(--border-subtle, rgba(148, 163, 184, 0.1)); }
-[data-theme="dark"] .cal-day-col.is-today { background: rgba(88, 152, 96, 0.06); }
+[data-theme="dark"] .cal-day-col.is-today { background: rgba(1, 149, 60, 0.06); }
 [data-theme="dark"] .cal-heading { color: var(--color-text-primary, #f1f5f9); }
 [data-theme="dark"] .cal-nav-btn,
 [data-theme="dark"] .cal-today-btn {
@@ -391,7 +391,7 @@
   background: var(--color-surface-3, #1e293b);
 }
 [data-theme="dark"] .cal-pending { background: rgba(245,158,11,0.18); color: var(--color-warning-emphasis); }
-[data-theme="dark"] .cal-confirmed { background: rgba(88,152,96,0.18); color: var(--color-success-deep); }
+[data-theme="dark"] .cal-confirmed { background: rgba(1, 149, 60,0.18); color: var(--color-success-deep); }
 [data-theme="dark"] .cal-finalized { background: rgba(59,130,246,0.18); color: var(--color-info-deep); }
 [data-theme="dark"] .cal-cancelled { background: rgba(148,163,184,0.1); color: var(--brand-gray-600); }
 [data-theme="dark"] .cal-empty-day { color: var(--brand-gray-600); }

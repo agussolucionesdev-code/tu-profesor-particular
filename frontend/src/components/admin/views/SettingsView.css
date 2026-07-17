@@ -20,12 +20,12 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1.25rem;
-  background: rgba(88, 152, 96, 0.08);
-  border: 1px solid rgba(88, 152, 96, 0.25);
+  background: rgba(1, 149, 60, 0.08);
+  border: 1px solid rgba(1, 149, 60, 0.25);
   border-radius: var(--border-radius, 12px);
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--accent-primary, #589860);
+  color: var(--accent-primary, #01953c);
   animation: slide-in 0.2s ease;
 }
 
@@ -63,7 +63,7 @@
 .settings-toggle-row:last-child { border-bottom: none; }
 
 .settings-field-row.is-dirty .settings-label {
-  color: var(--accent-primary, #589860);
+  color: var(--accent-primary, #01953c);
 }
 
 .settings-field-label {
@@ -104,7 +104,7 @@
 
 .settings-input:focus {
   outline: none;
-  border-color: var(--accent-primary, #589860);
+  border-color: var(--accent-primary, #01953c);
 }
 
 .settings-save-btn { padding: 0.45rem 0.6rem !important; }
@@ -145,9 +145,9 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
 .settings-toggle-btn svg { font-size: 1.25rem; }
 
 .settings-toggle-btn.is-on {
-  background: rgba(88, 152, 96, 0.1);
-  border-color: rgba(88, 152, 96, 0.3);
-  color: var(--accent-primary, #589860);
+  background: rgba(1, 149, 60, 0.1);
+  border-color: rgba(1, 149, 60, 0.3);
+  color: var(--accent-primary, #01953c);
 }
 
 /* ── Blocked dates form ── */
@@ -566,8 +566,8 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
 ═══════════════════════════════════════ */
 
 [data-theme="dark"] .settings-dirty-bar {
-  background: rgba(88, 152, 96, 0.12);
-  border-color: rgba(88, 152, 96, 0.3);
+  background: rgba(1, 149, 60, 0.12);
+  border-color: rgba(1, 149, 60, 0.3);
   color: var(--color-success-deep);
 }
 
@@ -583,9 +583,9 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
   border-color: var(--border-soft, rgba(148, 163, 184, 0.2));
   color: var(--color-text-primary, #f1f5f9);
 }
-[data-theme="dark"] .settings-input:focus { border-color: var(--accent-primary, #589860); }
+[data-theme="dark"] .settings-input:focus { border-color: var(--accent-primary, #01953c); }
 [data-theme="dark"] .settings-toggle-btn { background: var(--color-surface-2, #111827); border-color: var(--border-soft, rgba(148,163,184,0.2)); color: var(--color-text-tertiary, #94a3b8); }
-[data-theme="dark"] .settings-toggle-btn.is-on { background: rgba(88,152,96,0.15); border-color: rgba(88,152,96,0.3); color: var(--color-success-deep); }
+[data-theme="dark"] .settings-toggle-btn.is-on { background: rgba(1, 149, 60,0.15); border-color: rgba(1, 149, 60,0.3); color: var(--color-success-deep); }
 [data-theme="dark"] .settings-field-row.is-dirty .settings-label { color: var(--color-success-deep); }
 
 /* ═══════════════════════════════════════

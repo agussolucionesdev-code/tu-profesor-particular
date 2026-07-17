@@ -150,7 +150,7 @@ select {
   text-decoration: none;
   transform: translateY(-180%);
   transition: transform 0.2s ease;
-  box-shadow: 0 16px 30px rgba(19, 41, 64, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
 }
 
 .skip-link:focus {
@@ -185,8 +185,7 @@ html[data-theme="dark"] .skip-link {
 
 ::-webkit-scrollbar-thumb {
   background:
-    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
-    var(--scrollbar-thumb) border-box;
+    var(--scrollbar-border), var(--scrollbar-thumb) border-box;
   border-radius: 999px;
   border: 3px solid transparent;
   box-shadow:
@@ -196,18 +195,12 @@ html[data-theme="dark"] .skip-link {
 
 ::-webkit-scrollbar-thumb:hover {
   background:
-    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
-    var(--scrollbar-thumb-hover) border-box;
+    var(--scrollbar-border), var(--scrollbar-thumb-hover) border-box;
 }
 
 ::-webkit-scrollbar-thumb:active {
   background:
-    linear-gradient(var(--scrollbar-border), var(--scrollbar-border)) padding-box,
-    linear-gradient(
-      180deg,
-      rgba(24, 56, 88, 1),
-      rgba(88, 152, 96, 1)
-    ) border-box;
+    var(--scrollbar-border), rgba(0, 33, 76, 1);
 }
 
 ::-webkit-scrollbar-corner {
