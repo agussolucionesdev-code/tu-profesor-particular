@@ -1,22 +1,43 @@
 /* ══════════════════════════════════════════════════════
    HomePage — Tu Profesor Particular
-   Navy #0a1e3a / #1a3a6b  ·  Green #3d9647 / #4cb85e
+
+   Estas variables locales declaraban una TERCERA paleta propia
+   (navy #0a1e3a, green #3d9647) que no coincidía ni con tokens.css
+   ni con el logo. Ahora son alias de los tokens de marca: se conservan
+   los nombres para no tocar los ~17 degradados y sombras que las
+   consumen, pero el color sale de una sola fuente.
+   Verde del logo #01953c = 3.91:1 -> solo AA-large. --green apunta al
+   peldaño accesible (#006d1f, 6.55:1) porque viste texto chico;
+   --green-lt guarda el verde de marca para superficies grandes.
 ══════════════════════════════════════════════════════ */
 
 .hp {
-  --navy:       #0a1e3a;
-  --navy-2:     #1a3a6b;
-  --navy-3:     #2a5298;
-  --green:      #3d9647;
-  --green-lt:   #4cb85e;
-  --green-pale: #eaf6ec;
-  --white:      #ffffff;
-  --off:        #f2f6fb;
-  --text:       #0a1e3a;
-  --muted:      #4a6080;
-  --border:     rgba(26,58,107,.1);
+  --navy:       var(--brand-navy);        /* #00214c */
+  --navy-2:     var(--brand-navy-700);    /* #1c3b64 */
+  --navy-3:     var(--brand-navy-600);    /* #3d5980 */
+  --green:      var(--brand-green-600);   /* #006d1f — 6.55:1 sobre blanco */
+  --green-lt:   var(--brand-green);       /* #01953c — verde de marca */
+  --green-on-dark: var(--brand-green-300);/* #88ce93 — 8.55:1 sobre el navy */
+  --green-pale: var(--brand-green-50);    /* #eafdec */
+  --white:      var(--brand-white);
+  --off:        var(--brand-gray-50);     /* #f6f7f8 */
+  --text:       var(--brand-navy);
+  --muted:      var(--brand-gray-600);    /* #53595f — 7.09:1 */
+  --border:     rgba(0, 33, 76, .1);
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Regiones de fondo navy: --green-lt se reapunta al peldaño claro.
+   El verde de marca sobre navy da 4.06:1 y reprueba para texto normal;
+   green-300 da 8.55:1. Mismo token, resuelto según el contexto, en vez de
+   parchear una por una las ~10 reglas que lo consumen sobre oscuro. */
+.hp-web-banner,
+.hp-hero,
+.hp-section--dark,
+.hp-more-subjects,
+.hp-cta-final {
+  --green-lt: var(--green-on-dark);
 }
 
 /* ── keyframes ──────────────────────────────────────── */
@@ -38,7 +59,7 @@
   justify-content: center;
   gap: 12px;
   padding: 11px 24px;
-  background: linear-gradient(90deg, var(--navy) 0%, #0f2d52 100%);
+  background: var(--navy);
   text-decoration: none;
   transition: filter .2s;
   flex-wrap: wrap;
@@ -65,13 +86,13 @@
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 12px; font-weight: 800;
   color: var(--green-lt);
-  background: rgba(76,184,94,.12);
-  border: 1px solid rgba(76,184,94,.25);
+  background: rgba(1, 149, 60, .12);
+  border: 1px solid rgba(1, 149, 60, .25);
   padding: 4px 12px; border-radius: 100px;
   transition: background .15s;
 }
 .hp-web-banner-cta svg { font-size: 9px; }
-.hp-web-banner:hover .hp-web-banner-cta { background: rgba(76,184,94,.22); }
+.hp-web-banner:hover .hp-web-banner-cta { background: rgba(1, 149, 60, .22); }
 
 /* ════════════════════════════════════════════════════
    HERO
@@ -81,7 +102,7 @@
   min-height: calc(100svh - 60px);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  background: linear-gradient(145deg, var(--navy) 0%, #0f2d52 50%, #14406e 100%);
+  background: var(--navy);
   overflow: hidden;
   padding: 80px 24px 100px;
 }
@@ -89,14 +110,14 @@
 /* fondo */
 .hp-hero-bg { position:absolute; inset:0; pointer-events:none; }
 
-.hp-blob {
-  position: absolute; border-radius: 50%;
-  filter: blur(100px); pointer-events: none;
-}
-.hp-blob--1 { width:700px; height:700px; top:-200px; right:-150px; background:rgba(61,150,71,.16); animation:blob 11s ease-in-out infinite; }
-.hp-blob--2 { width:500px; height:500px; bottom:-180px; left:-120px; background:rgba(42,82,152,.25); animation:blob 15s ease-in-out infinite reverse; }
-.hp-blob--3 { width:280px; height:280px; top:45%; left:42%; background:rgba(76,184,94,.07); animation:blob 20s ease-in-out infinite 3s; }
+/* Los .hp-blob eran tres manchas de color con blur(100px) animadas en bucle.
+   Es exactamente el "artificial AI look" que el brandbook pide evitar, y lo
+   opuesto a un plano limpio. Se retiran (el nodo sigue en el JSX por ahora;
+   la fase 4 lo borra del DOM). */
+.hp-blob { display: none; }
 
+/* Retícula: dos series de hairlines de 1px al 2.8%. No es un degradado de
+   color — es textura plana. Se conserva. */
 .hp-grid {
   position:absolute; inset:0;
   background-image:
@@ -122,7 +143,7 @@
 .hp-logo-img {
   width: min(300px, 70vw);
   height: auto;
-  filter: drop-shadow(0 8px 28px rgba(0,0,0,.35));
+
 }
 
 .hp-hero-badge {
@@ -151,13 +172,14 @@
   letter-spacing: -.035em;
   animation: fade-up .6s .1s ease both;
 }
+/* Antes: degradado de 3 paradas recortado al texto (background-clip) con un
+   shimmer en bucle. Con color plano ese andamiaje no pinta nada, así que se
+   retira entero y queda color directo.
+   --green-on-dark (8.55:1 sobre el navy) en vez del verde de marca (4.06:1,
+   que reprueba para texto normal aunque acá sea grande). */
 .hp-h1-accent {
   display: inline-block;
-  color: transparent;
-  background: linear-gradient(90deg, #5ddb71, #a8f5b4, #5ddb71);
-  background-size: 200% auto;
-  -webkit-background-clip: text; background-clip: text;
-  animation: shimmer 2.5s linear 1s infinite;
+  color: var(--green-on-dark);
 }
 
 .hp-hero-sub {
@@ -222,7 +244,7 @@
 }
 .hp-scroll-line {
   display: block; width: 2px; height: 36px;
-  background: linear-gradient(180deg, rgba(255,255,255,.5) 0%, transparent 100%);
+  background: rgba(255,255,255,.28);
   border-radius: 2px; margin: 0 auto;
   animation: scroll-bounce 1.8s ease-in-out infinite;
 }
@@ -242,12 +264,12 @@
 .hp-cta-main {
   background: var(--green);
   color: #fff;
-  box-shadow: 0 6px 28px rgba(61,150,71,.35);
+  box-shadow: none;
 }
 .hp-cta-main:hover {
   background: #338040;
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(61,150,71,.5);
+  box-shadow: none;
 }
 
 .hp-cta-ghost {
@@ -273,7 +295,7 @@
 ════════════════════════════════════════════════════ */
 .hp-section       { padding: 88px 40px; background: var(--white); }
 .hp-section--soft { background: var(--off); }
-.hp-section--dark { background: linear-gradient(165deg, var(--navy) 0%, #0f2d52 100%); overflow:hidden; position:relative; }
+.hp-section--dark { background: var(--navy); overflow:hidden; position:relative; }
 
 .hp-section-inner        { max-width: 1160px; margin: 0 auto; }
 .hp-section-inner--center { text-align: center; }
@@ -291,7 +313,7 @@
   padding: 5px 13px; border-radius: 100px;
   margin-bottom: 14px;
 }
-.hp-kicker--green { color: var(--green-lt); background: rgba(76,184,94,.14); }
+.hp-kicker--green { color: var(--green-lt); background: rgba(1, 149, 60, .14); }
 
 .hp-section-h2         { font-size: clamp(1.8rem,3.5vw,2.7rem); font-weight: 900; color: var(--text); margin: 0 0 14px; letter-spacing: -.03em; line-height: 1.1; }
 .hp-section-h2--light  { color: var(--white); }
@@ -328,7 +350,7 @@
 
 .hp-step-card:hover {
   transform: perspective(900px) rotateX(-4deg) rotateY(3deg) translateY(-6px) scale(1.02);
-  border-color: rgba(76,184,94,.4);
+  border-color: rgba(1, 149, 60, .4);
   background: rgba(255,255,255,.09);
 }
 
@@ -345,22 +367,22 @@
 .hp-step-num {
   font-size: 11px; font-weight: 800;
   letter-spacing: .12em; color: var(--green-lt);
-  background: rgba(76,184,94,.12);
+  background: rgba(1, 149, 60, .12);
   padding: 4px 10px; border-radius: 100px;
 }
 
 .hp-step-icon-wrap {
   width: 58px; height: 58px;
   border-radius: 17px;
-  background: linear-gradient(135deg, rgba(76,184,94,.2) 0%, rgba(42,82,152,.2) 100%);
-  border: 1.5px solid rgba(76,184,94,.3);
+  background: rgba(1, 149, 60, .12);
+  border: 1.5px solid rgba(1, 149, 60, .3);
   color: var(--green-lt);
   display: flex; align-items: center; justify-content: center;
   font-size: 26px;
   transition: background .2s, border-color .2s;
 }
 .hp-step-card:hover .hp-step-icon-wrap {
-  background: linear-gradient(135deg, rgba(76,184,94,.3) 0%, rgba(42,82,152,.25) 100%);
+  background: rgba(1, 149, 60, .20);
   border-color: var(--green-lt);
 }
 
@@ -370,7 +392,7 @@
   display: inline-block;
   font-size: 11.5px; font-weight: 700;
   color: var(--green-lt);
-  background: rgba(76,184,94,.1);
+  background: rgba(1, 149, 60, .1);
   padding: 4px 10px; border-radius: 100px;
   margin-top: 4px;
 }
@@ -379,7 +401,7 @@
 .hp-step-glow {
   position: absolute; inset: -1px;
   border-radius: 22px;
-  background: linear-gradient(135deg, rgba(76,184,94,.15), transparent 60%);
+  background: rgba(1, 149, 60, .10);
   opacity: 0; transition: opacity .3s;
   pointer-events: none;
 }
@@ -436,7 +458,7 @@
 .hp-subject-front {
   background: var(--white);
   border: 1.5px solid var(--border);
-  box-shadow: 0 8px 28px rgba(10,30,58,.08);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, .10);
   transform: rotateY(0deg);
 }
 .hp-subject-card:hover .hp-subject-front,
@@ -446,9 +468,9 @@
 
 /* cara trasera */
 .hp-subject-back {
-  background: var(--subject-grad, linear-gradient(135deg,#1a3a6b,#2a5298));
+  background: var(--subject-grad, var(--brand-navy-700));
   border: 1.5px solid rgba(255,255,255,.08);
-  box-shadow: 0 16px 48px rgba(0,0,0,.28);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .14);
   transform: rotateY(180deg);
 }
 .hp-subject-card:hover .hp-subject-back,
@@ -461,17 +483,17 @@
   position: relative;
   width: 72px; height: 72px;
   border-radius: 50%;
-  background: var(--subject-grad, linear-gradient(135deg,#1a3a6b,#2a5298));
+  background: var(--subject-grad, var(--brand-navy-700));
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 30px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .10);
 }
 .hp-subject-icon-ring {
   position: absolute; inset: -6px;
   border-radius: 50%;
   border: 2px solid;
-  border-color: var(--subject-color, #1a3a6b);
+  border-color: var(--subject-color, var(--brand-navy-700));
   opacity: .25;
   animation: ring-pulse 3s ease-in-out var(--float-delay, 0s) infinite;
 }
@@ -534,7 +556,7 @@
 /* ── Banner: más materias ── */
 .hp-more-subjects {
   border-radius: 18px;
-  background: linear-gradient(135deg, var(--navy) 0%, #0f2d52 100%);
+  background: var(--navy);
   overflow: hidden;
   position: relative;
 }
@@ -580,7 +602,7 @@
   border: none;
   padding: 13px 22px; border-radius: 12px;
   text-decoration: none; flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(61,150,71,.4);
+  box-shadow: none;
   transition: background .15s, transform .15s;
 }
 .hp-more-subjects-btn:hover { background: #338040; transform: translateY(-2px); }
@@ -606,18 +628,18 @@
 }
 .hp-reason-card:hover {
   border-color: var(--navy-2);
-  box-shadow: 0 10px 36px rgba(10,30,58,.1);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, .10);
   transform: translateY(-4px);
 }
 
 .hp-reason-icon {
   width: 52px; height: 52px;
   border-radius: 15px;
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-3) 100%);
+  background: var(--navy);
   color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 23px;
-  box-shadow: 0 6px 20px rgba(10,30,58,.22);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, .18);
   transition: transform .2s;
 }
 .hp-reason-card:hover .hp-reason-icon { transform: scale(1.07) rotate(-3deg); }
@@ -658,7 +680,7 @@
   border-color: var(--green);
   background: var(--navy);
   transform: translateY(-5px);
-  box-shadow: 0 14px 40px rgba(10,30,58,.2);
+  box-shadow: 0 0 0 1px rgba(0, 33, 76, .18);
 }
 .hp-level-emoji { font-size: 28px; transition: transform .25s; }
 .hp-level-card:hover .hp-level-emoji { transform: scale(1.18) rotate(-6deg); }
@@ -689,7 +711,7 @@
 .hp-cta-section {
   position: relative;
   padding: 100px 40px 0;
-  background: linear-gradient(150deg, var(--navy) 0%, #0f2d52 60%, #14406e 100%);
+  background: var(--navy);
   overflow: hidden;
   text-align: center;
 }
@@ -709,7 +731,7 @@
   width: 88px; height: 88px;
   object-fit: contain;
   margin-bottom: 28px;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,.35));
+
   animation: float-up 4s ease-in-out infinite;
 }
 
@@ -766,7 +788,7 @@
   width: 52px; height: 52px;
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,.3));
+
 }
 
 .hp-web-copy {
@@ -796,13 +818,13 @@
   background: var(--green);
   padding: 12px 22px; border-radius: 12px;
   flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(61,150,71,.35);
+  box-shadow: none;
   transition: background .15s, transform .15s, box-shadow .15s;
 }
 .hp-web-section:hover .hp-web-arrow-btn {
   background: #338040;
   transform: translateX(3px);
-  box-shadow: 0 6px 24px rgba(61,150,71,.45);
+  box-shadow: none;
 }
 
 /* ════════════════════════════════════════════════════
@@ -815,7 +837,7 @@
 [data-theme="dark"] .hp-reason-card     { background:#101e2e; }
 [data-theme="dark"] .hp-level-card      { background:#0c1b2d; }
 [data-theme="dark"] .hp-level-card:hover { background:var(--navy-2); }
-[data-theme="dark"] .hp-kicker          { background:rgba(61,150,71,.13); }
+[data-theme="dark"] .hp-kicker          { background:rgba(1, 149, 60, .13); }
 
 /* ════════════════════════════════════════════════════
    RESPONSIVE
