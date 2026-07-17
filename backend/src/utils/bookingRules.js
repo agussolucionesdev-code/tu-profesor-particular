@@ -23,6 +23,30 @@ export const ATTENDANCE_STATUS = [
   "Recuperatorio",
 ];
 
+// La modalidad es un dato operativo, no cosmetico: decide si el mail lleva el
+// enlace de la clase o la direccion del consultorio. Vive como enum y no como
+// texto libre para que el panel pueda filtrar por ella.
+export const BOOKING_MODALITY = ["online", "presencial"];
+
+// Las reservas anteriores a este campo no tienen modalidad. El default las deja
+// validas en lugar de invalidar el historico entero.
+export const DEFAULT_BOOKING_MODALITY = "online";
+
+const MODALITY_LABELS = new Map([
+  ["online", "Online"],
+  ["presencial", "Presencial"],
+]);
+
+export const normalizeModality = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+// Los mails y el panel nunca deben renderizar el valor crudo ni "undefined".
+export const formatModalityLabel = (value) =>
+  MODALITY_LABELS.get(normalizeModality(value)) ??
+  MODALITY_LABELS.get(DEFAULT_BOOKING_MODALITY);
+
 export const ADULT_RELATIONSHIP_VALUE = "self";
 export const RESPONSIBLE_RELATIONSHIP_OTHER_VALUE = "otro";
 export const RESPONSIBLE_RELATIONSHIP_VALUES = [
@@ -128,6 +152,14 @@ export const phoneDigitsRegex = (value) => {
 const textField = (min, max) => z.string().trim().min(min).max(max);
 const optionalRelationshipDetail = z.string().trim().max(80).optional().default("");
 
+// El wizard manda la modalidad como viene del boton; se normaliza antes de
+// validar para no rechazar "Presencial" o " online " por un detalle de forma.
+const modalityEnum = z.preprocess(
+  (value) => (typeof value === "string" ? normalizeModality(value) : value),
+  z.enum(BOOKING_MODALITY),
+);
+const modalityField = modalityEnum.optional().default(DEFAULT_BOOKING_MODALITY);
+
 export const createBookingSchema = z
   .object({
     responsibleName: textField(3, 80),
@@ -141,6 +173,7 @@ export const createBookingSchema = z
     educationLevel: textField(3, 60),
     yearGrade: textField(2, 60),
     subject: textField(2, 120),
+    modality: modalityField,
     academicSituation: z.string().trim().max(1200).optional().default(""),
     timeSlot: z.union([z.string(), z.date()]),
     duration: z.coerce.number(),
@@ -173,6 +206,7 @@ export const adminCreateBookingSchema = z
     educationLevel: textField(3, 60),
     yearGrade: textField(2, 60),
     subject: textField(2, 120),
+    modality: modalityField,
     academicSituation: textField(1, 1200),
     timeSlot: z.union([z.string(), z.date()]),
     duration: z.coerce.number(),
@@ -212,6 +246,9 @@ export const updateBookingSchema = z
     studentEvolution: z.string().trim().max(5000).optional(),
     emotionalState: z.string().trim().max(1000).optional(),
     subject: textField(2, 120).optional(),
+    // Patch: sin default. Omitir la modalidad debe dejarla como está, no
+    // resetearla silenciosamente a online.
+    modality: modalityEnum.optional(),
     academicSituation: textField(1, 1200).optional(),
     school: textField(1, 120).optional(),
     educationLevel: textField(3, 60).optional(),

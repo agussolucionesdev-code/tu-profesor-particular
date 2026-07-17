@@ -100,6 +100,9 @@ const publicBooking = (booking) => ({
   bookingCode: booking.bookingCode,
   studentName: booking.studentName,
   subject: booking.subject,
+  // La modalidad no es sensible y el alumno necesita verla confirmada: es la
+  // diferencia entre esperar un enlace y viajar hasta Temperley.
+  modality: booking.modality,
   timeSlot: booking.timeSlot,
   endTime: booking.endTime,
   duration: booking.duration,
@@ -121,6 +124,7 @@ const managedBooking = (booking) => ({
   educationLevel: booking.educationLevel,
   yearGrade: booking.yearGrade,
   subject: booking.subject,
+  modality: booking.modality,
   academicSituation: booking.academicSituation,
   timeSlot: booking.timeSlot,
   endTime: booking.endTime,
@@ -856,6 +860,7 @@ export const createAdminBooking = async (req, res, next) => {
       educationLevel: payload.educationLevel,
       yearGrade: payload.yearGrade,
       subject: payload.subject,
+      modality: payload.modality,
       academicSituation: payload.academicSituation,
       timeSlot: startTime,
       endTime,
@@ -1129,6 +1134,7 @@ export const createBooking = async (req, res, next) => {
       educationLevel: payload.educationLevel,
       yearGrade: payload.yearGrade,
       subject: payload.subject,
+      modality: payload.modality,
       academicSituation: payload.academicSituation,
       timeSlot: startTime,
       endTime,

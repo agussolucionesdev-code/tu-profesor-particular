@@ -3752,6 +3752,123 @@ describe("booking flows", () => {
     }
   });
 
+  describe("modality contract", () => {
+    it("persiste la modalidad presencial que eligió el alumno", async () => {
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "presencial" }))
+        .expect(201);
+
+      expect(created.body.data.modality).toBe("presencial");
+
+      const stored = await Booking.findOne({
+        bookingCode: created.body.data.bookingCode,
+      }).lean();
+      expect(stored.modality).toBe("presencial");
+    });
+
+    it("cae en online cuando el cliente no manda modalidad", async () => {
+      // El frontend desplegado hoy no conoce el campo. No puede romperse.
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload())
+        .expect(201);
+
+      expect(created.body.data.modality).toBe("online");
+
+      const stored = await Booking.findOne({
+        bookingCode: created.body.data.bookingCode,
+      }).lean();
+      expect(stored.modality).toBe("online");
+    });
+
+    it("rechaza una modalidad desconocida sin crear la reserva", async () => {
+      const response = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "hibrida" }))
+        .expect(400);
+
+      expect(response.body.details.fieldErrors).toHaveProperty("modality");
+      expect(await Booking.countDocuments({})).toBe(0);
+    });
+
+    it("expone la modalidad en el enlace de gestión de la familia", async () => {
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "presencial" }))
+        .expect(201);
+
+      const managed = await request(app)
+        .get("/api/bookings/manage")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .expect(200);
+
+      expect(managed.body.data.modality).toBe("presencial");
+    });
+
+    it("conserva la modalidad al reprogramar", async () => {
+      // Reprogramar mueve el horario. No puede cambiar dónde se da la clase.
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "presencial" }))
+        .expect(201);
+
+      const rescheduled = await request(app)
+        .post("/api/bookings/reschedule")
+        .set("X-Booking-Manage-Token", created.body.data.managementToken)
+        .send({
+          bookingCode: created.body.data.bookingCode,
+          newTimeSlot: formatForApi(tomorrowAt(14)),
+          newDuration: 1,
+        })
+        .expect(200);
+
+      expect(rescheduled.body.data.modality).toBe("presencial");
+    });
+
+    it("deja al admin corregir la modalidad de una reserva existente", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "online" }))
+        .expect(201);
+
+      const stored = await Booking.findOne({
+        bookingCode: created.body.data.bookingCode,
+      }).lean();
+
+      await request(app)
+        .put(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ modality: "presencial" })
+        .expect(200);
+
+      const updated = await Booking.findById(stored._id).lean();
+      expect(updated.modality).toBe("presencial");
+    });
+
+    it("no resetea la modalidad cuando el admin edita otro campo", async () => {
+      const token = await createAdminAndLogin();
+      const created = await request(app)
+        .post("/api/bookings/reserve")
+        .send(validBookingPayload({ modality: "presencial" }))
+        .expect(201);
+
+      const stored = await Booking.findOne({
+        bookingCode: created.body.data.bookingCode,
+      }).lean();
+
+      await request(app)
+        .put(`/api/bookings/${stored._id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .send({ notes: "Trae la carpeta" })
+        .expect(200);
+
+      const updated = await Booking.findById(stored._id).lean();
+      expect(updated.modality).toBe("presencial");
+    });
+  });
+
   describe("subjects settings contract", () => {
     const levels = (suffix = "") => [
       { level: "Universitario", subjects: [`Cálculo${suffix}`] },

@@ -97,6 +97,61 @@ describe("booking email templates", () => {
     },
   );
 
+  it.each([
+    ["presencial", "Presencial"],
+    ["online", "Online"],
+  ])("muestra la modalidad %s en el HTML como etiqueta legible", (modality, label) => {
+    const html = buildBookingEmailHtml({
+      booking: { ...booking, modality },
+      event: "created",
+      dateStr: "20/04/2026, 10:00",
+    });
+
+    expect(html).toContain(label);
+  });
+
+  it.each([
+    ["presencial", "Presencial"],
+    ["online", "Online"],
+  ])("muestra la modalidad %s en el texto plano", (modality, label) => {
+    const text = buildBookingEmailText({
+      booking: { ...booking, modality },
+      event: "created",
+      dateStr: "20/04/2026, 10:00",
+    });
+
+    expect(text).toContain(label);
+  });
+
+  it("nunca renderiza el valor crudo ni undefined cuando falta la modalidad", () => {
+    // Las reservas anteriores al campo no lo tienen. El mail no puede decir
+    // "undefined" ni "presencial" en minuscula suelta.
+    const html = buildBookingEmailHtml({
+      booking,
+      event: "created",
+      dateStr: "20/04/2026, 10:00",
+    });
+
+    expect(html).not.toContain("undefined");
+    expect(html).toContain("Online");
+  });
+
+  it("sigue mostrando la dirección aunque la modalidad sea online", () => {
+    // Deliberado: las reservas creadas antes de este campo caen en "online" por
+    // default. Condicionar la dirección a la modalidad les borraría el dato a
+    // turnos presenciales reales ya agendados. Se condicionará cuando el wizard
+    // cargue modalidad de verdad.
+    const html = buildBookingEmailHtml({
+      booking: { ...booking, modality: "online" },
+      event: "reminder",
+      dateStr: "20/04/2026, 10:00",
+      teacherAddress: "Dirección de prueba 123",
+      teacherMapsUrl: "https://maps.example.com/test",
+    });
+
+    expect(html).toContain("Dirección de prueba 123");
+  });
+
   it("builds a generic management-link email without exposing private booking data", () => {
     const managementUrl = `https://frontend.example.com/m#token=${"b".repeat(43)}`;
     const html = buildManagementLinkEmailHtml({ booking, managementUrl });

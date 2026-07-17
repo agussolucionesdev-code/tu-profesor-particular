@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import {
   ADULT_RELATIONSHIP_VALUE,
   formatDate,
+  formatModalityLabel,
   formatResponsibleRelationshipLabel,
 } from "../utils/bookingRules.js";
 import { getSetting } from "../controllers/settingsController.js";
@@ -373,6 +374,9 @@ const buildSafeBooking = (booking = {}, dateStr = "", previousDateStr = "") => {
     isAdult: adult,
     greetingName: escapeHtml(getGreetingName(booking) || "Hola"),
     subject: escapeHtml(booking.subject || "Materia a definir"),
+    // formatModalityLabel ya cae en la etiqueta del default ante un valor
+    // ausente o desconocido: el mail nunca muestra el valor crudo.
+    modality: escapeHtml(formatModalityLabel(booking.modality)),
     educationLevel: escapeHtml(booking.educationLevel || "Nivel no cargado"),
     yearGrade: escapeHtml(booking.yearGrade || ""),
     school: escapeHtml(booking.school || "Institución no cargada"),
@@ -651,6 +655,7 @@ export const buildBookingEmailHtml = ({
                     ${infoRow("Alumno/a", safe.studentName)}
                     ${infoRow("Responsable", buildResponsibleValue(safe))}
                     ${infoRow("Materia", safe.subject)}
+                    ${infoRow("Modalidad", safe.modality)}
                     ${infoRow("Nivel", nivelValue)}
                     ${safe.school && safe.school !== "Institución no cargada" ? infoRow("Institución", safe.school) : ""}
                   </table>
@@ -730,6 +735,7 @@ export const buildBookingEmailText = ({
     `Alumno/a: ${safe.studentName}`,
     responsibleLine,
     `Materia: ${safe.subject}`,
+    `Modalidad: ${safe.modality}`,
     `Código de referencia: ${safe.rawCode}`,
     "",
   );

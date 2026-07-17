@@ -2,10 +2,13 @@ import crypto from "node:crypto";
 import mongoose from "mongoose";
 import {
   ATTENDANCE_STATUS,
+  BOOKING_MODALITY,
+  DEFAULT_BOOKING_MODALITY,
   RESPONSIBLE_RELATIONSHIP_OTHER_VALUE,
   RESPONSIBLE_RELATIONSHIP_VALUES,
   normalizeCode,
   normalizeEmail,
+  normalizeModality,
   normalizePhone,
 } from "../utils/bookingRules.js";
 
@@ -166,6 +169,17 @@ const bookingSchema = new mongoose.Schema(
     educationLevel: { type: String, required: true, trim: true, maxlength: 60 },
     yearGrade: { type: String, required: true, trim: true, maxlength: 60 },
     subject: { type: String, required: true, trim: true, maxlength: 120 },
+    // Enum y no texto libre: la modalidad decide si el mail lleva el enlace de
+    // la clase o la direccion, y el panel filtra por ella. El default mantiene
+    // validas las reservas anteriores a este campo.
+    modality: {
+      type: String,
+      enum: BOOKING_MODALITY,
+      default: DEFAULT_BOOKING_MODALITY,
+      required: true,
+      set: (value) =>
+        value === undefined || value === null ? value : normalizeModality(value),
+    },
     academicSituation: { type: String, trim: true, default: "", maxlength: 1200 },
 
     timeSlot: { type: Date, required: true, index: true },
