@@ -116,11 +116,7 @@
 /* fondo */
 .hp-hero-bg { position:absolute; inset:0; pointer-events:none; }
 
-/* Los .hp-blob eran tres manchas de color con blur(100px) animadas en bucle.
-   Es exactamente el "artificial AI look" que el brandbook pide evitar, y lo
-   opuesto a un plano limpio. Se retiran (el nodo sigue en el JSX por ahora;
-   la fase 4 lo borra del DOM). */
-.hp-blob { display: none; }
+/* Los .hp-blob (manchas con blur animadas) se retiraron del DOM en la fase 4. */
 
 /* Retícula: dos series de hairlines de 1px al 2.8%. No es un degradado de
    color — es textura plana. Se conserva. */

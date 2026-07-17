@@ -173,19 +173,8 @@
   transform: scale(1.06);
 }
 
-/* halo pulsante detrás del ícono */
-/* Ornamentos del logo: retirados.
-   Eran tres capas animadas en bucle alrededor del monograma — un glow radial
-   con blur(8px) pulsando cada 3.6s, un anillo punteado rotando cada 14s, y
-   tres chispas verdes con doble resplandor titilando en loop.
-   Nada de eso es plano, ni minimalista, ni premium: es precisamente el
-   "artificial AI look" que el brandbook pide evitar. El logo se sostiene solo.
-   Los nodos siguen en Navbar.jsx; la fase 4 los borra del DOM. */
-.brand-mark-glow,
-.brand-mark-orbit,
-.brand-mark-sparkle {
-  display: none;
-}
+/* Los ornamentos animados del logo (glow pulsante, órbita punteada, chispas)
+   se retiraron del DOM en la fase 4. El logo se sostiene solo. */
 
 /* tipografía de marca */
 .brand-copy {

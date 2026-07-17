@@ -2,17 +2,26 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const bookingFormSource = readFileSync(
-  new URL("../../src/components/BookingForm.jsx", import.meta.url),
+// Invariante: el CTA final de reserva no puede dispararse sin disponibilidad
+// verificada. En el kiosco eso vive en `isReadyToSubmit`, que gatea el botón
+// "Confirmar reserva".
+const kioskSource = readFileSync(
+  new URL("../../src/components/BookingKiosk.jsx", import.meta.url),
   "utf8",
 );
 
-const confirmationCall = bookingFormSource.match(
-  /<ConfirmationStep(?<props>[\s\S]*?)\/>/,
-)?.groups?.props;
+test("gates the final booking CTA on verified availability", () => {
+  const readyDefinition = kioskSource.match(
+    /const isReadyToSubmit =([\s\S]*?);/,
+  )?.[1];
 
-test("passes verified availability state to the final booking CTA", () => {
-  assert.ok(confirmationCall, "BookingForm must render ConfirmationStep");
-  assert.match(confirmationCall, /\bisConfirmationReady=/);
-  assert.match(confirmationCall, /\bavailabilityStatus=/);
+  assert.ok(readyDefinition, "BookingKiosk debe definir isReadyToSubmit");
+  assert.match(readyDefinition, /availabilityStatus === "ready"/);
+  assert.match(readyDefinition, /isSelectedTimeVerified/);
+
+  // El botón de confirmar queda deshabilitado si no hay disponibilidad lista.
+  assert.match(
+    kioskSource,
+    /kiosk-confirm[\s\S]*?disabled=\{loading \|\| !isReadyToSubmit\}/,
+  );
 });

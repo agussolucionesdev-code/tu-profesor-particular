@@ -9,10 +9,8 @@ const readSource = (relativePath) =>
 const navbarSource = readSource("../../src/layouts/Navbar.jsx");
 const footerSource = readSource("../../src/layouts/Footer.jsx");
 const homeSource = readSource("../../src/pages/HomePage.jsx");
-const bookingSource = readSource("../../src/components/BookingForm.jsx");
-const confirmationSource = readSource(
-  "../../src/components/booking/steps/ConfirmationStep.jsx",
-);
+const kioskSource = readSource("../../src/components/BookingKiosk.jsx");
+const kioskConstants = readSource("../../src/constants/kioskWizard.js");
 
 test("offers an explicit home destination and makes the brand return home", () => {
   assert.match(navbarSource, /title:\s*"Inicio",\s*path:\s*"\/"/);
@@ -55,13 +53,18 @@ test("renders only explicitly configured social profiles", () => {
 
 test("states one consistent online and in-person offer", () => {
   assert.match(homeSource, /Clases online y presenciales/i);
-  assert.match(bookingSource, /Online y presencial en Temperley/i);
+  // La oferta online/presencial ahora es un paso del kiosco, con la ubicación
+  // presencial explícita.
+  assert.match(kioskConstants, /value: "online"/);
+  assert.match(kioskConstants, /value: "presencial"/);
+  assert.match(kioskConstants, /Temperley/i);
 });
 
 test("uses the secure management access and an honest unpublished-price state", () => {
   assert.match(homeSource, /enlace seguro/i);
   assert.doesNotMatch(homeSource, /Todo desde el portal con tu código/i);
-  assert.match(bookingSource, /Precio no publicado/i);
-  assert.match(confirmationSource, /Precio no publicado/i);
-  assert.doesNotMatch(confirmationSource, /Precio:\s*A coordinar/i);
+  // Precio honesto: el kiosco muestra un estimado SOLO si hay precio publicado
+  // (pricePerHour > 0); nunca renderiza "$0" ni un precio inventado.
+  assert.match(kioskSource, /pricePerHour > 0 && formData\.duration/);
+  assert.match(kioskSource, /\{priceLabel &&/);
 });
