@@ -1,5 +1,9 @@
 /* ============================================================
-   BrandLoader — branded loading screen with logo pulse
+   BrandLoader — pantalla de carga de marca, plana y premium.
+   El logo va contenido en un tile de tamaño fijo (como el del
+   navbar) para que NUNCA se infle. Nada de escalar la imagen
+   raster (se ve barato); la vida la da un tile que respira y una
+   barra indeterminada con el verde de marca.
    ============================================================ */
 
 .brand-loader {
@@ -9,69 +13,90 @@
   justify-content: center;
   min-height: 60dvh;
   padding: 2rem;
-  gap: 1.5rem;
+  gap: 1.4rem;
+  animation: brandLoaderIn 0.4s ease both;
 }
 
-.brand-loader-logo {
-  width: 56px;
-  height: 56px;
+@keyframes brandLoaderIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tile contenedor: mismo lenguaje que el .brand-mark del navbar. */
+.brand-loader-mark {
+  width: 84px;
+  height: 84px;
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid var(--border-color, rgba(0, 33, 76, 0.12));
+  animation: brandLoaderBreathe 2s ease-in-out infinite;
+}
+
+[data-theme="dark"] .brand-loader-mark {
+  background: rgba(216, 238, 220, 0.9);
+  border-color: rgba(136, 206, 147, 0.3);
+}
+
+/* CLAVE del arreglo: contener el logo pase lo que pase con la cascada global.
+   La especificidad de dos clases le gana a .theme-logo__image (width:auto),
+   que era lo que dejaba inflar la imagen a todo el ancho. */
+.brand-loader-mark .theme-logo {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.brand-loader-mark .brand-loader-logo {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  animation: brandPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  display: block;
 }
 
-@keyframes brandPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.75;
-  }
-  50% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
+@keyframes brandLoaderBreathe {
+  0%, 100% { transform: translateY(0); opacity: 0.9; }
+  50% { transform: translateY(-3px); opacity: 1; }
 }
 
-.brand-loader-bar {
-  width: 120px;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--border-soft, #e2e8f0);
+/* Barra indeterminada plana. */
+.brand-loader-track {
+  width: 160px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-soft, rgba(0, 33, 76, 0.1));
   overflow: hidden;
 }
 
-.brand-loader-bar-fill {
+.brand-loader-indicator {
   height: 100%;
-  width: 40%;
-  border-radius: 3px;
+  width: 38%;
+  border-radius: 999px;
   background: var(--brand-green, #01953c);
-  animation: barSlide 1.4s ease-in-out infinite;
+  animation: brandLoaderSlide 1.3s cubic-bezier(0.45, 0, 0.25, 1) infinite;
 }
 
-@keyframes barSlide {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(200%); }
-  100% { transform: translateX(350%); }
+@keyframes brandLoaderSlide {
+  0% { transform: translateX(-130%); }
+  100% { transform: translateX(430%); }
 }
 
 .brand-loader-text {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-text-tertiary, #7791ac);
+  color: var(--text-secondary, #3d5980);
   letter-spacing: 0.01em;
 }
 
-/* Dark mode */
-[data-theme="dark"] .brand-loader-bar {
-  background: var(--border-soft, #334155);
-}
-
-/* Reduced motion */
+/* Respeta la preferencia de menos movimiento. */
 @media (prefers-reduced-motion: reduce) {
-  .brand-loader-logo {
+  .brand-loader,
+  .brand-loader-mark {
     animation: none;
-    opacity: 1;
   }
-
-  .brand-loader-bar-fill {
+  .brand-loader-mark { opacity: 1; }
+  .brand-loader-indicator {
     animation: none;
     width: 100%;
     opacity: 0.5;
