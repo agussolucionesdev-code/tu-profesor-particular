@@ -24,6 +24,7 @@ import {
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
+import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import "./HomePage.css";
 
 /* ── datos ─────────────────────────────────────────── */
@@ -91,41 +92,30 @@ const LEVEL_FORM_MAP = {
 };
 
 const LEVELS = [
-  { label: "Primaria",             emoji: "✏️" },
-  { label: "Secundaria",           emoji: "📐" },
-  { label: "Secundaria Técnica",   emoji: "🔧" },
-  { label: "Terciario / Superior", emoji: "📚" },
-  { label: "Universitario",        emoji: "🎓" },
-];
-
-const STEPS = [
   {
-    num: "01",
-    icon: FaUserGraduate,
-    title: "Contanos tu situación",
-    desc: "Materia, nivel y contexto. Sin formularios eternos: en pocos pasos tenemos lo que necesitamos.",
-    tag: "Sin registro. Sin contraseña.",
+    label: "Primaria",
+    emoji: "✏️",
+    desc: "Bases sólidas desde el principio. Acompañamiento en las materias troncales, con paciencia y sin apurar etapas.",
   },
   {
-    num: "02",
-    icon: FaRegClock,
-    title: "Elegí el día y la hora",
-    desc: "Calendario en tiempo real. Solo aparecen los turnos disponibles — nada que ya esté ocupado.",
-    tag: "Lun. a Sáb., horario amplio.",
+    label: "Secundaria",
+    emoji: "📐",
+    desc: "El tramo donde más se necesita claridad. Matemática, Física, Química y más, alineado a lo que te toman en clase.",
   },
   {
-    num: "03",
-    icon: FaClipboardList,
-    title: "Confirmá y guardá tu acceso",
-    desc: "Recibís un código visible y un enlace seguro. Ese enlace te permite reprogramar, cancelar o consultar el turno sin exponer tus datos.",
-    tag: "Comprobante por email opcional.",
+    label: "Secundaria Técnica",
+    emoji: "🔧",
+    desc: "Las materias técnicas con su lógica propia: dibujo, electricidad, electrónica, mecánica y las ciencias que las sostienen.",
   },
   {
-    num: "04",
-    icon: FaClipboardCheck,
-    title: "Llegá con tus dudas",
-    desc: "La primera clase es de diagnóstico. Entendemos dónde estás parado y trazamos el camino desde ahí.",
-    tag: "Online o presencial en Temperley.",
+    label: "Terciario / Superior",
+    emoji: "📚",
+    desc: "Formación docente y carreras superiores: pedagogía, didáctica, metodología de la investigación y más.",
+  },
+  {
+    label: "Universitario",
+    emoji: "🎓",
+    desc: "El filtro de los primeros años: Análisis, Álgebra, Física, Química, Estadística y las materias que frenan a todos.",
   },
 ];
 
@@ -267,52 +257,9 @@ const HomePage = () => {
       </section>
 
       {/* ════════════════════════════════════════
-          CÓMO RESERVAR — 3D cards
+          CÓMO RESERVAR — recreación en vivo del kiosco
       ════════════════════════════════════════ */}
-      <section className="hp-section hp-section--dark" aria-labelledby="hp-steps-title">
-        <div className="hp-section-inner">
-          <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker hp-kicker--green">Simple, rápido, sin fricción</span>
-            <h2 id="hp-steps-title" className="hp-section-h2 hp-section-h2--light">
-              Reservar es lo más fácil
-            </h2>
-            <p className="hp-section-p hp-section-p--light">
-              Porque la barrera para empezar tiene que ser cero. Gestioná la reserva online, desde el celular y paso a paso.
-            </p>
-          </div>
-
-          <ol className="hp-steps-grid" aria-label="Pasos para reservar">
-            {STEPS.map((step) => {
-              const Icon = step.icon;
-              return (
-                <li key={step.num} className="hp-step-card">
-                  <div className="hp-step-card-inner">
-                    <div className="hp-step-num-wrap">
-                      <span className="hp-step-num">{step.num}</span>
-                    </div>
-                    <div className="hp-step-icon-wrap">
-                      <Icon aria-hidden="true" />
-                    </div>
-                    <strong className="hp-step-title">{step.title}</strong>
-                    <p className="hp-step-desc">{step.desc}</p>
-                    <span className="hp-step-tag">{step.tag}</span>
-                  </div>
-                  <div className="hp-step-glow" aria-hidden="true" />
-                </li>
-              );
-            })}
-          </ol>
-
-          <div className="hp-steps-cta">
-            <Link to="/reservar" className="hp-cta-main hp-cta-xl">
-              <FaCalendarCheck aria-hidden="true" />
-              Empezar ahora — sin adelanto
-              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-            </Link>
-            <p className="hp-steps-note">Sin tarjeta. Sin contrato. Sin compromiso.</p>
-          </div>
-        </div>
-      </section>
+      <BookingStepsShowcase />
 
       {/* ════════════════════════════════════════
           MATERIAS — flip 3D cards
@@ -455,6 +402,7 @@ const HomePage = () => {
                 >
                   <span className="hp-level-emoji" aria-hidden="true">{l.emoji}</span>
                   <span className="hp-level-label">{l.label}</span>
+                  <span className="hp-level-desc">{l.desc}</span>
                   <span className="hp-level-cta">Reservar →</span>
                 </Link>
               </li>
