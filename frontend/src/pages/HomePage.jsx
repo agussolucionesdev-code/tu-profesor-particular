@@ -25,6 +25,7 @@ import {
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
+import { getSubjectIcon } from "../constants/subjectIcons";
 import "./HomePage.css";
 
 /* ── datos ─────────────────────────────────────────── */
@@ -190,63 +191,107 @@ const HomePage = () => {
         </div>
 
         <div className="hp-hero-inner">
-          <div className="hp-hero-logo" aria-hidden="true">
-            <ThemeLogo variant="full" imgClassName="hp-logo-img" alt="Tu Profesor Particular" />
-          </div>
+          {/* ── Columna copy ── */}
+          <div className="hp-hero-copy">
+            <div className="hp-hero-badge">
+              <span className="hp-hero-badge-dot" aria-hidden="true" />
+              Clases online y presenciales · Temperley, Buenos Aires
+            </div>
 
-          <div className="hp-hero-badge">
-            <span className="hp-hero-badge-dot" aria-hidden="true" />
-            Clases online y presenciales · Temperley, Buenos Aires
-          </div>
+            <h1 className="hp-hero-h1">
+              Entendé de verdad,<br />
+              <span className="hp-h1-accent">no&nbsp;de&nbsp;memoria</span>
+            </h1>
 
-          <h1 className="hp-hero-h1">
-            Entendé de verdad,<br />
-            <span className="hp-h1-accent">no&nbsp;de&nbsp;memoria</span>
-          </h1>
-
-          <p className="hp-hero-sub">
-            ¿Estudiás y el resultado no cambia? Acá encontrás la clase que te faltaba.<br />
-            Matemáticas · Física · Fisicoquímica · Química · Inglés
-          </p>
-
-          <div className="hp-hero-chips" aria-label="Garantías">
-            {[
-              { icon: FaCheckCircle, text: "Sin pagos por adelantado" },
-              { icon: FaCheckCircle, text: "Primera clase de diagnóstico" },
-              { icon: FaCheckCircle, text: "Reserva simple y guiada" },
-            ].map((c) => (
-              <span key={c.text} className="hp-chip">
-                <c.icon aria-hidden="true" /> {c.text}
+            <p className="hp-hero-sub">
+              ¿Estudiás y el resultado no cambia? Acá encontrás la clase que te faltaba.
+              <span className="hp-hero-subjects-line">
+                Matemáticas · Física · Fisicoquímica · Química · Inglés
               </span>
-            ))}
+            </p>
+
+            <div className="hp-hero-chips" aria-label="Garantías">
+              {[
+                { icon: FaCheckCircle, text: "Sin pagos por adelantado" },
+                { icon: FaCheckCircle, text: "Primera clase de diagnóstico" },
+                { icon: FaCheckCircle, text: "Reserva simple y guiada" },
+              ].map((c) => (
+                <span key={c.text} className="hp-chip">
+                  <c.icon aria-hidden="true" /> {c.text}
+                </span>
+              ))}
+            </div>
+
+            <div className="hp-hero-ctas">
+              <Link to="/reservar" className="hp-cta-main">
+                <FaCalendarCheck aria-hidden="true" />
+                Reservar mi clase — sin adelanto
+                <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+              </Link>
+              <a
+                href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
+                className="hp-cta-ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaWhatsapp aria-hidden="true" />
+                Consultar antes
+              </a>
+            </div>
+
+            <ul className="hp-hero-trust" aria-label="Cómo funciona">
+              <li>Sin registro ni contraseña</li>
+              <li>Reservás en menos de un minuto</li>
+              <li>Gestionás con tu código</li>
+            </ul>
           </div>
 
-          <div className="hp-hero-ctas">
-            <Link to="/reservar" className="hp-cta-main">
-              <FaCalendarCheck aria-hidden="true" />
-              Reservar mi clase — sin adelanto
-              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-            </Link>
-            <a
-              href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
-              className="hp-cta-ghost"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaWhatsapp aria-hidden="true" />
-              Consultar antes
-            </a>
-          </div>
-
-          {/* mini preview de pasos en el hero */}
-          <div className="hp-hero-steps-preview" aria-hidden="true">
-            {["Contás tu situación", "Elegís día y hora", "Llegás con tus dudas"].map((s, i) => (
-              <div key={s} className="hp-preview-step">
-                <span className="hp-preview-num">{i + 1}</span>
-                <span className="hp-preview-label">{s}</span>
-                {i < 2 && <FaArrowRight className="hp-preview-arrow" />}
+          {/* ── Columna vista previa en vivo del kiosco ── */}
+          <div className="hp-hero-preview" aria-hidden="true">
+            <div className="hp-hero-device">
+              <div className="hp-hero-device-bar">
+                <span className="hp-hero-device-dot" />
+                <span className="hp-hero-device-dot" />
+                <span className="hp-hero-device-dot" />
+                <span className="hp-hero-device-url">turnos.tuprofesorparticular.com.ar</span>
               </div>
-            ))}
+              <div className="hp-hero-device-body">
+                <div className="hp-hero-mini-stepper">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <span
+                      key={n}
+                      className={`hp-hero-mini-dot ${n === 1 ? "is-current" : ""}`}
+                    >
+                      {n}
+                    </span>
+                  ))}
+                </div>
+                <p className="hp-hero-device-title">¿Qué materia?</p>
+                <div className="hp-hero-device-grid">
+                  {["Matemática", "Física", "Química", "Biología", "Historia", "Inglés"].map(
+                    (s, i) => {
+                      const Icon = getSubjectIcon(s);
+                      return (
+                        <span
+                          key={s}
+                          className={`hp-hero-subject ${i === 0 ? "is-selected" : ""}`}
+                        >
+                          <Icon aria-hidden="true" />
+                          {s}
+                        </span>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <span className="hp-hero-float hp-hero-float--a">
+              <FaCheckCircle aria-hidden="true" /> Sin adelanto
+            </span>
+            <span className="hp-hero-float hp-hero-float--b">
+              <FaRegClock aria-hidden="true" /> Turno en 1 minuto
+            </span>
           </div>
         </div>
 
