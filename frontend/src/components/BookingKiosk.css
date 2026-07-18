@@ -162,11 +162,29 @@
   font-size: 1.6rem;
   color: var(--brand-green-600);
   margin-bottom: 0.25rem;
+  line-height: 1;
 }
+.kiosk-choice-icon-sm { font-size: 1.15rem; margin-bottom: 0; }
 .kiosk-choice-modality {
   align-items: flex-start;
   padding: 1.4rem 1.25rem;
 }
+
+/* Card de materia: ícono + etiqueta en fila, compacta. El ícono es decorativo
+   (aria-hidden); la etiqueta carga el significado. */
+.kiosk-choice-subject {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+}
+.kiosk-choice-subject .kiosk-choice-label { font-size: 0.98rem; }
+.kiosk-choice-subject .kiosk-choice-icon {
+  flex-shrink: 0;
+  color: var(--brand-navy);
+}
+.kiosk-choice-subject:hover .kiosk-choice-icon { color: var(--brand-green-600); }
+.kiosk-choice-subject.is-selected .kiosk-choice-icon { color: var(--brand-green-600); }
 
 /* ── Chips (duración) ────────────────────────────────────────────────────── */
 .kiosk-field-label {
