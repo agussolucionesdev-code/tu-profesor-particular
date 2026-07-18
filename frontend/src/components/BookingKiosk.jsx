@@ -19,6 +19,7 @@ import { createBooking, fetchPublicSettings } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
+import { getSubjectIcon, getLevelIcon } from "../constants/subjectIcons";
 import {
   KIOSK_STEPS,
   LEVEL_OPTIONS,
@@ -439,17 +440,23 @@ const BookingKiosk = () => {
                 <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué estás cursando?</h1>
                 <p className="kiosk-subtitle">Elegí el nivel para ver las materias.</p>
                 <div className="kiosk-grid kiosk-grid-levels">
-                  {LEVEL_OPTIONS.map((lvl) => (
-                    <button
-                      key={lvl.value}
-                      type="button"
-                      className="kiosk-choice-card"
-                      onClick={() => chooseLevel(lvl.value)}
-                    >
-                      <span className="kiosk-choice-label">{lvl.label}</span>
-                      <span className="kiosk-choice-hint">{lvl.hint}</span>
-                    </button>
-                  ))}
+                  {LEVEL_OPTIONS.map((lvl) => {
+                    const LevelIcon = getLevelIcon(lvl.value);
+                    return (
+                      <button
+                        key={lvl.value}
+                        type="button"
+                        className="kiosk-choice-card"
+                        onClick={() => chooseLevel(lvl.value)}
+                      >
+                        <span className="kiosk-choice-icon" aria-hidden="true">
+                          <LevelIcon />
+                        </span>
+                        <span className="kiosk-choice-label">{lvl.label}</span>
+                        <span className="kiosk-choice-hint">{lvl.hint}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             ) : (
@@ -470,16 +477,22 @@ const BookingKiosk = () => {
                   </button>
                 </div>
                 <div className="kiosk-grid kiosk-grid-subjects">
-                  {subjectsForLevel.map((subject) => (
-                    <button
-                      key={subject}
-                      type="button"
-                      className={`kiosk-choice-card kiosk-choice-compact ${formData.subject === subject ? "is-selected" : ""}`}
-                      onClick={() => chooseSubject(subject)}
-                    >
-                      <span className="kiosk-choice-label">{subject}</span>
-                    </button>
-                  ))}
+                  {subjectsForLevel.map((subject) => {
+                    const SubjectIcon = getSubjectIcon(subject);
+                    return (
+                      <button
+                        key={subject}
+                        type="button"
+                        className={`kiosk-choice-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
+                        onClick={() => chooseSubject(subject)}
+                      >
+                        <span className="kiosk-choice-icon kiosk-choice-icon-sm" aria-hidden="true">
+                          <SubjectIcon />
+                        </span>
+                        <span className="kiosk-choice-label">{subject}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
