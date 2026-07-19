@@ -1,0 +1,128 @@
+/* ============================================================
+   HeroKioskDemo — la app que se reserva sola. Flat + marca.
+   ============================================================ */
+.hkd {
+  width: min(360px, 100%);
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.hkd-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 11px 14px;
+  background: #f6f7f8;
+  border-bottom: 1px solid rgba(0, 33, 76, 0.08);
+}
+.hkd-dot { width: 9px; height: 9px; border-radius: 50%; background: #d5d8db; }
+.hkd-url {
+  margin-left: 10px; font-size: 11px; color: #747980;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.hkd-body { padding: 18px; min-height: 244px; }
+
+/* stepper */
+.hkd-stepper { display: flex; gap: 6px; margin-bottom: 16px; }
+.hkd-step {
+  flex: 1; height: 24px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+  background: #e9ebed; color: #747980;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+.hkd-step.is-current { background: #00214c; color: #fff; }
+.hkd-step.is-done { background: #01953c; color: #fff; }
+
+/* stage: cada paso entra animado (re-mount por key) */
+.hkd-stage { animation: hkdStepIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes hkdStepIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.hkd-title { font-size: 16px; font-weight: 800; color: #00214c; margin: 0 0 12px; }
+.hkd-label {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #747980; margin: 12px 0 6px;
+}
+
+/* materias / modalidad grid */
+.hkd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.hkd-cell {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 11px; border-radius: 10px;
+  border: 1.5px solid rgba(0, 33, 76, 0.12); background: #fff;
+  font-size: 13px; font-weight: 700; color: #00214c;
+}
+.hkd-cell svg { color: #00214c; flex-shrink: 0; }
+.hkd-cell.is-sel { border-color: #00214c; background: #f2f7fe; }
+.hkd-cell.is-sel svg { color: #006d1f; }
+
+.hkd-modal {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px; border-radius: 12px;
+  border: 1.5px solid rgba(0, 33, 76, 0.12); background: #fff;
+}
+.hkd-modal svg { font-size: 1.25rem; color: #006d1f; margin-bottom: 3px; }
+.hkd-modal strong { font-size: 13.5px; color: #00214c; }
+.hkd-modal small { font-size: 11px; color: #53595f; }
+.hkd-modal.is-sel { border-color: #00214c; background: #f2f7fe; }
+
+/* turno */
+.hkd-pills { display: flex; gap: 6px; }
+.hkd-pill {
+  padding: 6px 12px; border-radius: 999px;
+  border: 1.5px solid rgba(0, 33, 76, 0.12); background: #fff;
+  font-size: 12px; font-weight: 700; color: #00214c;
+}
+.hkd-pill.is-sel { background: #00214c; color: #fff; border-color: #00214c; }
+.hkd-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.hkd-slot {
+  min-width: 60px; text-align: center;
+  padding: 8px 6px; border-radius: 8px;
+  border: 1.5px solid rgba(0, 33, 76, 0.12); background: #fff;
+  font-size: 13px; font-weight: 800; color: #00214c;
+}
+.hkd-slot.is-sel { border-color: #01953c; background: #eafdec; color: #004b04; }
+
+/* datos */
+.hkd-form { display: flex; flex-direction: column; gap: 8px; }
+.hkd-input {
+  padding: 10px 12px; border-radius: 8px;
+  border: 1.5px solid rgba(0, 33, 76, 0.12); background: #fff;
+  font-size: 13px; color: #00214c; overflow: hidden; white-space: nowrap;
+}
+.hkd-muted { color: #94999e; }
+.hkd-typed { border-color: #01953c; }
+
+/* confirmar */
+.hkd-summary { border: 1px solid rgba(0, 33, 76, 0.12); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.hkd-summary > div {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 8px 11px; border-bottom: 1px solid rgba(0, 33, 76, 0.07);
+}
+.hkd-summary > div:last-child { border-bottom: none; }
+.hkd-summary span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #747980; }
+.hkd-summary strong { font-size: 13px; color: #00214c; }
+.hkd-confirm {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px; border-radius: 10px;
+  background: #01953c; color: #fff; font-weight: 800; font-size: 14px;
+}
+
+/* barra de progreso inferior */
+.hkd-progress { height: 4px; background: #e9ebed; }
+.hkd-progress-fill {
+  display: block; height: 100%;
+  background: #01953c;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hkd-stage { animation: none; }
+  .hkd-progress-fill, .hkd-step { transition: none; }
+}

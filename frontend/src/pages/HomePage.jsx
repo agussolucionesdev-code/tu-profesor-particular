@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
@@ -25,6 +26,7 @@ import {
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
+import HeroKioskDemo from "../components/home/HeroKioskDemo";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
 import "./HomePage.css";
@@ -162,6 +164,58 @@ const HomePage = () => {
     "¿Estudiás pero el resultado no cambia? Clases online y presenciales en Temperley de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro ni pagos por adelantado.",
   );
 
+  // Reveal al hacer scroll. Se aplica por JS: la clase que oculta la agrega el
+  // efecto, así sin JS el contenido queda visible (nada se esconde por CSS solo).
+  useEffect(() => {
+    const els = document.querySelectorAll(".hp-section, .hp-cta-section, .bss");
+    if (!els.length) return undefined;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (reduced || typeof IntersectionObserver === "undefined") {
+      els.forEach((el) => el.classList.add("hp-reveal", "is-in"));
+      return undefined;
+    }
+    els.forEach((el) => el.classList.add("hp-reveal"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) {
+            en.target.classList.add("is-in");
+            io.unobserve(en.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    // Red de seguridad: si el observer no dispara (pestaña oculta, error, etc.)
+    // nada puede quedar invisible. A los 3s se revela todo lo que falte.
+    const fallback = window.setTimeout(() => {
+      els.forEach((el) => el.classList.add("is-in"));
+    }, 3000);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
+  }, []);
+
+  // Tilt 3D: el visual del hero sigue al mouse (sutil). Se anula en reduced-motion.
+  const tiltRef = useRef(null);
+  const handleTilt = (e) => {
+    const el = tiltRef.current;
+    if (!el || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.style.setProperty("--ry", `${(px * 9).toFixed(2)}deg`);
+    el.style.setProperty("--rx", `${(-py * 6).toFixed(2)}deg`);
+  };
+  const resetTilt = () => {
+    const el = tiltRef.current;
+    if (!el) return;
+    el.style.setProperty("--ry", "0deg");
+    el.style.setProperty("--rx", "0deg");
+  };
+
   return (
     <div className="hp">
 
@@ -253,64 +307,39 @@ const HomePage = () => {
             </ul>
           </div>
 
-          {/* ── Columna visual: foto + app en vivo ── */}
-          <div className="hp-hero-visual" aria-hidden="true">
-            <div className="hp-hero-portrait">
-              <span className="hp-hero-portrait-block" />
-              <img
-                src={agustinHero}
-                alt="Agustín Elías Sosa, tu profesor particular"
-                className="hp-hero-portrait-img"
-                width="800"
-                height="1069"
-              />
-              <span className="hp-hero-nameplate">
-                <strong>Agustín Elías Sosa</strong>
-                <span>Tu profesor de confianza</span>
+          {/* ── Columna visual: demo animado + profe ── */}
+          <div
+            className="hp-hero-visual"
+            aria-hidden="true"
+            onMouseMove={handleTilt}
+            onMouseLeave={resetTilt}
+          >
+            <div className="hp-hero-tilt" ref={tiltRef}>
+              <div className="hp-hero-glow-ring" />
+              <HeroKioskDemo />
+
+              {/* profe: avatar + nombre */}
+              <div className="hp-hero-profe">
+                <img
+                  src={agustinHero}
+                  alt="Agustín Elías Sosa"
+                  className="hp-hero-profe-img"
+                  width="800"
+                  height="1069"
+                />
+                <span className="hp-hero-profe-copy">
+                  <strong>Agustín Elías Sosa</strong>
+                  <span>Tu profesor de confianza</span>
+                </span>
+              </div>
+
+              <span className="hp-hero-float hp-hero-float--a">
+                <FaCheckCircle aria-hidden="true" /> Sin adelanto
+              </span>
+              <span className="hp-hero-float hp-hero-float--b">
+                <FaRegClock aria-hidden="true" /> Reservás en 1 minuto
               </span>
             </div>
-
-            <div className="hp-hero-device">
-              <div className="hp-hero-device-bar">
-                <span className="hp-hero-device-dot" />
-                <span className="hp-hero-device-dot" />
-                <span className="hp-hero-device-dot" />
-              </div>
-              <div className="hp-hero-device-body">
-                <div className="hp-hero-mini-stepper">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <span
-                      key={n}
-                      className={`hp-hero-mini-dot ${n === 1 ? "is-current" : ""}`}
-                    >
-                      {n}
-                    </span>
-                  ))}
-                </div>
-                <p className="hp-hero-device-title">¿Qué materia?</p>
-                <div className="hp-hero-device-grid">
-                  {["Matemática", "Física", "Química", "Inglés"].map((s, i) => {
-                    const Icon = getSubjectIcon(s);
-                    return (
-                      <span
-                        key={s}
-                        className={`hp-hero-subject ${i === 0 ? "is-selected" : ""}`}
-                      >
-                        <Icon aria-hidden="true" />
-                        {s}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <span className="hp-hero-float hp-hero-float--a">
-              <FaCheckCircle aria-hidden="true" /> Sin adelanto
-            </span>
-            <span className="hp-hero-float hp-hero-float--b">
-              <FaRegClock aria-hidden="true" /> Turno en 1 minuto
-            </span>
           </div>
         </div>
 

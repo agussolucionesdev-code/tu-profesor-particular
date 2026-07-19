@@ -256,90 +256,61 @@
   color: var(--green-on-dark); font-weight: 900;
 }
 
-/* ── Visual: foto + app en vivo ── */
+/* ── Visual: demo animado + profe ── */
 .hp-hero-visual {
   position: relative;
   display: flex; justify-content: center;
+  perspective: 1200px;
   animation: fade-up .7s .3s ease both;
 }
-
-.hp-hero-portrait {
+/* tilt 3D (sigue al mouse vía --rx/--ry) + flotación continua */
+.hp-hero-tilt {
   position: relative;
-  width: min(400px, 100%);
+  width: min(360px, 100%);
+  transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+  animation: hpHeroFloat 6s ease-in-out infinite;
 }
-/* bloque de color plano offset detrás de la foto = profundidad sin sombra */
-.hp-hero-portrait-block {
-  position: absolute;
-  inset: 18px -18px -18px 18px;
-  border-radius: 26px;
-  background: var(--green);
-  z-index: 0;
+@keyframes hpHeroFloat {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -12px; }
 }
-.hp-hero-portrait-img {
-  position: relative; z-index: 1;
-  display: block; width: 100%; height: auto;
-  aspect-ratio: 4 / 5;
-  object-fit: cover; object-position: 50% 22%;
-  border-radius: 24px;
-  border: 3px solid #fff;
-}
-.hp-hero-nameplate {
-  position: absolute; z-index: 2;
-  left: 14px; bottom: 14px;
-  display: flex; flex-direction: column;
-  padding: 10px 16px; border-radius: 14px;
-  background: rgba(0,33,76,.86);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,.14);
-}
-.hp-hero-nameplate strong { color: #fff; font-size: 15px; font-weight: 800; }
-.hp-hero-nameplate span { color: var(--green-on-dark); font-size: 12px; font-weight: 700; }
 
-/* tarjeta app superpuesta */
-.hp-hero-device {
-  position: absolute; z-index: 3;
-  right: -28px; bottom: 40px;
-  width: 260px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.18);
-  overflow: hidden;
+/* aro de acento verde detrás del demo */
+.hp-hero-glow-ring {
+  position: absolute; z-index: 0;
+  left: -12%; top: -8%; width: 124%; height: 116%;
+  border-radius: 32px;
+  border: 1px solid rgba(1,149,60,.30);
+  pointer-events: none;
 }
-.hp-hero-device-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 9px 12px;
-  border-bottom: 1px solid rgba(0,33,76,.08);
-  background: #f6f7f8;
+
+/* profe: avatar + nombre */
+.hp-hero-profe {
+  position: absolute; z-index: 6;
+  left: 50%; bottom: -26px; translate: -50% 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px 8px 8px; border-radius: 100px;
+  background: rgba(0,33,76,.95);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 12px 26px rgba(0,0,0,.3);
+  white-space: nowrap;
+  animation: float-up 4s ease-in-out infinite .4s;
 }
-.hp-hero-device-dot { width: 8px; height: 8px; border-radius: 50%; background: #d5d8db; }
-.hp-hero-device-body { padding: 14px; }
-.hp-hero-mini-stepper { display: flex; gap: 4px; margin-bottom: 12px; }
-.hp-hero-mini-dot {
-  flex: 1; height: 20px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800;
-  background: #e9ebed; color: #747980;
+.hp-hero-profe-img {
+  width: 46px; height: 46px; border-radius: 50%;
+  object-fit: cover; object-position: 50% 22%;
+  border: 2px solid var(--green);
+  flex-shrink: 0;
 }
-.hp-hero-mini-dot.is-current { background: var(--brand-navy, #00214c); color: #fff; }
-.hp-hero-device-title {
-  font-size: 15px; font-weight: 800;
-  color: var(--brand-navy, #00214c); margin: 0 0 10px;
-}
-.hp-hero-device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.hp-hero-subject {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 9px; border-radius: 9px;
-  border: 1.5px solid rgba(0,33,76,.12); background: #fff;
-  font-size: 12px; font-weight: 700; color: var(--brand-navy, #00214c);
-}
-.hp-hero-subject svg { color: var(--brand-navy, #00214c); flex-shrink: 0; font-size: 12px; }
-.hp-hero-subject.is-selected { border-color: var(--brand-navy, #00214c); background: #f2f7fe; }
-.hp-hero-subject.is-selected svg { color: var(--brand-green-600, #006d1f); }
+.hp-hero-profe-copy { display: flex; flex-direction: column; }
+.hp-hero-profe-copy strong { color: #fff; font-size: 13px; font-weight: 800; }
+.hp-hero-profe-copy span { color: var(--green-on-dark); font-size: 11px; font-weight: 700; }
 
 /* chips flotantes de prueba */
 .hp-hero-float {
-  position: absolute; z-index: 4;
+  position: absolute; z-index: 6;
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 14px; border-radius: 100px;
   background: #ffffff; color: var(--brand-navy, #00214c);
@@ -348,8 +319,37 @@
   animation: float-up 3.5s ease-in-out infinite;
 }
 .hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
-.hp-hero-float--a { top: 6px; right: -18px; }
-.hp-hero-float--b { top: 30%; left: -26px; animation-delay: 1.2s; }
+.hp-hero-float--a { top: -14px; right: -14px; }
+.hp-hero-float--b { top: 42%; right: -28px; animation-delay: 1.2s; }
+
+/* fondo del hero en movimiento (lento y sutil) */
+.hp-hero-ring--1 { animation: hpSpin 40s linear infinite; }
+.hp-hero-ring--2 { animation: hpSpin 55s linear infinite reverse; }
+.hp-hero-blob--green { animation: hpDrift 14s ease-in-out infinite; }
+@keyframes hpSpin { to { transform: rotate(360deg); } }
+@keyframes hpDrift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-24px, -20px); }
+}
+
+/* ── Reveal al hacer scroll (clase agregada por JS) ── */
+.hp-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
+  will-change: opacity, transform;
+}
+.hp-reveal.is-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-hero-tilt,
+  .hp-hero-ring--1,
+  .hp-hero-ring--2,
+  .hp-hero-blob--green,
+  .hp-hero-profe,
+  .hp-hero-float { animation: none; }
+  .hp-reveal { opacity: 1; transform: none; transition: none; }
+}
 
 /* scroll hint */
 .hp-scroll-hint {
@@ -981,11 +981,12 @@
   .hp-hero-ctas,
   .hp-hero-trust { justify-content: center; }
   .hp-hero-visual { order: 2; }
-  .hp-hero-portrait { width: min(320px, 80vw); }
-  /* La app superpuesta y los flotantes se ocultan en mobile para no desbordar;
-     el paso a paso completo se ve más abajo. La foto queda como visual limpio. */
-  .hp-hero-device,
-  .hp-hero-float { display: none; }
+  .hp-hero-tilt { width: min(340px, 88vw); transform: none; }
+  /* En mobile el demo animado sigue siendo el protagonista; los flotantes, el
+     avatar y el aro se ocultan para no desbordar. */
+  .hp-hero-profe,
+  .hp-hero-float,
+  .hp-hero-glow-ring { display: none; }
 }
 
 @media (max-width: 768px) {
