@@ -26,16 +26,19 @@ const FOOTER_LINKS = [
   {
     to: "/reservar",
     label: "Reservar tu turno",
+    hint: "Materia, horario y listo",
     icon: <FaCalendarAlt aria-hidden="true" />,
   },
   {
     to: "/portal",
     label: "Ver mis turnos",
+    hint: "Consultá, reprogramá o cancelá",
     icon: <FaUserLock aria-hidden="true" />,
   },
   {
     to: "/admin",
     label: "Panel del profesor",
+    hint: "Acceso exclusivo",
     icon: <FaUserCog aria-hidden="true" />,
   },
 ];
@@ -89,23 +92,56 @@ const Footer = () => {
   return (
     <>
       <footer className="footer-elite">
-        <div className="footer-ambient-glow"></div>
+        <div className="footer-texture" aria-hidden="true" />
+
+        {/* ── Cinta de firma: slogan + acción rápida ── */}
+        <Reveal direction="fade" delay={0} as="div">
+          <div className="footer-ribbon">
+            <p className="footer-ribbon-slogan">
+              <span className="ribbon-a">Juntos,</span>{" "}
+              <span className="ribbon-b">despejando el camino a</span>{" "}
+              <span className="ribbon-c">la meta.</span>
+            </p>
+            <div className="footer-ribbon-actions">
+              <Link to="/reservar" className="footer-ribbon-cta">
+                <FaCalendarAlt aria-hidden="true" />
+                Reservar mi clase
+                <FaArrowRight className="ribbon-cta-arrow" aria-hidden="true" />
+              </Link>
+              <a
+                href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
+                target="_blank"
+                rel="noreferrer"
+                className="footer-ribbon-ghost"
+              >
+                <FaWhatsapp aria-hidden="true" />
+                Consultar
+              </a>
+            </div>
+          </div>
+        </Reveal>
 
         <div className="footer-grid-container">
           <Reveal direction="left" delay={0} className="footer-brand-col">
             <div className="footer-header-brand">
               <div className="logo-premium-wrapper">
-                <ThemeLogo variant="monogram" imgClassName="logo-img-transparent" alt="Tu Profesor Particular" />
+                <ThemeLogo
+                  variant="monogram"
+                  imgClassName="logo-img-transparent"
+                  alt="Tu Profesor Particular"
+                />
               </div>
 
               <div className="brand-titles">
                 <h3>Agustín Elías Sosa</h3>
-                <span>Tu profesor particular</span>
+                <span>Tu profesor de confianza</span>
               </div>
             </div>
 
             <div className="brand-philosophy">
-              <h4 className="neuro-hook">Clases particulares con orden, cercanía y seguimiento.</h4>
+              <h4 className="neuro-hook">
+                Clases particulares con orden, cercanía y seguimiento.
+              </h4>
               <p className="neuro-copy">
                 Un espacio para aprender con claridad, resolver dudas y llegar
                 a cada clase con un plan concreto, humano y adaptado a vos.
@@ -114,13 +150,13 @@ const Footer = () => {
 
             <div className="footer-value-tags">
               <span className="value-tag">
-                <FaUserCheck aria-hidden="true" /> ATENCIÓN PERSONALIZADA
+                <FaUserCheck aria-hidden="true" /> Atención personalizada
               </span>
               <span className="value-tag">
-                <FaBrain aria-hidden="true" /> ACOMPAÑAMIENTO CLARO
+                <FaBrain aria-hidden="true" /> Acompañamiento claro
               </span>
               <span className="value-tag">
-                <FaGlobe aria-hidden="true" /> GESTIÓN SIMPLE
+                <FaGlobe aria-hidden="true" /> Gestión simple
               </span>
             </div>
           </Reveal>
@@ -128,12 +164,18 @@ const Footer = () => {
           <Reveal direction="up" delay={80} className="footer-nav-col">
             <h4 className="footer-section-title">Explorar</h4>
             <nav aria-label="Navegación del pie de página">
-              <ul ref={linksRef} className={`footer-links-list reveal-list stagger-auto${linksVisible ? " is-visible" : ""}`}>
+              <ul
+                ref={linksRef}
+                className={`footer-links-list reveal-list stagger-auto${linksVisible ? " is-visible" : ""}`}
+              >
                 {FOOTER_LINKS.map((item) => (
                   <li key={item.to}>
                     <Link to={item.to} className="footer-link-item">
                       <div className="link-icon-box">{item.icon}</div>
-                      <span className="link-text">{item.label}</span>
+                      <span className="link-copy">
+                        <span className="link-text">{item.label}</span>
+                        <span className="link-hint">{item.hint}</span>
+                      </span>
                       <FaArrowRight className="link-arrow" aria-hidden="true" />
                     </Link>
                   </li>
@@ -155,11 +197,10 @@ const Footer = () => {
                   <FaWhatsapp />
                 </div>
                 <div className="contact-details">
-                  <span className="contact-label">
-                    Asesoramiento vía WhatsApp
-                  </span>
+                  <span className="contact-label">WhatsApp</span>
                   <span className="contact-value">+54 9 11 6423-6675</span>
                 </div>
+                <FaArrowRight className="contact-arrow" aria-hidden="true" />
               </a>
 
               <a
@@ -170,11 +211,12 @@ const Footer = () => {
                   <FaEnvelope />
                 </div>
                 <div className="contact-details">
-                  <span className="contact-label">Consultas por email</span>
+                  <span className="contact-label">Email</span>
                   <span className="contact-value">
                     agustinsosa.profe@gmail.com
                   </span>
                 </div>
+                <FaArrowRight className="contact-arrow" aria-hidden="true" />
               </a>
 
               <a
@@ -187,47 +229,48 @@ const Footer = () => {
                   <FaMapMarkerAlt />
                 </div>
                 <div className="contact-details">
-                  <span className="contact-label">Ubicación presencial</span>
+                  <span className="contact-label">Presencial</span>
                   <span className="contact-value">Temperley, Bs. As.</span>
                 </div>
+                <FaArrowRight className="contact-arrow" aria-hidden="true" />
               </a>
             </address>
           </Reveal>
         </div>
 
         <Reveal direction="fade" delay={200} as="div">
-        <div className="footer-bottom-panel">
-          <div className="bottom-panel-container">
-            <div className="copyright-area">
-              <p>
-                &copy; {currentYear} <strong>Agustín Elías Sosa</strong>. Todos
-                los derechos reservados.
-              </p>
-              <span className="copyright-sub">
-                Experiencia digital diseñada para reservar, gestionar y volver
-                con claridad.
-              </span>
-            </div>
+          <div className="footer-bottom-panel">
+            <div className="bottom-panel-container">
+              <div className="copyright-area">
+                <p>
+                  &copy; {currentYear} <strong>Agustín Elías Sosa</strong>.
+                  Todos los derechos reservados.
+                </p>
+                <span className="copyright-sub">
+                  Experiencia digital diseñada para reservar, gestionar y
+                  volver con claridad.
+                </span>
+              </div>
 
-            {CONFIGURED_SOCIAL_LINKS.length > 0 && (
-            <div className="social-area" aria-label="Redes sociales">
-              {CONFIGURED_SOCIAL_LINKS.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={item.className}
-                  aria-label={item.label}
-                  title={item.label}
-                >
-                  {item.icon}
-                </a>
-              ))}
+              {CONFIGURED_SOCIAL_LINKS.length > 0 && (
+                <div className="social-area" aria-label="Redes sociales">
+                  {CONFIGURED_SOCIAL_LINKS.map((item) => (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={item.className}
+                      aria-label={item.label}
+                      title={item.label}
+                    >
+                      {item.icon}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
-            )}
           </div>
-        </div>
         </Reveal>
       </footer>
 

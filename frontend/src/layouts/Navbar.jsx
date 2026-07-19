@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import {
+  FaArrowRight,
   FaBars,
   FaCalendarAlt,
   FaClipboardList,
@@ -35,6 +36,7 @@ const NAVBAR_VOICE_OPTIONS = {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [voiceMuted, setVoiceMutedState] = useState(() => isVoiceMuted());
   const [voiceBlocked, setVoiceBlocked] = useState(false);
   const [showVoiceHint, setShowVoiceHint] = useState(() => {
@@ -45,20 +47,55 @@ const Navbar = () => {
     }
   });
   const themeTransitionTimerRef = useRef(null);
+  const rafRef = useRef(0);
   const location = useLocation();
   const { effectiveTheme, setThemePreference } = useUISettings();
 
+  // Scroll: estado compacto + barra de progreso de lectura (rAF-throttled).
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    const measure = () => {
+      rafRef.current = 0;
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      setScrolled(window.scrollY > 16);
+      setScrollProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
     };
 
+    const handleScroll = () => {
+      if (!rafRef.current) {
+        rafRef.current = window.requestAnimationFrame(measure);
+      }
+    };
+
+    measure();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
-  // Hint de voz: persiste hasta interacción explícita o 12 s, ya no
-  // se descarta con el primer scroll (eso era confuso para el usuario).
+  // Menú mobile: bloquea el scroll del body y cierra con Escape.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKey = (event) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [isOpen]);
+
+  // Hint de voz: persiste hasta interacción explícita o 30 s.
   useEffect(() => {
     if (!showVoiceHint) return undefined;
 
@@ -172,13 +209,17 @@ const Navbar = () => {
 
   const navLinks = [
     { title: "Inicio", path: "/", icon: <FaHome /> },
-    { title: "Reservar", path: "/reservar", icon: <FaCalendarAlt /> },
     { title: "Mis Turnos", path: "/portal", icon: <FaClipboardList /> },
   ];
 
+  const voiceTitle = voiceBlocked
+    ? "El navegador bloqueó la voz. Habilitá el sonido para este sitio y reintentá."
+    : voiceMuted
+      ? "Activar guía por voz"
+      : "Pausar guía por voz";
+
   return (
     <nav className={`navbar-elite ${scrolled ? "scrolled" : ""}`}>
-      <div className="navbar-aurora" aria-hidden="true" />
       <div className="navbar-container">
         <Link
           to="/"
@@ -198,7 +239,19 @@ const Navbar = () => {
         </Link>
 
         <div className="navbar-right-zone">
-          <ul className={`nav-menu-list ${isOpen ? "active" : ""}`}>
+          {/* Backdrop del menú mobile */}
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            className={`nav-sheet-backdrop ${isOpen ? "active" : ""}`}
+            onClick={() => setIsOpen(false)}
+          />
+
+          <ul
+            id="nav-menu-sheet"
+            className={`nav-menu-list ${isOpen ? "active" : ""}`}
+          >
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
 
@@ -214,13 +267,26 @@ const Navbar = () => {
                       {link.icon}
                     </span>
                     <span className="nav-text">{link.title}</span>
-                    {isActive && (
-                      <span className="nav-active-pulse" aria-hidden="true" />
-                    )}
                   </Link>
                 </li>
               );
             })}
+
+            {/* CTA principal: reservar. Destacado, no un link más. */}
+            <li className="nav-item nav-item-cta">
+              <Link
+                to="/reservar"
+                className={`nav-cta-btn ${location.pathname === "/reservar" ? "active" : ""}`}
+                onClick={() => setIsOpen(false)}
+                aria-current={
+                  location.pathname === "/reservar" ? "page" : undefined
+                }
+              >
+                <FaCalendarAlt aria-hidden="true" />
+                <span>Reservar</span>
+                <FaArrowRight className="nav-cta-arrow" aria-hidden="true" />
+              </Link>
+            </li>
           </ul>
 
           <div
@@ -245,20 +311,8 @@ const Navbar = () => {
                 className={`nav-utility-btn voice-toggle-btn ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
                 onClick={toggleVoice}
                 onBlur={dismissVoiceHint}
-                title={
-                  voiceBlocked
-                    ? "El navegador bloqueó la voz. Habilitá el sonido para este sitio y reintentá."
-                    : voiceMuted
-                      ? "Activar guía por voz"
-                      : "Pausar guía por voz"
-                }
-                aria-label={
-                  voiceBlocked
-                    ? "Guía por voz bloqueada por el navegador. Tocá para reintentar."
-                    : voiceMuted
-                      ? "Activar guía por voz"
-                      : "Pausar guía por voz"
-                }
+                title={voiceTitle}
+                aria-label={voiceTitle}
                 aria-pressed={!voiceMuted}
               >
                 <span className="nav-utility-icon" aria-hidden="true">
@@ -270,19 +324,8 @@ const Navbar = () => {
                     <FaVolumeUp />
                   )}
                 </span>
-                <span className="nav-utility-copy">
-                  <strong>Guía por voz</strong>
-                  <small>
-                    {voiceBlocked
-                      ? "Habilitala en tu navegador"
-                      : voiceMuted
-                        ? "Tocá para activar"
-                        : "Te acompaño al reservar"}
-                  </small>
-                </span>
                 {!voiceMuted && !voiceBlocked && (
                   <span className="voice-wave" aria-hidden="true">
-                    <span className="voice-wave-bar" />
                     <span className="voice-wave-bar" />
                     <span className="voice-wave-bar" />
                     <span className="voice-wave-bar" />
@@ -306,17 +349,12 @@ const Navbar = () => {
                   : "Cambiar a modo oscuro"
               }
             >
-              <span className="nav-utility-icon theme-toggle-icon-wrap" aria-hidden="true">
+              <span
+                className="nav-utility-icon theme-toggle-icon-wrap"
+                aria-hidden="true"
+              >
                 <FaSun className="theme-icon theme-icon--sun" />
                 <FaMoon className="theme-icon theme-icon--moon" />
-              </span>
-              <span className="nav-utility-copy">
-                <strong>
-                  {effectiveTheme === "dark" ? "Modo claro" : "Modo oscuro"}
-                </strong>
-                <small>
-                  {effectiveTheme === "dark" ? "Iluminar vista" : "Bajar brillo"}
-                </small>
               </span>
             </button>
           </div>
@@ -327,11 +365,19 @@ const Navbar = () => {
             onClick={() => setIsOpen((currentState) => !currentState)}
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isOpen}
+            aria-controls="nav-menu-sheet"
           >
             {isOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
           </button>
         </div>
       </div>
+
+      {/* Progreso de lectura: hairline verde que crece con el scroll */}
+      <span
+        className="navbar-progress"
+        aria-hidden="true"
+        style={{ transform: `scaleX(${scrollProgress})` }}
+      />
     </nav>
   );
 };
