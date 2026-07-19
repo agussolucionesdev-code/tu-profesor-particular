@@ -26,6 +26,7 @@ import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import { getSubjectIcon } from "../constants/subjectIcons";
+import agustinHero from "../assets/images/agustin-hero.webp";
 import "./HomePage.css";
 
 /* ── datos ─────────────────────────────────────────── */
@@ -188,6 +189,9 @@ const HomePage = () => {
       <section className="hp-hero" aria-label="Inicio">
         <div className="hp-hero-bg" aria-hidden="true">
           <span className="hp-grid" />
+          <span className="hp-hero-ring hp-hero-ring--1" />
+          <span className="hp-hero-ring hp-hero-ring--2" />
+          <span className="hp-hero-blob hp-hero-blob--green" />
         </div>
 
         <div className="hp-hero-inner">
@@ -203,23 +207,26 @@ const HomePage = () => {
               <span className="hp-h1-accent">no&nbsp;de&nbsp;memoria</span>
             </h1>
 
-            <p className="hp-hero-sub">
-              ¿Estudiás y el resultado no cambia? Acá encontrás la clase que te faltaba.
-              <span className="hp-hero-subjects-line">
-                Matemáticas · Física · Fisicoquímica · Química · Inglés
-              </span>
+            <p className="hp-hero-slogan">
+              <span className="hp-slogan-a">Juntos,</span>{" "}
+              <span className="hp-slogan-b">despejando el camino a</span>{" "}
+              <span className="hp-slogan-c">la meta.</span>
             </p>
 
-            <div className="hp-hero-chips" aria-label="Garantías">
-              {[
-                { icon: FaCheckCircle, text: "Sin pagos por adelantado" },
-                { icon: FaCheckCircle, text: "Primera clase de diagnóstico" },
-                { icon: FaCheckCircle, text: "Reserva simple y guiada" },
-              ].map((c) => (
-                <span key={c.text} className="hp-chip">
-                  <c.icon aria-hidden="true" /> {c.text}
-                </span>
-              ))}
+            <p className="hp-hero-sub">
+              ¿Estudiás y el resultado no cambia? Acá está la clase que te faltaba.
+            </p>
+
+            <div className="hp-hero-subjects" aria-label="Materias principales">
+              {["Matemáticas", "Física", "Fisicoquímica", "Química", "Inglés"].map((s) => {
+                const Icon = getSubjectIcon(s);
+                return (
+                  <span key={s} className="hp-hero-subject-chip">
+                    <Icon aria-hidden="true" />
+                    {s}
+                  </span>
+                );
+              })}
             </div>
 
             <div className="hp-hero-ctas">
@@ -246,14 +253,28 @@ const HomePage = () => {
             </ul>
           </div>
 
-          {/* ── Columna vista previa en vivo del kiosco ── */}
-          <div className="hp-hero-preview" aria-hidden="true">
+          {/* ── Columna visual: foto + app en vivo ── */}
+          <div className="hp-hero-visual" aria-hidden="true">
+            <div className="hp-hero-portrait">
+              <span className="hp-hero-portrait-block" />
+              <img
+                src={agustinHero}
+                alt="Agustín Elías Sosa, tu profesor particular"
+                className="hp-hero-portrait-img"
+                width="800"
+                height="1069"
+              />
+              <span className="hp-hero-nameplate">
+                <strong>Agustín Elías Sosa</strong>
+                <span>Tu profesor de confianza</span>
+              </span>
+            </div>
+
             <div className="hp-hero-device">
               <div className="hp-hero-device-bar">
                 <span className="hp-hero-device-dot" />
                 <span className="hp-hero-device-dot" />
                 <span className="hp-hero-device-dot" />
-                <span className="hp-hero-device-url">turnos.tuprofesorparticular.com.ar</span>
               </div>
               <div className="hp-hero-device-body">
                 <div className="hp-hero-mini-stepper">
@@ -268,20 +289,18 @@ const HomePage = () => {
                 </div>
                 <p className="hp-hero-device-title">¿Qué materia?</p>
                 <div className="hp-hero-device-grid">
-                  {["Matemática", "Física", "Química", "Biología", "Historia", "Inglés"].map(
-                    (s, i) => {
-                      const Icon = getSubjectIcon(s);
-                      return (
-                        <span
-                          key={s}
-                          className={`hp-hero-subject ${i === 0 ? "is-selected" : ""}`}
-                        >
-                          <Icon aria-hidden="true" />
-                          {s}
-                        </span>
-                      );
-                    },
-                  )}
+                  {["Matemática", "Física", "Química", "Inglés"].map((s, i) => {
+                    const Icon = getSubjectIcon(s);
+                    return (
+                      <span
+                        key={s}
+                        className={`hp-hero-subject ${i === 0 ? "is-selected" : ""}`}
+                      >
+                        <Icon aria-hidden="true" />
+                        {s}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>

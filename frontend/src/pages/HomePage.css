@@ -128,15 +128,33 @@
   background-size: 56px 56px;
 }
 
-/* contenido — split: copy + vista previa de la app */
+/* Acentos de fondo — geométricos y planos (aros de 1px + un bloque de color
+   sólido a baja opacidad). Nada de degradados ni blur. */
+.hp-hero-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.hp-hero-ring--1 { width: 560px; height: 560px; top: -180px; right: -120px; }
+.hp-hero-ring--2 { width: 340px; height: 340px; bottom: -140px; left: -80px; border-color: rgba(1,149,60,.12); }
+.hp-hero-blob {
+  position: absolute; border-radius: 50%; pointer-events: none;
+}
+.hp-hero-blob--green {
+  width: 620px; height: 620px;
+  right: -260px; bottom: -320px;
+  background: rgba(1,149,60,.07);
+}
+
+/* contenido — split: copy + composición foto/app */
 .hp-hero-inner {
   position: relative;
-  max-width: 1180px;
+  max-width: 1200px;
   width: 100%;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   align-items: center;
-  gap: clamp(2rem, 5vw, 4.5rem);
+  gap: clamp(2rem, 5vw, 4rem);
 }
 
 .hp-hero-copy {
@@ -152,7 +170,7 @@
   background: rgba(255,255,255,.07);
   border: 1px solid rgba(255,255,255,.12);
   padding: 7px 16px; border-radius: 100px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   animation: fade-up .6s .05s ease both;
 }
 .hp-hero-badge-dot {
@@ -163,10 +181,10 @@
 }
 
 .hp-hero-h1 {
-  font-size: clamp(2.7rem, 5.4vw, 4.6rem);
-  font-weight: 900; line-height: 1.03;
+  font-size: clamp(2.7rem, 5.4vw, 4.7rem);
+  font-weight: 900; line-height: 1.02;
   color: var(--white);
-  margin: 0 0 20px;
+  margin: 0 0 14px;
   letter-spacing: -.04em;
   animation: fade-up .6s .1s ease both;
 }
@@ -175,42 +193,48 @@
   color: var(--green-on-dark);
 }
 
+/* Slogan del logo — firma de marca */
+.hp-hero-slogan {
+  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  margin: 0 0 20px;
+  animation: fade-up .6s .14s ease both;
+}
+.hp-slogan-a { color: #fff; }
+.hp-slogan-b { color: rgba(255,255,255,.62); font-weight: 700; }
+.hp-slogan-c { color: var(--green-on-dark); }
+
 .hp-hero-sub {
   font-size: clamp(15px, 1.5vw, 18px);
-  line-height: 1.7;
+  line-height: 1.65;
   color: rgba(255,255,255,.66);
-  margin: 0 0 26px;
-  max-width: 46ch;
-  animation: fade-up .6s .15s ease both;
-}
-.hp-hero-subjects-line {
-  display: block;
-  margin-top: 8px;
-  font-weight: 700;
-  color: rgba(255,255,255,.82);
+  margin: 0 0 22px;
+  max-width: 44ch;
+  animation: fade-up .6s .18s ease both;
 }
 
-.hp-hero-chips {
-  display: flex; flex-wrap: wrap;
-  gap: 10px; justify-content: flex-start;
-  margin-bottom: 30px;
-  animation: fade-up .6s .2s ease both;
+/* Materias destacadas — chips con ícono */
+.hp-hero-subjects {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 28px;
+  animation: fade-up .6s .22s ease both;
 }
-.hp-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 700;
-  color: rgba(255,255,255,.85);
+.hp-hero-subject-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13.5px; font-weight: 800;
+  color: #fff;
   background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  padding: 7px 14px; border-radius: 100px;
+  border: 1px solid rgba(255,255,255,.16);
+  padding: 8px 14px; border-radius: 100px;
 }
-.hp-chip svg { color: var(--green-lt); font-size: 11px; }
+.hp-hero-subject-chip svg { color: var(--green-on-dark); font-size: 14px; }
 
 .hp-hero-ctas {
   display: flex; flex-wrap: wrap;
   gap: 14px; justify-content: flex-start;
-  margin-bottom: 26px;
-  animation: fade-up .6s .25s ease both;
+  margin-bottom: 24px;
+  animation: fade-up .6s .26s ease both;
 }
 
 /* fila de confianza */
@@ -232,74 +256,100 @@
   color: var(--green-on-dark); font-weight: 900;
 }
 
-/* ── Vista previa en vivo del kiosco ── */
-.hp-hero-preview {
+/* ── Visual: foto + app en vivo ── */
+.hp-hero-visual {
   position: relative;
+  display: flex; justify-content: center;
   animation: fade-up .7s .3s ease both;
 }
-.hp-hero-device {
+
+.hp-hero-portrait {
   position: relative;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.2);
-  overflow: hidden;
-  transform: perspective(1400px) rotateY(-7deg) rotateX(2deg);
-  transition: transform .5s cubic-bezier(.22,1,.36,1);
+  width: min(400px, 100%);
 }
-.hp-hero-preview:hover .hp-hero-device {
-  transform: perspective(1400px) rotateY(0deg) rotateX(0deg);
+/* bloque de color plano offset detrás de la foto = profundidad sin sombra */
+.hp-hero-portrait-block {
+  position: absolute;
+  inset: 18px -18px -18px 18px;
+  border-radius: 26px;
+  background: var(--green);
+  z-index: 0;
+}
+.hp-hero-portrait-img {
+  position: relative; z-index: 1;
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover; object-position: 50% 22%;
+  border-radius: 24px;
+  border: 3px solid #fff;
+}
+.hp-hero-nameplate {
+  position: absolute; z-index: 2;
+  left: 14px; bottom: 14px;
+  display: flex; flex-direction: column;
+  padding: 10px 16px; border-radius: 14px;
+  background: rgba(0,33,76,.86);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.14);
+}
+.hp-hero-nameplate strong { color: #fff; font-size: 15px; font-weight: 800; }
+.hp-hero-nameplate span { color: var(--green-on-dark); font-size: 12px; font-weight: 700; }
+
+/* tarjeta app superpuesta */
+.hp-hero-device {
+  position: absolute; z-index: 3;
+  right: -28px; bottom: 40px;
+  width: 260px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.18);
+  overflow: hidden;
 }
 .hp-hero-device-bar {
   display: flex; align-items: center; gap: 6px;
-  padding: 11px 16px;
+  padding: 9px 12px;
   border-bottom: 1px solid rgba(0,33,76,.08);
   background: #f6f7f8;
 }
-.hp-hero-device-dot { width: 9px; height: 9px; border-radius: 50%; background: #d5d8db; }
-.hp-hero-device-url {
-  margin-left: 10px;
-  font-size: 11px; color: #747980;
-  font-family: var(--font-mono, monospace);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.hp-hero-device-body { padding: 20px; }
-.hp-hero-mini-stepper { display: flex; gap: 6px; margin-bottom: 14px; }
+.hp-hero-device-dot { width: 8px; height: 8px; border-radius: 50%; background: #d5d8db; }
+.hp-hero-device-body { padding: 14px; }
+.hp-hero-mini-stepper { display: flex; gap: 4px; margin-bottom: 12px; }
 .hp-hero-mini-dot {
-  flex: 1; height: 24px; border-radius: 999px;
+  flex: 1; height: 20px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
+  font-size: 11px; font-weight: 800;
   background: #e9ebed; color: #747980;
 }
 .hp-hero-mini-dot.is-current { background: var(--brand-navy, #00214c); color: #fff; }
 .hp-hero-device-title {
-  font-size: 17px; font-weight: 800;
-  color: var(--brand-navy, #00214c); margin: 0 0 12px;
+  font-size: 15px; font-weight: 800;
+  color: var(--brand-navy, #00214c); margin: 0 0 10px;
 }
-.hp-hero-device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hp-hero-device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .hp-hero-subject {
-  display: flex; align-items: center; gap: 8px;
-  padding: 11px 12px; border-radius: 10px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 9px; border-radius: 9px;
   border: 1.5px solid rgba(0,33,76,.12); background: #fff;
-  font-size: 14px; font-weight: 700; color: var(--brand-navy, #00214c);
+  font-size: 12px; font-weight: 700; color: var(--brand-navy, #00214c);
 }
-.hp-hero-subject svg { color: var(--brand-navy, #00214c); flex-shrink: 0; }
+.hp-hero-subject svg { color: var(--brand-navy, #00214c); flex-shrink: 0; font-size: 12px; }
 .hp-hero-subject.is-selected { border-color: var(--brand-navy, #00214c); background: #f2f7fe; }
 .hp-hero-subject.is-selected svg { color: var(--brand-green-600, #006d1f); }
 
 /* chips flotantes de prueba */
 .hp-hero-float {
-  position: absolute;
+  position: absolute; z-index: 4;
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 14px; border-radius: 100px;
   background: #ffffff; color: var(--brand-navy, #00214c);
   font-size: 13px; font-weight: 800;
-  box-shadow: 0 0 0 1px rgba(0,33,76,.1), 0 10px 24px rgba(0,0,0,.18);
+  box-shadow: 0 0 0 1px rgba(0,33,76,.1), 0 10px 24px rgba(0,0,0,.22);
   animation: float-up 3.5s ease-in-out infinite;
 }
 .hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
-.hp-hero-float--a { top: -16px; right: 6px; }
-.hp-hero-float--b { bottom: -16px; left: 8px; animation-delay: 1.2s; }
+.hp-hero-float--a { top: 6px; right: -18px; }
+.hp-hero-float--b { top: 30%; left: -26px; animation-delay: 1.2s; }
 
 /* scroll hint */
 .hp-scroll-hint {
@@ -923,17 +973,19 @@
 
 /* Hero split → apilado y centrado */
 @media (max-width: 900px) {
-  .hp-hero-inner { grid-template-columns: 1fr; gap: 2.5rem; max-width: 560px; }
+  .hp-hero-inner { grid-template-columns: 1fr; gap: 2.5rem; max-width: 520px; }
   .hp-hero-copy { align-items: center; text-align: center; }
   .hp-hero-sub { max-width: 52ch; }
-  .hp-hero-chips,
+  .hp-hero-slogan,
+  .hp-hero-subjects,
   .hp-hero-ctas,
   .hp-hero-trust { justify-content: center; }
-  .hp-hero-preview { order: 2; width: 100%; max-width: 420px; margin: 0 auto; }
-  .hp-hero-device {
-    transform: none;
-  }
-  .hp-hero-preview:hover .hp-hero-device { transform: none; }
+  .hp-hero-visual { order: 2; }
+  .hp-hero-portrait { width: min(320px, 80vw); }
+  /* La app superpuesta y los flotantes se ocultan en mobile para no desbordar;
+     el paso a paso completo se ve más abajo. La foto queda como visual limpio. */
+  .hp-hero-device,
+  .hp-hero-float { display: none; }
 }
 
 @media (max-width: 768px) {
