@@ -1,542 +1,554 @@
-/* ==========================================================================
-   FOOTER ÉLITE v18.0 - ACADEMIA AGUSTÍN ELÍAS SOSA
-   Safe Zone para botón flotante, Iluminación Ambient Spotlight Profesional
-   ========================================================================== */
+/* ══════════════════════════════════════════════════════════════════════════
+   Footer — cierre de página premium, plano y de marca.
+   Navy profundo (más oscuro que el hero = profundidad), retícula hairline,
+   cinta de firma con el slogan, columnas claras y micro-interacciones.
 
-/* Busca las variables :root de tu Footer.css y reemplázalas por estas */
-:root {
-  --bg-footer-base: var(--color-bg-light);
-  --bg-footer-panel: var(--color-surface-soft);
-  --bg-card-hover: var(--color-white);
-  --ft-primary: var(--color-accent);
-  --ft-primary-dark: var(--color-primary-dark);
-  --ft-primary-glow: var(--nav-accent-glow);
-  --text-pure: var(--color-text-main);
-  --text-body: var(--color-text-muted);
-  --text-muted: var(--color-text-soft);
-  --border-light: var(--border-soft);
-  --border-strong: var(--border-strong);
-  --transition-smooth: var(--transition-smooth);
-}
+   Nota de especificidad: theme-polish.css y brand-identity-refresh.css tienen
+   reglas sueltas sobre .footer-elite/.contact-card/.footer-link-item. Acá se
+   usa `footer.footer-elite` y reglas descendientes para ganarles sin tocarlas.
+   (De paso murió el :root duplicado que este archivo declaraba.)
+   ══════════════════════════════════════════════════════════════════════════ */
 
-[data-theme="dark"] {
-  --bg-footer-base: var(--color-bg-light);
-  --bg-footer-panel: var(--color-surface-soft);
-  --bg-card-hover: var(--color-surface-2);
-  --ft-primary: var(--color-accent);
-  --ft-primary-dark: var(--color-primary-dark);
-  --ft-primary-glow: var(--nav-accent-glow);
-  --text-pure: var(--color-text-main);
-  --text-body: var(--color-text-muted);
-  --text-muted: var(--color-text-soft);
-  --border-light: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-}
-.footer-elite {
-  background-color: var(--bg-footer-base);
-  color: var(--text-body);
-  font-family: "Inter", sans-serif;
+footer.footer-elite {
+  position: relative;
   margin-top: auto;
-  border-top: 1px solid var(--border-light);
-  position: relative;
+  background: var(--brand-navy-900, #000b2b);
+  border-top: 1px solid rgba(1, 149, 60, 0.35);
   overflow: hidden;
-}
-
-/* Efecto de luz ambiental superior */
-.footer-ambient-glow {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 1px;
-  background: var(--ft-primary);
   box-shadow: none;
-  opacity: 0.6;
 }
 
-.footer-grid-container {
-  max-width: 1300px;
-  margin: 0 auto;
-  padding: 6rem 2rem 5rem 2rem;
-  display: grid;
-  grid-template-columns: 1.6fr 1fr 1.2fr;
-  gap: 4rem;
+/* Retícula sutil, misma textura plana que el hero. */
+.footer-elite .footer-texture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 56px 56px;
 }
 
-/* =========================================
-   COLUMNA 1: IDENTIDAD Y COPY
-   ========================================= */
-.footer-header-brand {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 2rem;
-}
-
-/* === SOLUCIÓN AL LOGO: SIN CAJAS, CON ILUMINACIÓN TRASERA (SPOTLIGHT) === */
-.logo-premium-wrapper {
+/* ── Cinta de firma ──────────────────────────────────────────────────────── */
+.footer-elite .footer-ribbon {
   position: relative;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2rem);
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 75px;
-  height: 75px;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(204, 217, 235, 0.1);
 }
 
-/* Luz de fondo sutil proyectada detrás del logo */
-.logo-premium-wrapper::before {
+.footer-elite .footer-ribbon-slogan {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.footer-elite .ribbon-a { color: #ffffff; }
+.footer-elite .ribbon-b { color: rgba(255, 255, 255, 0.55); font-weight: 700; }
+.footer-elite .ribbon-c { color: var(--brand-green-300, #88ce93); }
+
+.footer-elite .footer-ribbon-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-elite .footer-ribbon-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  background: var(--brand-green, #01953c);
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.footer-elite .footer-ribbon-cta:hover {
+  background: var(--brand-green-deep, #006d1f);
+  transform: translateY(-2px);
+}
+
+.footer-elite .ribbon-cta-arrow {
+  font-size: 0.78rem;
+  transition: transform 180ms ease;
+}
+
+.footer-elite .footer-ribbon-cta:hover .ribbon-cta-arrow {
+  transform: translateX(4px);
+}
+
+.footer-elite .footer-ribbon-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.35rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.footer-elite .footer-ribbon-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-2px);
+}
+
+/* ── Grid principal ──────────────────────────────────────────────────────── */
+.footer-elite .footer-grid-container {
+  position: relative;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 5vw, 3.75rem) clamp(1.25rem, 4vw, 2rem);
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1.1fr;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Columna de marca */
+.footer-elite .footer-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.1rem;
+}
+
+.footer-elite .logo-premium-wrapper {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(204, 217, 235, 0.2);
+  flex-shrink: 0;
+}
+
+.footer-elite .logo-img-transparent {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.footer-elite .brand-titles h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.footer-elite .brand-titles span {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--brand-green-300, #88ce93);
+}
+
+.footer-elite .neuro-hook {
+  margin: 0 0 0.5rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.footer-elite .neuro-copy {
+  margin: 0 0 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 40ch;
+}
+
+.footer-elite .footer-value-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-elite .value-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(204, 217, 235, 0.16);
+  background: rgba(204, 217, 235, 0.05);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: none;
+}
+
+.footer-elite .value-tag svg {
+  color: var(--brand-green-300, #88ce93);
+  font-size: 0.8rem;
+}
+
+/* Títulos de sección */
+.footer-elite .footer-section-title {
+  position: relative;
+  margin: 0 0 1.2rem;
+  padding-bottom: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.footer-elite .footer-section-title::after {
   content: "";
   position: absolute;
-  width: 130%;
-  height: 130%;
-  background: none;
-  z-index: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  transition: var(--transition-smooth);
+  left: 0;
+  bottom: 0;
+  width: 34px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-green, #01953c);
 }
 
-.logo-img-transparent {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  transition: var(--transition-smooth);
-}
-
-.logo-premium-wrapper:hover::before {
-  background: none;
-  transform: scale(1.1);
-}
-.logo-premium-wrapper:hover .logo-img-transparent {
-  transform: scale(1.05);
-}
-/* ======================================================================= */
-
-.brand-titles {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.brand-titles h3 {
-  margin: 0;
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: var(--text-pure);
-  letter-spacing: -0.3px;
-}
-.brand-titles span {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--ft-primary);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-
-.brand-philosophy {
-  margin-bottom: 2rem;
-}
-.neuro-hook {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--text-pure);
-  margin: 0 0 10px 0;
-}
-.neuro-copy {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--text-body);
-  margin: 0;
-  max-width: 90%;
-}
-
-.footer-value-tags {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.value-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.value-tag svg {
-  color: var(--ft-primary);
-  font-size: 1.1rem;
-}
-
-/* =========================================
-   COLUMNA 2: NAVEGACIÓN
-   ========================================= */
-.footer-section-title {
-  color: var(--text-pure);
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 2rem;
-}
-
-.footer-links-list {
+/* Links Explorar */
+.footer-elite .footer-links-list {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0.6rem;
 }
 
-.footer-link-item {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: var(--text-body);
-  transition: var(--transition-smooth);
-}
-
-.link-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--border-light);
-  color: var(--text-muted);
+.footer-elite .footer-link-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  transition: var(--transition-smooth);
+  gap: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(204, 217, 235, 0.12);
+  background: rgba(204, 217, 235, 0.04);
+  text-decoration: none;
+  box-shadow: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
-.link-text {
-  font-size: 1rem;
-  font-weight: 500;
-  transition: var(--transition-smooth);
+.footer-elite .footer-link-item:hover {
+  border-color: rgba(1, 149, 60, 0.55);
+  background: rgba(1, 149, 60, 0.1);
+  transform: translateX(4px);
 }
 
-.link-arrow {
+.footer-elite .link-icon-box {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: rgba(1, 149, 60, 0.14);
+  color: var(--brand-green-300, #88ce93);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+.footer-elite .link-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.footer-elite .link-text {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.footer-elite .link-hint {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.footer-elite .link-arrow {
+  font-size: 0.75rem;
+  color: var(--brand-green-300, #88ce93);
   opacity: 0;
-  transform: translateX(-15px);
-  margin-left: 10px;
-  color: var(--ft-primary);
-  font-size: 0.85rem;
-  transition: var(--transition-smooth);
+  transform: translateX(-4px);
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
-/* Hover en los Links */
-.footer-link-item:hover {
-  color: var(--text-pure);
-  transform: translateX(8px);
-}
-.footer-link-item:hover .link-icon-box {
-  background: var(--ft-primary);
-  color: white;
-  box-shadow: 0 0 0 1px var(--ft-primary-glow);
-}
-.footer-link-item:hover .link-arrow {
+.footer-elite .footer-link-item:hover .link-arrow {
   opacity: 1;
   transform: translateX(0);
 }
 
-/* =========================================
-   COLUMNA 3: CONTACTO ACCESIBLE
-   ========================================= */
-.footer-contact-address {
+/* Contacto */
+.footer-elite .footer-contact-address {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
   font-style: normal;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
 }
 
-.contact-card {
+.footer-elite .contact-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(204, 217, 235, 0.12);
+  background: rgba(204, 217, 235, 0.04);
   text-decoration: none;
-  padding: 10px;
-  border-radius: 12px;
-  transition: var(--transition-smooth);
-  border: 1px solid transparent;
+  box-shadow: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
-.contact-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  background: var(--border-light);
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  transition: var(--transition-smooth);
+.footer-elite .contact-card:hover {
+  transform: translateX(4px);
+  box-shadow: none;
 }
 
-.contact-details {
+.footer-elite .contact-card.wp-card:hover {
+  border-color: rgba(37, 211, 102, 0.6);
+  background: rgba(37, 211, 102, 0.09);
+}
+
+.footer-elite .contact-card.email-card:hover {
+  border-color: rgba(204, 217, 235, 0.4);
+  background: rgba(204, 217, 235, 0.08);
+}
+
+.footer-elite .contact-card.location-card:hover {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.footer-elite .contact-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  font-size: 1rem;
+  flex-shrink: 0;
+  background: rgba(204, 217, 235, 0.08);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.footer-elite .wp-card .contact-icon { background: rgba(37, 211, 102, 0.16); color: #4ade80; }
+.footer-elite .email-card .contact-icon { background: rgba(204, 217, 235, 0.12); color: var(--brand-navy-200, #ccd9eb); }
+.footer-elite .location-card .contact-icon { background: rgba(245, 158, 11, 0.14); color: #fbbf24; }
+
+.footer-elite .contact-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
 }
-.contact-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+
+.footer-elite .contact-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  transition: var(--transition-smooth);
-}
-.contact-value {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-body);
-  transition: var(--transition-smooth);
-  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-/* Micro-interacciones (Color Original) */
-.contact-card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-light);
-  transform: translateX(5px);
-}
-
-.contact-card.wp-card:hover .contact-icon {
-  background: #25d366;
-  color: white;
-  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.22);
-}
-.contact-card.wp-card:hover .contact-value {
-  color: #25d366;
-}
-
-.contact-card.email-card:hover .contact-icon {
-  background: var(--ft-primary);
-  color: white;
-  box-shadow: 0 0 0 1px var(--ft-primary-glow);
-}
-.contact-card.email-card:hover .contact-value {
-  color: var(--text-pure);
-}
-
-.contact-card.location-card:hover .contact-icon {
-  background: #3b82f6;
-  color: white;
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.22);
-}
-.contact-card.location-card:hover .contact-value {
-  color: #3b82f6;
-}
-
-/* =========================================
-   PANEL INFERIOR Y SAFE ZONE
-   ========================================= */
-.footer-bottom-panel {
-  background-color: var(--bg-footer-panel);
-  border-top: 1px solid var(--border-strong);
-}
-
-.bottom-panel-container {
-  max-width: 1300px;
-  margin: 0 auto;
-  /* El padding derecho de 120px asegura que NADA toque el botón flotante */
-  padding: 1.5rem 120px 1.5rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.copyright-area p {
-  margin: 0 0 5px 0;
+.footer-elite .contact-value {
   font-size: 0.9rem;
-  color: var(--text-body);
-}
-.copyright-area p strong {
-  color: var(--text-pure);
   font-weight: 700;
-}
-.copyright-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.social-area {
-  display: flex;
-  gap: 15px;
+  color: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.social-bubble {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background: var(--border-light);
-  color: var(--text-body);
+.footer-elite .contact-arrow {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.footer-elite .contact-card:hover .contact-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Barra final ─────────────────────────────────────────────────────────── */
+.footer-elite .footer-bottom-panel {
+  position: relative;
+  border-top: 1px solid rgba(204, 217, 235, 0.1);
+}
+
+.footer-elite .bottom-panel-container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 1.25rem clamp(1.25rem, 4vw, 2rem);
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  text-decoration: none;
-  transition: var(--transition-smooth);
-}
-.social-bubble:hover {
-  transform: translateY(-5px) scale(1.1);
-  color: white;
-}
-.social-bubble.insta:hover {
-  background: #f09433;
-  box-shadow: 0 0 0 1px rgba(225, 48, 108, 0.22);
-}
-.social-bubble.fb:hover {
-  background: #1877f2;
-  box-shadow: 0 0 0 1px rgba(24, 119, 242, 0.22);
-}
-.social-bubble.in:hover {
-  background: #0a66c2;
-  box-shadow: 0 0 0 1px rgba(10, 102, 194, 0.22);
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-/* =========================================
-   BOTÓN FLOTANTE DINÁMICO (Scroll NATIVO)
-   ========================================= */
+.footer-elite .copyright-area p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-elite .copyright-area strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-elite .copyright-sub {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.footer-elite .social-area {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.footer-elite .social-bubble {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(204, 217, 235, 0.16);
+  background: rgba(204, 217, 235, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, color 160ms ease;
+}
+
+.footer-elite .social-bubble:hover {
+  transform: translateY(-3px);
+  color: #ffffff;
+}
+
+.footer-elite .social-bubble.insta:hover { border-color: #e1306c; background: rgba(225, 48, 108, 0.16); }
+.footer-elite .social-bubble.fb:hover { border-color: #1877f2; background: rgba(24, 119, 242, 0.16); }
+.footer-elite .social-bubble.in:hover { border-color: #0a66c2; background: rgba(10, 102, 194, 0.16); }
+
+/* ── Botón volver arriba ─────────────────────────────────────────────────── */
 .btn-up-floating {
   position: fixed;
-  bottom: 35px;
-  right: 35px;
-  width: 50px;
-  height: 50px;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
   border-radius: 14px;
-  background: var(--ft-primary);
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+  border: 1px solid rgba(0, 33, 76, 0.15);
+  background: var(--brand-green, #01953c);
+  color: #ffffff;
+  font-size: 1rem;
   cursor: pointer;
-  z-index: 9999;
-
-  /* Lógica de Fade in/out */
   opacity: 0;
   visibility: hidden;
-  transform: translateY(20px);
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 0.3s ease,
-    box-shadow 0.3s ease;
+  transform: translateY(10px);
+  transition: opacity 220ms ease, transform 220ms ease, visibility 0s 220ms, background 160ms ease;
 }
 
 .btn-up-floating.visible {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
-  box-shadow: 0 0 0 1px var(--ft-primary-glow);
+  transition: opacity 220ms ease, transform 220ms ease, background 160ms ease;
 }
 
 .btn-up-floating:hover {
-  background: var(--ft-primary-dark);
-  transform: translateY(-5px);
-  box-shadow: 0 0 0 1px var(--ft-primary-glow);
+  background: var(--brand-green-deep, #006d1f);
 }
 
-/* =========================================
-   RESPONSIVE (Perfectamente Adaptable)
-   ========================================= */
-@media screen and (max-width: 1100px) {
-  .footer-grid-container {
+.btn-up-floating:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .footer-elite .footer-grid-container {
     grid-template-columns: 1fr 1fr;
-    gap: 4rem;
   }
-  .footer-brand-col {
+  .footer-elite .footer-brand-col {
     grid-column: 1 / -1;
-    max-width: 800px;
   }
 }
 
-@media screen and (max-width: 768px) {
-  .footer-grid-container {
+@media (max-width: 640px) {
+  .footer-elite .footer-grid-container {
     grid-template-columns: 1fr;
-    padding: 4rem 1.5rem;
-    text-align: center;
+    gap: 2rem;
   }
-  .footer-header-brand {
+  .footer-elite .footer-ribbon {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer-elite .footer-ribbon-actions {
+    width: 100%;
+  }
+  .footer-elite .footer-ribbon-cta {
+    flex: 1;
+    justify-content: center;
+  }
+  .footer-elite .bottom-panel-container {
     flex-direction: column;
     text-align: center;
   }
-  .brand-philosophy {
-    margin: 0 auto 2rem;
-  }
-  .footer-value-tags {
-    align-items: center;
-  }
+}
 
-  .footer-links-list {
-    align-items: center;
-  }
-  .contact-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 15px;
-  }
-  .contact-card:hover {
-    transform: translateY(-5px);
-  }
-
-  .bottom-panel-container {
-    padding: 2rem 1.5rem 6rem 1.5rem;
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
-  }
-
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .footer-elite .footer-link-item,
+  .footer-elite .contact-card,
+  .footer-elite .social-bubble,
+  .footer-elite .footer-ribbon-cta,
+  .footer-elite .footer-ribbon-ghost,
   .btn-up-floating {
-    bottom: 20px;
-    right: 20px;
-    width: 45px;
-    height: 45px;
+    transition: none;
   }
-}
-
-.brand-titles span,
-.footer-section-title,
-.contact-label,
-.value-tag {
-  font-size: var(--font-size-eyebrow);
-}
-
-.neuro-copy,
-.contact-value,
-.copyright-area p {
-  font-size: var(--font-size-caption);
-  line-height: 1.7;
-}
-
-.link-text {
-  font-size: var(--font-size-label);
-}
-
-.copyright-sub {
-  font-size: 0.82rem;
-}
-
-/* =========================================
-   DARK MODE — Contact cards
-   ========================================= */
-[data-theme="dark"] .contact-card {
-  border-color: transparent;
-}
-
-[data-theme="dark"] .contact-card:hover {
-  background: var(--color-surface-2);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .contact-icon {
-  background: var(--color-surface-2);
-  color: var(--color-text-muted);
 }
