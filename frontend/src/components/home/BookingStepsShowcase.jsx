@@ -175,7 +175,7 @@ const BookingStepsShowcase = () => (
 
       <ol className="bss-steps">
         {STEPS.map((step) => (
-          <li key={step.n} className="bss-step">
+          <li key={step.n} className="bss-step" data-reveal="scale">
             <StepFrame callout={step.callout}>{step.render()}</StepFrame>
             <div className="bss-caption">
               <span className="bss-badge">{String(step.n).padStart(2, "0")}</span>

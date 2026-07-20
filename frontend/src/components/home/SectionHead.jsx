@@ -15,19 +15,23 @@ import "./SectionHead.css";
  */
 const SectionHead = ({ index, kicker, title, titleId, lead, light = false }) => (
   <header className={`sh${light ? " sh--light" : ""}`}>
-    <div className="sh-rule" aria-hidden="true" />
+    <div className="sh-rule" data-reveal="left" aria-hidden="true" />
 
-    <p className="sh-meta">
+    <p className="sh-meta" data-reveal="up">
       <span className="sh-index">{index}</span>
       <span className="sh-dash" aria-hidden="true" />
       <span className="sh-kicker">{kicker}</span>
     </p>
 
     <div className="sh-body">
-      <h2 id={titleId} className="sh-title">
+      <h2 id={titleId} className="sh-title" data-reveal="clip">
         {title}
       </h2>
-      {lead && <p className="sh-lead">{lead}</p>}
+      {lead && (
+        <p className="sh-lead" data-reveal="up">
+          {lead}
+        </p>
+      )}
     </div>
   </header>
 );

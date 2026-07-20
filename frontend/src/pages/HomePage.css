@@ -165,7 +165,8 @@
   right: clamp(-160px, -8vw, -60px);
   bottom: -22%;
   background: rgba(1, 149, 60, .085);
-  transform: rotate(-14deg);
+  transform: translateY(var(--parallax-y, 0)) rotate(-14deg);
+  will-change: transform;
 }
 
 /* ── Grilla editorial ───────────────────────────────
@@ -417,14 +418,8 @@
   to   { transform: translateX(-50%); }
 }
 
-/* ── Reveal al hacer scroll (clase agregada por JS) ── */
-.hp-reveal {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
-  will-change: opacity, transform;
-}
-.hp-reveal.is-in { opacity: 1; transform: none; }
+/* El reveal por-sección viejo (.hp-reveal/.is-in) se retiró: ahora el
+   movimiento lo maneja reveal-system.css a nivel de elemento. */
 
 @media (prefers-reduced-motion: reduce) {
   .hp-hero-tilt,
@@ -435,7 +430,6 @@
   .hp-ticker-track { animation: none; }
   /* El reveal por palabra no puede quedar en opacity:0 si se anula. */
   .hp-h1-word { animation: none; opacity: 1; transform: none; }
-  .hp-reveal { opacity: 1; transform: none; transition: none; }
 }
 
 /* ════════════════════════════════════════════════════
@@ -599,14 +593,9 @@
   height: 240px;
   cursor: pointer;
   perspective: 1100px;
-  /* breathe animation con delay staggered */
-  animation: subject-breathe 5s ease-in-out var(--float-delay, 0s) infinite;
-}
-
-@keyframes subject-breathe {
-  0%, 100% { transform: translateY(0)     scale(1); }
-  40%       { transform: translateY(-8px)  scale(1.015); }
-  70%       { transform: translateY(-4px)  scale(1.008); }
+  /* Antes flotaba en loop (subject-breathe). Ese movimiento perpetuo se lee
+     inquieto, no pulido: la entrada la da ahora el scroll-reveal y la vida, el
+     hover-flip. El transform queda libre para que el reveal lo use. */
 }
 
 /* núcleo giratorio */
@@ -794,19 +783,36 @@
 }
 
 .hp-reason-card {
+  position: relative;
   display: flex; flex-direction: column;
   align-items: flex-start; gap: 12px;
   padding: 30px 26px;
   background: var(--white);
   border: 1.5px solid var(--border);
   border-radius: 18px;
-  transition: border-color .2s, box-shadow .2s, transform .2s;
+  overflow: hidden;
+  transition:
+    transform .42s var(--ease-signature),
+    border-color .32s ease,
+    box-shadow .42s var(--ease-signature);
+}
+/* Línea de acento que se dibuja de izquierda a derecha al pasar el mouse.
+   El gesto es el detalle: scaleX desde el origen, con la curva firma. */
+.hp-reason-card::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--green-lt);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .5s var(--ease-signature);
 }
 .hp-reason-card:hover {
   border-color: var(--navy-2);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, .10);
-  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -14px rgba(0, 33, 76, .35);
+  transform: translateY(-5px);
 }
+.hp-reason-card:hover::before { transform: scaleX(1); }
 
 .hp-reason-icon {
   width: 52px; height: 52px;
@@ -816,9 +822,12 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 23px;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, .18);
-  transition: transform .2s;
+  transition: transform .42s var(--ease-signature), background .32s ease;
 }
-.hp-reason-card:hover .hp-reason-icon { transform: scale(1.07) rotate(-3deg); }
+.hp-reason-card:hover .hp-reason-icon {
+  transform: scale(1.08) rotate(-4deg);
+  background: var(--green);
+}
 
 .hp-reason-title { font-size: 15.5px; font-weight: 800; color: var(--text); }
 .hp-reason-desc  { font-size: 13.5px; color: var(--muted); line-height: 1.68; margin: 0; }
@@ -858,7 +867,11 @@
   border: 2px solid var(--border);
   border-radius: 18px;
   text-decoration: none;
-  transition: border-color .2s, box-shadow .2s, transform .2s, background .2s;
+  transition:
+    transform .42s var(--ease-signature),
+    border-color .32s ease,
+    box-shadow .42s var(--ease-signature),
+    background .38s var(--ease-signature);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -866,8 +879,8 @@
 .hp-level-card:hover {
   border-color: var(--green);
   background: var(--navy);
-  transform: translateY(-5px);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, .18);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 34px -16px rgba(0, 33, 76, .5);
 }
 /* Ícono en caja sólida, igual que las tarjetas de razones. El emoji anterior
    giraba en hover; acá el gesto lo hace la caja, más contenido y coherente. */
@@ -878,11 +891,11 @@
   background: var(--brand-navy-800);
   color: #fff;
   font-size: 19px;
-  transition: background .2s, transform .25s;
+  transition: background .38s var(--ease-signature), transform .42s var(--ease-signature);
 }
 .hp-level-card:hover .hp-level-icon {
   background: var(--green);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.06);
 }
 
 .hp-level-label {
