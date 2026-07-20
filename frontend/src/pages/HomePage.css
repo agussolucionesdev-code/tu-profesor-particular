@@ -103,6 +103,19 @@
 /* ════════════════════════════════════════════════════
    HERO
 ════════════════════════════════════════════════════ */
+/* ────────────────────────────────────────────────────
+   HERO EDITORIAL
+
+   El hero anterior apilaba 7 bloques en una columna: badge, h1, slogan,
+   subtítulo, chips, CTAs y garantías. Todos del mismo ancho y con el mismo
+   espaciado — una lista, no una composición.
+
+   Este es una grilla editorial de revista: un rail de marginalia, un titular
+   descomunal que ocupa TODO el ancho, el cuerpo en una sola columna angosta
+   y el demo rompiendo la grilla por arriba. La jerarquía la hace el tamaño y
+   el aire, no la decoración. Sin degradados ni sombras difusas: bloques
+   sólidos, hairlines de 1px y geometría.
+──────────────────────────────────────────────────── */
 .hp-hero {
   position: relative;
   min-height: calc(100svh - 60px);
@@ -110,7 +123,8 @@
   align-items: center; justify-content: center;
   background: var(--navy);
   overflow: hidden;
-  padding: 80px 24px 100px;
+  /* El padding inferior reserva el alto de la cinta, que va anclada abajo. */
+  padding: clamp(56px, 7vw, 96px) clamp(20px, 5vw, 56px) 104px;
 }
 
 /* fondo */
@@ -135,106 +149,151 @@
   border: 1px solid rgba(255,255,255,.06);
   pointer-events: none;
 }
-.hp-hero-ring--1 { width: 560px; height: 560px; top: -180px; right: -120px; }
-.hp-hero-ring--2 { width: 340px; height: 340px; bottom: -140px; left: -80px; border-color: rgba(1,149,60,.12); }
-.hp-hero-blob {
-  position: absolute; border-radius: 50%; pointer-events: none;
-}
-.hp-hero-blob--green {
-  width: 620px; height: 620px;
-  right: -260px; bottom: -320px;
-  background: rgba(1,149,60,.07);
+.hp-hero-ring--1 { width: 620px; height: 620px; top: -260px; right: -180px; }
+
+/* Bloque sólido desplazado: peso visual sin blur ni degradado. */
+.hp-hero-slab {
+  position: absolute;
+  width: clamp(280px, 34vw, 520px);
+  height: clamp(280px, 34vw, 520px);
+  right: clamp(-160px, -8vw, -60px);
+  bottom: -22%;
+  background: rgba(1, 149, 60, .085);
+  transform: rotate(-14deg);
 }
 
-/* contenido — split: copy + composición foto/app */
+/* ── Grilla editorial ───────────────────────────────
+   rail  |  titular a todo el ancho
+   rail  |  cuerpo   |  demo
+──────────────────────────────────────────────────── */
 .hp-hero-inner {
   position: relative;
-  max-width: 1200px;
+  max-width: 1280px;
   width: 100%;
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 4rem);
+  grid-template-columns: 64px minmax(0, 1fr) minmax(0, 336px);
+  grid-template-areas:
+    "rail head head"
+    "rail body demo";
+  column-gap: clamp(1.25rem, 3.5vw, 3rem);
+  row-gap: clamp(1.75rem, 3.5vw, 2.75rem);
+  align-items: start;
 }
 
-.hp-hero-copy {
-  display: flex; flex-direction: column;
-  align-items: flex-start; text-align: left;
-}
-
-.hp-hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 700;
-  letter-spacing: .09em; text-transform: uppercase;
-  color: rgba(255,255,255,.6);
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.12);
-  padding: 7px 16px; border-radius: 100px;
-  margin-bottom: 20px;
+/* ── Rail de marginalia ── */
+.hp-hero-rail {
+  grid-area: rail;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px;
+  align-self: stretch;
+  padding-top: 6px;
   animation: fade-up .6s .05s ease both;
 }
-.hp-hero-badge-dot {
+.hp-rail-num {
+  font-size: 12px; font-weight: 900;
+  letter-spacing: .12em;
+  color: var(--green-on-dark);
+}
+.hp-rail-line {
+  flex: 1;
+  width: 1px; min-height: 48px;
+  background: rgba(255,255,255,.16);
+}
+.hp-rail-label {
+  writing-mode: vertical-rl;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+/* ── Titular ── */
+.hp-hero-head { grid-area: head; }
+
+.hp-hero-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11.5px; font-weight: 800;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  margin: 0 0 clamp(14px, 2vw, 22px);
+  animation: fade-up .6s .05s ease both;
+}
+.hp-eyebrow-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--green-lt);
   animation: pulse 2s infinite;
   flex-shrink: 0;
 }
-
-.hp-hero-h1 {
-  font-size: clamp(2.7rem, 5.4vw, 4.7rem);
-  font-weight: 900; line-height: 1.02;
-  color: var(--white);
-  margin: 0 0 14px;
-  letter-spacing: -.04em;
-  animation: fade-up .6s .1s ease both;
+.hp-eyebrow-sep {
+  width: 22px; height: 1px;
+  background: rgba(255,255,255,.28);
+  flex-shrink: 0;
 }
-.hp-h1-accent {
+
+/* Tipografía descomunal: acá se juega el impacto. */
+.hp-hero-h1 {
+  font-size: clamp(2.85rem, 8.4vw, 7.1rem);
+  font-weight: 900;
+  line-height: .88;
+  letter-spacing: -.045em;
+  color: var(--white);
+  margin: 0;
+  text-wrap: balance;
+}
+.hp-h1-line { display: block; }
+.hp-h1-line--accent { color: var(--green-on-dark); }
+
+/* Reveal palabra por palabra, escalonado por --i. */
+.hp-h1-word {
   display: inline-block;
-  color: var(--green-on-dark);
+  margin-right: .21em;
+  animation: hpWordIn .72s cubic-bezier(.22, 1, .36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+}
+@keyframes hpWordIn {
+  from { opacity: 0; transform: translateY(.36em); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Cuerpo: columna angosta, tipo revista ── */
+/* El ancho lo fija la fila de CTAs, no el texto: a 46ch los dos botones
+   se apilaban. El texto se sigue midiendo por ch, cada bloque por su cuenta. */
+.hp-hero-body {
+  grid-area: body;
+  max-width: min(100%, 540px);
+  padding-top: clamp(4px, 1.5vw, 18px);
 }
 
 /* Slogan del logo — firma de marca */
 .hp-hero-slogan {
-  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  font-size: clamp(1.05rem, 1.7vw, 1.45rem);
   font-weight: 800;
-  letter-spacing: -.01em;
-  margin: 0 0 20px;
-  animation: fade-up .6s .14s ease both;
+  letter-spacing: -.015em;
+  line-height: 1.3;
+  margin: 0 0 14px;
+  padding-left: 16px;
+  border-left: 3px solid var(--green-lt);
+  animation: fade-up .6s .34s ease both;
 }
 .hp-slogan-a { color: #fff; }
 .hp-slogan-b { color: rgba(255,255,255,.62); font-weight: 700; }
 .hp-slogan-c { color: var(--green-on-dark); }
 
 .hp-hero-sub {
-  font-size: clamp(15px, 1.5vw, 18px);
-  line-height: 1.65;
+  font-size: clamp(15px, 1.4vw, 17.5px);
+  line-height: 1.62;
   color: rgba(255,255,255,.66);
-  margin: 0 0 22px;
+  margin: 0 0 26px;
   max-width: 44ch;
-  animation: fade-up .6s .18s ease both;
+  animation: fade-up .6s .4s ease both;
 }
-
-/* Materias destacadas — chips con ícono */
-.hp-hero-subjects {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  margin-bottom: 28px;
-  animation: fade-up .6s .22s ease both;
-}
-.hp-hero-subject-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 13.5px; font-weight: 800;
-  color: #fff;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.16);
-  padding: 8px 14px; border-radius: 100px;
-}
-.hp-hero-subject-chip svg { color: var(--green-on-dark); font-size: 14px; }
 
 .hp-hero-ctas {
   display: flex; flex-wrap: wrap;
-  gap: 14px; justify-content: flex-start;
-  margin-bottom: 24px;
-  animation: fade-up .6s .26s ease both;
+  gap: 12px; justify-content: flex-start;
+  margin-bottom: 22px;
+  animation: fade-up .6s .46s ease both;
 }
 
 /* fila de confianza */
@@ -242,13 +301,13 @@
   display: flex; flex-wrap: wrap;
   gap: 8px 18px;
   list-style: none; margin: 0; padding: 0;
-  animation: fade-up .6s .32s ease both;
+  animation: fade-up .6s .52s ease both;
 }
 .hp-hero-trust li {
   position: relative;
-  font-size: 13px; font-weight: 600;
-  color: rgba(255,255,255,.6);
-  padding-left: 20px;
+  font-size: 12.5px; font-weight: 600;
+  color: rgba(255,255,255,.58);
+  padding-left: 18px;
 }
 .hp-hero-trust li::before {
   content: "✓";
@@ -256,11 +315,13 @@
   color: var(--green-on-dark); font-weight: 900;
 }
 
-/* ── Visual: demo animado + profe ── */
-.hp-hero-visual {
+/* ── Demo: sube y rompe la grilla contra el titular ── */
+.hp-hero-aside {
+  grid-area: demo;
   position: relative;
   display: flex; justify-content: center;
   perspective: 1200px;
+  margin-top: clamp(-5.5rem, -4vw, -1rem);
   animation: fade-up .7s .3s ease both;
 }
 /* tilt 3D (sigue al mouse vía --rx/--ry) + flotación continua */
@@ -275,15 +336,6 @@
 @keyframes hpHeroFloat {
   0%, 100% { translate: 0 0; }
   50% { translate: 0 -12px; }
-}
-
-/* aro de acento verde detrás del demo */
-.hp-hero-glow-ring {
-  position: absolute; z-index: 0;
-  left: -12%; top: -8%; width: 124%; height: 116%;
-  border-radius: 32px;
-  border: 1px solid rgba(1,149,60,.30);
-  pointer-events: none;
 }
 
 /* profe: avatar + nombre */
@@ -319,17 +371,44 @@
   animation: float-up 3.5s ease-in-out infinite;
 }
 .hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
-.hp-hero-float--a { top: -14px; right: -14px; }
-.hp-hero-float--b { top: 42%; right: -28px; animation-delay: 1.2s; }
+.hp-hero-float--a { top: -16px; right: -18px; }
 
 /* fondo del hero en movimiento (lento y sutil) */
-.hp-hero-ring--1 { animation: hpSpin 40s linear infinite; }
-.hp-hero-ring--2 { animation: hpSpin 55s linear infinite reverse; }
-.hp-hero-blob--green { animation: hpDrift 14s ease-in-out infinite; }
+.hp-hero-ring--1 { animation: hpSpin 48s linear infinite; }
 @keyframes hpSpin { to { transform: rotate(360deg); } }
-@keyframes hpDrift {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-24px, -20px); }
+
+/* ── Ticker de materias: cinta infinita al pie del hero ──
+   Reemplaza a los chips estáticos. Al ser full-bleed cierra la composición
+   con una línea horizontal, que es justo lo que le faltaba al apilado. */
+.hp-hero-ticker {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  border-top: 1px solid rgba(255,255,255,.12);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  overflow: hidden;
+  padding: 15px 0;
+  /* mask lateral: la cinta se desvanece en los bordes sin degradado de color */
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.hp-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: hpTicker 42s linear infinite;
+}
+.hp-ticker-run { display: flex; flex-shrink: 0; }
+.hp-ticker-item {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 0 26px;
+  font-size: 14px; font-weight: 800;
+  letter-spacing: -.01em;
+  color: rgba(255,255,255,.72);
+  white-space: nowrap;
+}
+.hp-ticker-item svg { color: var(--green-on-dark); font-size: 15px; }
+@keyframes hpTicker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 /* ── Reveal al hacer scroll (clase agregada por JS) ── */
@@ -344,22 +423,13 @@
 @media (prefers-reduced-motion: reduce) {
   .hp-hero-tilt,
   .hp-hero-ring--1,
-  .hp-hero-ring--2,
-  .hp-hero-blob--green,
   .hp-hero-profe,
-  .hp-hero-float { animation: none; }
+  .hp-hero-float,
+  .hp-eyebrow-dot,
+  .hp-ticker-track { animation: none; }
+  /* El reveal por palabra no puede quedar en opacity:0 si se anula. */
+  .hp-h1-word { animation: none; opacity: 1; transform: none; }
   .hp-reveal { opacity: 1; transform: none; transition: none; }
-}
-
-/* scroll hint */
-.hp-scroll-hint {
-  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-}
-.hp-scroll-line {
-  display: block; width: 2px; height: 36px;
-  background: rgba(255,255,255,.28);
-  border-radius: 2px; margin: 0 auto;
-  animation: scroll-bounce 1.8s ease-in-out infinite;
 }
 
 /* ════════════════════════════════════════════════════
@@ -971,22 +1041,40 @@
   .hp-steps-grid    { grid-template-columns: repeat(2,1fr); }
 }
 
-/* Hero split → apilado y centrado */
-@media (max-width: 900px) {
-  .hp-hero-inner { grid-template-columns: 1fr; gap: 2.5rem; max-width: 520px; }
-  .hp-hero-copy { align-items: center; text-align: center; }
-  .hp-hero-sub { max-width: 52ch; }
-  .hp-hero-slogan,
-  .hp-hero-subjects,
-  .hp-hero-ctas,
-  .hp-hero-trust { justify-content: center; }
-  .hp-hero-visual { order: 2; }
-  .hp-hero-tilt { width: min(340px, 88vw); transform: none; }
-  /* En mobile el demo animado sigue siendo el protagonista; los flotantes, el
-     avatar y el aro se ocultan para no desbordar. */
+/* Hero editorial → el demo baja bajo el cuerpo, el rail se mantiene */
+@media (max-width: 1040px) {
+  .hp-hero-inner {
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-areas:
+      "rail head"
+      "rail body"
+      "rail demo";
+  }
+  .hp-hero-aside {
+    margin-top: .5rem;
+    justify-content: flex-start;
+  }
+  .hp-hero-body { max-width: 54ch; }
+}
+
+/* Mobile: se retira el rail (la marginalia necesita ancho para no ahogar
+   al titular) y el demo se centra. */
+@media (max-width: 760px) {
+  .hp-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "body"
+      "demo";
+    row-gap: 1.75rem;
+  }
+  .hp-hero-rail { display: none; }
+  .hp-hero-aside { justify-content: center; margin-top: 0; }
+  .hp-hero-tilt { width: min(340px, 86vw); transform: none; }
+  .hp-hero-h1 { letter-spacing: -.035em; }
+  /* Los flotantes y el avatar desbordan en pantallas angostas. */
   .hp-hero-profe,
-  .hp-hero-float,
-  .hp-hero-glow-ring { display: none; }
+  .hp-hero-float { display: none; }
 }
 
 @media (max-width: 768px) {
@@ -995,8 +1083,7 @@
   .hp-web-section  { margin: 0 -20px; }
   .hp-web-section-inner { padding: 28px 20px; flex-direction: column; text-align: center; }
   .hp-web-copy { align-items: center; }
-  .hp-hero     { padding: 72px 20px 88px; }
-  .hp-hero-h1  { font-size: 2.4rem; }
+  .hp-hero     { padding: 56px 20px 92px; }
   .hp-subjects-grid {
     grid-template-columns: repeat(2, 1fr);
     /* desactivar breathe en mobile para evitar conflicto con flip */
@@ -1014,6 +1101,5 @@
   .hp-subjects-grid { grid-template-columns: repeat(2, 1fr); }
   .hp-subject-card  { height: 200px; }
   .hp-web-banner    { gap: 8px; }
-  .hp-hero-float--a { top: -14px; right: 0; }
-  .hp-hero-float--b { bottom: -14px; left: 0; }
+  .hp-ticker-item   { padding: 0 18px; font-size: 13px; }
 }

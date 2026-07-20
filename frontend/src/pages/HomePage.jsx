@@ -6,7 +6,6 @@ import {
   FaBolt,
   FaCalculator,
   FaCalendarCheck,
-  FaCheckCircle,
   FaClipboardCheck,
   FaClipboardList,
   FaExternalLinkAlt,
@@ -32,6 +31,21 @@ import agustinHero from "../assets/images/agustin-hero.webp";
 import "./HomePage.css";
 
 /* ── datos ─────────────────────────────────────────── */
+
+/* Cinta del hero. Reemplaza a los chips estáticos: mismo contenido, sin
+   apilar una fila más en la columna de texto. El texto accesible va en un
+   <p class="sr-only"> aparte, porque la cinta se duplica para el loop. */
+const HERO_TICKER = [
+  "Matemáticas",
+  "Física",
+  "Fisicoquímica",
+  "Química",
+  "Inglés",
+  "Análisis Matemático",
+  "Álgebra",
+  "Biología",
+  "Y muchas más a consultar",
+];
 
 const SUBJECTS = [
   {
@@ -243,24 +257,49 @@ const HomePage = () => {
       <section className="hp-hero" aria-label="Inicio">
         <div className="hp-hero-bg" aria-hidden="true">
           <span className="hp-grid" />
+          {/* Acentos planos: un bloque sólido desplazado + un aro de 1px.
+              Geometría, no degradados. */}
+          <span className="hp-hero-slab" />
           <span className="hp-hero-ring hp-hero-ring--1" />
-          <span className="hp-hero-ring hp-hero-ring--2" />
-          <span className="hp-hero-blob hp-hero-blob--green" />
         </div>
 
         <div className="hp-hero-inner">
-          {/* ── Columna copy ── */}
-          <div className="hp-hero-copy">
-            <div className="hp-hero-badge">
-              <span className="hp-hero-badge-dot" aria-hidden="true" />
-              Clases online y presenciales · Temperley, Buenos Aires
-            </div>
+          {/* ── Rail de marginalia: el gesto editorial ── */}
+          <div className="hp-hero-rail" aria-hidden="true">
+            <span className="hp-rail-num">01</span>
+            <span className="hp-rail-line" />
+            <span className="hp-rail-label">Clases particulares</span>
+          </div>
+
+          {/* ── Titular: manda él, ocupa todo el ancho ── */}
+          <header className="hp-hero-head">
+            <p className="hp-hero-eyebrow">
+              <span className="hp-eyebrow-dot" aria-hidden="true" />
+              Online y presencial
+              <span className="hp-eyebrow-sep" aria-hidden="true" />
+              Temperley, Buenos Aires
+            </p>
 
             <h1 className="hp-hero-h1">
-              Entendé de verdad,<br />
-              <span className="hp-h1-accent">no&nbsp;de&nbsp;memoria</span>
+              <span className="hp-h1-line">
+                {["Entendé", "de", "verdad,"].map((w, i) => (
+                  <span key={w} className="hp-h1-word" style={{ "--i": i }}>
+                    {w}
+                  </span>
+                ))}
+              </span>
+              <span className="hp-h1-line hp-h1-line--accent">
+                {["no", "de", "memoria"].map((w, i) => (
+                  <span key={w} className="hp-h1-word" style={{ "--i": i + 3 }}>
+                    {w}
+                  </span>
+                ))}
+              </span>
             </h1>
+          </header>
 
+          {/* ── Cuerpo: slogan + promesa + acciones ── */}
+          <div className="hp-hero-body">
             <p className="hp-hero-slogan">
               <span className="hp-slogan-a">Juntos,</span>{" "}
               <span className="hp-slogan-b">despejando el camino a</span>{" "}
@@ -268,25 +307,14 @@ const HomePage = () => {
             </p>
 
             <p className="hp-hero-sub">
-              ¿Estudiás y el resultado no cambia? Acá está la clase que te faltaba.
+              ¿Estudiás y el resultado no cambia? Acá está la clase que te
+              faltaba.
             </p>
-
-            <div className="hp-hero-subjects" aria-label="Materias principales">
-              {["Matemáticas", "Física", "Fisicoquímica", "Química", "Inglés"].map((s) => {
-                const Icon = getSubjectIcon(s);
-                return (
-                  <span key={s} className="hp-hero-subject-chip">
-                    <Icon aria-hidden="true" />
-                    {s}
-                  </span>
-                );
-              })}
-            </div>
 
             <div className="hp-hero-ctas">
               <Link to="/reservar" className="hp-cta-main">
                 <FaCalendarCheck aria-hidden="true" />
-                Reservar mi clase — sin adelanto
+                Reservar mi clase
                 <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
               </Link>
               <a
@@ -301,24 +329,22 @@ const HomePage = () => {
             </div>
 
             <ul className="hp-hero-trust" aria-label="Cómo funciona">
+              <li>Sin adelanto</li>
               <li>Sin registro ni contraseña</li>
               <li>Reservás en menos de un minuto</li>
-              <li>Gestionás con tu código</li>
             </ul>
           </div>
 
-          {/* ── Columna visual: demo animado + profe ── */}
+          {/* ── Demo: rompe la grilla, se solapa con el titular ── */}
           <div
-            className="hp-hero-visual"
+            className="hp-hero-aside"
             aria-hidden="true"
             onMouseMove={handleTilt}
             onMouseLeave={resetTilt}
           >
             <div className="hp-hero-tilt" ref={tiltRef}>
-              <div className="hp-hero-glow-ring" />
               <HeroKioskDemo />
 
-              {/* profe: avatar + nombre */}
               <div className="hp-hero-profe">
                 <img
                   src={agustinHero}
@@ -334,19 +360,33 @@ const HomePage = () => {
               </div>
 
               <span className="hp-hero-float hp-hero-float--a">
-                <FaCheckCircle aria-hidden="true" /> Sin adelanto
-              </span>
-              <span className="hp-hero-float hp-hero-float--b">
-                <FaRegClock aria-hidden="true" /> Reservás en 1 minuto
+                <FaRegClock aria-hidden="true" /> 1 minuto
               </span>
             </div>
           </div>
         </div>
 
-        {/* scroll indicator */}
-        <div className="hp-scroll-hint" aria-hidden="true">
-          <span className="hp-scroll-line" />
+        {/* ── Ticker de materias: cinta infinita al pie del hero ── */}
+        <div className="hp-hero-ticker" aria-hidden="true">
+          <div className="hp-ticker-track">
+            {[0, 1].map((pass) => (
+              <span className="hp-ticker-run" key={pass}>
+                {HERO_TICKER.map((s) => {
+                  const Icon = getSubjectIcon(s);
+                  return (
+                    <span className="hp-ticker-item" key={`${pass}-${s}`}>
+                      <Icon aria-hidden="true" />
+                      {s}
+                    </span>
+                  );
+                })}
+              </span>
+            ))}
+          </div>
         </div>
+        <p className="sr-only">
+          Materias: {HERO_TICKER.join(", ")}. Y muchas otras a consultar.
+        </p>
       </section>
 
       {/* ════════════════════════════════════════
