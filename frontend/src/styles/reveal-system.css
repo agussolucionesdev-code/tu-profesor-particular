@@ -1,0 +1,61 @@
+/* ══════════════════════════════════════════════════════
+   REVEAL SYSTEM — la firma de movimiento del Inicio
+
+   Una sola curva de easing para toda la página (expo-out). Los reveals se
+   activan cuando useScrollReveal marca [data-revealed]. Cada variante define
+   sólo su estado inicial; el estado final es siempre "en su lugar, nítido".
+
+   Todo scopeado a .hp: fuera de la home no hay hook que revele, así que un
+   [data-reveal] suelto no puede quedar invisible.
+
+   Regla de oro: el movimiento se siente caro cuando es LENTO al final y entra
+   desde poco desplazamiento, no desde lejos. De ahí el .9s con
+   cubic-bezier(.16,1,.3,1) y desplazamientos cortos.
+══════════════════════════════════════════════════════ */
+
+.hp {
+  --ease-signature: cubic-bezier(.16, 1, .3, 1);
+  --reveal-dur: .9s;
+}
+
+.hp [data-reveal] {
+  opacity: 0;
+  transition:
+    opacity var(--reveal-dur) var(--ease-signature),
+    transform var(--reveal-dur) var(--ease-signature),
+    clip-path var(--reveal-dur) var(--ease-signature),
+    filter var(--reveal-dur) var(--ease-signature);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+/* Variantes de entrada */
+.hp [data-reveal="up"]    { transform: translateY(34px); }
+.hp [data-reveal="scale"] { transform: translateY(22px) scale(.965); }
+.hp [data-reveal="blur"]  { filter: blur(14px); }
+.hp [data-reveal="right"] { transform: translateX(-42px); }
+.hp [data-reveal="left"]  { transform: translateX(42px); }
+/* Cortina: el titular se descubre de abajo hacia arriba. */
+.hp [data-reveal="clip"] {
+  clip-path: inset(0 0 105% 0);
+  transform: translateY(8px);
+}
+
+/* Estado final — común a todas las variantes */
+.hp [data-reveal][data-revealed] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: inset(0 0 -5% 0);
+}
+
+/* Nadie ejecuta este sistema sin respetar la preferencia del usuario. */
+@media (prefers-reduced-motion: reduce) {
+  .hp [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+    transition: none !important;
+  }
+}

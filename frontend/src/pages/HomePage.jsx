@@ -28,12 +28,14 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
+import useScrollReveal from "../hooks/useScrollReveal";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import HeroKioskDemo from "../components/home/HeroKioskDemo";
 import SectionHead from "../components/home/SectionHead";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
+import "../styles/reveal-system.css";
 import "./HomePage.css";
 
 /* ── datos ─────────────────────────────────────────── */
@@ -187,37 +189,43 @@ const HomePage = () => {
     "¿Estudiás pero el resultado no cambia? Clases online y presenciales en Temperley de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro ni pagos por adelantado.",
   );
 
-  // Reveal al hacer scroll. Se aplica por JS: la clase que oculta la agrega el
-  // efecto, así sin JS el contenido queda visible (nada se esconde por CSS solo).
+  // Motor de scroll-reveal: revela cada elemento [data-reveal] al entrar al
+  // viewport, con stagger por grupo. Reemplaza al reveal por-sección anterior.
+  const pageRef = useRef(null);
+  useScrollReveal(pageRef, []);
+
+  // Parallax sutil: elementos [data-parallax] se desplazan a una fracción del
+  // scroll. rAF-throttled y anulado en reduced-motion. Da profundidad sin blur.
   useEffect(() => {
-    const els = document.querySelectorAll(".hp-section, .hp-cta-section, .bss");
-    if (!els.length) return undefined;
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (reduced || typeof IntersectionObserver === "undefined") {
-      els.forEach((el) => el.classList.add("hp-reveal", "is-in"));
+    const root = pageRef.current;
+    if (!root) return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
       return undefined;
     }
-    els.forEach((el) => el.classList.add("hp-reveal"));
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) {
-            en.target.classList.add("is-in");
-            io.unobserve(en.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
-    // Red de seguridad: si el observer no dispara (pestaña oculta, error, etc.)
-    // nada puede quedar invisible. A los 3s se revela todo lo que falte.
-    const fallback = window.setTimeout(() => {
-      els.forEach((el) => el.classList.add("is-in"));
-    }, 3000);
+    const layers = Array.from(root.querySelectorAll("[data-parallax]"));
+    if (!layers.length) return undefined;
+
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const mid = window.innerHeight / 2;
+      layers.forEach((layer) => {
+        const speed = Number(layer.getAttribute("data-parallax")) || 0;
+        const rect = layer.getBoundingClientRect();
+        const offset = (rect.top + rect.height / 2 - mid) * speed;
+        layer.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
+      });
+    };
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
-      io.disconnect();
-      window.clearTimeout(fallback);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -240,7 +248,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className="hp">
+    <div className="hp" ref={pageRef}>
 
       {/* ── Banner web principal ── */}
       <a
@@ -268,8 +276,8 @@ const HomePage = () => {
         <div className="hp-hero-bg" aria-hidden="true">
           <span className="hp-grid" />
           {/* Acentos planos: un bloque sólido desplazado + un aro de 1px.
-              Geometría, no degradados. */}
-          <span className="hp-hero-slab" />
+              Geometría, no degradados. Parallax sutil para dar profundidad. */}
+          <span className="hp-hero-slab" data-parallax="0.09" />
           <span className="hp-hero-ring hp-hero-ring--1" />
         </div>
 
@@ -417,13 +425,19 @@ const HomePage = () => {
             lead="Pasá el mouse sobre cada tarjeta. Describimos exactamente los temas que más complican — y cómo los trabajamos para que dejen de serlo."
           />
 
-          <ul className="hp-subjects-grid" role="list" aria-label="Materias principales">
+          <ul
+            className="hp-subjects-grid"
+            role="list"
+            aria-label="Materias principales"
+            data-reveal-group="90"
+          >
             {SUBJECTS.map((s) => {
               const Icon = s.icon;
               return (
                 <li
                   key={s.label}
                   className="hp-subject-card"
+                  data-reveal="scale"
                   style={{
                     "--float-delay":   s.delay,
                     "--subject-color": s.color,
@@ -460,7 +474,7 @@ const HomePage = () => {
           </ul>
 
           {/* Banner "más materias" */}
-          <div className="hp-more-subjects">
+          <div className="hp-more-subjects" data-reveal="up">
             <div className="hp-more-subjects-inner">
               <span className="hp-more-subjects-icon" aria-hidden="true">
                 <FaBookOpen />
@@ -501,11 +515,11 @@ const HomePage = () => {
             lead="Estudiar más no siempre es la solución. A veces alcanza con una sola clase bien enfocada para que todo lo que veías borroso de repente tenga sentido."
           />
 
-          <ul className="hp-reasons-grid" role="list">
+          <ul className="hp-reasons-grid" role="list" data-reveal-group="80">
             {REASONS.map((r) => {
               const Icon = r.icon;
               return (
-                <li key={r.title} className="hp-reason-card">
+                <li key={r.title} className="hp-reason-card" data-reveal="up">
                   <span className="hp-reason-icon">
                     <Icon aria-hidden="true" />
                   </span>
@@ -530,14 +544,14 @@ const HomePage = () => {
             titleId="hp-levels-title"
             lead={'No hay nivel "demasiado básico" ni "demasiado avanzado". Elegí el tuyo y el formulario de reserva ya lo va a tener marcado.'}
           />
-          <p className="hp-levels-hint">
+          <p className="hp-levels-hint" data-reveal="up">
             Tocá tu nivel para reservar directamente
           </p>
-          <ul className="hp-levels" role="list">
+          <ul className="hp-levels" role="list" data-reveal-group="70">
             {LEVELS.map((l) => {
               const LevelIcon = l.icon;
               return (
-              <li key={l.label}>
+              <li key={l.label} data-reveal="up">
                 <Link
                   to={`/reservar?nivel=${encodeURIComponent(LEVEL_FORM_MAP[l.label])}`}
                   className="hp-level-card"
@@ -565,19 +579,25 @@ const HomePage = () => {
           <span className="hp-grid" />
         </div>
 
-        <div className="hp-cta-inner">
-          <ThemeLogo variant="monogram" imgClassName="hp-cta-monogram" alt="" aria-hidden="true" />
+        <div className="hp-cta-inner" data-reveal-group="110">
+          <ThemeLogo
+            variant="monogram"
+            imgClassName="hp-cta-monogram"
+            alt=""
+            aria-hidden="true"
+            data-reveal="scale"
+          />
 
-          <h2 className="hp-cta-h2">
+          <h2 className="hp-cta-h2" data-reveal="clip">
             El parcial no espera.<br />
             <span className="hp-cta-h2-accent">Empezá hoy.</span>
           </h2>
-          <p className="hp-cta-p">
+          <p className="hp-cta-p" data-reveal="up">
             La primera clase es de diagnóstico: entendemos dónde estás y qué necesitás.<br />
             Sin pagos por adelantado. Sin compromiso. Solo una hora que puede cambiar todo.
           </p>
 
-          <div className="hp-cta-actions">
+          <div className="hp-cta-actions" data-reveal="up">
             <Link to="/reservar" className="hp-cta-main hp-cta-xl">
               <FaCalendarCheck aria-hidden="true" />
               Reservar mi primera clase
@@ -594,7 +614,7 @@ const HomePage = () => {
             </a>
           </div>
 
-          <p className="hp-cta-location">
+          <p className="hp-cta-location" data-reveal="up">
             <FaMapMarkerAlt aria-hidden="true" /> Jujuy 414, Temperley · Buenos Aires
           </p>
         </div>
