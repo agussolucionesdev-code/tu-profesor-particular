@@ -7,6 +7,7 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { getSubjectIcon } from "../../constants/subjectIcons";
+import SectionHead from "./SectionHead";
 import "./BookingStepsShowcase.css";
 
 // Recreaciones fieles de cada paso del kiosco: mismos íconos y colores reales,
@@ -164,14 +165,13 @@ const STEPS = [
 const BookingStepsShowcase = () => (
   <section className="bss" aria-labelledby="bss-title">
     <div className="bss-inner">
-      <div className="bss-head">
-        <span className="bss-kicker">Reservar es de verdad así de simple</span>
-        <h2 id="bss-title" className="bss-h2">Cómo sacás tu turno, paso a paso</h2>
-        <p className="bss-lead">
-          Mirá exactamente cómo se ve. Cinco pasos, la mayoría de un solo toque, sin
-          registro ni pagos por adelantado.
-        </p>
-      </div>
+      <SectionHead
+        index="02"
+        kicker="Reservar es de verdad así de simple"
+        title="Cómo sacás tu turno, paso a paso"
+        titleId="bss-title"
+        lead="Mirá exactamente cómo se ve. Cinco pasos, la mayoría de un solo toque, sin registro ni pagos por adelantado."
+      />
 
       <ol className="bss-steps">
         {STEPS.map((step) => (

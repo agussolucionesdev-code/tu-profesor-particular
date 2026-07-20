@@ -9,30 +9,8 @@
 }
 .bss-inner { max-width: 1100px; margin: 0 auto; }
 
-.bss-head { text-align: center; max-width: 640px; margin: 0 auto clamp(2.5rem, 5vw, 4rem); }
-.bss-kicker {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--brand-green-600, #006d1f);
-  margin-bottom: 0.75rem;
-}
-.bss-h2 {
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1.08;
-  color: var(--brand-navy, #00214c);
-  margin: 0 0 0.75rem;
-}
-.bss-lead {
-  font-size: clamp(1rem, 1.6vw, 1.15rem);
-  line-height: 1.6;
-  color: var(--brand-gray-600, #53595f);
-  margin: 0;
-}
+/* El encabezado propio (.bss-head/-kicker/-h2/-lead, centrado) se reemplazó
+   por <SectionHead>, compartido con el resto del Inicio. */
 
 /* ── Lista de pasos, alternada ── */
 .bss-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(2.5rem, 5vw, 4.5rem); }
@@ -205,9 +183,7 @@
 
 /* ── Dark ── */
 [data-theme="dark"] .bss { background: var(--brand-navy-900, #000b2b); }
-[data-theme="dark"] .bss-h2,
 [data-theme="dark"] .bss-step-title { color: #f2f7fb; }
-[data-theme="dark"] .bss-lead,
 [data-theme="dark"] .bss-step-desc { color: var(--brand-navy-200, #ccd9eb); }
 [data-theme="dark"] .bss-step-notes li { color: #f2f7fb; }
 [data-theme="dark"] .bss-frame { background: var(--brand-navy-800, #00204a); border-color: rgba(204, 217, 235, 0.16); }

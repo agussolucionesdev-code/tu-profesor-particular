@@ -4,16 +4,21 @@ import {
   FaArrowRight,
   FaAtom,
   FaBolt,
+  FaBookOpen,
   FaCalculator,
   FaCalendarCheck,
+  FaChalkboardTeacher,
   FaClipboardCheck,
   FaClipboardList,
+  FaCogs,
+  FaDraftingCompass,
   FaExternalLinkAlt,
   FaFlask,
   FaGlobeAmericas,
   FaGraduationCap,
   FaMapMarkerAlt,
   FaMedal,
+  FaPencilAlt,
   FaRegClock,
   FaRegLightbulb,
   FaRocket,
@@ -26,6 +31,7 @@ import { usePageMeta } from "../hooks/useDocumentTitle";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import HeroKioskDemo from "../components/home/HeroKioskDemo";
+import SectionHead from "../components/home/SectionHead";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
 import "./HomePage.css";
@@ -47,6 +53,11 @@ const HERO_TICKER = [
   "Y muchas más a consultar",
 ];
 
+/* Las tarjetas traían un `gradient` por materia (linear-gradient de 135°) que
+   contradecía la regla del proyecto: nada de degradados. Ahora cada materia
+   aporta un único color sólido, que viste el ícono y el aro. La cara trasera
+   pasó a navy uniforme: monocromo con un acento se lee más premium que cinco
+   fondos de colores distintos compitiendo entre sí. */
 const SUBJECTS = [
   {
     icon:     FaCalculator,
@@ -54,7 +65,6 @@ const SUBJECTS = [
     tagline:  "No sos malo en matemáticas.",
     hook:     "Nunca te las explicaron bien.",
     color:    "#1a3a6b",
-    gradient: "linear-gradient(135deg,#1a3a6b,#2a5298)",
     param:    "Matemáticas",
     delay:    "0s",
   },
@@ -63,8 +73,7 @@ const SUBJECTS = [
     label:    "Física",
     tagline:  "La física tiene lógica interna.",
     hook:     "Cuando la encontrás, todo encaja solo.",
-    color:    "#b45309",
-    gradient: "linear-gradient(135deg,#92400e,#d97706)",
+    color:    "#a34a08",
     param:    "Física",
     delay:    "0.4s",
   },
@@ -74,7 +83,6 @@ const SUBJECTS = [
     tagline:  "El filtro más duro de cualquier carrera.",
     hook:     "Con la guía correcta, se vuelve la más lógica.",
     color:    "#5b21b6",
-    gradient: "linear-gradient(135deg,#4c1d95,#7c3aed)",
     param:    "Fisicoquímica",
     delay:    "0.8s",
   },
@@ -84,7 +92,6 @@ const SUBJECTS = [
     tagline:  "Basta de memorizar sin entender.",
     hook:     "La química tiene reglas — y tienen sentido.",
     color:    "#065f46",
-    gradient: "linear-gradient(135deg,#064e3b,#059669)",
     param:    "Química",
     delay:    "1.2s",
   },
@@ -94,7 +101,6 @@ const SUBJECTS = [
     tagline:  "No es talento. Es método.",
     hook:     "Y el miedo a hablar se trabaja, no se espera.",
     color:    "#1e3a5f",
-    gradient: "linear-gradient(135deg,#0c2340,#1a4a7a)",
     param:    "Inglés",
     delay:    "1.6s",
   },
@@ -109,30 +115,33 @@ const LEVEL_FORM_MAP = {
   "Universitario":        "Universitario",
 };
 
+/* Los niveles traían emojis (✏️📐🔧📚🎓), lo único emoji de la página junto al
+   banner de materias. Al lado del sistema de íconos vectoriales se leían como
+   un parche: pasan a react-icons, que además siguen el color de la marca. */
 const LEVELS = [
   {
     label: "Primaria",
-    emoji: "✏️",
+    icon: FaPencilAlt,
     desc: "Bases sólidas desde el principio. Acompañamiento en las materias troncales, con paciencia y sin apurar etapas.",
   },
   {
     label: "Secundaria",
-    emoji: "📐",
+    icon: FaDraftingCompass,
     desc: "El tramo donde más se necesita claridad. Matemática, Física, Química y más, alineado a lo que te toman en clase.",
   },
   {
     label: "Secundaria Técnica",
-    emoji: "🔧",
+    icon: FaCogs,
     desc: "Las materias técnicas con su lógica propia: dibujo, electricidad, electrónica, mecánica y las ciencias que las sostienen.",
   },
   {
     label: "Terciario / Superior",
-    emoji: "📚",
+    icon: FaChalkboardTeacher,
     desc: "Formación docente y carreras superiores: pedagogía, didáctica, metodología de la investigación y más.",
   },
   {
     label: "Universitario",
-    emoji: "🎓",
+    icon: FaGraduationCap,
     desc: "El filtro de los primeros años: Análisis, Álgebra, Física, Química, Estadística y las materias que frenan a todos.",
   },
 ];
@@ -243,7 +252,8 @@ const HomePage = () => {
       >
         <span className="hp-web-banner-pulse" aria-hidden="true" />
         <span className="hp-web-banner-text">
-          🌐 <strong>Sitio principal:</strong>{" "}
+          <FaGlobeAmericas className="hp-web-banner-globe" aria-hidden="true" />
+          <strong>Sitio principal:</strong>{" "}
           <span className="hp-web-banner-url">tuprofesorparticular.com.ar</span>
         </span>
         <span className="hp-web-banner-cta">
@@ -399,16 +409,13 @@ const HomePage = () => {
       ════════════════════════════════════════ */}
       <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
-          <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker">Reconocés tu situación acá</span>
-            <h2 id="hp-subjects-title" className="hp-section-h2">
-              Materias principales
-            </h2>
-            <p className="hp-section-p">
-              Pasá el mouse sobre cada tarjeta. Describimos exactamente los temas que más complican —
-              y cómo los trabajamos para que dejen de serlo.
-            </p>
-          </div>
+          <SectionHead
+            index="03"
+            kicker="Reconocés tu situación acá"
+            title="Materias principales"
+            titleId="hp-subjects-title"
+            lead="Pasá el mouse sobre cada tarjeta. Describimos exactamente los temas que más complican — y cómo los trabajamos para que dejen de serlo."
+          />
 
           <ul className="hp-subjects-grid" role="list" aria-label="Materias principales">
             {SUBJECTS.map((s) => {
@@ -418,9 +425,8 @@ const HomePage = () => {
                   key={s.label}
                   className="hp-subject-card"
                   style={{
-                    "--float-delay":    s.delay,
-                    "--subject-grad":   s.gradient,
-                    "--subject-color":  s.color,
+                    "--float-delay":   s.delay,
+                    "--subject-color": s.color,
                   }}
                 >
                   {/* cara delantera */}
@@ -456,7 +462,9 @@ const HomePage = () => {
           {/* Banner "más materias" */}
           <div className="hp-more-subjects">
             <div className="hp-more-subjects-inner">
-              <span className="hp-more-subjects-icon" aria-hidden="true">📚</span>
+              <span className="hp-more-subjects-icon" aria-hidden="true">
+                <FaBookOpen />
+              </span>
               <div className="hp-more-subjects-copy">
                 <strong>Doy muchas más materias.</strong>
                 <span>
@@ -485,15 +493,13 @@ const HomePage = () => {
       ════════════════════════════════════════ */}
       <section className="hp-section hp-section--soft" aria-labelledby="hp-reasons-title">
         <div className="hp-section-inner">
-          <div className="hp-section-head hp-section-head--center">
-            <span className="hp-kicker">Lo que hace la diferencia</span>
-            <h2 id="hp-reasons-title" className="hp-section-h2">
-              Por qué esto funciona cuando lo otro no
-            </h2>
-            <p className="hp-section-p" style={{margin:"0 auto"}}>
-              Estudiar más no siempre es la solución. A veces alcanza con una sola clase bien enfocada para que todo lo que veías borroso de repente tenga sentido.
-            </p>
-          </div>
+          <SectionHead
+            index="04"
+            kicker="Lo que hace la diferencia"
+            title="Por qué esto funciona cuando lo otro no"
+            titleId="hp-reasons-title"
+            lead="Estudiar más no siempre es la solución. A veces alcanza con una sola clase bien enfocada para que todo lo que veías borroso de repente tenga sentido."
+          />
 
           <ul className="hp-reasons-grid" role="list">
             {REASONS.map((r) => {
@@ -516,30 +522,37 @@ const HomePage = () => {
           NIVELES EDUCATIVOS
       ════════════════════════════════════════ */}
       <section className="hp-section" aria-labelledby="hp-levels-title">
-        <div className="hp-section-inner hp-section-inner--center">
-          <span className="hp-kicker">Sin importar dónde estés</span>
-          <h2 id="hp-levels-title" className="hp-section-h2">Todos los niveles</h2>
-          <p className="hp-section-p" style={{margin:"0 auto 12px"}}>
-            No hay nivel "demasiado básico" ni "demasiado avanzado". Elegí el tuyo y el formulario de reserva ya lo va a tener marcado.
-          </p>
+        <div className="hp-section-inner">
+          <SectionHead
+            index="05"
+            kicker="Sin importar dónde estés"
+            title="Todos los niveles"
+            titleId="hp-levels-title"
+            lead={'No hay nivel "demasiado básico" ni "demasiado avanzado". Elegí el tuyo y el formulario de reserva ya lo va a tener marcado.'}
+          />
           <p className="hp-levels-hint">
-            ↓ Tocá tu nivel para reservar directamente
+            Tocá tu nivel para reservar directamente
           </p>
           <ul className="hp-levels" role="list">
-            {LEVELS.map((l) => (
+            {LEVELS.map((l) => {
+              const LevelIcon = l.icon;
+              return (
               <li key={l.label}>
                 <Link
                   to={`/reservar?nivel=${encodeURIComponent(LEVEL_FORM_MAP[l.label])}`}
                   className="hp-level-card"
                   aria-label={`Reservar clase de nivel ${l.label}`}
                 >
-                  <span className="hp-level-emoji" aria-hidden="true">{l.emoji}</span>
+                  <span className="hp-level-icon" aria-hidden="true">
+                    <LevelIcon />
+                  </span>
                   <span className="hp-level-label">{l.label}</span>
                   <span className="hp-level-desc">{l.desc}</span>
                   <span className="hp-level-cta">Reservar →</span>
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       </section>
