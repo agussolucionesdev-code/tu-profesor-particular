@@ -137,6 +137,21 @@
 /* fondo */
 .hp-hero-bg { position:absolute; inset:0; pointer-events:none; }
 
+/* Grano de impresión: ruido fractal SVG tileado a muy baja opacidad. Da una
+   textura de papel/tinta sobre el navy que se lee "cara" y artesanal — no es
+   un degradado ni una sombra, es textura plana. Se aplica a las dos regiones
+   navy grandes (hero y cierre) vía el fondo, siempre detrás del contenido. */
+.hp-hero-bg::after,
+.hp-cta-bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+  opacity: .05;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
 /* Los .hp-blob (manchas con blur animadas) se retiraron del DOM en la fase 4. */
 
 /* Retícula: dos series de hairlines de 1px al 2.8%. No es un degradado de
@@ -239,18 +254,28 @@
   flex-shrink: 0;
 }
 
-/* Tipografía descomunal: acá se juega el impacto. */
+/* Tipografía descomunal: acá se juega el impacto. Serif de display (Fraunces)
+   con optical sizing — rima con el "Particular" en cursiva del logo y lee
+   editorial/caro donde una sans en negrita leía genérica. El serif pide menos
+   tracking negativo y algo más de interlineado que la sans. */
 .hp-hero-h1 {
-  font-size: clamp(2.85rem, 8.4vw, 7.1rem);
-  font-weight: 900;
-  line-height: .88;
-  letter-spacing: -.045em;
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2.9rem, 8.6vw, 7.3rem);
+  font-weight: 460;
+  line-height: .94;
+  letter-spacing: -.022em;
   color: var(--white);
   margin: 0;
   text-wrap: balance;
 }
 .hp-h1-line { display: block; }
-.hp-h1-line--accent { color: var(--green-on-dark); }
+/* El acento va en cursiva: es el gesto del logo, y separa las dos ideas. */
+.hp-h1-line--accent {
+  color: var(--green-on-dark);
+  font-style: italic;
+  font-weight: 420;
+}
 
 /* Reveal palabra por palabra, escalonado por --i. */
 .hp-h1-word {
@@ -657,9 +682,11 @@
   min-width: 0;
 }
 .hp-subj-name {
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
-  font-weight: 900;
-  letter-spacing: -.03em;
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+  font-weight: 520;
+  letter-spacing: -.014em;
   line-height: 1.05;
   color: var(--text);
 }
@@ -935,15 +962,18 @@
   color: var(--green-lt);
 }
 
-/* El cierre tiene que pegar tan fuerte como el hero: misma escala tipográfica
-   y mismo interlineado cerrado. Antes se quedaba a mitad de camino. */
+/* El cierre tiene que pegar tan fuerte como el hero: mismo serif de display,
+   misma escala grande. */
 .hp-cta-h2 {
-  font-size: clamp(2.4rem, 6.4vw, 5.2rem);
-  font-weight: 900; color: var(--white);
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2.5rem, 6.6vw, 5.4rem);
+  font-weight: 460; color: var(--white);
   margin: 0 0 18px;
-  letter-spacing: -.045em; line-height: .92;
+  letter-spacing: -.022em; line-height: .98;
   text-wrap: balance;
 }
+.hp-cta-h2-accent { font-style: italic; font-weight: 420; }
 
 .hp-cta-p {
   font-size: 16.5px; color: rgba(255,255,255,.6);

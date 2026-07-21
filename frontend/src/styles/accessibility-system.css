@@ -24,6 +24,9 @@ html[data-font-scale="xlarge"] {
 
 html[data-font-family="readable"] {
   --ui-font-family-active: var(--ui-font-family-readable);
+  /* El modo lectura también neutraliza el serif de display: los titulares
+     vuelven a la sans legible. */
+  --ui-font-display: var(--ui-font-family-readable);
 }
 
 html[data-accent-balance="navy"] {
