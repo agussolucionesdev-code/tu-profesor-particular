@@ -49,10 +49,12 @@
 }
 
 .sh-title {
-  font-size: clamp(2.05rem, 4.7vw, 3.7rem);
-  font-weight: 900;
-  line-height: .96;
-  letter-spacing: -.038em;
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2.1rem, 4.8vw, 3.85rem);
+  font-weight: 480;
+  line-height: 1;
+  letter-spacing: -.02em;
   color: var(--text);
   margin: 0;
   text-wrap: balance;
