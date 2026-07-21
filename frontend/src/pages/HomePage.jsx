@@ -55,56 +55,56 @@ const HERO_TICKER = [
   "Y muchas más a consultar",
 ];
 
-/* Las tarjetas traían un `gradient` por materia (linear-gradient de 135°) que
-   contradecía la regla del proyecto: nada de degradados. Ahora cada materia
-   aporta un único color sólido, que viste el ícono y el aro. La cara trasera
-   pasó a navy uniforme: monocromo con un acento se lee más premium que cinco
-   fondos de colores distintos compitiendo entre sí. */
+/* Cada materia aporta un color sólido (regla del proyecto: sin degradados)
+   que viste el ícono, el número y la barra de acento de su fila en el índice
+   editorial. `ink` es la variante clara del mismo tono para dark mode: los
+   colores base dan 1.5–2.9:1 sobre el fondo oscuro — invisibles. El tagline +
+   hook, el copy que vende, está siempre visible (antes lo escondía un flip). */
 const SUBJECTS = [
   {
-    icon:     FaCalculator,
-    label:    "Matemáticas",
-    tagline:  "No sos malo en matemáticas.",
-    hook:     "Nunca te las explicaron bien.",
-    color:    "#1a3a6b",
-    param:    "Matemáticas",
-    delay:    "0s",
+    icon:    FaCalculator,
+    label:   "Matemáticas",
+    tagline: "No sos malo en matemáticas.",
+    hook:    "Nunca te las explicaron bien.",
+    color:   "#1a3a6b",
+    ink:     "#8fb4e8",
+    param:   "Matemáticas",
   },
   {
-    icon:     FaBolt,
-    label:    "Física",
-    tagline:  "La física tiene lógica interna.",
-    hook:     "Cuando la encontrás, todo encaja solo.",
-    color:    "#a34a08",
-    param:    "Física",
-    delay:    "0.4s",
+    icon:    FaBolt,
+    label:   "Física",
+    tagline: "La física tiene lógica interna.",
+    hook:    "Cuando la encontrás, todo encaja solo.",
+    color:   "#a34a08",
+    ink:     "#f09a55",
+    param:   "Física",
   },
   {
-    icon:     FaAtom,
-    label:    "Fisicoquímica",
-    tagline:  "El filtro más duro de cualquier carrera.",
-    hook:     "Con la guía correcta, se vuelve la más lógica.",
-    color:    "#5b21b6",
-    param:    "Fisicoquímica",
-    delay:    "0.8s",
+    icon:    FaAtom,
+    label:   "Fisicoquímica",
+    tagline: "El filtro más duro de cualquier carrera.",
+    hook:    "Con la guía correcta, se vuelve la más lógica.",
+    color:   "#5b21b6",
+    ink:     "#c4a5f5",
+    param:   "Fisicoquímica",
   },
   {
-    icon:     FaFlask,
-    label:    "Química",
-    tagline:  "Basta de memorizar sin entender.",
-    hook:     "La química tiene reglas — y tienen sentido.",
-    color:    "#065f46",
-    param:    "Química",
-    delay:    "1.2s",
+    icon:    FaFlask,
+    label:   "Química",
+    tagline: "Basta de memorizar sin entender.",
+    hook:    "La química tiene reglas — y tienen sentido.",
+    color:   "#065f46",
+    ink:     "#5fd4a8",
+    param:   "Química",
   },
   {
-    icon:     FaGlobeAmericas,
-    label:    "Inglés",
-    tagline:  "No es talento. Es método.",
-    hook:     "Y el miedo a hablar se trabaja, no se espera.",
-    color:    "#1e3a5f",
-    param:    "Inglés",
-    delay:    "1.6s",
+    icon:    FaGlobeAmericas,
+    label:   "Inglés",
+    tagline: "No es talento. Es método.",
+    hook:    "Y el miedo a hablar se trabaja, no se espera.",
+    color:   "#1e3a5f",
+    ink:     "#8ab6de",
+    param:   "Inglés",
   },
 ];
 
@@ -413,7 +413,12 @@ const HomePage = () => {
       <BookingStepsShowcase />
 
       {/* ════════════════════════════════════════
-          MATERIAS — flip 3D cards
+          MATERIAS — índice editorial
+
+          Antes eran 5 flip-cards cuadradas: gimmick, hostil al touch, y el copy
+          más potente (el tagline + hook) quedaba ESCONDIDO detrás del giro. Acá
+          es un índice tipo revista — el copy que vende está siempre a la vista,
+          cada fila es un link directo a reservar, y numera igual que el resto.
       ════════════════════════════════════════ */}
       <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
@@ -422,56 +427,45 @@ const HomePage = () => {
             kicker="Reconocés tu situación acá"
             title="Materias principales"
             titleId="hp-subjects-title"
-            lead="Pasá el mouse sobre cada tarjeta. Describimos exactamente los temas que más complican — y cómo los trabajamos para que dejen de serlo."
+            lead="Los temas que más complican, dichos sin vueltas. Tocá el tuyo y llegás a la reserva con la materia ya elegida."
           />
 
-          <ul
-            className="hp-subjects-grid"
-            role="list"
+          <ol
+            className="hp-subject-index"
             aria-label="Materias principales"
-            data-reveal-group="90"
+            data-reveal-group="70"
           >
-            {SUBJECTS.map((s) => {
+            {SUBJECTS.map((s, i) => {
               const Icon = s.icon;
               return (
-                <li
-                  key={s.label}
-                  className="hp-subject-card"
-                  data-reveal="scale"
-                  style={{
-                    "--float-delay":   s.delay,
-                    "--subject-color": s.color,
-                  }}
-                >
-                  {/* cara delantera */}
-                  <div className="hp-subject-front" aria-hidden="false">
-                    <div className="hp-subject-icon-wrap">
-                      <Icon aria-hidden="true" />
-                      <span className="hp-subject-icon-ring" aria-hidden="true" />
-                    </div>
-                    <strong className="hp-subject-name">{s.label}</strong>
-                    <span className="hp-subject-hint">Tocá para ver más</span>
-                  </div>
-
-                  {/* cara trasera */}
-                  <div className="hp-subject-back">
-                    <Icon className="hp-subject-back-icon" aria-hidden="true" />
-                    <div className="hp-subject-back-copy">
-                      <strong className="hp-subject-back-tagline">{s.tagline}</strong>
-                      <span className="hp-subject-back-hook">{s.hook}</span>
-                    </div>
-                    <Link
-                      to={`/reservar?materia=${encodeURIComponent(s.param)}`}
-                      className="hp-subject-back-btn"
-                    >
-                      <FaCalendarCheck aria-hidden="true" />
-                      Reservar clase de {s.label}
-                    </Link>
-                  </div>
+                <li key={s.label} className="hp-subj-row" data-reveal="up">
+                  <Link
+                    to={`/reservar?materia=${encodeURIComponent(s.param)}`}
+                    className="hp-subj-link"
+                    style={{ "--subject-color": s.color, "--subject-ink": s.ink }}
+                    aria-label={`Reservar clase de ${s.label}`}
+                  >
+                    <span className="hp-subj-num" aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="hp-subj-icon" aria-hidden="true">
+                      <Icon />
+                    </span>
+                    <span className="hp-subj-copy">
+                      <span className="hp-subj-name">{s.label}</span>
+                      <span className="hp-subj-tagline">
+                        <b>{s.tagline}</b> {s.hook}
+                      </span>
+                    </span>
+                    <span className="hp-subj-go">
+                      Reservar
+                      <FaArrowRight aria-hidden="true" />
+                    </span>
+                  </Link>
                 </li>
               );
             })}
-          </ul>
+          </ol>
 
           {/* Banner "más materias" */}
           <div className="hp-more-subjects" data-reveal="up">
