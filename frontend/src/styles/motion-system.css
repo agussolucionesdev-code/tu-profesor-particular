@@ -308,7 +308,11 @@
 }
 
 .page-enter {
-  animation: pageIn 0.35s var(--ease-out-expo) both;
+  /* `backwards`, no `both`: aplica el estado inicial antes de animar (sin
+     flash) pero NO retiene el translateY(0) final. `both` dejaba un transform
+     identidad permanente en .main-content, y un transform en un ancestro rompe
+     position:sticky (el scrollytelling de los pasos). */
+  animation: pageIn 0.35s var(--ease-out-expo) backwards;
 }
 
 /* ── Typing dot loader ── */

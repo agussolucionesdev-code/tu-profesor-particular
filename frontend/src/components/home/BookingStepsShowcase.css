@@ -188,6 +188,66 @@
 .bss-step-notes li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--brand-navy, #00214c); }
 .bss-step-notes svg { color: var(--brand-green-600, #006d1f); flex-shrink: 0; }
 
+/* ══════════════════════════════════════════════════════
+   MODO INMERSIVO — scrollytelling con stage sticky
+
+   Solo desktop sin reduced-motion (el JS decide y monta ImmersiveSteps). El
+   contenedor .bss-scroll es alto; dentro, .bss-sticky se fija a viewport y su
+   contenido —mockup + caption— cambia según el paso activo, que sale del
+   progreso de scroll. Nada de esto se monta en mobile/reduced-motion: ahí va
+   el apilado .bss-steps de siempre.
+══════════════════════════════════════════════════════ */
+.bss-scroll { position: relative; }
+
+.bss-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 56px);
+}
+
+/* Columna del mockup (derecha). Re-monta por key → entra animado en cada paso. */
+.bss-stage-visual {
+  order: 2;
+  display: flex; justify-content: center;
+  animation: bssStageIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bss-stage-visual .bss-frame { width: min(430px, 100%); }
+@keyframes bssStageIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.975); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Columna de texto (izquierda). Cada pieza entra con un micro-desfase. */
+.bss-stage-caption { order: 1; display: flex; flex-direction: column; align-items: flex-start; }
+.bss-stage-caption .bss-badge { font-size: clamp(2.8rem, 4vw, 3.6rem); margin-bottom: 1rem; animation: bssCaptionIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.bss-stage-caption .bss-step-title { font-size: clamp(1.7rem, 3.2vw, 2.5rem); animation: bssCaptionIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.bss-stage-caption .bss-step-desc { font-size: clamp(1rem, 1.3vw, 1.15rem); max-width: 42ch; animation: bssCaptionIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.bss-stage-caption > div { animation: bssCaptionIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+@keyframes bssCaptionIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Rail de progreso: cinco marcas horizontales. */
+.bss-rail { display: flex; gap: 8px; margin-top: 1.75rem; }
+.bss-rail-tick {
+  width: 30px; height: 4px; border-radius: 4px;
+  background: var(--brand-navy, #00214c); opacity: 0.14;
+  transition: opacity 0.4s ease, width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
+}
+.bss-rail-tick.is-done { opacity: 0.4; }
+.bss-rail-tick.is-active { width: 52px; opacity: 1; background: var(--brand-green, #01953c); }
+
+[data-theme="dark"] .bss-rail-tick { background: #ccd9eb; }
+[data-theme="dark"] .bss-rail-tick.is-active { background: var(--brand-green-300, #88ce93); }
+
 /* ── CTA ── */
 .bss-cta { text-align: center; margin-top: clamp(3rem, 6vw, 5rem); }
 .bss-cta-btn {
