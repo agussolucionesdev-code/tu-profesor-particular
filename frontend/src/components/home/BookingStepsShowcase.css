@@ -218,7 +218,8 @@
 [data-theme="dark"] .bss-summary strong,
 [data-theme="dark"] .bss-modality strong { color: #f2f7fb; }
 [data-theme="dark"] .bss-callout { box-shadow: 0 0 0 4px var(--brand-navy-900, #000b2b); }
-[data-theme="dark"] .bss-badge { background: var(--brand-green, #01953c); }
+/* El numeral ya no es una caja rellena; en dark hereda el rol de texto claro de
+   --brand-navy. El viejo fondo verde pintaba un bloque detrás del número. */
 
 /* ── Responsive: apilar ── */
 @media (max-width: 780px) {
