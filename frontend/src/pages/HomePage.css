@@ -32,7 +32,11 @@
   --border:     rgba(0, 33, 76, .1);
   --row-hover:  rgba(0, 33, 76, .045);   /* hover de filas; se invierte en dark */
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip (no hidden): contiene el desborde horizontal de los acentos y el
+     ticker full-bleed SIN crear un contenedor de scroll. `overflow-x: hidden`
+     forzaba `overflow-y: auto`, y eso rompe position:sticky del scrollytelling
+     de los pasos. `clip` deja el eje Y en visible. */
+  overflow-x: clip;
 }
 
 /* Regiones de fondo navy: --green-lt se reapunta al peldaño claro.

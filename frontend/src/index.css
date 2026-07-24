@@ -8,7 +8,11 @@ html {
   color-scheme: light;
   font-size: var(--font-size-base);
   width: 100%;
-  overflow-x: hidden;
+  /* clip (no hidden) en toda la cadena raíz: contiene el desborde horizontal
+     sin crear contenedores de scroll. `overflow-x: hidden` fuerza `overflow-y:
+     auto`, y eso hacía que #root fuera el scroller en vez del viewport, rompiendo
+     position:sticky. `clip` deja el eje Y visible → sticky pinea al viewport. */
+  overflow-x: clip;
   scroll-behavior: auto;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
@@ -45,7 +49,7 @@ body {
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   transition:
     background-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
     color 0.26s ease,
@@ -55,7 +59,7 @@ body {
 #root {
   min-height: 100vh;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
 }

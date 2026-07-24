@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
@@ -162,47 +163,161 @@ const STEPS = [
   },
 ];
 
-const BookingStepsShowcase = () => (
-  <section className="bss" aria-labelledby="bss-title">
-    <div className="bss-inner">
-      <SectionHead
-        index="02"
-        kicker="Reservar es de verdad así de simple"
-        title="Cómo sacás tu turno, paso a paso"
-        titleId="bss-title"
-        lead="Mirá exactamente cómo se ve. Cinco pasos, la mayoría de un solo toque, sin registro ni pagos por adelantado."
-      />
+const StepNotes = ({ notes }) => (
+  <ul className="bss-step-notes">
+    {notes.map((note) => (
+      <li key={note}>
+        <FaCheckCircle aria-hidden="true" /> {note}
+      </li>
+    ))}
+  </ul>
+);
 
-      <ol className="bss-steps">
-        {STEPS.map((step) => (
-          <li key={step.n} className="bss-step" data-reveal="scale">
-            <StepFrame callout={step.callout}>{step.render()}</StepFrame>
-            <div className="bss-caption">
-              <span className="bss-badge">{String(step.n).padStart(2, "0")}</span>
-              <h3 className="bss-step-title">{step.title}</h3>
-              <p className="bss-step-desc">{step.desc}</p>
-              <ul className="bss-step-notes">
-                {step.notes.map((note) => (
-                  <li key={note}>
-                    <FaCheckCircle aria-hidden="true" /> {note}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </li>
-        ))}
-      </ol>
+/* Fallback apilado: mobile y reduced-motion. Los cinco pasos, uno debajo del
+   otro, con reveal al entrar. Es el layout probado. */
+const StackedSteps = () => (
+  <ol className="bss-steps">
+    {STEPS.map((step) => (
+      <li key={step.n} className="bss-step" data-reveal="scale">
+        <StepFrame callout={step.callout}>{step.render()}</StepFrame>
+        <div className="bss-caption">
+          <span className="bss-badge">{String(step.n).padStart(2, "0")}</span>
+          <h3 className="bss-step-title">{step.title}</h3>
+          <p className="bss-step-desc">{step.desc}</p>
+          <StepNotes notes={step.notes} />
+        </div>
+      </li>
+    ))}
+  </ol>
+);
 
-      <div className="bss-cta">
-        <Link to="/reservar" className="bss-cta-btn">
-          <FaCalendarCheck aria-hidden="true" />
-          Probalo ahora — sacá tu turno
-          <FaArrowRight aria-hidden="true" />
-        </Link>
-        <p className="bss-cta-note">Te lleva menos de un minuto. Sin tarjeta, sin compromiso.</p>
+/* Modo inmersivo (scrollytelling): el stage se fija en pantalla y el mockup
+   avanza por los 5 pasos según el progreso de scroll. Solo desktop sin
+   reduced-motion — abajo cae al apilado. El paso activo sale de la posición del
+   contenedor alto respecto al viewport (rAF-throttled), no de timers. */
+const SEGMENT_VH = 58; // scroll por paso, además del primer viewport
+
+const ImmersiveSteps = () => {
+  const scrollRef = useRef(null);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const rect = el.getBoundingClientRect();
+      const total = el.offsetHeight - window.innerHeight;
+      if (total <= 0) return;
+      const passed = Math.min(Math.max(-rect.top, 0), total);
+      const idx = Math.min(
+        STEPS.length - 1,
+        Math.floor((passed / total) * STEPS.length),
+      );
+      setActive((prev) => (prev === idx ? prev : idx));
+    };
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const step = STEPS[active];
+
+  return (
+    <div
+      className="bss-scroll"
+      ref={scrollRef}
+      style={{ height: `calc(100vh + ${(STEPS.length - 1) * SEGMENT_VH}vh)` }}
+    >
+      <div className="bss-sticky">
+        <div className="bss-stage-visual" key={`v-${active}`}>
+          <StepFrame callout={step.callout}>{step.render()}</StepFrame>
+        </div>
+
+        <div className="bss-stage-caption">
+          <span className="bss-badge" key={`n-${active}`}>
+            {String(step.n).padStart(2, "0")}
+          </span>
+          <h3 className="bss-step-title" key={`t-${active}`}>
+            {step.title}
+          </h3>
+          <p className="bss-step-desc" key={`d-${active}`}>
+            {step.desc}
+          </p>
+          <div key={`no-${active}`}>
+            <StepNotes notes={step.notes} />
+          </div>
+
+          {/* Rail de progreso: cinco marcas, la activa llena */}
+          <div className="bss-rail" aria-hidden="true">
+            {STEPS.map((s, i) => (
+              <span
+                key={s.n}
+                className={`bss-rail-tick ${i === active ? "is-active" : ""} ${i < active ? "is-done" : ""}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
-  </section>
-);
+  );
+};
+
+const BookingStepsShowcase = () => {
+  const [immersive, setImmersive] = useState(false);
+
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 900px)");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const compute = () => setImmersive(wide.matches && !reduce.matches);
+    compute();
+    wide.addEventListener("change", compute);
+    reduce.addEventListener("change", compute);
+    return () => {
+      wide.removeEventListener("change", compute);
+      reduce.removeEventListener("change", compute);
+    };
+  }, []);
+
+  return (
+    <section className="bss" aria-labelledby="bss-title">
+      <div className="bss-inner">
+        <SectionHead
+          index="02"
+          kicker="Reservar es de verdad así de simple"
+          title="Cómo sacás tu turno, paso a paso"
+          titleId="bss-title"
+          lead="Mirá exactamente cómo se ve. Cinco pasos, la mayoría de un solo toque, sin registro ni pagos por adelantado."
+        />
+      </div>
+
+      {immersive ? <ImmersiveSteps /> : (
+        <div className="bss-inner">
+          <StackedSteps />
+        </div>
+      )}
+
+      <div className="bss-inner">
+        <div className="bss-cta">
+          <Link to="/reservar" className="bss-cta-btn">
+            <FaCalendarCheck aria-hidden="true" />
+            Probalo ahora — sacá tu turno
+            <FaArrowRight aria-hidden="true" />
+          </Link>
+          <p className="bss-cta-note">Te lleva menos de un minuto. Sin tarjeta, sin compromiso.</p>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export default BookingStepsShowcase;
