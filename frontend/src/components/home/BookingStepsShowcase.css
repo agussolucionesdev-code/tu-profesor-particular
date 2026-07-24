@@ -155,14 +155,34 @@
 
 /* ── Caption ── */
 .bss-caption { display: flex; flex-direction: column; align-items: flex-start; }
+/* Numeral editorial: un número serif grande con una regla debajo, tipo lista de
+   revista. Reemplaza al cuadrado navy relleno, que era el único estilo de
+   numeración que rompía con los numerales finos del resto del Inicio. */
 .bss-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 46px; height: 46px; border-radius: 14px;
-  background: var(--brand-navy, #00214c); color: #fff;
-  font-size: 1.1rem; font-weight: 900; letter-spacing: -0.02em;
-  margin-bottom: 0.9rem;
+  display: inline-flex; align-items: baseline; gap: 12px;
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: 2.6rem; font-weight: 400;
+  line-height: 1;
+  color: var(--brand-navy, #00214c);
+  margin-bottom: 0.75rem;
 }
-.bss-step-title { font-size: clamp(1.25rem, 2.4vw, 1.6rem); font-weight: 900; letter-spacing: -0.02em; color: var(--brand-navy, #00214c); margin: 0 0 0.5rem; }
+.bss-badge::after {
+  content: "";
+  align-self: center;
+  width: 34px; height: 2px;
+  background: var(--brand-green, #01953c);
+}
+/* Título del paso: contenido editorial (no es la UI del mockup) → serif de
+   display, igual que nombres de materia y títulos de sección. El texto DENTRO
+   del marco de navegador queda en sans porque simula la app real. */
+.bss-step-title {
+  font-family: var(--ui-font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.35rem, 2.6vw, 1.75rem);
+  font-weight: 520; letter-spacing: -0.015em; line-height: 1.05;
+  color: var(--brand-navy, #00214c); margin: 0 0 0.55rem;
+}
 .bss-step-desc { font-size: 1rem; line-height: 1.6; color: var(--brand-gray-600, #53595f); margin: 0 0 1rem; }
 .bss-step-notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
 .bss-step-notes li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--brand-navy, #00214c); }
