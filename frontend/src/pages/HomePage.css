@@ -383,42 +383,59 @@
   50% { translate: 0 -12px; }
 }
 
-/* profe: avatar + nombre */
-.hp-hero-profe {
+/* Foto de Agustín: protagonista humano del hero. Marco plano (aro de 1px, sin
+   sombra difusa) + un bloque de acento verde detrás para dar profundidad sin
+   degradados. La firma va en una píldora que se solapa abajo. */
+.hp-hero-photo {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 4.7;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 0 0 1px rgba(0,33,76,.2);
+  background: var(--brand-navy-800);
+}
+.hp-hero-photo::before {
+  /* acento verde en el borde superior, plano */
+  content: "";
+  position: absolute; z-index: 2; inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--brand-green);
+}
+.hp-hero-photo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 18%;
+}
+.hp-hero-photo-tag {
   position: absolute; z-index: 6;
-  left: 50%; bottom: -26px; translate: -50% 0;
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px 8px 8px; border-radius: 100px;
-  background: rgba(0,33,76,.95);
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: 0 12px 26px rgba(0,0,0,.3);
-  white-space: nowrap;
-  animation: float-up 4s ease-in-out infinite .4s;
+  left: 14px; bottom: 14px; right: 14px;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 11px 16px; border-radius: 16px;
+  background: rgba(0,20,42,.86);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.14);
 }
-.hp-hero-profe-img {
-  width: 46px; height: 46px; border-radius: 50%;
-  object-fit: cover; object-position: 50% 22%;
-  border: 2px solid var(--green);
-  flex-shrink: 0;
-}
-.hp-hero-profe-copy { display: flex; flex-direction: column; }
-.hp-hero-profe-copy strong { color: #fff; font-size: 13px; font-weight: 800; }
-.hp-hero-profe-copy span { color: var(--green-on-dark); font-size: 11px; font-weight: 700; }
+.hp-hero-photo-tag strong { color: #fff; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+.hp-hero-photo-tag span { color: var(--green-on-dark); font-size: 12px; font-weight: 700; }
 
-/* chips flotantes de prueba */
+/* chip flotante de prueba (sobre la foto) */
 .hp-hero-float {
   position: absolute; z-index: 6;
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 14px; border-radius: 100px;
+  padding: 9px 15px; border-radius: 100px;
   background: #ffffff; color: var(--brand-navy, #00214c);
   font-size: 13px; font-weight: 800;
-  box-shadow: 0 0 0 1px rgba(0,33,76,.1), 0 10px 24px rgba(0,0,0,.22);
+  box-shadow: 0 0 0 1px rgba(0,33,76,.1);
   animation: float-up 3.5s ease-in-out infinite;
 }
 .hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
-/* Flota claramente por encima del borde de la tarjeta: a -16px pisaba la barra
-   del navegador del mockup y tapaba el final de la URL. */
-.hp-hero-float--a { top: -44px; right: -6px; }
+/* Straddle la esquina superior derecha de la foto. */
+.hp-hero-float--a { top: 20px; right: -16px; }
 
 /* fondo del hero en movimiento (lento y sutil) */
 .hp-hero-ring--1 { animation: hpSpin 48s linear infinite; }
@@ -1138,10 +1155,10 @@
   }
   .hp-hero-rail { display: none; }
   .hp-hero-aside { justify-content: center; margin-top: 0; }
-  .hp-hero-tilt { width: min(340px, 86vw); transform: none; }
+  .hp-hero-tilt { width: min(320px, 82vw); transform: none; }
   .hp-hero-h1 { letter-spacing: -.035em; }
-  /* Los flotantes y el avatar desbordan en pantallas angostas. */
-  .hp-hero-profe,
+  /* La foto sí se muestra (es el visual protagonista); solo el chip flotante
+     se retira en pantallas angostas para no desbordar. */
   .hp-hero-float { display: none; }
 }
 

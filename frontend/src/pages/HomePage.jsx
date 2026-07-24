@@ -32,7 +32,6 @@ import useScrollReveal from "../hooks/useScrollReveal";
 import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
-import HeroKioskDemo from "../components/home/HeroKioskDemo";
 import SectionHead from "../components/home/SectionHead";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
@@ -394,32 +393,29 @@ const HomePage = () => {
             </ul>
           </div>
 
-          {/* ── Demo: rompe la grilla, se solapa con el titular ── */}
+          {/* ── Foto de Agustín: protagonista humano, rompe la grilla ── */}
           <div
             className="hp-hero-aside"
-            aria-hidden="true"
             onMouseMove={handleTilt}
             onMouseLeave={resetTilt}
           >
             <div className="hp-hero-tilt" ref={tiltRef}>
-              <HeroKioskDemo />
-
-              <div className="hp-hero-profe">
+              <figure className="hp-hero-photo">
                 <img
                   src={agustinHero}
-                  alt="Agustín Elías Sosa"
-                  className="hp-hero-profe-img"
+                  alt="Agustín Elías Sosa, tu profesor particular"
+                  className="hp-hero-photo-img"
                   width="800"
                   height="1069"
                 />
-                <span className="hp-hero-profe-copy">
+                <figcaption className="hp-hero-photo-tag">
                   <strong>Agustín Elías Sosa</strong>
                   <span>Tu profesor de confianza</span>
-                </span>
-              </div>
+                </figcaption>
+              </figure>
 
-              <span className="hp-hero-float hp-hero-float--a">
-                <FaRegClock aria-hidden="true" /> 1 minuto
+              <span className="hp-hero-float hp-hero-float--a" aria-hidden="true">
+                <FaRegClock aria-hidden="true" /> Reservás en 1 minuto
               </span>
             </div>
           </div>
