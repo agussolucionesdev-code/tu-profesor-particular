@@ -23,6 +23,17 @@ nav.navbar-elite {
   border-bottom: 1px solid rgba(0, 33, 76, 0.1);
   box-shadow: none;
   transition: background 240ms ease, border-color 240ms ease;
+  /* Entrada: baja suave al cargar (una sola vez — el navbar es persistente).
+     Se anima `top`, NO `transform`: un transform (aunque sea identidad, o
+     congelado en una pestaña que no pinta) volvería al navbar contenedor de sus
+     hijos position:fixed y rompería el backdrop/sheet mobile (inset:0 quedaría
+     relativo al navbar). Con top, el navbar nunca es contenedor de esos hijos. */
+  animation: navbarDrop 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes navbarDrop {
+  from { top: -76px; opacity: 0; }
+  to   { top: 0; opacity: 1; }
 }
 
 [data-theme="dark"] nav.navbar-elite {
@@ -132,9 +143,10 @@ nav.navbar-elite.scrolled .navbar-container {
 }
 
 .navbar-elite .brand-title {
-  font-family: "Playfair Display", "Georgia", serif;
-  font-size: 1.22rem;
-  font-weight: 900;
+  font-family: var(--ui-font-display, "Georgia", serif);
+  font-optical-sizing: auto;
+  font-size: 1.32rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--brand-navy, #00214c);
   white-space: nowrap;
@@ -465,11 +477,18 @@ nav.navbar-elite.scrolled .navbar-container {
   box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
 }
 
-/* Backdrop (solo visible con el menú mobile abierto) */
+/* Backdrop (solo visible con el menú mobile abierto).
+   El navbar tiene backdrop-filter → es el bloque contenedor de sus hijos
+   position:fixed, así que `inset:0` cubría solo el alto del navbar (bug viejo).
+   Con top/left 0 + 100%/100vh (unidades de viewport) cubre toda la pantalla:
+   el navbar arranca en (0,0), y vw/vh no dependen del contenedor. */
 .navbar-elite .nav-sheet-backdrop {
   display: none;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
   z-index: -1;
   border: none;
   padding: 0;
@@ -554,6 +573,7 @@ nav.navbar-elite.scrolled .navbar-container {
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  nav.navbar-elite,
   .navbar-elite .voice-wave-bar,
   .navbar-elite .voice-hint-bubble {
     animation: none;

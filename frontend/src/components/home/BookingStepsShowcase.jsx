@@ -211,9 +211,14 @@ const ImmersiveSteps = () => {
       const total = el.offsetHeight - window.innerHeight;
       if (total <= 0) return;
       const passed = Math.min(Math.max(-rect.top, 0), total);
+      const progress = passed / total;
+      // Progreso continuo vía CSS var (sin re-render): el rail se llena de forma
+      // fluida con el scroll, así los saltos discretos de paso no se sienten
+      // toscos — siempre hay movimiento atado al scroll.
+      el.style.setProperty("--bss-progress", progress.toFixed(4));
       const idx = Math.min(
         STEPS.length - 1,
-        Math.floor((passed / total) * STEPS.length),
+        Math.floor(progress * STEPS.length),
       );
       setActive((prev) => (prev === idx ? prev : idx));
     };
@@ -257,12 +262,13 @@ const ImmersiveSteps = () => {
             <StepNotes notes={step.notes} />
           </div>
 
-          {/* Rail de progreso: cinco marcas, la activa llena */}
+          {/* Rail de progreso: fill continuo (sigue el scroll) + 5 puntos */}
           <div className="bss-rail" aria-hidden="true">
+            <span className="bss-rail-fill" />
             {STEPS.map((s, i) => (
               <span
                 key={s.n}
-                className={`bss-rail-tick ${i === active ? "is-active" : ""} ${i < active ? "is-done" : ""}`}
+                className={`bss-rail-dot ${i === active ? "is-active" : ""} ${i < active ? "is-done" : ""}`}
               />
             ))}
           </div>
