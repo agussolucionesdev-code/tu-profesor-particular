@@ -404,7 +404,9 @@
   animation: float-up 3.5s ease-in-out infinite;
 }
 .hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
-.hp-hero-float--a { top: -16px; right: -18px; }
+/* Flota claramente por encima del borde de la tarjeta: a -16px pisaba la barra
+   del navegador del mockup y tapaba el final de la URL. */
+.hp-hero-float--a { top: -44px; right: -6px; }
 
 /* fondo del hero en movimiento (lento y sutil) */
 .hp-hero-ring--1 { animation: hpSpin 48s linear infinite; }
