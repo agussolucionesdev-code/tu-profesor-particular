@@ -272,13 +272,21 @@
   color: var(--white);
   margin: 0;
   text-wrap: balance;
+  /* Gaze: sigue al cursor (--gaze-* seteadas en .hp-hero). Se usa el LONGHAND
+     `translate`, no `transform`: el h1 tiene una animación de entrada que pinea
+     su `transform`, y translate compone aparte sin pelearse con ella. */
+  translate: calc(var(--gaze-x, 0) * 10px) calc(var(--gaze-y, 0) * 6px);
+  transition: translate .45s cubic-bezier(.16, 1, .3, 1);
 }
 .hp-h1-line { display: block; }
-/* El acento va en cursiva: es el gesto del logo, y separa las dos ideas. */
+/* El acento va en cursiva: es el gesto del logo, y separa las dos ideas.
+   Se desplaza un poco más que la primera línea → profundidad de parallax. */
 .hp-h1-line--accent {
   color: var(--green-on-dark);
   font-style: italic;
   font-weight: 420;
+  translate: calc(var(--gaze-x, 0) * 7px) calc(var(--gaze-y, 0) * 4px);
+  transition: translate .55s cubic-bezier(.16, 1, .3, 1);
 }
 
 /* Reveal palabra por palabra, escalonado por --i. */
@@ -676,11 +684,15 @@
   background: var(--subject-color, var(--brand-navy-800));
   color: #fff;
   font-size: 22px;
-  transition: transform .45s var(--ease-signature);
+  /* Lean magnético: el ícono se inclina hacia el cursor dentro de la fila
+     (--row-lean, seteada por JS; 0 en reposo). Todo en `transform` para que el
+     lean y el lift/rotate/scale del hover vivan en una sola propiedad. */
+  transform: translateX(calc(var(--row-lean, 0) * 9px));
+  transition: transform .35s var(--ease-signature), background .38s ease;
 }
 .hp-subj-link:hover .hp-subj-icon,
 .hp-subj-link:focus-visible .hp-subj-icon {
-  transform: translateY(-3px) rotate(-4deg) scale(1.06);
+  transform: translate(calc(var(--row-lean, 0) * 10px), -3px) rotate(-4deg) scale(1.08);
 }
 
 .hp-subj-copy {

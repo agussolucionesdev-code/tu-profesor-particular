@@ -1,0 +1,17 @@
+/* Envoltorio magnético: la transición suave da el efecto "gooey" al seguir y
+   al volver. inline-flex para no romper el layout del hijo. */
+.magnetic {
+  display: inline-flex;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.magnetic > * {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magnetic {
+    transition: none;
+    transform: none !important;
+  }
+}

@@ -15,6 +15,7 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
+import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import {
   isVoiceMuted,
@@ -274,18 +275,20 @@ const Navbar = () => {
 
             {/* CTA principal: reservar. Destacado, no un link más. */}
             <li className="nav-item nav-item-cta">
-              <Link
-                to="/reservar"
-                className={`nav-cta-btn ${location.pathname === "/reservar" ? "active" : ""}`}
-                onClick={() => setIsOpen(false)}
-                aria-current={
-                  location.pathname === "/reservar" ? "page" : undefined
-                }
-              >
-                <FaCalendarAlt aria-hidden="true" />
-                <span>Reservar</span>
-                <FaArrowRight className="nav-cta-arrow" aria-hidden="true" />
-              </Link>
+              <Magnetic strength={0.4} className="nav-cta-magnetic">
+                <Link
+                  to="/reservar"
+                  className={`nav-cta-btn ${location.pathname === "/reservar" ? "active" : ""}`}
+                  onClick={() => setIsOpen(false)}
+                  aria-current={
+                    location.pathname === "/reservar" ? "page" : undefined
+                  }
+                >
+                  <FaCalendarAlt aria-hidden="true" />
+                  <span>Reservar</span>
+                  <FaArrowRight className="nav-cta-arrow" aria-hidden="true" />
+                </Link>
+              </Magnetic>
             </li>
           </ul>
 
