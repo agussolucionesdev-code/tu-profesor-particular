@@ -29,6 +29,7 @@ import {
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import useScrollReveal from "../hooks/useScrollReveal";
+import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import HeroKioskDemo from "../components/home/HeroKioskDemo";
@@ -247,6 +248,42 @@ const HomePage = () => {
     el.style.setProperty("--rx", "0deg");
   };
 
+  // Gaze del hero: el titular (y los acentos) se desplazan sutilmente siguiendo
+  // el cursor — el hero "reacciona al mouse". Se escribe --gaze-x/-y en el hero
+  // y el CSS traduce cada capa a distinta profundidad. rAF-throttled, anulado
+  // en reduced-motion.
+  const heroRef = useRef(null);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      return undefined;
+    }
+    let raf = 0;
+    const onMove = (event) => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        const r = el.getBoundingClientRect();
+        const gx = ((event.clientX - r.left) / r.width - 0.5) * 2;
+        const gy = ((event.clientY - r.top) / r.height - 0.5) * 2;
+        el.style.setProperty("--gaze-x", gx.toFixed(3));
+        el.style.setProperty("--gaze-y", gy.toFixed(3));
+      });
+    };
+    const onLeave = () => {
+      el.style.setProperty("--gaze-x", "0");
+      el.style.setProperty("--gaze-y", "0");
+    };
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <div className="hp" ref={pageRef}>
 
@@ -272,7 +309,7 @@ const HomePage = () => {
       {/* ════════════════════════════════════════
           HERO
       ════════════════════════════════════════ */}
-      <section className="hp-hero" aria-label="Inicio">
+      <section className="hp-hero" aria-label="Inicio" ref={heroRef}>
         <div className="hp-hero-bg" aria-hidden="true">
           <span className="hp-grid" />
           {/* Acentos planos: un bloque sólido desplazado + un aro de 1px.
@@ -330,20 +367,24 @@ const HomePage = () => {
             </p>
 
             <div className="hp-hero-ctas">
-              <Link to="/reservar" className="hp-cta-main">
-                <FaCalendarCheck aria-hidden="true" />
-                Reservar mi clase
-                <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-              </Link>
-              <a
-                href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
-                className="hp-cta-ghost"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaWhatsapp aria-hidden="true" />
-                Consultar antes
-              </a>
+              <Magnetic strength={0.35}>
+                <Link to="/reservar" className="hp-cta-main">
+                  <FaCalendarCheck aria-hidden="true" />
+                  Reservar mi clase
+                  <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+                </Link>
+              </Magnetic>
+              <Magnetic strength={0.3}>
+                <a
+                  href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
+                  className="hp-cta-ghost"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FaWhatsapp aria-hidden="true" />
+                  Consultar antes
+                </a>
+              </Magnetic>
             </div>
 
             <ul className="hp-hero-trust" aria-label="Cómo funciona">
@@ -444,6 +485,23 @@ const HomePage = () => {
                     className="hp-subj-link"
                     style={{ "--subject-color": s.color, "--subject-ink": s.ink }}
                     aria-label={`Reservar clase de ${s.label}`}
+                    onMouseMove={(e) => {
+                      if (
+                        window.matchMedia?.("(prefers-reduced-motion: reduce)")
+                          ?.matches
+                      )
+                        return;
+                      const r = e.currentTarget.getBoundingClientRect();
+                      const lx =
+                        (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+                      e.currentTarget.style.setProperty(
+                        "--row-lean",
+                        lx.toFixed(3),
+                      );
+                    }}
+                    onMouseLeave={(e) =>
+                      e.currentTarget.style.setProperty("--row-lean", "0")
+                    }
                   >
                     <span className="hp-subj-num" aria-hidden="true">
                       {String(i + 1).padStart(2, "0")}
