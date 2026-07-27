@@ -32,6 +32,7 @@ import useScrollReveal from "../hooks/useScrollReveal";
 import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
+import FaqSection from "../components/home/FaqSection";
 import SectionHead from "../components/home/SectionHead";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
@@ -618,6 +619,11 @@ const HomePage = () => {
           </ul>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════
+          FAQ
+      ════════════════════════════════════════ */}
+      <FaqSection />
 
       {/* ════════════════════════════════════════
           CTA FINAL + web principal
