@@ -37,7 +37,7 @@ const FaqSection = () => (
   <section className="hp-section hp-section--soft" aria-labelledby="hp-faq-title">
     <div className="hp-section-inner">
       <SectionHead
-        index="06"
+        index="07"
         kicker="Antes de reservar"
         title="Preguntas frecuentes"
         titleId="hp-faq-title"

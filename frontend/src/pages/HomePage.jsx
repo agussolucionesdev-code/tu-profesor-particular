@@ -31,6 +31,7 @@ import { usePageMeta } from "../hooks/useDocumentTitle";
 import useScrollReveal from "../hooks/useScrollReveal";
 import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
+import AboutAgustin from "../components/home/AboutAgustin";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import FaqSection from "../components/home/FaqSection";
 import SectionHead from "../components/home/SectionHead";
@@ -619,6 +620,11 @@ const HomePage = () => {
           </ul>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════
+          QUIÉN ES AGUSTÍN
+      ════════════════════════════════════════ */}
+      <AboutAgustin />
 
       {/* ════════════════════════════════════════
           FAQ
