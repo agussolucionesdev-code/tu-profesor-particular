@@ -452,6 +452,11 @@ const HomePage = () => {
       <BookingStepsShowcase />
 
       {/* ════════════════════════════════════════
+          QUIÉN ES AGUSTÍN (presentación temprana, tras mostrar lo fácil que es)
+      ════════════════════════════════════════ */}
+      <AboutAgustin />
+
+      {/* ════════════════════════════════════════
           MATERIAS — índice editorial
 
           Antes eran 5 flip-cards cuadradas: gimmick, hostil al touch, y el copy
@@ -462,7 +467,7 @@ const HomePage = () => {
       <section className="hp-section" aria-labelledby="hp-subjects-title">
         <div className="hp-section-inner">
           <SectionHead
-            index="03"
+            index="04"
             kicker="Reconocés tu situación acá"
             title="Materias principales"
             titleId="hp-subjects-title"
@@ -558,7 +563,7 @@ const HomePage = () => {
       <section className="hp-section hp-section--soft" aria-labelledby="hp-reasons-title">
         <div className="hp-section-inner">
           <SectionHead
-            index="04"
+            index="05"
             kicker="Lo que hace la diferencia"
             title="Por qué esto funciona cuando lo otro no"
             titleId="hp-reasons-title"
@@ -588,7 +593,7 @@ const HomePage = () => {
       <section className="hp-section" aria-labelledby="hp-levels-title">
         <div className="hp-section-inner">
           <SectionHead
-            index="05"
+            index="06"
             kicker="Sin importar dónde estés"
             title="Todos los niveles"
             titleId="hp-levels-title"
@@ -620,11 +625,6 @@ const HomePage = () => {
           </ul>
         </div>
       </section>
-
-      {/* ════════════════════════════════════════
-          QUIÉN ES AGUSTÍN
-      ════════════════════════════════════════ */}
-      <AboutAgustin />
 
       {/* ════════════════════════════════════════
           FAQ
