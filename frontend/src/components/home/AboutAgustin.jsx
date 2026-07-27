@@ -18,7 +18,7 @@ const AboutAgustin = () => (
   <section className="hp-section" aria-labelledby="hp-about-title">
     <div className="hp-section-inner">
       <SectionHead
-        index="06"
+        index="03"
         kicker="Tu profesor"
         title="Quién es Agustín"
         titleId="hp-about-title"
