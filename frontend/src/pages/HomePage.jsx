@@ -35,6 +35,7 @@ import AboutAgustin from "../components/home/AboutAgustin";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import FaqSection from "../components/home/FaqSection";
 import SectionHead from "../components/home/SectionHead";
+import SectionRail from "../components/home/SectionRail";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import agustinHero from "../assets/images/agustin-hero.webp";
 import "../styles/reveal-system.css";
@@ -303,6 +304,9 @@ const HomePage = () => {
 
   return (
     <div className="hp" ref={pageRef}>
+      {/* Índice lateral: dónde estás y salto directo a cualquier sección. */}
+      <SectionRail />
+
 
       {/* ── Banner web principal ── */}
       <a
