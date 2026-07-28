@@ -46,6 +46,40 @@
 }
 .hero-sep { width: 22px; height: 1px; background: rgba(255, 255, 255, 0.28); }
 
+/* El dolor del alumno, escrito a máquina. Va antes del titular y en un tono
+   más apagado: es la voz de quien llega, no la de la marca. */
+.hero-pain {
+  /* Texto en flujo normal, NO flex: con flex-wrap el caret se iba solo a la
+     línea de abajo cada vez que la palabra quedaba vacía entre ciclos. */
+  display: block;
+  margin: 0 0 clamp(14px, 2vw, 20px);
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-style: italic;
+  font-size: clamp(1.05rem, 2.1vw, 1.6rem);
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.5);
+}
+.hero-pain-quote { color: rgba(255, 255, 255, 0.28); }
+/* Se reserva el ancho de la palabra más larga ("Análisis Matemático") para que
+   el cierre de comillas no baile a cada letra. */
+.hero-pain-word {
+  /* inline-block para que min-width aplique; el caret adentro sigue el flujo
+     inline del texto, así que su baseline no se rompe. */
+  display: inline-block;
+  min-width: 11ch;
+  min-height: 1em;
+  color: var(--green-on-dark);
+  font-style: normal;
+  font-weight: 500;
+}
+
+@media (max-width: 620px) {
+  /* En pantallas angostas reservar ancho fuerza saltos raros: se libera. */
+  .hero-pain-word { min-width: 0; }
+}
+
 .hero-title { color: #fff; }
 .hero-title em { color: var(--green-on-dark); }
 

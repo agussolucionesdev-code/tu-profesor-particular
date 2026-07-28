@@ -1,0 +1,29 @@
+/* Máquina de escribir. El caret es un bloque fino que late; no se usa el
+   clásico "|" tipográfico para que no salte de ancho entre fuentes. */
+/* Inline (no flex): así el caret sigue la baseline del texto en lugar de
+   alinearse por su cuenta, que lo dejaba flotando más abajo. */
+.tw {
+  display: inline;
+}
+
+.tw-caret {
+  display: inline-block;
+  width: 0.07em;
+  min-width: 2px;
+  height: 0.78em;
+  margin-left: 0.1em;
+  /* Pequeño descenso para quedar a ras del texto, no sobre la baseline. */
+  vertical-align: -0.04em;
+  background: currentColor;
+  animation: twBlink 1.05s steps(1, end) infinite;
+}
+
+@keyframes twBlink {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tw-caret { animation: none; opacity: 1; }
+}
