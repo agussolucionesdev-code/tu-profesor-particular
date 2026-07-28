@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
@@ -249,6 +249,22 @@ const HomePage = () => {
     el.style.setProperty("--rx", "0deg");
   };
 
+  // Índice de materias: un panel "preview" sigue al cursor y muestra la materia
+  // bajo el mouse en grande. Es el gesto editorial/Awwwards clásico de hover
+  // reveal. La posición se escribe en CSS vars (rAF) para no re-renderizar; solo
+  // el cambio de materia activa dispara render. Inerte en touch y reduced-motion.
+  const subjectsRef = useRef(null);
+  const followerRef = useRef(null);
+  const [activeSubject, setActiveSubject] = useState(null);
+
+  const moveFollower = (event) => {
+    const el = followerRef.current;
+    if (!el) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    el.style.setProperty("--fx", `${event.clientX}px`);
+    el.style.setProperty("--fy", `${event.clientY}px`);
+  };
+
   // Gaze del hero: el titular (y los acentos) se desplazan sutilmente siguiendo
   // el cursor — el hero "reacciona al mouse". Se escribe --gaze-x/-y en el hero
   // y el CSS traduce cada capa a distinta profundidad. rAF-throttled, anulado
@@ -478,6 +494,9 @@ const HomePage = () => {
             className="hp-subject-index"
             aria-label="Materias principales"
             data-reveal-group="70"
+            ref={subjectsRef}
+            onMouseMove={moveFollower}
+            onMouseLeave={() => setActiveSubject(null)}
           >
             {SUBJECTS.map((s, i) => {
               const Icon = s.icon;
@@ -488,6 +507,8 @@ const HomePage = () => {
                     className="hp-subj-link"
                     style={{ "--subject-color": s.color, "--subject-ink": s.ink }}
                     aria-label={`Reservar clase de ${s.label}`}
+                    onMouseEnter={() => setActiveSubject(i)}
+                    onFocus={() => setActiveSubject(null)}
                     onMouseMove={(e) => {
                       if (
                         window.matchMedia?.("(prefers-reduced-motion: reduce)")
@@ -527,6 +548,38 @@ const HomePage = () => {
               );
             })}
           </ol>
+
+          {/* Preview que sigue al cursor sobre el índice de materias. */}
+          <div
+            ref={followerRef}
+            className={`hp-subj-follower ${activeSubject !== null ? "is-on" : ""}`}
+            aria-hidden="true"
+            style={
+              activeSubject !== null
+                ? {
+                    "--subject-color": SUBJECTS[activeSubject].color,
+                    "--subject-ink": SUBJECTS[activeSubject].ink,
+                  }
+                : undefined
+            }
+          >
+            {activeSubject !== null && (
+              <>
+                <span className="hp-subj-follower-icon">
+                  {(() => {
+                    const Icon = SUBJECTS[activeSubject].icon;
+                    return <Icon />;
+                  })()}
+                </span>
+                <span className="hp-subj-follower-copy">
+                  <span className="hp-subj-follower-name">
+                    {SUBJECTS[activeSubject].label}
+                  </span>
+                  <span className="hp-subj-follower-go">Reservar ahora</span>
+                </span>
+              </>
+            )}
+          </div>
 
           {/* Banner "más materias" */}
           <div className="hp-more-subjects" data-reveal="up">
