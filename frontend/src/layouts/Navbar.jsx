@@ -24,7 +24,6 @@ import {
 } from "../utils/neuroToast";
 import "./Navbar.css";
 
-const VOICE_HINT_KEY = "voice_hint_seen";
 const VOICE_MUTED_EVENT = "neuro-voice-muted-changed";
 const VOICE_BLOCKED_EVENT = "neuro-voice-blocked";
 const VOICE_READY_EVENT = "neuro-voice-ready";
@@ -34,19 +33,55 @@ const NAVBAR_VOICE_OPTIONS = {
   volume: 0.9,
 };
 
+/* ── Descubrimiento de la guía por voz ─────────────────────────────────────
+   La guía por voz es una función valiosa que antes vivía detrás de un ícono
+   mudo: nadie sabía que existía. Ahora se anuncia en tres capas, de menor a
+   mayor intrusión:
+     1. El control lleva rótulo visible ("Guía por voz"), no sólo un ícono.
+     2. Un punto pulsante mientras nunca se haya usado.
+     3. Una invitación que aparece a los 4 s y se puede aceptar o posponer.
+   Si la posponen, vuelve a ofrecerse cada 3 minutos, COMO MÁXIMO 3 veces en
+   total. Si la activan o la descartan, no molesta nunca más (se recuerda entre
+   visitas). El objetivo es que se entere, no perseguirla. */
+const VOICE_INVITE_KEY = "voice_invite_state_v2";
+const VOICE_INVITE_MAX = 3;
+const VOICE_INVITE_FIRST_DELAY = 4000;
+const VOICE_INVITE_REPEAT_DELAY = 180000; // 3 min
+const VOICE_INVITE_VISIBLE_MS = 15000;
+
+const readInviteState = () => {
+  try {
+    const raw = window.localStorage.getItem(VOICE_INVITE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return {
+      done: Boolean(parsed?.done),
+      shown: Number(parsed?.shown) || 0,
+    };
+  } catch {
+    return { done: false, shown: 0 };
+  }
+};
+
+const writeInviteState = (state) => {
+  try {
+    window.localStorage.setItem(VOICE_INVITE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors silently.
+  }
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [voiceMuted, setVoiceMutedState] = useState(() => isVoiceMuted());
   const [voiceBlocked, setVoiceBlocked] = useState(false);
-  const [showVoiceHint, setShowVoiceHint] = useState(() => {
-    try {
-      return window.localStorage.getItem(VOICE_HINT_KEY) !== "true";
-    } catch {
-      return true;
-    }
-  });
+  const [showVoiceInvite, setShowVoiceInvite] = useState(false);
+  /* `inviteDone` = ya la activó o la descartó; no se vuelve a ofrecer nunca.
+     Es estado (no ref) porque decide si se pinta el punto pulsante.
+     El contador de apariciones sí va en un ref: no afecta al render. */
+  const [inviteDone, setInviteDone] = useState(() => readInviteState().done);
+  const inviteShownRef = useRef(readInviteState().shown);
   const themeTransitionTimerRef = useRef(null);
   const rafRef = useRef(0);
   const location = useLocation();
@@ -96,21 +131,35 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
-  // Hint de voz: persiste hasta interacción explícita o 30 s.
+  /* Ciclo de invitación a la guía por voz: primer ofrecimiento a los 4 s y
+     recordatorios cada 3 min, hasta 3 en total. Cada aparición dura 15 s. Se
+     detiene apenas la voz se activa o el visitante la descarta. */
   useEffect(() => {
-    if (!showVoiceHint) return undefined;
+    if (inviteDone || !voiceMuted || voiceBlocked) return undefined;
 
-    const timeoutId = window.setTimeout(() => {
-      setShowVoiceHint(false);
-      try {
-        window.localStorage.setItem(VOICE_HINT_KEY, "true");
-      } catch {
-        // Ignore storage errors silently.
-      }
-    }, 30000);
+    const hideTimers = [];
+    const offer = () => {
+      if (inviteShownRef.current >= VOICE_INVITE_MAX) return;
+      setShowVoiceInvite(true);
+      inviteShownRef.current += 1;
+      writeInviteState({ done: false, shown: inviteShownRef.current });
+      hideTimers.push(
+        window.setTimeout(
+          () => setShowVoiceInvite(false),
+          VOICE_INVITE_VISIBLE_MS,
+        ),
+      );
+    };
 
-    return () => window.clearTimeout(timeoutId);
-  }, [showVoiceHint]);
+    const first = window.setTimeout(offer, VOICE_INVITE_FIRST_DELAY);
+    const repeat = window.setInterval(offer, VOICE_INVITE_REPEAT_DELAY);
+
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(repeat);
+      hideTimers.forEach((id) => window.clearTimeout(id));
+    };
+  }, [voiceMuted, voiceBlocked, inviteDone]);
 
   useEffect(
     () => () => {
@@ -145,13 +194,13 @@ const Navbar = () => {
     };
   }, []);
 
-  const dismissVoiceHint = () => {
-    setShowVoiceHint(false);
-
-    try {
-      window.localStorage.setItem(VOICE_HINT_KEY, "true");
-    } catch {
-      // Ignore storage errors silently.
+  /* Cierra la invitación. `forever` la da por saldada: no se vuelve a ofrecer
+     en visitas futuras (se usa al activar la voz o al elegir "Ahora no"). */
+  const closeVoiceInvite = (forever = false) => {
+    setShowVoiceInvite(false);
+    if (forever) {
+      setInviteDone(true);
+      writeInviteState({ done: true, shown: inviteShownRef.current });
     }
   };
 
@@ -194,7 +243,8 @@ const Navbar = () => {
     const nextMuted = !voiceMuted;
     setVoiceMuted(nextMuted);
     setVoiceMutedState(nextMuted);
-    dismissVoiceHint();
+    // Ya conoce la función: se deja de ofrecer.
+    closeVoiceInvite(true);
 
     if (!nextMuted) {
       primeVoicePlayback({
@@ -216,8 +266,11 @@ const Navbar = () => {
   const voiceTitle = voiceBlocked
     ? "El navegador bloqueó la voz. Habilitá el sonido para este sitio y reintentá."
     : voiceMuted
-      ? "Activar guía por voz"
+      ? "Activar guía por voz: te acompaño hablado en cada paso"
       : "Pausar guía por voz";
+
+  // Punto pulsante mientras la función siga sin descubrirse.
+  const voiceIsUndiscovered = voiceMuted && !voiceBlocked && !inviteDone;
 
   return (
     <nav className={`navbar-elite ${scrolled ? "scrolled" : ""}`}>
@@ -228,9 +281,13 @@ const Navbar = () => {
           onClick={() => setIsOpen(false)}
           aria-label="Tu Profesor Particular — Agustín Elías Sosa"
         >
-          <span className="brand-mark" aria-hidden="true">
-            <ThemeLogo variant="monogram" imgClassName="brand-mark-img" alt="" />
-          </span>
+          {/* Monograma sin caja ni borde: antes se leía como sticker pegado. */}
+          <ThemeLogo
+            variant="monogram"
+            imgClassName="brand-mark-img"
+            alt=""
+            aria-hidden="true"
+          />
           <span className="brand-copy">
             <span className="brand-title">
               Tu Profesor <span className="brand-title-accent">Particular</span>
@@ -299,26 +356,15 @@ const Navbar = () => {
             <div
               className={`voice-toggle-shell ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
             >
-              {showVoiceHint && voiceMuted && !voiceBlocked && (
-                <button
-                  type="button"
-                  className="voice-hint-bubble"
-                  onClick={toggleVoice}
-                >
-                  Activá la guía por voz
-                </button>
-              )}
-
               <button
                 type="button"
-                className={`nav-utility-btn voice-toggle-btn ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
+                className={`voice-toggle-btn ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
                 onClick={toggleVoice}
-                onBlur={dismissVoiceHint}
                 title={voiceTitle}
                 aria-label={voiceTitle}
                 aria-pressed={!voiceMuted}
               >
-                <span className="nav-utility-icon" aria-hidden="true">
+                <span className="voice-toggle-icon" aria-hidden="true">
                   {voiceBlocked ? (
                     <FaExclamationTriangle />
                   ) : voiceMuted ? (
@@ -327,12 +373,23 @@ const Navbar = () => {
                     <FaVolumeUp />
                   )}
                 </span>
+                {/* Rótulo visible: la función se entiende sin tocar nada. */}
+                <span className="voice-toggle-label">
+                  {voiceBlocked
+                    ? "Voz bloqueada"
+                    : voiceMuted
+                      ? "Guía por voz"
+                      : "Guía activa"}
+                </span>
                 {!voiceMuted && !voiceBlocked && (
                   <span className="voice-wave" aria-hidden="true">
                     <span className="voice-wave-bar" />
                     <span className="voice-wave-bar" />
                     <span className="voice-wave-bar" />
                   </span>
+                )}
+                {voiceIsUndiscovered && (
+                  <span className="voice-new-dot" aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -373,14 +430,43 @@ const Navbar = () => {
             {isOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
           </button>
         </div>
+
+        {/* Progreso de lectura: hairline verde al pie de la cápsula. Va dentro
+            para que el overflow:hidden lo recorte siguiendo el border-radius. */}
+        <span
+          className="navbar-progress"
+          aria-hidden="true"
+          style={{ transform: `scaleX(${scrollProgress})` }}
+        />
       </div>
 
-      {/* Progreso de lectura: hairline verde que crece con el scroll */}
-      <span
-        className="navbar-progress"
-        aria-hidden="true"
-        style={{ transform: `scaleX(${scrollProgress})` }}
-      />
+      {/* Invitación a la guía por voz. Vive FUERA de la cápsula: el
+          backdrop-filter de ésta la vuelve contenedor de sus hijos fixed y su
+          overflow:hidden recortaría la tarjeta. */}
+      {showVoiceInvite && voiceMuted && !voiceBlocked && (
+        <div className="voice-invite" role="status">
+          <p className="voice-invite-copy">
+            <strong>¿Querés que te guíe hablando?</strong>
+            Te acompaño paso a paso mientras reservás tu turno.
+          </p>
+          <div className="voice-invite-actions">
+            <button
+              type="button"
+              className="voice-invite-yes"
+              onClick={toggleVoice}
+            >
+              Activar guía
+            </button>
+            <button
+              type="button"
+              className="voice-invite-no"
+              onClick={() => closeVoiceInvite(true)}
+            >
+              Ahora no
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
