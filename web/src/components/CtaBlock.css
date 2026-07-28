@@ -1,0 +1,38 @@
+.cta { text-align: center; }
+
+.cta-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Monograma como marca de agua gigante detrás del titular. */
+.cta-watermark {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  translate: -50% -54%;
+  width: clamp(300px, 42vw, 560px);
+  height: auto;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.cta .display--xl { color: #fff; }
+.cta .display--xl em { color: var(--green-on-dark); }
+
+.cta-lead {
+  margin: 1.25rem auto 2rem;
+  max-width: 54ch;
+  text-align: center;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.85rem;
+}
