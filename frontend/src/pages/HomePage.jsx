@@ -693,12 +693,13 @@ const HomePage = () => {
         </div>
 
         <div className="hp-cta-inner" data-reveal-group="110">
+          {/* Marca de agua de fondo: NO lleva data-reveal — el sistema de reveal
+              lo llevaría a opacity 1 (mayor especificidad) y taparía el titular. */}
           <ThemeLogo
             variant="monogram"
             imgClassName="hp-cta-monogram"
             alt=""
             aria-hidden="true"
-            data-reveal="scale"
           />
 
           <h2 className="hp-cta-h2" data-reveal="clip">
