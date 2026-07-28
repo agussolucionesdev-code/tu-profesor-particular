@@ -1,0 +1,367 @@
+/* Estilos compartidos por las páginas internas (Sobre mí, Materias, Cómo
+   trabajo, Contacto, 404). La primera sección deja aire para la isla flotante. */
+.pagehead { padding-top: calc(var(--nav-space) + clamp(24px, 4vw, 56px)); }
+
+/* ── Grilla genérica de tarjetas de texto ────────────── */
+.plain-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.plain-grid > li {
+  padding: clamp(22px, 2.6vw, 30px);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  transition: transform 0.42s var(--ease), box-shadow 0.42s var(--ease);
+}
+.plain-grid > li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px -18px rgba(0, 33, 76, 0.4);
+}
+.plain-grid h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.plain-grid p { margin: 0; font-size: 0.9rem; line-height: 1.62; color: var(--muted); }
+
+/* ── Sobre mí ────────────────────────────────────────── */
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+.about-photo {
+  margin: 0;
+  position: relative;
+  aspect-ratio: 4 / 4.6;
+  max-width: 360px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.about-photo::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--green-brand);
+}
+.about-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 16%; }
+
+.about-bio {
+  margin: 0 0 1.1rem;
+  font-size: clamp(1rem, 1.45vw, 1.15rem);
+  line-height: 1.68;
+  color: var(--text);
+  max-width: 56ch;
+}
+.about-bio b { font-weight: 800; color: var(--green); }
+
+.about-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  margin: clamp(1.5rem, 3vw, 2rem) 0 0;
+  padding-top: clamp(1.2rem, 2vw, 1.6rem);
+  border-top: 1px solid var(--border);
+}
+.about-stats > div { display: flex; flex-direction: column; gap: 4px; }
+.about-stats dt {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2rem, 3.4vw, 2.9rem);
+  font-weight: 480;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--green);
+}
+.about-stats dd { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); max-width: 18ch; }
+
+@media (max-width: 860px) {
+  .about-grid { grid-template-columns: minmax(0, 1fr); }
+  .about-photo { max-width: 300px; }
+}
+
+/* ── Materias (tarjetas) ─────────────────────────────── */
+.subj-cards {
+  list-style: none;
+  margin: 0 0 clamp(2rem, 4vw, 3rem);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.subj-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(26px, 3vw, 34px);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.42s var(--ease), box-shadow 0.42s var(--ease);
+}
+.subj-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--subject-color, var(--green-brand));
+}
+.subj-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 34px -18px rgba(0, 33, 76, 0.42);
+}
+.subj-card-name { margin: 0 0 0.7rem; color: var(--text); }
+.subj-card-claim { margin: 0 0 0.8rem; font-size: 0.95rem; line-height: 1.55; color: var(--muted); }
+.subj-card-claim b { color: var(--text); font-weight: 800; }
+.subj-card-detail {
+  margin: 0 0 1.4rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--muted);
+  flex: 1;
+}
+.subj-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--green);
+  text-decoration: none;
+  transition: transform 0.35s var(--ease);
+}
+.subj-card-cta svg { font-size: 0.7rem; }
+.subj-card-cta:hover { transform: translateX(3px); text-decoration: underline; }
+
+.subj-extra {
+  padding: clamp(28px, 3.4vw, 40px);
+  background: var(--navy-800);
+  color: #fff;
+  border-radius: 20px;
+}
+.subj-extra h3 {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+  font-weight: 520;
+  letter-spacing: -0.015em;
+}
+.subj-extra p {
+  margin: 0 0 1.4rem;
+  max-width: 58ch;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ── Cómo trabajo ────────────────────────────────────── */
+.method-list { list-style: none; margin: 0; padding: 0; }
+.method-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding: clamp(24px, 3vw, 34px) 0;
+  border-bottom: 1px solid var(--border);
+}
+.method-step:first-child { border-top: 1px solid var(--border); }
+.method-index {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 400;
+  line-height: 0.9;
+  color: var(--green);
+  opacity: 0.9;
+}
+.method-copy h3 { margin: 0 0 0.6rem; color: var(--text); }
+.method-copy p {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.3vw, 1.05rem);
+  line-height: 1.68;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+/* ── FAQ ─────────────────────────────────────────────── */
+.faq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 840px;
+  border-top: 1px solid var(--border);
+  interpolate-size: allow-keywords;
+}
+.faq-list > li { border-bottom: 1px solid var(--border); }
+
+.faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(18px, 2.4vw, 26px) 4px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  transition: color 0.25s ease;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary:hover,
+.faq-item[open] summary { color: var(--green); }
+
+/* Cruz que gira: dos hairlines, sin iconografía extra. */
+.faq-plus {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  transition: transform 0.35s var(--ease), background 0.25s ease,
+    border-color 0.25s ease;
+}
+.faq-plus::before,
+.faq-plus::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 1.5px;
+  background: var(--green);
+  translate: -50% -50%;
+  transition: background 0.25s ease;
+}
+.faq-plus::after { rotate: 90deg; }
+.faq-item[open] .faq-plus {
+  transform: rotate(135deg);
+  background: var(--green-brand);
+  border-color: var(--green-brand);
+}
+.faq-item[open] .faq-plus::before,
+.faq-item[open] .faq-plus::after { background: #fff; }
+
+/* Despliegue con altura real; degrada a apertura instantánea. */
+.faq-item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 0.45s var(--ease), content-visibility 0.45s allow-discrete;
+}
+.faq-item[open]::details-content { block-size: auto; }
+
+.faq-answer p {
+  margin: 0;
+  padding: 0 4px clamp(18px, 2.4vw, 26px);
+  max-width: 66ch;
+  font-size: clamp(0.95rem, 1.3vw, 1.02rem);
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* ── Contacto ────────────────────────────────────────── */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: clamp(24px, 3vw, 32px);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  text-decoration: none;
+  transition: transform 0.42s var(--ease), box-shadow 0.42s var(--ease),
+    border-color 0.3s ease;
+}
+.contact-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--navy-700);
+  box-shadow: 0 16px 34px -18px rgba(0, 33, 76, 0.42);
+}
+.contact-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.contact-card p { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--muted); }
+
+.contact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--navy-800);
+  color: #fff;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+.contact-action {
+  margin-top: auto;
+  padding-top: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.contact-action svg { font-size: 0.68rem; }
+
+/* La reserva es la acción principal: ocupa más y se viste en navy. */
+.contact-card--primary {
+  grid-column: span 2;
+  background: var(--navy-800);
+  border-color: transparent;
+}
+.contact-card--primary h3,
+.contact-card--primary .display { color: #fff; }
+.contact-card--primary p { color: rgba(255, 255, 255, 0.72); max-width: 46ch; }
+.contact-card--primary .contact-action { color: var(--green-on-dark); }
+.contact-kicker {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green-on-dark);
+}
+
+@media (max-width: 620px) {
+  .contact-card--primary { grid-column: auto; }
+}
+
+/* ── 404 ─────────────────────────────────────────────── */
+.nf { text-align: center; }
+.nf-code { color: var(--green); opacity: 0.22; margin-bottom: -0.4rem; }
+.nf-title { color: var(--text); margin-bottom: 1rem; }
+.nf-lead { margin: 0 auto 2rem; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .plain-grid > li:hover,
+  .subj-card:hover,
+  .contact-card:hover { transform: none; }
+  .faq-item::details-content { transition: none; }
+}

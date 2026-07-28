@@ -1,0 +1,97 @@
+.sfoot {
+  position: relative;
+  overflow: hidden;
+  background: var(--navy-800);
+  color: #fff;
+  padding-top: clamp(56px, 6vw, 88px);
+}
+
+.sfoot-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(2rem, 4vw, 3.5rem);
+  padding-bottom: clamp(40px, 5vw, 64px);
+}
+
+.sfoot-mark {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  margin-bottom: 1.1rem;
+}
+.sfoot-tagline {
+  color: #fff;
+  max-width: 22ch;
+  margin: 0 0 0.9rem;
+}
+.sfoot-tagline span { color: #fff; }
+.sfoot-tagline em { color: var(--green-on-dark); }
+.sfoot-person {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sfoot-title {
+  margin: 0 0 1rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green-on-dark);
+}
+
+.sfoot-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.sfoot-col a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.74);
+  text-decoration: none;
+  transition: color 180ms ease, transform 260ms var(--ease);
+}
+.sfoot-col a:hover {
+  color: #fff;
+  transform: translateX(3px);
+}
+.sfoot-col a svg { font-size: 0.72rem; flex-shrink: 0; opacity: 0.75; }
+.sfoot-contact a { word-break: break-word; }
+.sfoot-contact a svg { font-size: 0.95rem; opacity: 1; color: var(--green-on-dark); }
+
+.sfoot-base {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.sfoot-base p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+.sfoot-base-note { color: rgba(255, 255, 255, 0.4) !important; }
+
+@media (max-width: 900px) {
+  .sfoot-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .sfoot-inner { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfoot-col a:hover { transform: none; }
+}
