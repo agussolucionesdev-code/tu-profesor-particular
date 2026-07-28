@@ -53,6 +53,25 @@
   border-color: var(--green);
 }
 
+/* Despliegue con altura REAL.
+   El contenido de un <details> cerrado no está en el flujo, así que una
+   transición común no lo anima. `::details-content` + `interpolate-size`
+   permiten interpolar hasta `auto` sin saber la altura de antemano. Donde el
+   navegador no lo soporta, simplemente abre al instante (degradación limpia).
+   El wrapper grid mantiene el contenido contenido durante la interpolación. */
+.hp-faq-list { interpolate-size: allow-keywords; }
+
+.hp-faq-details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size .45s cubic-bezier(.16, 1, .3, 1),
+    content-visibility .45s allow-discrete;
+}
+.hp-faq-details[open]::details-content { block-size: auto; }
+
+.hp-faq-wrap { display: grid; }
+
 .hp-faq-a {
   margin: 0;
   padding: 0 4px var(--faq-pad);
@@ -60,13 +79,10 @@
   font-size: clamp(15px, 1.35vw, 16.5px);
   line-height: 1.68;
   color: var(--muted);
-  /* Entrada suave del contenido al abrir. */
-  animation: hpFaqReveal .4s cubic-bezier(.16, 1, .3, 1) both;
+  opacity: 0;
+  transition: opacity .3s ease .1s;
 }
-@keyframes hpFaqReveal {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+.hp-faq-details[open] .hp-faq-a { opacity: 1; }
 
 [data-theme="dark"] .hp-faq-icon { border-color: rgba(204, 217, 235, .2); color: var(--green-on-dark); }
 [data-theme="dark"] .hp-faq-details[open] .hp-faq-icon { background: var(--green-on-dark); color: #06210f; border-color: var(--green-on-dark); }
@@ -74,6 +90,7 @@
 [data-theme="dark"] .hp-faq-details[open] .hp-faq-q { color: var(--green-on-dark); }
 
 @media (prefers-reduced-motion: reduce) {
-  .hp-faq-a { animation: none; }
+  .hp-faq-a,
   .hp-faq-icon { transition: none; }
+  .hp-faq-details::details-content { transition: none; }
 }

@@ -54,7 +54,11 @@ const FaqSection = () => (
                   <FaPlus />
                 </span>
               </summary>
-              <p className="hp-faq-a">{item.a}</p>
+              {/* El wrapper con grid-template-rows 0fr→1fr permite animar la
+                  altura real del contenido sin conocerla de antemano. */}
+              <div className="hp-faq-wrap">
+                <p className="hp-faq-a">{item.a}</p>
+              </div>
             </details>
           </li>
         ))}
