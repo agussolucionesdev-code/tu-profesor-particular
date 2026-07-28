@@ -80,9 +80,16 @@ select {
 .main-content {
   width: 100%;
   margin: 0 auto;
-  padding: 0;
+  /* El navbar es una isla flotante: reserva su alto para que no tape el inicio
+     del contenido. Antes era una barra sólida y lo que quedaba debajo (el
+     banner del sitio principal) sencillamente no se veía. */
+  padding: var(--nav-float-space, 92px) 0 0;
   overflow-x: clip;
   flex: 1;
+}
+
+@media (max-width: 640px) {
+  .main-content { --nav-float-space: 80px; }
 }
 
 .main-content.immersive-page-content {

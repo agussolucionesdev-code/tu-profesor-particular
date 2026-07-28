@@ -9,82 +9,93 @@
    futura las retira.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════════════════
+   ISLA FLOTANTE
+   El <nav> es sólo el riel de posición (transparente, sin fondo). La barra en
+   sí es .navbar-container: una cápsula que flota con aire alrededor y se
+   compacta al scrollear. Un solo objeto visual en vez de seis.
+   ══════════════════════════════════════════════════════════════════════════ */
 nav.navbar-elite {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: var(--z-nav, 9999);
   height: auto;
   min-height: 0;
-  padding: 0;
   display: block;
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
-  border-bottom: 1px solid rgba(0, 33, 76, 0.1);
+  padding: clamp(10px, 1.4vw, 18px) clamp(10px, 2.4vw, 26px);
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
   box-shadow: none;
-  transition: background 240ms ease, border-color 240ms ease;
+  transition: padding 260ms cubic-bezier(0.16, 1, 0.3, 1);
   /* Entrada: baja suave al cargar (una sola vez — el navbar es persistente).
-     Se anima `top`, NO `transform`: un transform (aunque sea identidad, o
-     congelado en una pestaña que no pinta) volvería al navbar contenedor de sus
-     hijos position:fixed y rompería el backdrop/sheet mobile (inset:0 quedaría
-     relativo al navbar). Con top, el navbar nunca es contenedor de esos hijos. */
+     Se anima `top`, NO `transform`: un transform volvería al navbar contenedor
+     de sus hijos position:fixed y rompería el backdrop/sheet mobile. */
   animation: navbarDrop 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @keyframes navbarDrop {
-  from { top: -76px; opacity: 0; }
+  from { top: -90px; opacity: 0; }
   to   { top: 0; opacity: 1; }
 }
 
-[data-theme="dark"] nav.navbar-elite {
-  background: rgba(8, 17, 29, 0.82);
-  border-bottom-color: rgba(204, 217, 235, 0.12);
-  box-shadow: none;
+/* Al scrollear la isla se pega un poco más al borde: gana pantalla. */
+nav.navbar-elite.scrolled { padding-top: clamp(6px, 0.8vw, 10px); }
+
+/* ── La cápsula ──────────────────────────────────────────────────────────── */
+.navbar-elite .navbar-container {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  padding: 0.5rem 0.5rem 0.5rem clamp(0.9rem, 2vw, 1.35rem);
+  border: 1px solid rgba(0, 33, 76, 0.09);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 10px 34px -22px rgba(0, 33, 76, 0.5);
+  overflow: hidden;
+  transition:
+    min-height 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 240ms ease,
+    border-color 240ms ease,
+    box-shadow 260ms ease;
 }
 
-nav.navbar-elite.scrolled {
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom-color: rgba(0, 33, 76, 0.16);
+nav.navbar-elite.scrolled .navbar-container {
+  min-height: 56px;
+  background: rgba(255, 255, 255, 0.93);
+  border-color: rgba(0, 33, 76, 0.14);
+  box-shadow: 0 14px 40px -24px rgba(0, 33, 76, 0.6);
 }
 
-[data-theme="dark"] nav.navbar-elite.scrolled {
-  background: rgba(8, 17, 29, 0.95);
-  border-bottom-color: rgba(204, 217, 235, 0.18);
+[data-theme="dark"] .navbar-elite .navbar-container {
+  background: rgba(10, 22, 38, 0.78);
+  border-color: rgba(204, 217, 235, 0.12);
+  box-shadow: 0 12px 38px -24px rgba(0, 0, 0, 0.9);
+}
+[data-theme="dark"] nav.navbar-elite.scrolled .navbar-container {
+  background: rgba(10, 22, 38, 0.92);
+  border-color: rgba(204, 217, 235, 0.18);
 }
 
-/* Progreso de lectura: hairline verde pegada al borde inferior. */
+/* Progreso de lectura: hairline verde al pie de la cápsula. */
 .navbar-elite .navbar-progress {
   position: absolute;
   left: 0;
-  bottom: -1px;
+  bottom: 0;
   width: 100%;
   height: 2px;
   background: var(--brand-green, #01953c);
   transform-origin: left center;
   transform: scaleX(0);
   pointer-events: none;
-}
-
-/* ── Contenedor ──────────────────────────────────────────────────────────── */
-.navbar-elite .navbar-container {
-  max-width: 1240px;
-  margin: 0 auto;
-  min-height: 68px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.45rem clamp(1rem, 3vw, 1.5rem);
-  border: none;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  transition: min-height 220ms ease;
-}
-
-nav.navbar-elite.scrolled .navbar-container {
-  min-height: 58px;
-  box-shadow: none;
 }
 
 /* ── Marca ───────────────────────────────────────────────────────────────── */
@@ -109,30 +120,18 @@ nav.navbar-elite.scrolled .navbar-container {
   box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.35);
 }
 
-.navbar-elite .brand-mark {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 33, 76, 0.12);
-  box-shadow: none;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1), border-color 160ms ease;
-}
-
-.navbar-elite .navbar-brand:hover .brand-mark {
-  transform: rotate(-4deg) scale(1.06);
-  border-color: rgba(1, 149, 60, 0.45);
-  box-shadow: none;
-}
-
+/* El monograma va suelto, sin caja ni borde: se integra con la cápsula en vez
+   de parecer un sticker pegado encima. */
 .navbar-elite .brand-mark-img {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   object-fit: contain;
+  transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.navbar-elite .navbar-brand:hover .brand-mark-img {
+  transform: rotate(-5deg) scale(1.07);
 }
 
 .navbar-elite .brand-copy {
@@ -311,32 +310,34 @@ nav.navbar-elite.scrolled .navbar-container {
   display: flex;
 }
 
+/* Botón de tema: sin círculo ni borde propio — mismo lenguaje que el resto. */
 .navbar-elite .nav-utility-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   padding: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 33, 76, 0.14);
-  background: #ffffff;
-  color: var(--brand-navy, #00214c);
+  border-radius: 11px;
+  border: none;
+  background: none;
+  color: var(--brand-navy-600, #3d5980);
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  transition: background 180ms ease, color 180ms ease;
 }
 
 [data-theme="dark"] .navbar-elite .nav-utility-btn {
-  border-color: rgba(204, 217, 235, 0.18);
-  background: rgba(204, 217, 235, 0.07);
-  color: #f2f7fb;
+  color: var(--brand-navy-200, #ccd9eb);
 }
 
 .navbar-elite .nav-utility-btn:hover {
-  border-color: rgba(1, 149, 60, 0.5);
-  transform: translateY(-1px);
+  background: rgba(0, 33, 76, 0.06);
+  color: var(--brand-navy, #00214c);
+}
+[data-theme="dark"] .navbar-elite .nav-utility-btn:hover {
+  background: rgba(204, 217, 235, 0.1);
+  color: #ffffff;
 }
 
 .navbar-elite .nav-utility-btn:focus-visible {
@@ -352,20 +353,92 @@ nav.navbar-elite.scrolled .navbar-container {
   background: none;
 }
 
-/* Voz activa: botón verde con onda */
+/* ── Guía por voz: control ROTULADO ───────────────────────────────────────
+   Antes era un ícono mudo que nadie entendía. Ahora lleva su nombre al lado,
+   así la función se descubre sin tener que tocarla. */
+.navbar-elite .voice-toggle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 38px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 33, 76, 0.14);
+  background: none;
+  color: var(--brand-navy-600, #3d5980);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+[data-theme="dark"] .navbar-elite .voice-toggle-btn {
+  border-color: rgba(204, 217, 235, 0.18);
+  color: var(--brand-navy-200, #ccd9eb);
+}
+
+.navbar-elite .voice-toggle-btn:hover {
+  border-color: var(--brand-green, #01953c);
+  color: var(--brand-green-600, #006d1f);
+  background: rgba(1, 149, 60, 0.07);
+}
+[data-theme="dark"] .navbar-elite .voice-toggle-btn:hover {
+  color: var(--brand-green-300, #88ce93);
+  background: rgba(136, 206, 147, 0.1);
+}
+
+.navbar-elite .voice-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
+}
+
+.navbar-elite .voice-toggle-icon {
+  display: inline-flex;
+  font-size: 0.9rem;
+}
+
+/* Voz activa: se llena de verde y suma la onda animada. */
 .navbar-elite .voice-toggle-btn.active {
   background: var(--brand-green, #01953c);
   border-color: var(--brand-green, #01953c);
   color: #ffffff;
-  width: auto;
-  padding: 0 0.8rem;
-  border-radius: 999px;
+}
+[data-theme="dark"] .navbar-elite .voice-toggle-btn.active {
+  background: var(--brand-green, #01953c);
+  color: #ffffff;
+}
+.navbar-elite .voice-toggle-btn.active:hover {
+  background: var(--brand-green-deep, #006d1f);
+  color: #ffffff;
 }
 
 .navbar-elite .voice-toggle-btn.blocked {
   background: #b45309;
   border-color: #b45309;
   color: #ffffff;
+}
+
+/* Punto pulsante: señal de "esto existe y todavía no lo probaste". */
+.navbar-elite .voice-new-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand-green, #01953c);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  animation: navVoicePing 2.2s ease-in-out infinite;
+}
+[data-theme="dark"] .navbar-elite .voice-new-dot {
+  box-shadow: 0 0 0 2px rgba(10, 22, 38, 0.95);
+}
+@keyframes navVoicePing {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.65; }
 }
 
 .navbar-elite .voice-wave {
@@ -392,39 +465,100 @@ nav.navbar-elite.scrolled .navbar-container {
   50% { transform: scaleY(1); }
 }
 
-/* Burbuja de hint de voz */
-.navbar-elite .voice-hint-bubble {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+/* ── Invitación a la guía por voz ─────────────────────────────────────────
+   Tarjeta que explica el valor y ofrece dos salidas claras. Aparece a los 4 s
+   y se repite espaciada, como máximo 3 veces (la lógica vive en Navbar.jsx).
+   Apunta al control con una flechita, así se entiende de qué habla. */
+.navbar-elite .voice-invite {
+  /* Fija a la ventana, NO absoluta dentro de la cápsula: la cápsula usa
+     overflow:hidden (para recortar la barra de progreso) y recortaría la
+     tarjeta. Se alinea con el borde derecho de la cápsula. */
+  position: fixed;
+  top: 96px;
+  right: max(clamp(10px, 2.4vw, 26px), calc((100vw - 1180px) / 2));
   z-index: 5;
-  white-space: nowrap;
-  padding: 0.5rem 0.9rem;
-  border: none;
-  border-radius: 999px;
+  width: 268px;
+  padding: 0.95rem 1.05rem 0.85rem;
+  border-radius: 16px;
   background: var(--brand-navy, #00214c);
   color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
-  animation: navHintPop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  text-align: left;
+  box-shadow: 0 18px 42px -20px rgba(0, 11, 43, 0.85);
+  animation: navInvitePop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.navbar-elite .voice-hint-bubble::before {
+.navbar-elite .voice-invite::before {
   content: "";
   position: absolute;
   top: -5px;
-  right: 18px;
-  width: 10px;
-  height: 10px;
+  right: 42px;
+  width: 12px;
+  height: 12px;
   background: var(--brand-navy, #00214c);
   transform: rotate(45deg);
 }
 
-@keyframes navHintPop {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+.navbar-elite .voice-invite-copy {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.76);
+}
+.navbar-elite .voice-invite-copy strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.navbar-elite .voice-invite-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-elite .voice-invite-yes {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--brand-green, #01953c);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.navbar-elite .voice-invite-yes:hover { background: #17a94e; }
+
+.navbar-elite .voice-invite-no {
+  padding: 0.5rem 0.65rem;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+.navbar-elite .voice-invite-no:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-elite .voice-invite-yes:focus-visible,
+.navbar-elite .voice-invite-no:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.5);
+}
+
+@keyframes navInvitePop {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Tema: sol/luna cruzados */
@@ -440,7 +574,9 @@ nav.navbar-elite.scrolled .navbar-container {
   transition: opacity 200ms ease, transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.navbar-elite .theme-icon--sun { opacity: 0; transform: rotate(-90deg) scale(0.5); color: #f59e0b; }
+/* El sol iba en naranja (#f59e0b): el único elemento fuera de la paleta en
+   todo el sitio. Ahora usa el verde de marca. */
+.navbar-elite .theme-icon--sun { opacity: 0; transform: rotate(-90deg) scale(0.5); color: var(--brand-green-300, #88ce93); }
 .navbar-elite .theme-icon--moon { opacity: 1; transform: rotate(0) scale(1); }
 
 [data-theme="dark"] .navbar-elite .theme-icon--sun { opacity: 1; transform: rotate(0) scale(1); }
@@ -562,23 +698,40 @@ nav.navbar-elite.scrolled .navbar-container {
     font-size: 1rem;
   }
 
-  .navbar-elite .voice-hint-bubble { display: none; }
+  /* En mobile el rótulo no entra: el control vuelve a ícono, pero conserva su
+     aria-label y el punto pulsante, así la función sigue siendo descubrible. */
+  .navbar-elite .voice-toggle-label { display: none; }
+  .navbar-elite .voice-toggle-btn {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+  /* La invitación se ancla a la pantalla para no salirse de la cápsula. */
+  .navbar-elite .voice-invite {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+  .navbar-elite .voice-invite::before { display: none; }
 }
 
 @media (max-width: 480px) {
   .navbar-elite .navbar-container { gap: 0.5rem; }
-  .navbar-elite .brand-mark { width: 40px; height: 40px; }
-  .navbar-elite .brand-mark-img { width: 30px; height: 30px; }
+  .navbar-elite .brand-mark-img { width: 32px; height: 32px; }
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   nav.navbar-elite,
   .navbar-elite .voice-wave-bar,
-  .navbar-elite .voice-hint-bubble {
+  .navbar-elite .voice-new-dot,
+  .navbar-elite .voice-invite {
     animation: none;
   }
-  .navbar-elite .brand-mark,
+  .navbar-elite .brand-mark-img,
   .navbar-elite .nav-cta-btn,
   .navbar-elite .nav-cta-arrow,
   .navbar-elite .theme-icon {
