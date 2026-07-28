@@ -158,7 +158,7 @@ a { color: inherit; }
   margin: 0;
   text-wrap: balance;
 }
-.display--xl { font-size: clamp(2.9rem, 8vw, 6.4rem); line-height: 0.94; }
+.display--xl { font-size: clamp(3rem, 8.8vw, 7.2rem); line-height: 0.92; letter-spacing: -0.028em; }
 .display--lg { font-size: clamp(2.1rem, 4.8vw, 3.85rem); font-weight: 480; line-height: 1; }
 .display--md { font-size: clamp(1.4rem, 2.5vw, 2.1rem); font-weight: 520; line-height: 1.05; }
 .display em { font-style: italic; font-weight: 420; }

@@ -1,0 +1,50 @@
+.mbd {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Papel cuadriculado: dos series de hairlines finas más una retícula mayor
+   cada 5 celdas, como un cuaderno. Es textura plana, no un degradado de color. */
+.mbd-paper {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size:
+    140px 140px,
+    140px 140px,
+    28px 28px,
+    28px 28px;
+  /* Se desvanece hacia abajo para no pelear con el contenido. */
+  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+.mbd-symbol {
+  position: absolute;
+  font-family: var(--font-display);
+  font-style: italic;
+  line-height: 1;
+  color: var(--green-on-dark);
+  opacity: 0.09;
+  animation: mbdFloat 13s ease-in-out infinite;
+}
+
+@keyframes mbdFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(-4deg); }
+}
+
+@media (max-width: 700px) {
+  /* En pantallas chicas los símbolos se apiñan con el texto: quedan sólo dos. */
+  .mbd-symbol:nth-child(n + 4) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbd-symbol { animation: none; }
+}

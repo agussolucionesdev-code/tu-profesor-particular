@@ -7,6 +7,8 @@ import {
 } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
+import Typewriter from "../components/Typewriter.jsx";
+import MathBackdrop from "../components/MathBackdrop.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
   BOOKING_URL,
@@ -30,7 +32,7 @@ const Home = () => {
     <>
       {/* ── Hero ── */}
       <section className="section--dark hero" aria-label="Presentación">
-        <span className="grid-texture" aria-hidden="true" />
+        <MathBackdrop />
         <span className="hero-slab" aria-hidden="true" />
 
         <div className="shell hero-inner">
@@ -40,6 +42,28 @@ const Home = () => {
               Online y presencial
               <span className="hero-sep" aria-hidden="true" />
               {CONTACT.addressLine}
+            </p>
+
+            {/* La frase que el visitante ya pensó, escribiéndose sola: primero
+                que se reconozca, después la promesa. */}
+            <p className="hero-pain" data-reveal="up">
+              <span className="hero-pain-quote" aria-hidden="true">
+                «
+              </span>
+              No entiendo nada de{" "}
+              <Typewriter
+                className="hero-pain-word"
+                words={[
+                  "Matemáticas",
+                  "Física",
+                  "Química",
+                  "Análisis Matemático",
+                  "Fisicoquímica",
+                ]}
+              />
+              <span className="hero-pain-quote" aria-hidden="true">
+                »
+              </span>
             </p>
 
             <h1 className="display display--xl hero-title" data-reveal="clip">
