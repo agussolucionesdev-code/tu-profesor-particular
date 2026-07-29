@@ -9,6 +9,10 @@ import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
 import Typewriter from "../components/Typewriter.jsx";
 import MathBackdrop from "../components/MathBackdrop.jsx";
+import Credentials from "../components/Credentials.jsx";
+import PullQuote from "../components/PullQuote.jsx";
+import MethodSteps from "../components/MethodSteps.jsx";
+import FaqList from "../components/FaqList.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
   BOOKING_URL,
@@ -128,6 +132,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Autoridad en números, apenas termina el hero. */}
+      <Credentials />
+
       {/* ── Materias ── */}
       <section className="section" aria-labelledby="home-subjects">
         <div className="shell">
@@ -179,25 +186,47 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Corte tipográfico: rompe la cadena de grillas y da aire. */}
+      <PullQuote />
+
+      {/* ── Cómo trabajo ── */}
+      <section className="section" aria-labelledby="home-method">
+        <div className="shell">
+          <SectionHead
+            index="02"
+            kicker="Cómo trabajo"
+            title="Un método, no improvisación"
+            titleId="home-method"
+            lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
+          />
+          <MethodSteps />
+        </div>
+      </section>
+
       {/* ── Niveles ── */}
       <section className="section section--soft" aria-labelledby="home-levels">
         <div className="shell">
           <SectionHead
-            index="02"
+            index="03"
             kicker="Sin importar dónde estés"
             title="Todos los niveles"
             titleId="home-levels"
             lead='No hay nivel "demasiado básico" ni "demasiado avanzado". Se arranca desde donde estás vos.'
           />
 
-          <ul className="lvl-grid" data-reveal-group="70">
-            {LEVELS.map((l) => (
-              <li key={l.label} className="lvl-card" data-reveal="up">
+          {/* Lista editorial en lugar de grilla: la sección anterior y la
+              siguiente ya usan cajas, y tres grillas seguidas cansan. */}
+          <ol className="lvl-list" data-reveal-group="70">
+            {LEVELS.map((l, i) => (
+              <li key={l.label} data-reveal="up">
+                <span className="lvl-num" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <h3 className="display display--md lvl-name">{l.label}</h3>
                 <p className="lvl-desc">{l.desc}</p>
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
       </section>
 
@@ -205,11 +234,11 @@ const Home = () => {
       <section className="section" aria-labelledby="home-why">
         <div className="shell">
           <SectionHead
-            index="03"
+            index="04"
             kicker="Lo que hace la diferencia"
             title="Por qué esto funciona cuando lo otro no"
             titleId="home-why"
-            lead="Estudiar más no siempre es la solución. A veces alcanza con una clase bien enfocada para que todo lo que veías borroso tenga sentido."
+            lead="A veces alcanza con una clase bien enfocada para que todo lo que veías borroso tenga sentido. Estas son las condiciones con las que trabajo siempre."
           />
 
           <ul className="why-grid" data-reveal-group="80">
@@ -220,6 +249,20 @@ const Home = () => {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* ── Preguntas ── cierra las dudas antes del CTA final. */}
+      <section className="section section--soft" aria-labelledby="home-faq">
+        <div className="shell">
+          <SectionHead
+            index="05"
+            kicker="Antes de reservar"
+            title="Preguntas frecuentes"
+            titleId="home-faq"
+            lead="Lo que casi todos quieren saber antes de la primera clase."
+          />
+          <FaqList />
         </div>
       </section>
 
