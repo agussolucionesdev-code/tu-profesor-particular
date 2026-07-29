@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
-import { BOOKING_URL, CONTACT, waLink } from "../data/site.js";
+import { BOOKING_RESERVE_URL, CONTACT, waLink } from "../data/site.js";
 import "./Inner.css";
 import "./Contact.css";
 
@@ -141,7 +141,7 @@ const Contact = () => {
 
             <a
               className="ct-primary-cta"
-              href={BOOKING_URL}
+              href={BOOKING_RESERVE_URL}
               target="_blank"
               rel="noopener noreferrer"
             >

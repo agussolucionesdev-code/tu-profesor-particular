@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa6";
 import {
   BOOKING_MANAGE_URL,
-  BOOKING_URL,
+  BOOKING_RESERVE_URL,
   BRAND,
   CONTACT,
   waLink,
@@ -45,7 +45,7 @@ const SiteFooter = () => (
         <h2 className="sfoot-title">Tus turnos</h2>
         <ul>
           <li>
-            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+            <a href={BOOKING_RESERVE_URL} target="_blank" rel="noopener noreferrer">
               Reservar una clase <FaArrowUpRightFromSquare aria-hidden="true" />
             </a>
           </li>

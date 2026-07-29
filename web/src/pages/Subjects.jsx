@@ -2,7 +2,7 @@ import { FaArrowUpRightFromSquare, FaWhatsapp } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
-import { BOOKING_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
+import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
 import "./Inner.css";
 
 const Subjects = () => {
@@ -38,7 +38,7 @@ const Subjects = () => {
                 <p className="subj-card-detail">{s.detail}</p>
                 <a
                   className="subj-card-cta"
-                  href={`${BOOKING_URL}/reservar?materia=${encodeURIComponent(s.label)}`}
+                  href={`${BOOKING_RESERVE_URL}?materia=${encodeURIComponent(s.label)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

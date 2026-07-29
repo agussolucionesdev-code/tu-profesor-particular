@@ -314,11 +314,26 @@
 /* ── Turnos ──────────────────────────────────────────────────────────────── */
 .kiosk-day-group { margin-bottom: 1.1rem; }
 .kiosk-day-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--brand-navy);
+  /* --brand-navy es fijo y oscuro: sobre el tema oscuro casi no se leía. */
+  color: var(--text-primary);
   text-transform: capitalize;
   margin-bottom: 0.5rem;
+}
+
+/* Cuántos horarios tiene el día: evita que haya que contarlos a ojo. */
+.kiosk-day-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 .kiosk-slots { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .kiosk-slot {
@@ -336,7 +351,73 @@
 .kiosk-slot:hover { border-color: var(--brand-green); background: var(--state-hover-bg); }
 .kiosk-slot:active { transform: translateY(1px); }
 .kiosk-slot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.kiosk-slot-more { font-size: 0.85rem; color: var(--text-tertiary); }
+/* ── Desplegar / condensar los horarios de un día ────────────────────────
+   Antes acá había un `.kiosk-slot-more`: un span con "+N más" que NO era
+   interactivo, así que los horarios de la tarde eran inalcanzables. Ahora es un
+   botón real. */
+.kiosk-slot-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-base);
+  background: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+.kiosk-slot-toggle:hover {
+  border-color: var(--brand-green);
+  border-style: solid;
+  color: var(--accent-primary);
+  background: var(--state-hover-bg);
+}
+.kiosk-slot-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* La flecha gira al desplegar: señal de estado sin agregar texto. */
+.kiosk-slot-toggle-icon {
+  font-size: 0.72rem;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.kiosk-slot-toggle[aria-expanded="true"] .kiosk-slot-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Entrada de los horarios recién revelados. Con KIOSK_SLOTS_PER_DAY = 6, los
+   seis primeros ya estaban en pantalla: animar del 7º en adelante evita que
+   toda la fila "parpadee" al expandir. El escalonado corta a los 10 para que
+   una tarde con 25 turnos no tarde una eternidad en aparecer. */
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 7) {
+  animation: kioskSlotIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(7)  { animation-delay: 0ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(8)  { animation-delay: 22ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(9)  { animation-delay: 44ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(10) { animation-delay: 66ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(11) { animation-delay: 88ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(12) { animation-delay: 110ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(13) { animation-delay: 132ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(14) { animation-delay: 154ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(15) { animation-delay: 176ms; }
+.kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 16) { animation-delay: 198ms; }
+
+@keyframes kioskSlotIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 7) { animation: none; }
+  .kiosk-slot-toggle-icon { transition: none; }
+}
 
 /* ── Formulario ──────────────────────────────────────────────────────────── */
 .kiosk-form-grid {

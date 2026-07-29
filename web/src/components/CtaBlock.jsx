@@ -1,5 +1,5 @@
 import { FaArrowUpRightFromSquare, FaWhatsapp } from "react-icons/fa6";
-import { BOOKING_URL, waLink } from "../data/site.js";
+import { BOOKING_RESERVE_URL, waLink } from "../data/site.js";
 import monogram from "../assets/monogram.png";
 import "./CtaBlock.css";
 
@@ -29,7 +29,7 @@ const CtaBlock = ({
       <div className="cta-actions" data-reveal="up">
         <a
           className="btn btn--primary"
-          href={BOOKING_URL}
+          href={BOOKING_RESERVE_URL}
           target="_blank"
           rel="noopener noreferrer"
         >

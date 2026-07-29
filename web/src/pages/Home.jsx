@@ -15,7 +15,7 @@ import MethodSteps from "../components/MethodSteps.jsx";
 import FaqList from "../components/FaqList.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
-  BOOKING_URL,
+  BOOKING_RESERVE_URL,
   BRAND,
   CONTACT,
   LEVELS,
@@ -91,7 +91,7 @@ const Home = () => {
             <div className="hero-actions" data-reveal="up">
               <a
                 className="btn btn--primary"
-                href={BOOKING_URL}
+                href={BOOKING_RESERVE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
