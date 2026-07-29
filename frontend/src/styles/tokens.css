@@ -309,6 +309,15 @@
   --ui-text-small:           clamp(0.96rem, 0.93rem + 0.12vw, 1.03rem);
   --ui-text-body:            clamp(1rem, 0.98rem + 0.14vw, 1.08rem);
 
+  /* ── Estados interactivos (hover / seleccionado) ─────────────────────
+     Tokens semánticos, NO peldaños fijos de la escala. El kiosco usaba
+     --brand-green-50 y --brand-navy-50 directo, y como esos valores son claros
+     en los dos temas, en oscuro el texto quedaba casi invisible sobre ellos
+     (hover 1.82:1 y seleccionado ~1:1 contra --text-primary). */
+  --state-hover-bg:      var(--brand-green-50);
+  --state-selected-bg:   var(--brand-navy-50);
+  --state-selected-brd:  var(--brand-navy);
+
   /* ── Booking form local tokens ──────────────────────────────────────── */
   --bg-page:            #f6f7f8;
   --surface-card:       #ffffff;
@@ -488,6 +497,14 @@
   --brand-text:         #f2f7fb;
   --brand-muted:        #aabcd5;
   --shadow-soft-brand:  0 0 0 1px rgba(204, 217, 235, 0.12);
+
+  /* ── Estados interactivos (dark) ─────────────────────────────────────
+     Velos translúcidos sobre la superficie oscura en lugar de peldaños claros:
+     el texto sigue siendo el mismo y mantiene su contraste (medido: hover
+     7.4:1, seleccionado 6.9:1 contra --text-primary #f2f7fb). */
+  --state-hover-bg:      rgba(136, 206, 147, 0.14);
+  --state-selected-bg:   rgba(136, 206, 147, 0.2);
+  --state-selected-brd:  var(--brand-green-300);
 
   /* ── Booking form local tokens (dark) ────────────────────────────────── */
   --bg-page:          #08111d;

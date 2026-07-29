@@ -39,7 +39,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
 }
-.kiosk-portal-link:hover { background: var(--brand-navy-50); }
+.kiosk-portal-link:hover { background: var(--state-hover-bg); }
 
 /* ── Stepper honesto ─────────────────────────────────────────────────────── */
 .kiosk-stepper {
@@ -138,13 +138,13 @@
 }
 .kiosk-choice-card:hover {
   border-color: var(--brand-green);
-  background: var(--brand-green-50);
+  background: var(--state-hover-bg);
 }
 .kiosk-choice-card:active { transform: translateY(1px); }
 .kiosk-choice-card:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kiosk-choice-card.is-selected {
-  border-color: var(--brand-navy);
-  background: var(--brand-navy-50);
+  border-color: var(--state-selected-brd);
+  background: var(--state-selected-bg);
 }
 .kiosk-choice-compact { padding: 0.85rem 1rem; }
 
@@ -179,12 +179,93 @@
   padding: 0.85rem 1rem;
 }
 .kiosk-choice-subject .kiosk-choice-label { font-size: 0.98rem; }
+/* Tokens adaptativos: --brand-navy y --brand-green-600 son fijos y oscuros, y
+   sobre la superficie oscura del tema dark el ícono quedaba casi invisible. */
 .kiosk-choice-subject .kiosk-choice-icon {
   flex-shrink: 0;
-  color: var(--brand-navy);
+  color: var(--text-secondary);
 }
-.kiosk-choice-subject:hover .kiosk-choice-icon { color: var(--brand-green-600); }
-.kiosk-choice-subject.is-selected .kiosk-choice-icon { color: var(--brand-green-600); }
+.kiosk-choice-subject:hover .kiosk-choice-icon,
+.kiosk-choice-subject.is-selected .kiosk-choice-icon {
+  color: var(--accent-primary);
+}
+
+/* ── Paso 1: materia escrita a mano ──────────────────────────────────────
+   La tarjeta se distingue con borde discontinuo: se lee como "acá agregás algo"
+   y no como una materia más de la lista. */
+.kiosk-choice-other {
+  border-style: dashed;
+}
+.kiosk-choice-other .kiosk-choice-label { color: var(--text-secondary); }
+.kiosk-choice-other:hover .kiosk-choice-label,
+.kiosk-choice-other.is-selected .kiosk-choice-label { color: var(--text-primary); }
+
+.kiosk-other {
+  margin-top: 0.9rem;
+  padding: 1.1rem 1.15rem;
+  border: 1.5px solid var(--brand-green);
+  border-radius: var(--radius-md);
+  background: var(--state-hover-bg);
+}
+
+.kiosk-other-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.kiosk-other-hint {
+  margin: 0.3rem 0 0.8rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.kiosk-other-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.kiosk-other-input {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+.kiosk-other-input::placeholder { color: var(--text-tertiary); }
+.kiosk-other-input:focus-visible {
+  outline: none;
+  border-color: var(--brand-green);
+  box-shadow: var(--shadow-focus);
+}
+
+.kiosk-other-go {
+  flex-shrink: 0;
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--brand-green);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+/* Verde oscuro fijo, NO --accent-hover: ese token se invierte a verde claro en
+   tema oscuro y dejaría el texto blanco del botón ilegible. */
+.kiosk-other-go:hover { background: var(--brand-green-600); }
+.kiosk-other-go:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.kiosk-other-error {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--error-color);
+}
 
 /* ── Chips (duración) ────────────────────────────────────────────────────── */
 .kiosk-field-label {
@@ -252,7 +333,7 @@
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
-.kiosk-slot:hover { border-color: var(--brand-green); background: var(--brand-green-50); }
+.kiosk-slot:hover { border-color: var(--brand-green); background: var(--state-hover-bg); }
 .kiosk-slot:active { transform: translateY(1px); }
 .kiosk-slot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .kiosk-slot-more { font-size: 0.85rem; color: var(--text-tertiary); }

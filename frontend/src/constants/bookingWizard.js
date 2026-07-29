@@ -69,30 +69,32 @@ export const BOOKING_SUPPORT_PILLS = [
   "Código para gestionar cambios",
 ];
 
+/* Materias sugeridas por nivel.
+   Depuradas para ofrecer SÓLO lo que se dicta de verdad: antes la lista incluía
+   Derecho Penal, Contabilidad, Programación, Antropología y otras 20 materias
+   que no se dan, y ofrecer un turno que después hay que cancelar cuesta más que
+   no ofrecerlo. Se sacaron también las no académicas (Arte, Música, Educación
+   Física), que nadie toma en clases particulares.
+
+   Esta lista es el fallback embebido: si en el panel de administración se carga
+   `booking.subjectsByLevel`, ese valor tiene prioridad sobre esto.
+
+   Quien no encuentre su materia acá tiene la opción "Otra materia" en el paso 1,
+   que permite escribirla (el backend acepta texto libre de 2 a 120 caracteres). */
 export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
   Primaria: [
-    "Arte",
     "Ciencias Naturales",
     "Ciencias Sociales",
-    "Educación Física",
     "Inglés",
     "Lengua y Literatura",
     "Matemática",
-    "Música",
   ],
   Secundaria: [
     "Biología",
-    "Educación Artística",
-    "Educación Ética y Ciudadana",
-    "Educación Física",
-    "Filosofía",
     "Física",
-    "Geografía",
-    "Historia",
     "Inglés",
     "Lengua y Literatura",
     "Matemática",
-    "Psicología",
     "Química",
   ],
   "Secundaria Tecnica": [
@@ -136,47 +138,16 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     "Sociología de la Educación",
     "Tecnología Educativa",
   ],
+  // Corte a las 5 materias principales que se declaran en el sitio. Quien curse
+  // Análisis Matemático, Álgebra u otra, la escribe con "Otra materia".
   Universitario: [
-    "Administración de Empresas",
-    "Álgebra",
-    "Álgebra Lineal",
-    "Análisis Matemático",
-    "Antropología",
-    "Biología Celular",
-    "Cálculo",
-    "Contabilidad",
-    "Derecho Constitucional",
-    "Derecho Penal",
-    "Economía",
-    "Estadística",
-    "Filosofía",
+    "Fisicoquímica",
     "Física",
-    "Física General",
-    "Fisiología",
-    "Geografía",
-    "Gestión de Proyectos",
-    "Historia",
-    "Historia Argentina",
     "Inglés",
-    "Inglés Técnico",
-    "Introducción a la Administración",
-    "Introducción a la Informática",
-    "Legislación Laboral",
-    "Lógica",
     "Matemática",
-    "Matemática Discreta",
-    "Metodología de la Investigación",
-    "Microeconomía",
-    "Programación",
-    "Psicología",
     "Química",
-    "Química General",
-    "Química Orgánica",
-    "Sociología",
-    "Sistemas de Información",
-    "Termodinámica",
-    "Trigonometría",
   ],
+
 };
 
 export const getSubjectSuggestions = (educationLevel) =>

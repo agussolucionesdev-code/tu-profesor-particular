@@ -82,6 +82,10 @@ const BookingKiosk = () => {
   const [pricePerHour, setPricePerHour] = useState(0);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
   const [showAllDays, setShowAllDays] = useState(false);
+  // Paso 1: materia escrita a mano cuando no está en las sugeridas.
+  const [otherOpen, setOtherOpen] = useState(false);
+  const [otherSubject, setOtherSubject] = useState("");
+  const [otherSubjectError, setOtherSubjectError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -197,6 +201,25 @@ const BookingKiosk = () => {
   const chooseSubject = (subject) => {
     setField("subject", subject);
     setStep(2);
+  };
+
+  /* Salida de escape del paso 1. Las listas sugeridas cubren lo que se dicta
+     habitualmente, pero un universitario cursa "Análisis Matemático" o "Álgebra
+     Lineal", no "Matemática": sin esto se quedaría sin poder reservar. El
+     backend acepta la materia como texto libre (2 a 120 caracteres), así que
+     alcanza con enviarla escrita. */
+  const confirmOtherSubject = () => {
+    const value = otherSubject.trim();
+    if (value.length < 2) {
+      setOtherSubjectError("Escribí el nombre de la materia (mínimo 2 letras).");
+      return;
+    }
+    if (value.length > 120) {
+      setOtherSubjectError("El nombre es demasiado largo (máximo 120).");
+      return;
+    }
+    setOtherSubjectError("");
+    chooseSubject(value);
   };
 
   // ── Paso 2: Modalidad ─────────────────────────────────────────────────────
@@ -493,7 +516,77 @@ const BookingKiosk = () => {
                       </button>
                     );
                   })}
+
+                  {/* Última tarjeta: escribir una materia que no está listada. */}
+                  <button
+                    type="button"
+                    className={`kiosk-choice-card kiosk-choice-subject kiosk-choice-other ${otherOpen ? "is-selected" : ""}`}
+                    onClick={() => setOtherOpen((v) => !v)}
+                    aria-expanded={otherOpen}
+                    aria-controls="kiosk-other-subject"
+                  >
+                    <span
+                      className="kiosk-choice-icon kiosk-choice-icon-sm"
+                      aria-hidden="true"
+                    >
+                      <FaPencilAlt />
+                    </span>
+                    <span className="kiosk-choice-label">Otra materia</span>
+                  </button>
                 </div>
+
+                {otherOpen && (
+                  <div className="kiosk-other" id="kiosk-other-subject">
+                    <label className="kiosk-other-label" htmlFor="kiosk-other-input">
+                      ¿Cuál es tu materia?
+                    </label>
+                    <p className="kiosk-other-hint">
+                      Escribila como figura en tu plan de estudios. Por ejemplo:
+                      Análisis Matemático II, Álgebra Lineal, Fisicoquímica.
+                    </p>
+                    <div className="kiosk-other-row">
+                      <input
+                        id="kiosk-other-input"
+                        type="text"
+                        className="kiosk-other-input"
+                        value={otherSubject}
+                        maxLength={120}
+                        autoComplete="off"
+                        placeholder="Nombre de la materia"
+                        onChange={(e) => {
+                          setOtherSubject(e.target.value);
+                          if (otherSubjectError) setOtherSubjectError("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            confirmOtherSubject();
+                          }
+                        }}
+                        aria-invalid={otherSubjectError ? "true" : undefined}
+                        aria-describedby={
+                          otherSubjectError ? "kiosk-other-error" : undefined
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="kiosk-other-go"
+                        onClick={confirmOtherSubject}
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                    {otherSubjectError && (
+                      <p
+                        className="kiosk-other-error"
+                        id="kiosk-other-error"
+                        role="alert"
+                      >
+                        {otherSubjectError}
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </section>
