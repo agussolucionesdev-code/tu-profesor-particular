@@ -1,0 +1,368 @@
+/* ══════════════════════════════════════════════════════
+   Contacto.
+
+   El problema del diseño anterior era de composición: una grilla de 2 columnas
+   con la tarjeta principal ocupando dos celdas dejaba un hueco muerto abajo a
+   la derecha. Acá el layout es de dos columnas ASIMÉTRICAS de altura completa:
+   izquierda el camino de reserva, derecha la pila de canales. Sin huecos.
+══════════════════════════════════════════════════════ */
+.ct-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+  gap: clamp(18px, 2.4vw, 28px);
+  align-items: start;
+}
+
+@media (max-width: 940px) {
+  .ct-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Camino 1: reservar ────────────────────────────────
+   Bloque navy a sangre, sin degradados: el peso lo da el color pleno, el aire
+   y la escala tipográfica. */
+.ct-primary {
+  /* Sticky: la columna de canales es más alta, así que sin esto quedaba un
+     vacío debajo del bloque. Fijándolo, la acción principal acompaña la
+     lectura en lugar de desaparecer. Requiere align-items:start en el grid
+     y que ningún ancestro use overflow:hidden (usamos clip). */
+  position: sticky;
+  top: calc(var(--nav-space) + 8px);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(28px, 3.4vw, 44px);
+  border-radius: 24px;
+  background: var(--navy-800);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* Sin dos columnas el sticky no aporta y molesta: se desactiva. */
+@media (max-width: 940px) {
+  .ct-primary { position: relative; top: auto; }
+}
+
+/* Acento superior: hairline verde a todo el ancho. */
+.ct-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--green-brand);
+}
+
+.ct-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 clamp(16px, 2.2vw, 24px);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green-on-dark);
+}
+.ct-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green-on-dark);
+  flex-shrink: 0;
+}
+
+.ct-primary-title { color: #fff; margin-bottom: 0.85rem; }
+.ct-primary-title em { color: var(--green-on-dark); }
+
+.ct-primary-lead {
+  margin: 0 0 clamp(22px, 2.8vw, 30px);
+  font-size: clamp(0.95rem, 1.3vw, 1.05rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.68);
+  max-width: 42ch;
+}
+
+/* Pasos: hairlines horizontales, numeración discreta. */
+.ct-steps {
+  list-style: none;
+  margin: 0 0 clamp(24px, 3vw, 32px);
+  padding: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.ct-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+}
+.ct-step-num {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(136, 206, 147, 0.5);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--green-on-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+/* El CTA ahora es un botón de verdad, no un texto verde. */
+.ct-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  align-self: flex-start;
+  padding: 1rem 1.7rem;
+  border-radius: 14px;
+  background: var(--green-brand);
+  color: #fff;
+  font-size: 1.02rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.35s var(--ease);
+}
+.ct-primary-cta svg { font-size: 0.78rem; }
+.ct-primary-cta:hover {
+  background: #17a94e;
+  transform: translateY(-2px);
+}
+
+.ct-seals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1.2rem;
+  list-style: none;
+  margin: clamp(20px, 2.6vw, 26px) 0 0;
+  padding: 0;
+}
+.ct-seals li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ct-seals svg { font-size: 0.62rem; color: var(--green-on-dark); }
+
+/* ── Camino 2: canales ───────────────────────────────── */
+.ct-channels {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.8vw, 18px);
+}
+
+.ct-card {
+  padding: clamp(22px, 2.6vw, 30px);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  transition: border-color 0.3s ease, box-shadow 0.42s var(--ease);
+}
+.ct-card:hover {
+  border-color: rgba(0, 33, 76, 0.2);
+  box-shadow: 0 14px 32px -20px rgba(0, 33, 76, 0.34);
+}
+
+.ct-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 0.9rem;
+}
+
+.ct-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--navy-800);
+  color: #fff;
+  font-size: 1.02rem;
+}
+/* WhatsApp con su propio verde: es el canal que más se usa y conviene que se
+   reconozca de un vistazo. */
+.ct-icon--wa { background: #1faf54; }
+
+.ct-card-title {
+  margin: 0 0 2px;
+  font-size: 1.06rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.ct-card-sub {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.ct-mono {
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.ct-card-copy {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ── Selector de motivo ──────────────────────────────── */
+.ct-intents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+/* El radio real queda oculto pero operable: el foco se pinta en el label. */
+.ct-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--navy-600);
+  cursor: pointer;
+  transition: border-color 0.22s ease, background 0.22s ease, color 0.22s ease;
+}
+.ct-chip input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+.ct-chip:hover {
+  border-color: var(--green-brand);
+  color: var(--green);
+}
+.ct-chip.is-on {
+  background: var(--navy-800);
+  border-color: var(--navy-800);
+  color: #fff;
+}
+.ct-chip:has(input:focus-visible) {
+  outline: 3px solid rgba(1, 149, 60, 0.55);
+  outline-offset: 3px;
+}
+
+/* Vista previa del mensaje: se ve textual lo que se va a enviar. */
+.ct-preview {
+  margin: 0 0 1.1rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--green-brand);
+  border-radius: 0 12px 12px 0;
+  background: var(--off);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.ct-preview-tag {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.ct-wa-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 13px;
+  background: #1faf54;
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.35s var(--ease);
+}
+.ct-wa-cta svg { font-size: 1.05rem; }
+.ct-wa-cta:hover {
+  background: #17994a;
+  transform: translateY(-2px);
+}
+
+/* ── Acciones de las tarjetas simples ────────────────── */
+.ct-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.ct-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--green);
+  text-decoration: none;
+  transition: transform 0.35s var(--ease);
+}
+.ct-link svg { font-size: 0.7rem; }
+.ct-link:hover { transform: translateX(3px); text-decoration: underline; }
+
+.ct-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.22s ease, color 0.22s ease, background 0.22s ease;
+}
+.ct-copy svg { font-size: 0.72rem; }
+.ct-copy:hover {
+  border-color: var(--navy-700);
+  color: var(--text);
+}
+.ct-copy.is-done {
+  border-color: var(--green-brand);
+  background: var(--green-50);
+  color: var(--green);
+}
+
+.ct-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-primary-cta:hover,
+  .ct-wa-cta:hover,
+  .ct-link:hover { transform: none; }
+}
