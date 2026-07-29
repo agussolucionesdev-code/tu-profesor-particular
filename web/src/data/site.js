@@ -12,6 +12,10 @@
 ══════════════════════════════════════════════════════ */
 
 export const BOOKING_URL = "https://turnos.tuprofesorparticular.com.ar";
+/* Todo botón que hable de reservar debe caer DIRECTO en el formulario, no en la
+   portada del sistema de turnos: un paso intermedio es una oportunidad de
+   abandono. Para enlazar la portada se usa BOOKING_URL a secas. */
+export const BOOKING_RESERVE_URL = `${BOOKING_URL}/reservar`;
 export const BOOKING_MANAGE_URL = `${BOOKING_URL}/portal`;
 
 export const CONTACT = {

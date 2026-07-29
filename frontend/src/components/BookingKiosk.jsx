@@ -4,6 +4,7 @@ import { addMinutes, format, isToday, isTomorrow } from "date-fns";
 import es from "date-fns/locale/es";
 import {
   FaCheckCircle,
+  FaChevronDown,
   FaChevronLeft,
   FaTicketAlt,
   FaLaptop,
@@ -82,6 +83,10 @@ const BookingKiosk = () => {
   const [pricePerHour, setPricePerHour] = useState(0);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
   const [showAllDays, setShowAllDays] = useState(false);
+  /* Días con la lista de horarios desplegada. Antes cada día mostraba sólo los
+     primeros KIOSK_SLOTS_PER_DAY y el resto se anunciaba con un "+N más" que era
+     TEXTO MUERTO: no había forma de llegar a los horarios de la tarde. */
+  const [expandedDays, setExpandedDays] = useState([]);
   // Paso 1: materia escrita a mano cuando no está en las sugeridas.
   const [otherOpen, setOtherOpen] = useState(false);
   const [otherSubject, setOtherSubject] = useState("");
@@ -184,6 +189,15 @@ const BookingKiosk = () => {
     const days = upcomingSlotsByDay;
     return showAllDays ? days : days.slice(0, KIOSK_UPCOMING_DAYS);
   }, [upcomingSlotsByDay, showAllDays]);
+
+  /* Despliega o cierra los horarios de un día. Se guarda por día (y no un único
+     booleano) para que abrir el martes no expanda también el miércoles. */
+  const toggleDay = (dateKey) =>
+    setExpandedDays((prev) =>
+      prev.includes(dateKey)
+        ? prev.filter((k) => k !== dateKey)
+        : [...prev, dateKey],
+    );
 
   const setField = (name, value) => handleChange({ target: { name, value } });
 
@@ -664,28 +678,56 @@ const BookingKiosk = () => {
                   </p>
                 )}
                 {availabilityStatus === "ready" &&
-                  visibleDays.map((day) => (
-                    <div key={day.dateKey} className="kiosk-day-group">
-                      <div className="kiosk-day-label">{formatDayLabel(day.dayObj)}</div>
-                      <div className="kiosk-slots">
-                        {day.slots.slice(0, KIOSK_SLOTS_PER_DAY).map((slot) => (
-                          <button
-                            key={slot.timeObj.toISOString()}
-                            type="button"
-                            className="kiosk-slot"
-                            onClick={() => chooseSlot(slot.timeObj)}
-                          >
-                            {format(slot.timeObj, "HH:mm")}
-                          </button>
-                        ))}
-                        {day.slots.length > KIOSK_SLOTS_PER_DAY && (
-                          <span className="kiosk-slot-more">
-                            +{day.slots.length - KIOSK_SLOTS_PER_DAY} más
+                  visibleDays.map((day) => {
+                    const expanded = expandedDays.includes(day.dateKey);
+                    const hidden = day.slots.length - KIOSK_SLOTS_PER_DAY;
+                    const shown = expanded
+                      ? day.slots
+                      : day.slots.slice(0, KIOSK_SLOTS_PER_DAY);
+                    return (
+                      <div key={day.dateKey} className="kiosk-day-group">
+                        <div className="kiosk-day-label">
+                          {formatDayLabel(day.dayObj)}
+                          <span className="kiosk-day-count">
+                            {day.slots.length}{" "}
+                            {day.slots.length === 1 ? "horario" : "horarios"}
                           </span>
+                        </div>
+                        <div
+                          className={`kiosk-slots ${expanded ? "is-expanded" : ""}`}
+                          id={`kiosk-slots-${day.dateKey}`}
+                        >
+                          {shown.map((slot) => (
+                            <button
+                              key={slot.timeObj.toISOString()}
+                              type="button"
+                              className="kiosk-slot"
+                              onClick={() => chooseSlot(slot.timeObj)}
+                            >
+                              {format(slot.timeObj, "HH:mm")}
+                            </button>
+                          ))}
+                        </div>
+                        {hidden > 0 && (
+                          <button
+                            type="button"
+                            className="kiosk-slot-toggle"
+                            onClick={() => toggleDay(day.dateKey)}
+                            aria-expanded={expanded}
+                            aria-controls={`kiosk-slots-${day.dateKey}`}
+                          >
+                            <FaChevronDown
+                              className="kiosk-slot-toggle-icon"
+                              aria-hidden="true"
+                            />
+                            {expanded
+                              ? "Mostrar menos horarios"
+                              : `Ver ${hidden} horarios más`}
+                          </button>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 {availabilityStatus === "ready" &&
                   !showAllDays &&
                   upcomingSlotsByDay.length > KIOSK_UPCOMING_DAYS && (

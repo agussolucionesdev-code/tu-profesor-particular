@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { FaArrowUpRightFromSquare, FaBars, FaXmark } from "react-icons/fa6";
-import { BOOKING_URL, BRAND } from "../data/site.js";
+import { BOOKING_RESERVE_URL, BRAND } from "../data/site.js";
 import monogram from "../assets/monogram.png";
 import "./SiteNav.css";
 
@@ -102,7 +102,7 @@ const SiteNav = () => {
           {/* El CTA sale del sitio hacia el sistema de turnos: se avisa. */}
           <a
             className="snav-cta"
-            href={BOOKING_URL}
+            href={BOOKING_RESERVE_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
