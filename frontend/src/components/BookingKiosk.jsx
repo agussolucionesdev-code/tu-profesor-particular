@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { addMinutes, format, isToday, isTomorrow } from "date-fns";
 import es from "date-fns/locale/es";
 import {
+  FaCalendarAlt,
   FaCheckCircle,
   FaChevronDown,
   FaChevronLeft,
@@ -16,6 +17,7 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import BookingSuccessModal from "./booking/BookingSuccessModal";
+import KioskSlotCalendar from "./KioskSlotCalendar";
 import { createBooking, fetchPublicSettings } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
@@ -185,10 +187,13 @@ const BookingKiosk = () => {
     [maxAllowedDuration],
   );
 
-  const visibleDays = useMemo(() => {
-    const days = upcomingSlotsByDay;
-    return showAllDays ? days : days.slice(0, KIOSK_UPCOMING_DAYS);
-  }, [upcomingSlotsByDay, showAllDays]);
+  /* La lista rápida muestra siempre los próximos días y nada más. El resto de
+     la agenda se recorre con el calendario (showAllDays lo abre), no estirando
+     esta lista. */
+  const visibleDays = useMemo(
+    () => upcomingSlotsByDay.slice(0, KIOSK_UPCOMING_DAYS),
+    [upcomingSlotsByDay],
+  );
 
   /* Despliega o cierra los horarios de un día. Se guarda por día (y no un único
      booleano) para que abrir el martes no expanda también el miércoles. */
@@ -728,16 +733,33 @@ const BookingKiosk = () => {
                       </div>
                     );
                   })}
+                {/* Más allá de los próximos días, un calendario: la agenda llega
+                    a 92 días y estirar la lista era imposible de recorrer. */}
                 {availabilityStatus === "ready" &&
-                  !showAllDays &&
                   upcomingSlotsByDay.length > KIOSK_UPCOMING_DAYS && (
-                    <button
-                      type="button"
-                      className="kiosk-inline-btn kiosk-more-days"
-                      onClick={() => setShowAllDays(true)}
-                    >
-                      Ver más fechas ({upcomingSlotsByDay.length - KIOSK_UPCOMING_DAYS})
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="kiosk-inline-btn kiosk-more-days"
+                        onClick={() => setShowAllDays((v) => !v)}
+                        aria-expanded={showAllDays}
+                        aria-controls="kiosk-calendar"
+                      >
+                        <FaCalendarAlt aria-hidden="true" />
+                        {showAllDays
+                          ? "Ocultar el calendario"
+                          : `Elegir otra fecha (${upcomingSlotsByDay.length - KIOSK_UPCOMING_DAYS} días más)`}
+                      </button>
+
+                      {showAllDays && (
+                        <div id="kiosk-calendar">
+                          <KioskSlotCalendar
+                            slotsByDay={upcomingSlotsByDay}
+                            onPick={chooseSlot}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
               </div>
             ) : (

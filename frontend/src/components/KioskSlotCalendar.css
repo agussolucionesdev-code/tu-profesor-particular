@@ -1,0 +1,244 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Calendario + horarios del día elegido (paso 3 del kiosco).
+
+   Todos los colores salen de tokens que se adaptan al tema. Nada de peldaños
+   fijos como --brand-navy-50 en estados interactivos: ese fue justamente el bug
+   que dejaba el texto ilegible en tema oscuro.
+   ══════════════════════════════════════════════════════════════════════════ */
+.ksc {
+  margin-top: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.ksc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .ksc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ksc-col { min-width: 0; }
+
+.ksc-col-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ksc-col-label svg { color: var(--accent-primary); font-size: 0.9rem; }
+
+/* ── Encabezado del mes ──────────────────────────────────────────────────── */
+.ksc-dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0.6rem;
+}
+.ksc-dp-header strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  color: var(--text-primary);
+}
+
+.ksc-month-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-base);
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+.ksc-month-nav:hover:not(:disabled) {
+  border-color: var(--brand-green);
+  color: var(--accent-primary);
+  background: var(--state-hover-bg);
+}
+.ksc-month-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+.ksc-month-nav:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* ── Calendario (react-datepicker) ───────────────────────────────────────── */
+.ksc-datepicker {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  padding: 0.85rem;
+  font-family: inherit;
+}
+.ksc-datepicker .react-datepicker__header {
+  background: none;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0;
+}
+.ksc-datepicker .react-datepicker__day-names {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.5rem 0 0;
+}
+.ksc-datepicker .react-datepicker__day-name {
+  width: 34px;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.ksc-datepicker .react-datepicker__month { margin: 0.35rem 0 0; }
+.ksc-datepicker .react-datepicker__week {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ksc-datepicker .react-datepicker__day {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  margin: 2px 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.ksc-datepicker .react-datepicker__day:hover { background: var(--state-hover-bg); }
+.ksc-datepicker .react-datepicker__day--disabled {
+  color: var(--text-tertiary);
+  opacity: 0.4;
+}
+.ksc-datepicker .react-datepicker__day--disabled:hover { background: none; }
+.ksc-datepicker .react-datepicker__day--outside-month { visibility: hidden; }
+.ksc-datepicker .react-datepicker__day:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Día con horarios libres: punto verde debajo del número. */
+.ksc-datepicker .ksc-day--free { color: var(--text-primary); font-weight: 800; }
+.ksc-datepicker .ksc-day--free::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  translate: -50% 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+}
+
+.ksc-datepicker .react-datepicker__day--selected {
+  background: var(--brand-green);
+  color: #fff;
+}
+.ksc-datepicker .react-datepicker__day--selected::after { background: #fff; }
+.ksc-datepicker .react-datepicker__day--keyboard-selected {
+  background: var(--state-selected-bg);
+  color: var(--text-primary);
+}
+
+.ksc-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.76rem;
+  color: var(--text-tertiary);
+}
+.ksc-legend-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+/* ── Horarios del día ────────────────────────────────────────────────────── */
+.ksc-day-caption {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: capitalize;
+  color: var(--text-primary);
+}
+.ksc-day-total {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: none;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ksc-periods { display: grid; gap: 1rem; }
+
+.ksc-period-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.ksc-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 0.5rem;
+}
+
+.ksc-slot {
+  padding: 0.6rem 0.5rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-base);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease,
+    transform 0.12s ease;
+}
+.ksc-slot:hover {
+  border-color: var(--brand-green);
+  background: var(--state-hover-bg);
+}
+.ksc-slot:active { transform: translateY(1px); }
+.ksc-slot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.ksc-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ksc-slot,
+  .ksc-month-nav,
+  .ksc-datepicker .react-datepicker__day { transition: none; }
+  .ksc-slot:active { transform: none; }
+}
