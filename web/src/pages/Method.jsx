@@ -1,7 +1,8 @@
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
+import MethodSteps from "../components/MethodSteps.jsx";
+import FaqList from "../components/FaqList.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
-import { FAQS, METHOD } from "../data/site.js";
 import "./Inner.css";
 
 const Method = () => {
@@ -22,19 +23,7 @@ const Method = () => {
             lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
           />
 
-          <ol className="method-list" data-reveal-group="90">
-            {METHOD.map((step) => (
-              <li key={step.index} className="method-step" data-reveal="up">
-                <span className="method-index" aria-hidden="true">
-                  {step.index}
-                </span>
-                <div className="method-copy">
-                  <h3 className="display display--md">{step.title}</h3>
-                  <p>{step.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <MethodSteps />
         </div>
       </section>
 
@@ -48,21 +37,7 @@ const Method = () => {
             lead="Lo que casi todos quieren saber antes de la primera clase."
           />
 
-          <ul className="faq-list" data-reveal-group="60">
-            {FAQS.map((item) => (
-              <li key={item.q} data-reveal="up">
-                <details className="faq-item">
-                  <summary>
-                    <span>{item.q}</span>
-                    <span className="faq-plus" aria-hidden="true" />
-                  </summary>
-                  <div className="faq-answer">
-                    <p>{item.a}</p>
-                  </div>
-                </details>
-              </li>
-            ))}
-          </ul>
+          <FaqList />
         </div>
       </section>
 

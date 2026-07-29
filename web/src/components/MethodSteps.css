@@ -1,0 +1,82 @@
+.ms-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.section--dark .ms-list { border-top-color: rgba(255, 255, 255, 0.14); }
+
+.ms-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(18px, 3.4vw, 46px);
+  padding: clamp(26px, 3.2vw, 40px) 4px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.4s ease;
+}
+.section--dark .ms-step { border-bottom-color: rgba(255, 255, 255, 0.14); }
+
+/* Barra verde que crece desde arriba al pasar el mouse: marca el paso activo
+   sin mover el layout. */
+.ms-step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--green-brand);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.5s var(--ease);
+}
+.ms-step:hover::before { transform: scaleY(1); }
+.ms-step:hover { background: rgba(0, 33, 76, 0.028); }
+.section--dark .ms-step:hover { background: rgba(255, 255, 255, 0.03); }
+
+.ms-index {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  font-weight: 380;
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  color: var(--green);
+  opacity: 0.42;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.4s ease;
+}
+.section--dark .ms-index { color: var(--green-on-dark); }
+.ms-step:hover .ms-index { opacity: 1; }
+
+.ms-title {
+  margin: 0 0 0.55rem;
+  color: var(--text);
+}
+.section--dark .ms-title { color: #fff; }
+
+.ms-desc {
+  margin: 0;
+  max-width: 62ch;
+  font-size: clamp(0.94rem, 1.3vw, 1.05rem);
+  line-height: 1.68;
+  color: var(--muted);
+}
+.section--dark .ms-desc { color: rgba(255, 255, 255, 0.66); }
+
+@media (max-width: 620px) {
+  .ms-step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    padding-left: 10px;
+  }
+  .ms-index { font-size: 2.2rem; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ms-step,
+  .ms-step::before,
+  .ms-index { transition: none; }
+}
