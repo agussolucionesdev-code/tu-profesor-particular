@@ -35,7 +35,17 @@ const describeSlotRange = (slots) => {
   return `${format(slots[0].timeObj, "HH:mm")} a ${format(slots.at(-1).timeObj, "HH:mm")}`;
 };
 
-export const useBookingAvailability = (selectedDate, selectedDuration, showToast) => {
+/**
+ * @param fullRange cuando es true se pide toda la agenda del servidor en lugar
+ *        de la ventana inicial corta. Lo activa el kiosco al abrir el
+ *        calendario, que sí necesita ver los meses siguientes.
+ */
+export const useBookingAvailability = (
+  selectedDate,
+  selectedDuration,
+  showToast,
+  fullRange = false,
+) => {
   const [existingBookings, setExistingBookings] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
   const [backendSlots, setBackendSlots] = useState(undefined);
@@ -49,7 +59,9 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
 
   useEffect(() => {
     let isCurrentRequest = true;
-    const requestParams = availabilityRequestParams(selectedDuration);
+    const requestParams = availabilityRequestParams(selectedDuration, {
+      days: fullRange ? null : undefined,
+    });
     const requestedDuration = requestParams?.duration ?? null;
 
     const loadBookings = async () => {
@@ -90,7 +102,9 @@ export const useBookingAvailability = (selectedDate, selectedDuration, showToast
     return () => {
       isCurrentRequest = false;
     };
-  }, [availabilityRequestVersion, selectedDuration, showToast]);
+    // fullRange entra como dependencia: al abrir el calendario hay que volver a
+    // pedir la agenda, esta vez completa.
+  }, [availabilityRequestVersion, selectedDuration, showToast, fullRange]);
 
   const requestedDuration = availabilityRequestParams(selectedDuration)?.duration ?? null;
   const effectiveAvailabilityStatus = resolvedAvailabilityDuration === requestedDuration

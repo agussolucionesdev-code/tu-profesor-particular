@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  AVAILABILITY_INITIAL_DAYS,
   availabilityRequestParams,
   getBusinessDateKey,
   isSelectedTimeAvailable,
@@ -88,8 +89,31 @@ test("groups slots by the configured Buenos Aires business date", () => {
 });
 
 test("includes the selected class duration in an availability query", () => {
-  assert.deepEqual(availabilityRequestParams(1.5), { duration: 1.5 });
-  assert.deepEqual(availabilityRequestParams("2"), { duration: 2 });
+  assert.equal(availabilityRequestParams(1.5).duration, 1.5);
+  assert.equal(availabilityRequestParams("2").duration, 2);
+});
+
+test("narrows the availability window so the first request stays small", () => {
+  // Sin rango el servidor devolvia su maximo (92 dias, 242 KB, +2500 slots):
+  // procesarlo bloqueaba el hilo principal y superaba el timeout del cliente.
+  const params = availabilityRequestParams(1);
+  assert.ok(params.from, "debe enviar from");
+  assert.ok(params.to, "debe enviar to");
+
+  const spanDays =
+    (new Date(params.to) - new Date(params.from)) / (24 * 60 * 60 * 1000);
+  assert.ok(
+    spanDays > AVAILABILITY_INITIAL_DAYS - 1 &&
+      spanDays < AVAILABILITY_INITIAL_DAYS + 1,
+    `la ventana deberia ser de ~${AVAILABILITY_INITIAL_DAYS} dias, fue ${spanDays}`,
+  );
+  assert.ok(new Date(params.from) <= new Date(), "from arranca hoy o antes");
+});
+
+test("requests the full server range when the calendar is opened", () => {
+  // El calendario necesita ver los meses siguientes: ahi si se pide todo.
+  const params = availabilityRequestParams(1, { days: null });
+  assert.deepEqual(params, { duration: 1 });
 });
 
 test("keeps the legacy request shape until the learner selects a duration", () => {

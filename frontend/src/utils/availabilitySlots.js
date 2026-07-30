@@ -27,11 +27,45 @@ const formatDateKey = (dateKey) => {
   return `${day}/${month}/${year}`;
 };
 
-export const availabilityRequestParams = (duration) => {
+/* Días que se piden al abrir el paso de turnos. Antes no se enviaba rango, así
+   que el servidor devolvía su máximo (92 días): 242 KB y más de 2.500 slots que
+   bloqueaban el hilo principal al procesarse —el navegador llegaba a reportar
+   "long-running script"— y con el timeout de 15 s de apiClient la carga no
+   terminaba nunca. Con 21 días alcanza para la lista de próximos turnos y para
+   las primeras semanas del calendario; si hace falta más, se pide el rango
+   completo recién cuando el visitante abre el calendario. */
+export const AVAILABILITY_INITIAL_DAYS = 21;
+
+/** Fin de día (23:59:59.999) `days` días después de hoy, hora local. */
+const endOfDayAfter = (days) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(23, 59, 59, 999);
+  return date;
+};
+
+/**
+ * Parámetros de la consulta de disponibilidad.
+ * @param duration duración elegida en horas (>= 0.5)
+ * @param options.days ventana a pedir; `null` pide el rango completo del
+ *        servidor (se usa al abrir el calendario, que necesita toda la agenda).
+ */
+export const availabilityRequestParams = (
+  duration,
+  { days = AVAILABILITY_INITIAL_DAYS } = {},
+) => {
   const numericDuration = Number(duration);
-  return Number.isFinite(numericDuration) && numericDuration >= 0.5
-    ? { duration: numericDuration }
-    : undefined;
+  if (!Number.isFinite(numericDuration) || numericDuration < 0.5) {
+    return undefined;
+  }
+  if (days === null) return { duration: numericDuration };
+
+  // El backend valida `from`/`to` y acota el resultado a ese intervalo.
+  return {
+    duration: numericDuration,
+    from: new Date().toISOString(),
+    to: endOfDayAfter(days).toISOString(),
+  };
 };
 
 export const isSelectedTimeAvailable = ({ selectedTime, backendSlots }) => {
