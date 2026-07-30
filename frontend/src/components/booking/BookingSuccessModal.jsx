@@ -217,7 +217,7 @@ const BookingSuccessModal = ({
             </Link>
           )}
           <a
-            href={`https://wa.me/5491164236675?text=${encodeURIComponent(whatsappConfirmText)}`}
+            href={`https://wa.me/5491133365937?text=${encodeURIComponent(whatsappConfirmText)}`}
             className="success-btn-whatsapp"
             target="_blank"
             rel="noopener noreferrer"

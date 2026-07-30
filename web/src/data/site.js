@@ -19,8 +19,8 @@ export const BOOKING_RESERVE_URL = `${BOOKING_URL}/reservar`;
 export const BOOKING_MANAGE_URL = `${BOOKING_URL}/portal`;
 
 export const CONTACT = {
-  whatsappNumber: "5491164236675",
-  whatsappDisplay: "+54 9 11 6423-6675",
+  whatsappNumber: "5491133365937",
+  whatsappDisplay: "+54 9 11 3336-5937",
   email: "agustinsosa.profe@gmail.com",
   addressLine: "Jujuy 414, Temperley",
   region: "Buenos Aires, Argentina",

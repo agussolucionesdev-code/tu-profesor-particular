@@ -133,7 +133,7 @@ const AboutAgustin = () => (
               </Link>
             </Magnetic>
             <a
-              href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn,%20quiero%20hacerte%20una%20consulta."
+              href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20quiero%20hacerte%20una%20consulta."
               className="hp-about-wp"
               target="_blank"
               rel="noopener noreferrer"

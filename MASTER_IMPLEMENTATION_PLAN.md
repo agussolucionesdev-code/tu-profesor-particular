@@ -728,7 +728,7 @@ export const useAdminData = (authConfig, isAuthenticated) => {
 - Consistent use of "vos" form (Argentine Spanish) - not mixing "tu/vos"
 - Warm, empathetic tone without being patronizing
 - No leftover English text in UI
-- WhatsApp number `5491164236675` is consistent everywhere
+- WhatsApp number `5491133365937` is consistent everywhere
 
 **Guardrails:**
 - Do NOT change internal variable names, function names, or comments (those stay in English).

@@ -19,11 +19,11 @@ const STRUCTURED_DATA = {
       },
       contactPoint: {
         "@type": "ContactPoint",
-        telephone: "+54-9-11-6423-6675",
+        telephone: "+54-9-11-3336-5937",
         contactType: "customer service",
         availableLanguage: "Spanish",
       },
-      sameAs: ["https://wa.me/5491164236675"],
+      sameAs: ["https://wa.me/5491133365937"],
     },
     {
       "@type": "Service",

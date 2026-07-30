@@ -397,7 +397,7 @@ const HomePage = () => {
               </Magnetic>
               <Magnetic strength={0.3}>
                 <a
-                  href="https://wa.me/5491164236675?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
+                  href="https://wa.me/5491133365937?text=Hola%2C%20tengo%20una%20consulta%20antes%20de%20reservar."
                   className="hp-cta-ghost"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -600,7 +600,7 @@ const HomePage = () => {
                 </span>
               </div>
               <a
-                href="https://wa.me/5491164236675?text=Hola%2C%20necesito%20ayuda%20con%20una%20materia%20que%20no%20veo%20en%20la%20web.%20%C2%BFMe%20pod%C3%A9s%20ayudar%3F"
+                href="https://wa.me/5491133365937?text=Hola%2C%20necesito%20ayuda%20con%20una%20materia%20que%20no%20veo%20en%20la%20web.%20%C2%BFMe%20pod%C3%A9s%20ayudar%3F"
                 className="hp-more-subjects-btn"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -722,7 +722,7 @@ const HomePage = () => {
               <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
             </Link>
             <a
-              href="https://wa.me/5491164236675?text=Hola%2C%20quiero%20consultar%20antes%20de%20reservar."
+              href="https://wa.me/5491133365937?text=Hola%2C%20quiero%20consultar%20antes%20de%20reservar."
               className="hp-cta-ghost hp-cta-xl"
               target="_blank"
               rel="noopener noreferrer"
