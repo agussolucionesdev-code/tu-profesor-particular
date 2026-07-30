@@ -123,7 +123,7 @@ const ClientPortal = () => {
 
         <a
           className="portal-help-line"
-          href="https://wa.me/5491164236675?text=Hola%20Agustin,%20necesito%20ayuda%20con%20un%20turno."
+          href="https://wa.me/5491133365937?text=Hola%20Agustin,%20necesito%20ayuda%20con%20un%20turno."
           target="_blank"
           rel="noopener noreferrer"
         >

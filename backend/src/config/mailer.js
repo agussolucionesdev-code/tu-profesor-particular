@@ -218,7 +218,7 @@ const getFrontendUrl = () =>
   );
 
 const getContactPhone = () =>
-  String(process.env.CONTACT_PHONE || "+54 9 11 6423-6675").trim();
+  String(process.env.CONTACT_PHONE || "+54 9 11 3336-5937").trim();
 
 const getWhatsappSelfUrl = () => {
   const raw = getContactPhone().replace(/\D/g, "");

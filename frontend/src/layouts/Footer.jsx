@@ -109,7 +109,7 @@ const Footer = () => {
                 <FaArrowRight className="ribbon-cta-arrow" aria-hidden="true" />
               </Link>
               <a
-                href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
+                href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
                 target="_blank"
                 rel="noreferrer"
                 className="footer-ribbon-ghost"
@@ -188,7 +188,7 @@ const Footer = () => {
             <h4 className="footer-section-title">Hablemos</h4>
             <address className="footer-contact-address">
               <a
-                href="https://wa.me/5491164236675?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
+                href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
                 target="_blank"
                 rel="noreferrer"
                 className="contact-card wp-card"
@@ -198,7 +198,7 @@ const Footer = () => {
                 </div>
                 <div className="contact-details">
                   <span className="contact-label">WhatsApp</span>
-                  <span className="contact-value">+54 9 11 6423-6675</span>
+                  <span className="contact-value">+54 9 11 3336-5937</span>
                 </div>
                 <FaArrowRight className="contact-arrow" aria-hidden="true" />
               </a>
