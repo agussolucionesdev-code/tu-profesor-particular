@@ -236,6 +236,22 @@
   color: var(--text-secondary);
 }
 
+/* En pantallas táctiles los días de 34px quedan chicos para el dedo: se agrandan
+   a 42px, cerca del mínimo recomendado, aprovechando que en una columna sobra
+   ancho. */
+@media (max-width: 860px) {
+  .ksc-datepicker .react-datepicker__day,
+  .ksc-datepicker .react-datepicker__day-name {
+    width: 42px;
+    height: 42px;
+  }
+  .ksc-datepicker .react-datepicker__day-name {
+    height: auto;
+    line-height: 1.6;
+  }
+  .ksc-slot { padding-block: 0.75rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ksc-slot,
   .ksc-month-nav,
