@@ -26,10 +26,13 @@ import "./RescheduleModal.css";
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };
 const DURATION_QUICK_BASE = [0.5, 1, 1.5, 2, 2.5, 3];
 
+/* Los bordes cubren el día COMPLETO (0 a 24) a propósito: con la noche cortada
+   en 22, un turno de las 22:00 quedaba fuera de las tres franjas y no se podía
+   elegir para reprogramar, aunque el servidor lo ofreciera. */
 const PERIODS = [
-  { id: "morning", label: "Mañana", from: 7, to: 13 },
+  { id: "morning", label: "Mañana", from: 0, to: 13 },
   { id: "afternoon", label: "Tarde", from: 13, to: 19 },
-  { id: "night", label: "Noche", from: 19, to: 22 },
+  { id: "night", label: "Noche", from: 19, to: 24 },
 ];
 
 const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, showToast }) => {
@@ -165,13 +168,29 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   // Group slots by period, skip empty periods
   const slotsByPeriod = useMemo(
     () =>
-      PERIODS.map((p) => ({
-        ...p,
-        slots: slots.filter((s) => {
-          const h = s.time.getHours();
-          return h >= p.from && h < p.to;
-        }),
-      })).filter((p) => p.slots.length > 0),
+      // Red de seguridad: si algún horario no cayera en ninguna franja, se
+      // muestra igual al final. Un turno inelegible es peor que una etiqueta
+      // genérica.
+      [
+        ...PERIODS.map((p) => ({
+          ...p,
+          slots: slots.filter((s) => {
+            const h = s.time.getHours();
+            return h >= p.from && h < p.to;
+          }),
+        })),
+        {
+          id: "otros",
+          label: "Otros horarios",
+          slots: slots.filter(
+            (s) =>
+              !PERIODS.some((p) => {
+                const h = s.time.getHours();
+                return h >= p.from && h < p.to;
+              }),
+          ),
+        },
+      ].filter((p) => p.slots.length > 0),
     [slots],
   );
 

@@ -18,10 +18,14 @@ import "./KioskSlotCalendar.css";
    Mismas decisiones que el modal de reprogramar del portal (PERIODS, header
    propio, locale es) para que las dos pantallas se sientan el mismo producto. */
 
+/* Franjas por hora de inicio. Los bordes cubren el día COMPLETO a propósito:
+   con la primera arrancando en 0 y la última terminando en 24, ningún horario
+   puede quedar fuera de todas y volverse inelegible. Pasó de verdad —con la
+   noche cortada en 22, el turno de las 22:00 existía y no se podía tocar. */
 const PERIODS = [
-  { id: "morning", label: "Mañana", from: 7, to: 13 },
+  { id: "morning", label: "Mañana", from: 0, to: 13 },
   { id: "afternoon", label: "Tarde", from: 13, to: 19 },
-  { id: "night", label: "Noche", from: 19, to: 22 },
+  { id: "night", label: "Noche", from: 19, to: 24 },
 ];
 
 const KioskSlotCalendar = ({ slotsByDay, onPick }) => {
@@ -42,18 +46,29 @@ const KioskSlotCalendar = ({ slotsByDay, onPick }) => {
     return match?.slots ?? [];
   }, [slotsByDay, selectedDay]);
 
-  // Agrupar por franja y descartar las vacías: sin "Noche" si no hay nocturnos.
-  const slotsByPeriod = useMemo(
-    () =>
-      PERIODS.map((p) => ({
-        ...p,
-        slots: daySlots.filter((s) => {
-          const h = s.timeObj.getHours();
-          return h >= p.from && h < p.to;
-        }),
-      })).filter((p) => p.slots.length > 0),
-    [daySlots],
-  );
+  /* Agrupar por franja, descartando las vacías (sin "Noche" si no hay
+     nocturnos). Se agrupa por reparto —cada horario cae en la primera franja
+     que lo acepta y se lo saca del resto— en lugar de filtrar tres veces: así
+     un horario no puede duplicarse ni, sobre todo, perderse. Si alguno quedara
+     sin franja igual se muestra al final: es preferible una etiqueta rara a un
+     turno disponible que nadie puede elegir. */
+  const slotsByPeriod = useMemo(() => {
+    const periodoDe = (slot) => {
+      const h = slot.timeObj.getHours();
+      return PERIODS.find((p) => h >= p.from && h < p.to);
+    };
+
+    const grupos = PERIODS.map((p) => ({
+      ...p,
+      slots: daySlots.filter((s) => periodoDe(s)?.id === p.id),
+    }));
+
+    const huerfanos = daySlots.filter((s) => !periodoDe(s));
+    if (huerfanos.length > 0) {
+      grupos.push({ id: "otros", label: "Otros horarios", slots: huerfanos });
+    }
+    return grupos.filter((p) => p.slots.length > 0);
+  }, [daySlots]);
 
   if (availableDays.length === 0) return null;
 
