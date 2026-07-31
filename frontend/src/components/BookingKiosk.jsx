@@ -133,7 +133,13 @@ const BookingKiosk = () => {
     isSelectedTimeVerified,
     maxAllowedDuration,
     retryAvailability,
-  } = useBookingAvailability(formData.timeSlot, formData.duration, showToast);
+    // showAllDays = calendario abierto: ahí sí se necesita toda la agenda.
+  } = useBookingAvailability(
+    formData.timeSlot,
+    formData.duration,
+    showToast,
+    showAllDays,
+  );
 
   useEffect(() => {
     funnelRef.current.start(1);
