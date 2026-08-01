@@ -120,7 +120,8 @@
   align-self: flex-start;
   padding: 1rem 1.7rem;
   border-radius: 14px;
-  background: var(--green-brand);
+  /* 1.02rem = 16.3px, por debajo del umbral de texto grande: pide 4.5:1. */
+  background: var(--green);
   color: #fff;
   font-size: 1.02rem;
   font-weight: 800;
@@ -291,7 +292,10 @@
   width: 100%;
   padding: 0.9rem 1.2rem;
   border-radius: 13px;
-  background: #1faf54;
+  /* Verde de WhatsApp, oscurecido hasta cumplir: #1faf54 con texto blanco daba
+     2.87:1. Sigue leyéndose como el verde de WhatsApp —el ícono manda tanto o
+     más que el tono— pero ahora la etiqueta se lee. */
+  background: #16803f;
   color: #fff;
   font-size: 0.98rem;
   font-weight: 800;
@@ -300,7 +304,7 @@
 }
 .ct-wa-cta svg { font-size: 1.05rem; }
 .ct-wa-cta:hover {
-  background: #17994a;
+  background: #0e6e35;   /* 6.36:1 — el hover oscurece, no aclara */
   transform: translateY(-2px);
 }
 
