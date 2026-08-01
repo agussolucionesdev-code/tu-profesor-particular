@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { addMinutes, format, isToday, isTomorrow } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import es from "date-fns/locale/es";
 import {
   FaCalendarAlt,
@@ -29,8 +29,6 @@ import {
   MODALITY_OPTIONS,
   KIOSK_DURATION_OPTIONS,
   getKioskYearGradeOptions,
-  KIOSK_UPCOMING_DAYS,
-  KIOSK_SLOTS_PER_DAY,
 } from "../constants/kioskWizard";
 import { toBookingApiAcademicSituation } from "../constants/bookingWizard";
 import {
@@ -68,12 +66,6 @@ const RELATIONSHIP_OPTIONS = [
   { value: RESPONSIBLE_RELATIONSHIP_OTHER_VALUE, label: "Otro" },
 ];
 
-const formatDayLabel = (dayObj) => {
-  if (isToday(dayObj)) return "Hoy";
-  if (isTomorrow(dayObj)) return "Mañana";
-  return format(dayObj, "EEEE d 'de' MMMM", { locale: es });
-};
-
 const BookingKiosk = () => {
   usePageMeta(
     "Reservar clase",
@@ -85,10 +77,6 @@ const BookingKiosk = () => {
   const [pricePerHour, setPricePerHour] = useState(0);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
   const [showAllDays, setShowAllDays] = useState(false);
-  /* Días con la lista de horarios desplegada. Antes cada día mostraba sólo los
-     primeros KIOSK_SLOTS_PER_DAY y el resto se anunciaba con un "+N más" que era
-     TEXTO MUERTO: no había forma de llegar a los horarios de la tarde. */
-  const [expandedDays, setExpandedDays] = useState([]);
   // Paso 1: materia escrita a mano cuando no está en las sugeridas.
   const [otherOpen, setOtherOpen] = useState(false);
   const [otherSubject, setOtherSubject] = useState("");
@@ -193,22 +181,6 @@ const BookingKiosk = () => {
     [maxAllowedDuration],
   );
 
-  /* La lista rápida muestra siempre los próximos días y nada más. El resto de
-     la agenda se recorre con el calendario (showAllDays lo abre), no estirando
-     esta lista. */
-  const visibleDays = useMemo(
-    () => upcomingSlotsByDay.slice(0, KIOSK_UPCOMING_DAYS),
-    [upcomingSlotsByDay],
-  );
-
-  /* Despliega o cierra los horarios de un día. Se guarda por día (y no un único
-     booleano) para que abrir el martes no expanda también el miércoles. */
-  const toggleDay = (dateKey) =>
-    setExpandedDays((prev) =>
-      prev.includes(dateKey)
-        ? prev.filter((k) => k !== dateKey)
-        : [...prev, dateKey],
-    );
 
   const setField = (name, value) => handleChange({ target: { name, value } });
 
@@ -671,7 +643,7 @@ const BookingKiosk = () => {
 
             {formData.duration ? (
               <div role="status" aria-live="polite">
-                <div className="kiosk-field-label">Próximos turnos disponibles</div>
+                <div className="kiosk-field-label">Elegí el día y el horario</div>
                 {availabilityStatus === "loading" && (
                   <p className="kiosk-muted">Buscando horarios libres…</p>
                 )}
@@ -683,90 +655,22 @@ const BookingKiosk = () => {
                     </button>
                   </div>
                 )}
-                {availabilityStatus === "ready" && visibleDays.length === 0 && (
+                {availabilityStatus === "ready" && upcomingSlotsByDay.length === 0 && (
                   <p className="kiosk-muted">
                     No hay turnos para esta duración en el período habilitado. Probá una duración más corta.
                   </p>
                 )}
-                {availabilityStatus === "ready" &&
-                  visibleDays.map((day) => {
-                    const expanded = expandedDays.includes(day.dateKey);
-                    const hidden = day.slots.length - KIOSK_SLOTS_PER_DAY;
-                    const shown = expanded
-                      ? day.slots
-                      : day.slots.slice(0, KIOSK_SLOTS_PER_DAY);
-                    return (
-                      <div key={day.dateKey} className="kiosk-day-group">
-                        <div className="kiosk-day-label">
-                          {formatDayLabel(day.dayObj)}
-                          <span className="kiosk-day-count">
-                            {day.slots.length}{" "}
-                            {day.slots.length === 1 ? "horario" : "horarios"}
-                          </span>
-                        </div>
-                        <div
-                          className={`kiosk-slots ${expanded ? "is-expanded" : ""}`}
-                          id={`kiosk-slots-${day.dateKey}`}
-                        >
-                          {shown.map((slot) => (
-                            <button
-                              key={slot.timeObj.toISOString()}
-                              type="button"
-                              className="kiosk-slot"
-                              onClick={() => chooseSlot(slot.timeObj)}
-                            >
-                              {format(slot.timeObj, "HH:mm")}
-                            </button>
-                          ))}
-                        </div>
-                        {hidden > 0 && (
-                          <button
-                            type="button"
-                            className="kiosk-slot-toggle"
-                            onClick={() => toggleDay(day.dateKey)}
-                            aria-expanded={expanded}
-                            aria-controls={`kiosk-slots-${day.dateKey}`}
-                          >
-                            <FaChevronDown
-                              className="kiosk-slot-toggle-icon"
-                              aria-hidden="true"
-                            />
-                            {expanded
-                              ? "Mostrar menos horarios"
-                              : `Ver ${hidden} horarios más`}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                {/* Más allá de los próximos días, un calendario: la agenda llega
-                    a 92 días y estirar la lista era imposible de recorrer. */}
-                {availabilityStatus === "ready" &&
-                  upcomingSlotsByDay.length > KIOSK_UPCOMING_DAYS && (
-                    <>
-                      <button
-                        type="button"
-                        className="kiosk-inline-btn kiosk-more-days"
-                        onClick={() => setShowAllDays((v) => !v)}
-                        aria-expanded={showAllDays}
-                        aria-controls="kiosk-calendar"
-                      >
-                        <FaCalendarAlt aria-hidden="true" />
-                        {showAllDays
-                          ? "Ocultar el calendario"
-                          : `Elegir otra fecha (${upcomingSlotsByDay.length - KIOSK_UPCOMING_DAYS} días más)`}
-                      </button>
-
-                      {showAllDays && (
-                        <div id="kiosk-calendar">
-                          <KioskSlotCalendar
-                            slotsByDay={upcomingSlotsByDay}
-                            onPick={chooseSlot}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
+                {/* Un solo camino para elegir turno. Antes convivían una lista de
+                    "próximos turnos" y un calendario detrás de un botón: dos formas
+                    de hacer lo mismo, y el que llegaba primero a la lista no sabía
+                    que existía el resto de la agenda. */}
+                {availabilityStatus === "ready" && upcomingSlotsByDay.length > 0 && (
+                  <KioskSlotCalendar
+                    slotsByDay={upcomingSlotsByDay}
+                    onPick={chooseSlot}
+                    onNeedFullRange={() => setShowAllDays(true)}
+                  />
+                )}
               </div>
             ) : (
               <p className="kiosk-muted">Elegí una duración para ver los horarios.</p>

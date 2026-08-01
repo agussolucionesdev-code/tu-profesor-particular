@@ -6,15 +6,16 @@
    que dejaba el texto ilegible en tema oscuro.
    ══════════════════════════════════════════════════════════════════════════ */
 .ksc {
-  margin-top: 1rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border-color);
+  margin-top: 0.75rem;
 }
 
+/* Dos columnas parejas: el calendario dejó de ser un extra detrás de un botón y
+   pasó a ser LA forma de elegir turno, así que se le da tamaño de protagonista
+   en vez del ancho mínimo que ocupaba antes. */
 .ksc-grid {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
-  gap: clamp(1.25rem, 3vw, 2.25rem);
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(1.5rem, 3.5vw, 2.75rem);
   align-items: start;
 }
 
@@ -93,9 +94,9 @@
   margin: 0.5rem 0 0;
 }
 .ksc-datepicker .react-datepicker__day-name {
-  width: 34px;
+  width: 40px;
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -109,13 +110,13 @@
 
 .ksc-datepicker .react-datepicker__day {
   position: relative;
-  width: 34px;
-  height: 34px;
-  margin: 2px 0;
+  width: 40px;
+  height: 40px;
+  margin: 3px 0;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-secondary);
   transition: background 0.16s ease, color 0.16s ease;
@@ -205,20 +206,23 @@
 
 .ksc-slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 0.6rem;
 }
 
+/* Horarios grandes: son EL objeto que se toca en este paso, así que se les da
+   peso propio en lugar del tamaño de chip que tenían. */
 .ksc-slot {
-  padding: 0.6rem 0.5rem;
+  padding: 0.85rem 0.6rem;
   border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-base);
+  border-radius: var(--radius-md);
   background: var(--surface-card);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: border-color 0.16s ease, background 0.16s ease,
     transform 0.12s ease;
@@ -236,20 +240,34 @@
   color: var(--text-secondary);
 }
 
-/* En pantallas táctiles los días de 34px quedan chicos para el dedo: se agrandan
-   a 42px, cerca del mínimo recomendado, aprovechando que en una columna sobra
-   ancho. */
+/* En pantallas táctiles los días quedan chicos para el dedo: se agrandan
+   aprovechando que en una sola columna sobra ancho. */
 @media (max-width: 860px) {
-  .ksc-datepicker .react-datepicker__day,
-  .ksc-datepicker .react-datepicker__day-name {
+  .ksc .ksc-datepicker .react-datepicker__day,
+  .ksc .ksc-datepicker .react-datepicker__day-name {
     width: 42px;
     height: 42px;
   }
-  .ksc-datepicker .react-datepicker__day-name {
+  .ksc .ksc-datepicker .react-datepicker__day-name {
     height: auto;
     line-height: 1.6;
   }
-  .ksc-slot { padding-block: 0.75rem; }
+  .ksc-slot { padding-block: 0.85rem; }
+}
+
+/* Por debajo de 480px, final-polish.css fuerza 34px !important a TODOS los
+   calendarios de la app. Acá se compensa con la misma arma y algo más de
+   especificidad: 38px entra cómodo en 320px de ancho (7 × 38 + gaps) y sigue
+   siendo más tocable que 34. */
+@media (max-width: 480px) {
+  .ksc .ksc-datepicker .react-datepicker__day,
+  .ksc .ksc-datepicker .react-datepicker__day-name {
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
+    font-size: 0.9rem !important;
+  }
+  .ksc-slots { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
