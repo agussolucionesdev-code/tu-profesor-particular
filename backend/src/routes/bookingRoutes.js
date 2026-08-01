@@ -19,11 +19,14 @@ import {
   requestManagementLink,
   getManagedBooking,
   revokeManagementAccess,
+  createPortalSession,
+  getPortalHistory,
 } from "../controllers/bookingController.js";
 import { requireAdmin } from "../middleware/authMiddleware.js";
 import {
   publicLookupLimiter,
   publicMutationLimiter,
+  portalSessionLimiter,
 } from "../middleware/rateLimiters.js";
 
 const router = express.Router();
@@ -34,6 +37,10 @@ router.get("/availability", getAvailability);
 // route parameter (and therefore never reach access logs).
 router.post("/manage/request-link", publicMutationLimiter, requestManagementLink);
 router.get("/manage", publicMutationLimiter, getManagedBooking);
+// Entrada al portal con el código. Limitador propio y más estricto: es el
+// único lugar donde se pueden probar códigos a ciegas.
+router.post("/portal/session", portalSessionLimiter, createPortalSession);
+router.get("/portal/history", publicMutationLimiter, getPortalHistory);
 router.post("/manage/revoke", publicMutationLimiter, revokeManagementAccess);
 router.post("/reschedule", publicMutationLimiter, rescheduleBooking);
 router.post("/cancel", publicMutationLimiter, cancelBookingClient);

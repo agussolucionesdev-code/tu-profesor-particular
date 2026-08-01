@@ -201,6 +201,16 @@
   font-weight: 700;
 }
 
+/* react-datepicker pinta su cabecera con un #f0f0f0 fijo. Nunca se sobreescribió
+   acá, así que en tema oscuro el nombre del mes quedaba en 1.06:1 y las flechas
+   en 1.25:1 —el mes era literalmente invisible—. Se anula el fondo de la
+   librería y la separación la marca un borde, como en el resto de la app. */
+.reschedule-datepicker .react-datepicker__header {
+  background: none;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0;
+}
+
 .reschedule-datepicker-header {
   display: flex;
   align-items: center;
@@ -314,15 +324,19 @@
   background: rgba(1, 149, 60, 0.06);
 }
 
+/* El horario elegido es el dato más importante del modal y era el peor medido:
+   --accent-primary se aclara a #88ce93 en tema oscuro y la tinta encima quedaba
+   en 1.30:1. El par fondo+tinta cambia junto y no se puede desincronizar. */
 .reschedule-slot-btn--selected {
-  border-color: var(--accent-primary, #01953c);
-  background: var(--accent-primary, #01953c);
-  color: var(--brand-white);
+  border-color: var(--cta-solid-bg);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
 }
 
 .reschedule-slot-btn--selected:hover {
-  background: var(--brand-green-deep);
-  color: var(--brand-white);
+  background: var(--cta-solid-bg-hover);
+  border-color: var(--cta-solid-bg-hover);
+  color: var(--cta-solid-ink);
 }
 
 .reschedule-slot-btn--disabled {
@@ -371,14 +385,15 @@
 }
 
 .reschedule-duration-btn--active {
-  border-color: var(--accent-primary, #01953c);
-  background: var(--accent-primary, #01953c);
-  color: var(--brand-white);
+  border-color: var(--cta-solid-bg);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
 }
 
 .reschedule-duration-btn--active:hover {
-  background: var(--brand-green-deep);
-  color: var(--brand-white);
+  background: var(--cta-solid-bg-hover);
+  border-color: var(--cta-solid-bg-hover);
+  color: var(--cta-solid-ink);
 }
 
 .reschedule-duration-btn:focus-visible {
@@ -513,7 +528,11 @@
   background: rgba(1, 149, 60, 0.18);
 }
 
-[data-theme="dark"] .reschedule-slot-btn {
+/* :not(--selected) es lo que faltaba. Sin eso esta regla (0,2,0) le ganaba a
+   .reschedule-slot-btn--selected (0,1,0) y le imponía su color al horario
+   elegido: tinta clara sobre el verde claro del tema oscuro, 1.30:1. El estado
+   seleccionado define su propio par y nadie más debe tocarlo. */
+[data-theme="dark"] .reschedule-slot-btn:not(.reschedule-slot-btn--selected) {
   border-color: var(--border-soft, #334155);
   color: var(--text-secondary, #94a3b8);
 }
@@ -522,7 +541,7 @@
   background: rgba(1, 149, 60, 0.1);
 }
 
-[data-theme="dark"] .reschedule-duration-btn {
+[data-theme="dark"] .reschedule-duration-btn:not(.reschedule-duration-btn--active) {
   border-color: var(--border-soft, #334155);
   color: var(--text-secondary, #94a3b8);
 }

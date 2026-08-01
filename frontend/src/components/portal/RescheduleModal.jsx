@@ -2,7 +2,10 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import es from "date-fns/locale/es";
+/* Import NOMBRADO. Con `import es from "date-fns/locale/es"` —como estaba— en
+   date-fns 4 llega `undefined`, el datepicker cae en su idioma por defecto y el
+   calendario mostraba "Su Mo Tu We Th Fr Sa" en un producto en castellano. */
+import { es } from "date-fns/locale";
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock, FaTimes } from "react-icons/fa";
 import {
   formatDateLong,
@@ -354,7 +357,10 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
               onChange={handleDayChange}
               minDate={availabilityMinDate ?? undefined}
               maxDate={availabilityMaxDate}
-              locale="es"
+              /* El OBJETO, no la cadena "es": por nombre habría que haberlo
+                 registrado antes con registerLocale, y al no estarlo el
+                 calendario caía en inglés sin avisar. */
+              locale={es}
               calendarClassName="reschedule-datepicker"
               renderCustomHeader={({
                 date,

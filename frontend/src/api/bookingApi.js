@@ -30,6 +30,19 @@ export const getManagedBooking = (managementToken) =>
 export const revokeManagementAccess = (managementToken) =>
   apiClient.post("/api/bookings/manage/revoke", {}, managementConfig(managementToken));
 
+/* Entrada al portal con el código de reserva. Devuelve el mismo token de
+   gestión que antes llegaba por mail, pero en el acto.
+
+   El token que vuelve de acá se guarda SOLO en memoria, por la misma razón que
+   dice el comentario de arriba: nada de localStorage ni sessionStorage. Si la
+   persona recarga, vuelve a escribir su código —son seis caracteres— y eso es
+   preferible a dejar una llave de 30 días tirada en el disco del navegador. */
+export const createPortalSession = (bookingCode) =>
+  apiClient.post("/api/bookings/portal/session", { bookingCode });
+
+export const fetchPortalHistory = (managementToken) =>
+  apiClient.get("/api/bookings/portal/history", managementConfig(managementToken));
+
 export const rescheduleBooking = (
   data,
   managementToken,

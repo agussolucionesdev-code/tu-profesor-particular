@@ -2433,6 +2433,92 @@ export const getManagedBooking = async (req, res, next) => {
   }
 };
 
+/* ── Portal: entrar con el código de reserva ────────────────────────────────
+   Reemplaza al flujo de "pedí un enlace y buscalo en tu correo". La decisión de
+   producto es que el código alcanza: son 6 caracteres sobre un alfabeto de 31
+   sin ambiguos (887 millones de combinaciones) generados con crypto.randomInt,
+   y sólo lo tiene quien reservó.
+
+   No se inventa un mecanismo de sesión nuevo: se emite el MISMO token de
+   gestión que hasta ahora viajaba por mail, con su expiración y su revocación.
+   Así reprogramar y cancelar siguen funcionando sin tocarse, y todo lo que ya
+   estaba probado sobre ese token sigue valiendo.
+
+   Dos cuidados, porque el código pasó a ser la única llave:
+   · el endpoint tiene su propio limitador, más estricto que el resto;
+   · la respuesta a un código que no existe es idéntica a la de uno mal
+     formado, para no confirmar cuáles existen. */
+export const createPortalSession = async (req, res, next) => {
+  try {
+    const bookingCode = normalizeCode(req.body?.bookingCode);
+    if (!BOOKING_CODE_PATTERN.test(bookingCode)) {
+      return unauthorizedManagementLink(res);
+    }
+
+    const booking = await Booking.findOne(
+      withActiveBooking({ bookingCode }),
+    ).exec();
+    if (!booking) return unauthorizedManagementLink(res);
+
+    const { managementToken } = issueManagementToken(booking);
+    await booking.save();
+
+    setNoStore(res);
+    /* Sólo el token: los datos se piden después CON el token. Si viajaran acá,
+       un código adivinado devolvería la ficha completa en el mismo golpe. */
+    return res.status(200).json({
+      success: true,
+      data: { managementToken },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+/* Historial completo del titular: todos los turnos que comparten el email de
+   la reserva con la que entró. Incluye los pasados y los cancelados —el pedido
+   es ver el historial, no sólo lo que viene— y cada uno viene marcado para que
+   el frontend no tenga que recalcular contra el reloj del navegador. */
+export const getPortalHistory = async (req, res, next) => {
+  try {
+    const booking = await findManagedBooking(req);
+    if (!booking) return unauthorizedManagementLink(res);
+
+    const bookings = await Booking.find(
+      trustedFilter({ email: booking.email }),
+    )
+      .sort({ timeSlot: 1 })
+      .exec();
+
+    const ahora = Date.now();
+    setNoStore(res);
+    return res.status(200).json({
+      success: true,
+      data: {
+        current: booking.bookingCode,
+        bookings: bookings.map((b) => ({
+          ...managedBooking(b),
+          isPast: new Date(b.timeSlot).getTime() < ahora,
+        })),
+      },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    if (typeof next === "function") return next(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
 export const revokeManagementAccess = async (req, res, next) => {
   let slotMutationLock = null;
   try {

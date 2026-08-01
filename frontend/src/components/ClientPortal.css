@@ -1,996 +1,504 @@
-/* =============================================================================
-   CLIENT PORTAL — Clean rewrite
-   Covers ONLY portal-level UI. Modals live in portal/CancelModal.css,
-   portal/RescheduleModal.css, and portal/StudentNotesPanel.css.
-   ============================================================================= */
+/* ══════════════════════════════════════════════════════════════════════════
+   Portal del alumno — entrada con código e historial de turnos.
 
-/* ---------------------------------------------------------------------------
-   0. Local design tokens (scoped to .client-portal-wrapper)
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper {
-  --cp-primary:      var(--brand-navy, #00214c);
-  --cp-accent:       var(--accent-primary, #01953c);
-  --cp-danger:       #cf4f4f;
-  --cp-warning:      #d08a2e;
-  --cp-surface:      var(--surface-card, #ffffff);
-  --cp-border:       var(--border-soft, #e2e8f0);
-  --cp-text-main:    var(--text-primary,   #1e293b);
-  --cp-text-muted:   var(--text-secondary, #64748b);
-  --cp-text-faint:   var(--text-tertiary,  #94a3b8);
-  --cp-bg:           var(--bg-page, #f1f5f9);
-  --cp-shadow:       0 4px 24px rgba(0, 33, 76, 0.08);
-  --cp-radius-card:  12px;
-  --cp-radius-btn:   8px;
-  --cp-radius-input: 8px;
+   Todo el color sale de tokens que siguen al tema. Nada de peldaños fijos ni
+   de blancos clavados: los pares fondo+tinta (--cta-solid-*, --navy-solid-*)
+   existen justamente para que un fondo no pueda quedar claro con la tinta
+   clara encima cuando el tema se invierte.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.pt-shell {
+  min-height: 100vh;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  padding: clamp(4.5rem, 9vw, 6.5rem) clamp(1rem, 4vw, 2rem) 4rem;
 }
 
-/* ---------------------------------------------------------------------------
-   1. Page wrapper
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper {
-  font-family: "Inter", sans-serif;
-  min-height: 90vh;
-  display: flex;
-  justify-content: center;
-  padding: calc(100px + 1.5rem) 1.2rem 3rem;
-  background: var(--cp-bg);
-  width: 100%;
+/* ── Entrada ─────────────────────────────────────────────────────────────── */
+.pt-gate {
+  max-width: 30rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
 }
 
-/* ---------------------------------------------------------------------------
-   2. Container
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .portal-container {
-  width: 100%;
-  max-width: 1080px;
-}
-
-/* ---------------------------------------------------------------------------
-   3. Header
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .portal-header {
-  position: relative;
-  overflow: hidden;
+.pt-gate-card {
+  padding: clamp(1.75rem, 5vw, 2.75rem);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
   text-align: center;
-  padding: 2rem 1.5rem;
-  margin-bottom: 1.5rem;
-  border-radius: 24px;
-  border: 1px solid var(--cp-border);
-  background: var(--cp-surface);
-  box-shadow: var(--cp-shadow);
 }
 
-.client-portal-wrapper .portal-header::after {
-  content: "";
-  position: absolute;
-  right: -60px;
-  bottom: -70px;
-  width: 200px;
-  height: 200px;
-  border-radius: 999px;
-  background: none;
-  pointer-events: none;
-}
-
-.client-portal-wrapper .portal-header-logo {
-  position: relative;
-  z-index: 1;
-  width: 60px;
-  height: 60px;
+.pt-gate-logo {
+  width: 54px;
+  height: 54px;
   object-fit: contain;
-  margin: 0 auto 0.6rem;
+  margin: 0 auto 1rem;
   display: block;
 }
 
-.client-portal-wrapper .portal-title {
-  position: relative;
-  z-index: 1;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 800;
-  color: var(--cp-text-main);
-  letter-spacing: -0.03em;
-  margin: 0 0 0.4rem;
+.pt-gate-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--ui-font-display, Georgia, serif);
+  font-optical-sizing: auto;
+  font-size: clamp(1.9rem, 5.5vw, 2.5rem);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--text-primary);
 }
 
-.client-portal-wrapper .portal-subtitle {
-  position: relative;
-  z-index: 1;
-  color: var(--cp-text-muted);
-  font-size: 1rem;
-  max-width: 560px;
-  margin: 0 auto;
-  line-height: 1.55;
-}
-
-.client-portal-wrapper .header-decoration {
-  position: relative;
-  z-index: 1;
-  width: 64px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--cp-primary);
-  margin: 1.2rem auto 0;
-}
-
-/* ---------------------------------------------------------------------------
-   6. Search form
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .search-container {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--cp-border);
-  background: var(--cp-surface);
-  box-shadow: var(--cp-shadow);
-}
-
-.client-portal-wrapper .search-input {
-  flex: 1;
-  min-height: 48px;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: var(--cp-radius-input);
-  background: rgba(248, 251, 253, 0.94);
-  font-size: 1rem;
-  color: var(--cp-text-main);
-  font-weight: 600;
-  outline: none;
-}
-
-.client-portal-wrapper .btn-search {
-  min-height: 48px;
-  padding: 0 1.5rem;
-  border: none;
-  border-radius: var(--cp-radius-btn);
-  background: #1d344d;
-  color: var(--brand-white);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  white-space: nowrap;
-}
-
-.client-portal-wrapper .btn-search:hover {
-  background: #001636;
-  box-shadow: 0 0 0 1px rgba(29, 52, 77, 0.22);
-}
-
-/* ---------------------------------------------------------------------------
-   7. Search helper text
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .search-helper {
-  margin: 0 0 1rem;
-  color: var(--cp-text-muted);
-  font-size: 0.88rem;
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* ---------------------------------------------------------------------------
-   8. Results summary banner
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .portal-results-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--cp-radius-card);
-  border: 1px solid rgba(1, 149, 60, 0.22);
-  background: rgba(1, 149, 60, 0.08);
-  color: #2d6b34;
-  font-weight: 700;
+.pt-gate-lead {
+  margin: 0 0 1.75rem;
   font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
-/* ---------------------------------------------------------------------------
-   9. Error / info message
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .portal-message {
+.pt-gate-form { display: grid; gap: 0.4rem; text-align: left; }
+
+.pt-gate-label {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* El campo es EL objeto de esta pantalla: se le da tamaño de protagonista.
+   Monoespaciado y con las letras separadas porque se copia carácter por
+   carácter desde un mail, y así el 8 no se confunde con el B. */
+.pt-gate-input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.pt-gate-input::placeholder {
+  color: var(--text-tertiary);
+  letter-spacing: 0.22em;
+}
+.pt-gate-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+.pt-gate-hint {
+  margin: 0.15rem 0 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.pt-gate-hint--warn { color: var(--warning-color); font-weight: 700; }
+
+.pt-gate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.95rem 1.2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.pt-gate-btn:hover:not(:disabled) {
+  background: var(--cta-solid-bg-hover);
+  transform: translateY(-1px);
+}
+.pt-gate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.pt-gate-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.pt-gate-error {
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius-base);
+  background: var(--color-error-bg);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--error-color);
+}
+
+.pt-gate-help,
+.pt-help {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border-radius: var(--cp-radius-card);
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: center;
-}
-
-.client-portal-wrapper .portal-message--error {
-  border: 1px solid #fecaca;
-  border-left: 5px solid var(--cp-danger);
-  background: #fef2f2;
-  color: var(--cp-danger);
-}
-
-.client-portal-wrapper .portal-message--info {
-  border: 1px solid rgba(48, 105, 152, 0.28);
-  border-left: 5px solid var(--cp-primary);
-  background: rgba(219, 234, 254, 0.72);
-  color: #1e4f78;
-}
-
-.client-portal-wrapper .portal-message--success {
-  border: 1px solid rgba(1, 149, 60, 0.32);
-  border-left: 5px solid var(--cp-success, #3d8a47);
-  background: rgba(220, 252, 231, 0.72);
-  color: #25652d;
-}
-
-.portal-recovery-card {
-  display: grid;
-  gap: 0.85rem;
-  margin: 1.25rem 0 1.5rem;
-  padding: 1.2rem;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-card);
-  background: var(--cp-surface);
-}
-
-.portal-recovery-card h2,
-.portal-recovery-card p {
-  margin: 0;
-}
-
-.portal-recovery-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 0.65rem;
-  align-items: end;
-}
-
-.portal-recovery-form label {
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.portal-recovery-form input,
-.portal-recovery-form button {
-  min-height: 2.9rem;
-  border-radius: 0.8rem;
-  font: inherit;
-}
-
-.portal-recovery-form input {
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--cp-border);
-  background: var(--cp-surface);
-  color: var(--cp-text-main);
-}
-
-/* --cp-primary sirve para TEXTO y BORDE (sigue al tema, y así debe ser), pero
-   como FONDO sólido con texto blanco se rompe: en oscuro vale #aabcd5 y el
-   blanco encima daba 1.93:1. Los fondos sólidos van con el par navy. */
-.portal-recovery-form button {
-  padding: 0.7rem 1rem;
-  border: 0;
-  background: var(--navy-solid-bg);
-  color: var(--navy-solid-ink);
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.portal-recovery-form label:nth-of-type(1) { grid-column: 1; }
-.portal-recovery-form label:nth-of-type(2) { grid-column: 2; }
-.portal-recovery-form input:nth-of-type(1) { grid-column: 1; }
-.portal-recovery-form input:nth-of-type(2) { grid-column: 2; }
-
-.portal-recovery-status {
-  color: var(--cp-primary);
-  font-weight: 700;
-}
-
-@media (max-width: 720px) {
-  .portal-recovery-form {
-    grid-template-columns: 1fr;
-  }
-
-  .portal-recovery-form label,
-  .portal-recovery-form input,
-  .portal-recovery-form button {
-    grid-column: 1 !important;
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   10. Empty state
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  color: var(--cp-text-muted);
-}
-
-/* ---------------------------------------------------------------------------
-   11. Ticket grid + wrapper animation
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .tickets-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.ticket-wrapper {
-  transition: opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease,
-    margin-bottom 0.5s ease;
-  opacity: 1;
-  max-height: 800px;
-  overflow: hidden;
-  transform: translateX(0);
-}
-
-.ticket-wrapper.fade-out-exit {
-  opacity: 0;
-  transform: translateX(80px);
-  max-height: 0;
-  margin-bottom: -1.5rem;
-}
-
-.portal-history-section { margin-top: 1.5rem; display: grid; gap: 0.75rem; }
-.portal-history-toggle { background: none; border: 1px dashed rgba(0, 33, 76, 0.3); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; transition: background 0.18s; width: 100%; text-align: center; }
-.portal-history-toggle:hover { background: rgba(0, 33, 76, 0.04); }
-.ticket-wrapper--history { opacity: 0.7; }
-.ticket-wrapper--history:hover { opacity: 1; transition: opacity 0.2s; }
-.tickets-grid--history { margin-top: 0.5rem; }
-[data-theme="dark"] .portal-history-toggle { border-color: rgba(148, 163, 184, 0.25); color: var(--brand-gray-400); }
-[data-theme="dark"] .portal-history-toggle:hover { background: rgba(255,255,255,0.04); }
-
-/* ---------------------------------------------------------------------------
-   12. Ticket card
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .ticket-card {
-  border-radius: var(--cp-radius-card);
-  border: 1px solid var(--cp-border);
-  background: var(--cp-surface);
-  box-shadow: var(--cp-shadow);
-  overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.client-portal-wrapper .ticket-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.19);
-}
-
-/* Status accent stripe */
-.client-portal-wrapper .ticket-card.Confirmado {
-  border-top: 4px solid var(--cp-accent);
-}
-.client-portal-wrapper .ticket-card.Pendiente {
-  border-top: 4px solid var(--cp-warning);
-}
-.client-portal-wrapper .ticket-card.Cancelado {
-  border-top: 4px solid var(--cp-danger);
-  opacity: 0.92;
-}
-
-/* Card header */
-.client-portal-wrapper .ticket-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.9rem 1.25rem;
-  background: rgba(248, 251, 253, 0.9);
-  border-bottom: 1px solid var(--cp-border);
-}
-
-/* Ticket code chip */
-.client-portal-wrapper .ticket-code {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--cp-text-muted);
-  background: rgba(226, 232, 240, 0.8);
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-
-/* Hash icon inside ticket code */
-.client-portal-wrapper .ticket-code-icon {
-  font-size: 0.8em;
-  margin-right: 4px;
-}
-
-/* Status badge */
-.client-portal-wrapper .status-badge {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  border-radius: 999px;
-}
-
-.client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(1, 149, 60, 0.14);
-  color: #2d6b34;
-}
-.client-portal-wrapper .status-badge.Pendiente {
-  background: rgba(208, 138, 46, 0.16);
-  color: #7c4e0d;
-}
-.client-portal-wrapper .status-badge.Cancelado {
-  background: rgba(207, 79, 79, 0.14);
-  color: #8b2020;
-}
-
-/* Card body */
-.client-portal-wrapper .ticket-body {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 2rem;
-  padding: 1.5rem 1.25rem;
-}
-
-.client-portal-wrapper .info-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.client-portal-wrapper .info-block {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.client-portal-wrapper .label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--cp-text-muted);
-}
-
-.client-portal-wrapper .value-primary {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .value-secondary {
-  font-size: 0.95rem;
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .highlight-name {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .date-highlight {
-  font-size: 1.1rem;
-  text-transform: capitalize;
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .time-highlight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--cp-text-muted);
-  font-weight: 500;
-}
-
-.client-portal-wrapper .duration-badge {
-  display: inline-block;
-  background: rgba(1, 149, 60, 0.1);
-  color: var(--cp-accent);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.client-portal-wrapper .value-tertiary {
-  font-size: 0.95rem;
-  color: var(--cp-text-main);
-  background: rgba(241, 245, 249, 0.9);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border-left: 3px solid var(--cp-accent);
-}
-
-/* Contact block */
-.client-portal-wrapper .contact-signature {
-  margin-top: auto;
-  padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px dashed var(--cp-border);
-  background: var(--cp-surface);
-}
-
-.client-portal-wrapper .contact-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.client-portal-wrapper .contact-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--cp-text-main);
-}
-
-.client-portal-wrapper .contact-item.missing {
-  color: var(--cp-text-faint);
-  font-style: italic;
-}
-
-.client-portal-wrapper .student-contact-mini {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 6px;
-}
-
-.client-portal-wrapper .student-contact-mini span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.84rem;
-  color: var(--cp-text-muted);
-}
-
-/* Card footer */
-.client-portal-wrapper .ticket-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.9rem 1.25rem;
-  border-top: 1px solid var(--cp-border);
-  background: rgba(248, 251, 253, 0.9);
-}
-
-/* Action buttons */
-.client-portal-wrapper .btn-action {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0.6rem 1rem;
-  border-radius: var(--cp-radius-btn);
-  border: 1px solid transparent;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
   font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color 0.18s ease;
 }
+.pt-gate-help:hover,
+.pt-help:hover { border-color: var(--accent-primary); }
+.pt-gate-help svg,
+.pt-help svg { color: var(--accent-ink); font-size: 1.05rem; }
+.pt-gate-help strong,
+.pt-help strong { color: var(--text-primary); }
 
-/* Reschedule = brand navy outline */
-.client-portal-wrapper .btn-reschedule {
-  background: var(--cp-surface);
-  border-color: var(--cp-primary);
-  color: var(--cp-primary);
-}
-.client-portal-wrapper .btn-reschedule:hover {
-  background: var(--navy-solid-bg);
-  color: var(--navy-solid-ink);
-}
+/* ── Cabecera del portal ─────────────────────────────────────────────────── */
+.pt-main { max-width: 60rem; margin: 0 auto; }
 
-/* Cancel = red outline */
-.client-portal-wrapper .btn-cancel {
-  background: rgba(207, 79, 79, 0.06);
-  border-color: rgba(207, 79, 79, 0.35);
-  color: var(--cp-danger);
-}
-.client-portal-wrapper .btn-cancel:hover {
-  background: var(--cp-danger);
-  border-color: var(--cp-danger);
-  color: var(--brand-white);
-}
-
-/* Confirm attendance = green outline */
-.client-portal-wrapper .btn-confirm-attendance {
-  background: rgba(1, 149, 60, 0.06);
-  border-color: rgba(1, 149, 60, 0.4);
-  color: var(--cp-success, #3d8a47);
-}
-.client-portal-wrapper .btn-confirm-attendance:hover {
-  background: var(--cp-success, #3d8a47);
-  border-color: var(--cp-success, #3d8a47);
-  color: var(--brand-white);
-}
-
-/* Delete = gray/dark */
-.client-portal-wrapper .btn-delete-forever {
-  background: var(--cp-text-faint);
-  border-color: var(--cp-text-faint);
-  color: var(--brand-white);
-}
-.client-portal-wrapper .btn-delete-forever:hover {
-  background: var(--brand-gray-600);
-  border-color: var(--brand-gray-600);
-}
-
-/* Cancelled note in footer */
-.client-portal-wrapper .cancelled-note {
-  margin-right: auto;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(207, 79, 79, 0.25);
-  background: rgba(207, 79, 79, 0.06);
-  color: #8b2020;
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-/* ---------------------------------------------------------------------------
-   13. Toast notification
-   --------------------------------------------------------------------------- */
-.portal-toast {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 9999;
+.pt-head {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
-  max-width: min(400px, calc(100vw - 2rem));
-  padding: 1rem 1.1rem;
-  border-radius: var(--cp-radius-card);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(255, 255, 255, 0.97);
-  color: var(--cp-text-main);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-  backdrop-filter: blur(12px);
-  animation: toastSlideIn 0.35s ease-out both;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-@keyframes toastSlideIn {
-  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+.pt-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
 }
 
-.portal-toast-icon {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  flex-shrink: 0;
-  font-size: 1rem;
+.pt-titulo {
+  margin: 0;
+  font-family: var(--ui-font-display, Georgia, serif);
+  font-optical-sizing: auto;
+  font-size: clamp(1.7rem, 4.5vw, 2.4rem);
+  font-weight: 560;
+  letter-spacing: -0.022em;
+  line-height: 1.08;
+  color: var(--text-primary);
 }
 
-.portal-toast-copy {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.2rem;
+.pt-head-sub {
+  margin: 0.45rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
 }
 
-.portal-toast-copy strong {
-  font-size: 0.93rem;
-  color: var(--cp-text-main);
-}
-
-.portal-toast-copy span,
-.portal-toast-copy small {
-  font-size: 0.84rem;
-  color: var(--cp-text-muted);
-  line-height: 1.5;
-}
-
-/* Toast variants */
-.portal-toast.success { border-color: rgba(1, 149, 60, 0.22); }
-.portal-toast.success .portal-toast-icon { background: rgba(1, 149, 60, 0.1); color: #2d6b34; }
-
-.portal-toast.warning { border-color: rgba(208, 138, 46, 0.24); }
-.portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.12); color: #7c4e0d; }
-
-.portal-toast.error { border-color: rgba(207, 79, 79, 0.22); }
-.portal-toast.error .portal-toast-icon { background: rgba(207, 79, 79, 0.1); color: #8b2020; }
-
-.portal-toast.info { border-color: rgba(0, 33, 76, 0.18); }
-.portal-toast.info .portal-toast-icon { background: rgba(0, 33, 76, 0.08); color: var(--brand-navy); }
-
-/* ---------------------------------------------------------------------------
-   15. Focus-visible outlines (accessibility)
-   --------------------------------------------------------------------------- */
-.client-portal-wrapper .search-input:focus-visible,
-.client-portal-wrapper .btn-search:focus-visible,
-.client-portal-wrapper .btn-action:focus-visible {
-  outline: 3px solid rgba(1, 149, 60, 0.4);
-  outline-offset: 2px;
-}
-
-/* ---------------------------------------------------------------------------
-   16. Dark mode
-   --------------------------------------------------------------------------- */
-[data-theme="dark"] .client-portal-wrapper {
-  --cp-surface:    var(--surface-card, #0f172a);
-  --cp-border:     var(--border-soft, rgba(148, 163, 184, 0.2));
-  --cp-text-main:  var(--text-primary,  #edf4fb);
-  --cp-text-muted: var(--text-secondary,#94a3b8);
-  --cp-text-faint: var(--text-tertiary, #64748b);
-  --cp-bg:         var(--bg-page, #07111f);
-  --cp-shadow:     0 4px 24px rgba(0, 0, 0, 0.28);
-}
-
-/* Header */
-[data-theme="dark"] .client-portal-wrapper .portal-header {
-  background: var(--color-surface-1);
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-header-logo {
-  background: rgba(216, 238, 220, 0.88) !important;
-  border-color: rgba(136, 206, 147, 0.25) !important;
-  box-shadow: none !important;
-  filter: none;
-}
-
-/* Search */
-[data-theme="dark"] .client-portal-wrapper .search-container {
-  background: var(--color-surface-1);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-input {
-  background: var(--color-surface-2);
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .btn-search {
-  background: var(--brand-navy);
-}
-[data-theme="dark"] .client-portal-wrapper .btn-search:hover {
-  background: #001636;
-}
-
-/* Results summary */
-[data-theme="dark"] .client-portal-wrapper .portal-results-summary {
-  background: rgba(1, 149, 60, 0.12);
-  border-color: rgba(136, 206, 147, 0.24);
-  color: #9ad2a1;
-}
-
-/* Error */
-[data-theme="dark"] .client-portal-wrapper .portal-message--error {
-  background: rgba(207, 79, 79, 0.1);
-  border-color: rgba(207, 79, 79, 0.3);
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-message--info {
-  background: rgba(48, 105, 152, 0.18);
-  border-color: rgba(171, 195, 217, 0.3);
-  color: #b8d8f0;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-message--success {
-  background: rgba(1, 149, 60, 0.16);
-  border-color: rgba(136, 206, 147, 0.3);
-  color: #a8dbae;
-}
-
-/* Ticket card */
-[data-theme="dark"] .client-portal-wrapper .ticket-card {
-  background: rgba(14, 27, 44, 0.96);
-  border-color: rgba(148, 163, 184, 0.14);
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-header,
-[data-theme="dark"] .client-portal-wrapper .ticket-footer {
-  background: rgba(17, 32, 50, 0.96);
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-code {
-  background: rgba(17, 32, 50, 0.96);
-  border-color: rgba(148, 163, 184, 0.12);
-  color: var(--brand-gray-400);
-}
-
-[data-theme="dark"] .client-portal-wrapper .status-badge.Confirmado {
-  background: rgba(136, 206, 147, 0.16);
-  color: #9ad2a1;
-}
-[data-theme="dark"] .client-portal-wrapper .status-badge.Pendiente {
-  background: rgba(208, 138, 46, 0.18);
-  color: #f0c27e;
-}
-[data-theme="dark"] .client-portal-wrapper .status-badge.Cancelado {
-  background: rgba(207, 79, 79, 0.16);
-  color: var(--color-error-deep);
-}
-
-[data-theme="dark"] .client-portal-wrapper .value-tertiary {
-  background: rgba(17, 32, 50, 0.9);
-}
-
-[data-theme="dark"] .client-portal-wrapper .contact-signature {
-  background: rgba(17, 32, 50, 0.8);
-  border-color: rgba(148, 163, 184, 0.16);
-}
-
-/* Buttons */
-[data-theme="dark"] .client-portal-wrapper .btn-reschedule {
-  background: transparent;
-  border-color: rgba(171, 195, 217, 0.4);
-  color: #edf4fb;
-}
-[data-theme="dark"] .client-portal-wrapper .btn-reschedule:hover {
-  background: rgba(0, 33, 76, 0.5);
-  border-color: rgba(171, 195, 217, 0.6);
-}
-
-[data-theme="dark"] .client-portal-wrapper .cancelled-note {
-  background: rgba(207, 79, 79, 0.1);
-  border-color: rgba(207, 79, 79, 0.22);
-  color: var(--color-error-deep);
-}
-
-/* Toast */
-[data-theme="dark"] .portal-toast {
-  background: rgba(14, 27, 44, 0.97);
-  border-color: rgba(148, 163, 184, 0.2);
-}
-[data-theme="dark"] .portal-toast-copy strong { color: #edf4fb; }
-[data-theme="dark"] .portal-toast.success .portal-toast-icon { background: rgba(1, 149, 60, 0.16); color: #9ad2a1; }
-[data-theme="dark"] .portal-toast.warning .portal-toast-icon { background: rgba(208, 138, 46, 0.16); color: #fcd34d; }
-[data-theme="dark"] .portal-toast.error   .portal-toast-icon { background: rgba(207, 79, 79, 0.16); color: var(--color-error-deep); }
-[data-theme="dark"] .portal-toast.info    .portal-toast-icon { background: rgba(0, 33, 76, 0.18); color: var(--color-info-deep); }
-
-/* Support strip */
-[data-theme="dark"] .client-portal-wrapper .portal-support-card {
-  background: rgba(14, 27, 44, 0.96);
-  border-color: rgba(148, 163, 184, 0.14);
-}
-
-/* ---------------------------------------------------------------------------
-   17. WhatsApp CTA pill
-   --------------------------------------------------------------------------- */
-.portal-help-line {
+.pt-salir {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 1.5rem auto 0;
-  padding: 0.65rem 1.25rem;
-  border-radius: 9999px;
-  background: rgba(37, 211, 102, 0.08);
-  border: 1px solid rgba(37, 211, 102, 0.2);
-  color: #166534;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.portal-help-line svg {
-  font-size: 1.1rem;
-  color: #25d366;
+  gap: 0.4rem;
   flex-shrink: 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
 }
+.pt-salir:hover { border-color: var(--error-color); color: var(--error-color); }
+.pt-salir:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
-.portal-help-line strong {
+.pt-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 1.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  background: var(--state-hover-bg);
+  font-size: 0.9rem;
   font-weight: 600;
-  color: inherit;
+  color: var(--text-primary);
+}
+.pt-aviso svg { color: var(--accent-ink); flex-shrink: 0; }
+
+.pt-seccion {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 2rem 0 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.pt-seccion-cuenta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-secondary);
 }
 
-.portal-help-line:hover {
-  background: rgba(37, 211, 102, 0.14);
-  border-color: rgba(37, 211, 102, 0.35);
-  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.19);
+.pt-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.85rem; }
+
+/* ── Tarjeta de turno ────────────────────────────────────────────────────── */
+.pt-turno {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: border-color 0.18s ease;
+}
+.pt-turno:hover { border-color: var(--accent-primary); }
+/* Los que ya pasaron o se cancelaron bajan un escalón, pero NO se atenúan con
+   opacity: el texto tiene que seguir siendo legible, es historial que se
+   consulta. La jerarquía la da la superficie, no el borrado. */
+.pt-turno.is-pasado,
+.pt-turno.is-cancelado { background: var(--bg-page); }
+
+.pt-turno-main {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.9rem, 2.5vw, 1.4rem);
+  padding: clamp(1rem, 3vw, 1.4rem);
+}
+
+/* Bloque de fecha: el número grande es lo primero que se busca. */
+.pt-turno-fecha {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 58px;
+  padding: 0.55rem 0;
+  border-radius: var(--radius-md);
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
+  line-height: 1;
+}
+.pt-turno-dia { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pt-turno-mes {
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pt-turno.is-cancelado .pt-turno-fecha {
+  background: var(--surface-3, var(--bg-page));
+  color: var(--text-secondary);
+}
+
+.pt-turno-cuerpo { flex: 1; min-width: 0; }
+
+.pt-turno-linea {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.pt-turno-materia {
+  margin: 0;
+  font-family: var(--ui-font-display, Georgia, serif);
+  font-optical-sizing: auto;
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem);
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.pt-chip {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pt-chip.is-confirmado { background: var(--state-hover-bg); color: var(--accent-ink); }
+.pt-chip.is-pasado { background: var(--state-selected-bg); color: var(--text-secondary); }
+.pt-chip.is-cancelado { background: var(--color-error-bg); color: var(--error-color); }
+.pt-chip.is-actual {
+  background: none;
+  border: 1px dashed var(--border-color);
+  color: var(--text-tertiary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pt-turno-cuando {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+}
+.pt-turno-cuando svg { color: var(--accent-ink); font-size: 0.82rem; flex-shrink: 0; }
+/* Sólo la inicial: `capitalize` ponía "Lunes 3 De Agosto De 2026", con las
+   preposiciones en mayúscula. En castellano el mes tampoco lleva mayúscula. */
+.pt-turno-cuando-txt::first-letter { text-transform: uppercase; }
+.pt-turno-sep { color: var(--text-tertiary); }
+.pt-turno-falta {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--state-hover-bg);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--accent-ink);
+}
+
+/* --text-secondary y no --tertiary: modalidad, nivel y código son datos que se
+   leen, no decoración. Y tertiary está calibrado contra blanco puro (4.79:1);
+   sobre la superficie gris de la tarjeta cae a 4.46 y no llega. */
+.pt-turno-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.pt-turno-meta svg { font-size: 0.76rem; margin-right: 0.2rem; }
+.pt-turno-codigo { font-family: var(--font-mono, monospace); letter-spacing: 0.04em; }
+
+.pt-turno-acciones { display: grid; gap: 0.45rem; flex-shrink: 0; }
+
+.pt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-base);
+  border: 1.5px solid transparent;
+  background: none;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
   text-decoration: none;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.pt-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.pt-btn--reprogramar {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+.pt-btn--reprogramar:hover {
+  border-color: var(--accent-primary);
+  background: var(--state-hover-bg);
+}
+.pt-btn--cancelar { color: var(--error-color); }
+.pt-btn--cancelar:hover { background: var(--color-error-bg); }
+
+.pt-btn--reservar {
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  padding: 0.8rem 1.3rem;
+}
+.pt-btn--reservar:hover { background: var(--cta-solid-bg-hover); }
+
+/* ── Detalle plegable ────────────────────────────────────────────────────── */
+.pt-turno-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.65rem clamp(1rem, 3vw, 1.4rem);
+  border: none;
+  border-top: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+.pt-turno-toggle:hover { background: var(--state-hover-bg); color: var(--text-primary); }
+.pt-turno-toggle:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.pt-turno-toggle svg { transition: transform 0.22s ease; font-size: 0.7rem; }
+.pt-turno-toggle svg.is-abierto { transform: rotate(180deg); }
+
+.pt-turno-detalle {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.9rem clamp(1rem, 3vw, 2rem);
+  margin: 0;
+  padding: 0 clamp(1rem, 3vw, 1.4rem) 1.2rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+.pt-turno-detalle-full { grid-column: 1 / -1; }
+.pt-turno-detalle dt {
+  margin-bottom: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.pt-turno-detalle dd {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-primary);
 }
 
-[data-theme="dark"] .portal-help-line {
-  background: rgba(37, 211, 102, 0.07);
-  border-color: rgba(37, 211, 102, 0.18);
-  color: #4ade80;
+/* ── Vacío ───────────────────────────────────────────────────────────────── */
+.pt-vacio {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  padding: clamp(2.5rem, 8vw, 4rem) 1.5rem;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
 }
+.pt-vacio svg { font-size: 2rem; color: var(--text-tertiary); }
+.pt-vacio p { margin: 0; font-size: 1rem; color: var(--text-secondary); }
 
-[data-theme="dark"] .portal-help-line svg {
-  color: #34d399;
-}
+.pt-help { margin-top: 2.5rem; }
 
-[data-theme="dark"] .portal-help-line:hover {
-  background: rgba(37, 211, 102, 0.12);
-  border-color: rgba(37, 211, 102, 0.3);
-  box-shadow: 0 0 0 1px rgba(37, 211, 102, 0.16);
-}
-
-/* ---------------------------------------------------------------------------
-   18. Responsive — 768px
-   --------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  .client-portal-wrapper {
-    padding-top: calc(80px + 1.25rem);
-  }
-
-  .client-portal-wrapper .ticket-body {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .client-portal-wrapper .ticket-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .client-portal-wrapper .ticket-footer {
-    flex-direction: column;
-  }
-
-  .client-portal-wrapper .btn-action {
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .pt-turno-main { flex-wrap: wrap; }
+  /* Los botones pasan a ocupar el ancho: en el pulgar, un target angosto al
+     borde de la tarjeta es el que más se falla. */
+  .pt-turno-acciones {
+    grid-template-columns: 1fr 1fr;
     width: 100%;
-    justify-content: center;
+    order: 3;
   }
-
-  .client-portal-wrapper .cancelled-note {
-    margin-right: 0;
-    width: 100%;
-  }
+  .pt-head { flex-direction: column; }
+  .pt-turno-fecha { width: 50px; }
 }
 
-/* ---------------------------------------------------------------------------
-   18. Responsive — 480px
-   --------------------------------------------------------------------------- */
-@media (max-width: 480px) {
-  .client-portal-wrapper {
-    padding: calc(72px + 1rem) 0.85rem 2rem;
-  }
-
-  .client-portal-wrapper .portal-header {
-    border-radius: 16px;
-    padding: 1.5rem 1rem;
-  }
-
-  .client-portal-wrapper .search-container {
-    flex-direction: column;
-    border-radius: 12px;
-  }
-
-  .client-portal-wrapper .btn-search {
-    width: 100%;
-    min-height: 48px;
-  }
-
-  .portal-toast {
-    top: auto;
-    bottom: 1rem;
-    right: 0.75rem;
-    left: 0.75rem;
-    max-width: none;
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   19. Reduced motion
-   --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .client-portal-wrapper *,
-  .ticket-wrapper,
-  .portal-toast {
-    animation: none !important;
-    transition: none !important;
-  }
+  .pt-gate-btn,
+  .pt-btn,
+  .pt-turno,
+  .pt-turno-toggle,
+  .pt-turno-toggle svg,
+  .pt-salir { transition: none; }
+  .pt-gate-btn:hover:not(:disabled) { transform: none; }
 }

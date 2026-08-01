@@ -197,7 +197,11 @@
      y medía 4.34:1 en 18 lugares del paso 3. Este tono da 4.79:1 y sigue
      leyéndose por debajo de --text-secondary (7.15:1): la jerarquía se
      mantiene, la lectura deja de estar al límite. */
-  --text-tertiary:      #5a7498;   /*  4.79:1 */
+  --text-tertiary:      #5a7498;   /*  4.79:1 sobre BLANCO */
+  /* Ojo con el margen: 4.79:1 está medido contra #ffffff. Sobre --bg-page
+     (#f6f7f8) baja a 4.46 y sobre una superficie gris (#e9ebed) a 4.01, o sea
+     reprueba. Si el texto va sobre algo que no sea la tarjeta blanca, usar
+     --text-secondary (5.98:1 incluso sobre el gris más oscuro). */
   --text-on-accent:     #ffffff;
 
   --border-subtle:      rgba(0, 33, 76, 0.06);
@@ -357,6 +361,14 @@
      el fondo lo pone el tema. Un verde fijo no sirve: #006d1f se lee 6.55:1
      sobre blanco pero cae a 2.65:1 sobre una superficie oscura. */
   --accent-ink:          var(--brand-green-600);   /* #006d1f — 6.55:1 */
+
+  /* Tercer par, para el botón destructivo (cancelar un turno). Mismo problema
+     que los otros dos: --error-color se aclara a #fca5a5 en tema oscuro y el
+     blanco encima daba 2.77:1 justo en el botón que confirma una acción que no
+     se puede deshacer. */
+  --danger-solid-bg:       #b91c1c;   /* 6.47:1 con blanco */
+  --danger-solid-bg-hover: #991b1b;   /* 8.31:1 */
+  --danger-solid-ink:      #ffffff;
 
   /* ── Booking form local tokens ──────────────────────────────────────── */
   --bg-page:            #f6f7f8;
@@ -563,6 +575,13 @@
 
   /* Verde de texto, aclarado para leerse sobre las superficies oscuras. */
   --accent-ink:          var(--brand-green-300);   /* #88ce93 */
+
+  /* El destructivo se invierte como los otros: rojo claro con tinta oscura.
+     El hover se ACLARA en vez de oscurecerse, para que se note el cambio sin
+     perder el contraste con la tinta. */
+  --danger-solid-bg:       #fca5a5;
+  --danger-solid-bg-hover: #fecaca;   /* 10.6:1 con la tinta */
+  --danger-solid-ink:      #450a0a;   /* 8.51:1 */
 
   /* ── Booking form local tokens (dark) ────────────────────────────────── */
   --bg-page:          #08111d;
