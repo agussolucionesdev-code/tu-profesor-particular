@@ -346,8 +346,34 @@
   font-weight: 700;
 }
 
+/* ── Perforado ────────────────────────────────────────────────────────────
+   El corte que vuelve "comprobante" a la tarjeta: dos muescas laterales del
+   color del fondo y una línea punteada entre medio. Las muescas usan el color
+   del overlay, así que el recorte se lee igual en claro y en oscuro. */
+.success-perf {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 22px;
+}
+.success-perf-line {
+  flex: 1;
+  border-top: 2px dashed var(--border-soft, rgba(0, 33, 76, 0.14));
+  margin: 0 14px;
+}
+.success-perf-notch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-page, #f6f7f8);
+  box-shadow: inset 0 0 0 1px rgba(0, 33, 76, 0.06);
+  flex-shrink: 0;
+}
+.success-perf-notch--left { margin-left: -11px; }
+.success-perf-notch--right { margin-right: -11px; }
+
 .success-code-section {
-  padding: 1.5rem;
+  padding: 0.5rem 1.5rem 1.5rem;
   text-align: center;
   border-bottom: 1px solid var(--border-soft, rgba(0, 33, 76, 0.08));
 }
@@ -360,37 +386,74 @@
   color: var(--text-tertiary, #8a9bb0);
 }
 
+/* Monoespaciado y tabular: un código se lee carácter por carácter, y así el
+   0 no se confunde con la O. --text-primary en vez de --brand-navy fijo, que
+   sobre la superficie oscura quedaba casi invisible. */
 .success-code-value {
-  font-size: 2.5rem;
-  letter-spacing: 0.2em;
-  font-weight: 900;
-  color: var(--brand-navy, #00214c);
-  margin: 0.5rem 0;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas,
+    monospace;
+  font-size: clamp(2.1rem, 8vw, 2.9rem);
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #00214c);
+  margin: 0.35rem 0 0.6rem;
+  /* El tracking agrega aire a la derecha: se compensa para que quede centrado */
+  text-indent: 0.18em;
 }
 
 .success-code-hint {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
   color: var(--text-secondary, #5a6b7d);
-  margin: 0 0 1rem;
+  margin: 0 auto 1rem;
+  max-width: 34ch;
+}
+.success-code-hint strong { color: var(--text-primary, #00214c); }
+
+.success-code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.success-code-alt {
+  margin: 0.75rem auto 0;
+  max-width: 36ch;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text-tertiary, #8a9bb0);
 }
 
 .success-copy-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.05rem;
   border-radius: 10px;
-  border: 1.5px solid var(--brand-navy, #00214c);
+  border: 1.5px solid var(--border-color, rgba(0, 33, 76, 0.2));
   background: transparent;
-  color: var(--brand-navy, #00214c);
+  color: var(--text-primary, #00214c);
+  font-family: inherit;
   font-weight: 700;
   font-size: 0.82rem;
   cursor: pointer;
-  transition: all 200ms ease;
+  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
 }
 .success-copy-btn:hover {
-  background: var(--brand-navy, #00214c);
-  color: var(--brand-white, #fff);
+  border-color: var(--brand-green, #01953c);
+  background: var(--state-hover-bg);
+  color: var(--accent-primary, #01953c);
+}
+.success-copy-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+/* El enlace directo es la alternativa, no la acción principal. */
+.success-copy-btn--ghost {
+  border-style: dashed;
+  color: var(--text-secondary, #5a6b7d);
 }
 
 .success-details {
@@ -569,8 +632,13 @@
   background: var(--surface-card, #0d1a29);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
 }
+/* El header es una banda oscura con texto blanco en los DOS temas: es el
+   "techo" del comprobante. No puede usar --brand-navy-deep, que se invierte a
+   #ccd9eb (celeste claro) en oscuro y dejaba el título en 1.43:1 — casi
+   invisible. Se fija un navy propio, más profundo que la superficie del modal
+   para que el corte se siga leyendo. */
 [data-theme="dark"] .success-header {
-  background: var(--brand-navy-deep);
+  background: #0d1a29;
 }
 [data-theme="dark"] .success-code-value {
   color: #edf4fb;
@@ -1404,10 +1472,6 @@
 }
 
 .success-main-column,
-.success-side-column {
-  display: grid;
-  gap: 1rem;
-}
 
 .success-hero-band {
   position: relative;
@@ -1529,18 +1593,6 @@
   padding: 1.2rem 1.25rem 1.35rem;
 }
 
-.success-code-panel-prominent {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
-  gap: 1rem;
-  align-items: center;
-  padding: 1.1rem 1.15rem;
-  border-radius: 28px;
-  border: 1px solid rgba(1, 149, 60, 0.18);
-  background:
-    rgba(237, 246, 238, 0.97);
-  box-shadow: 0 0 0 1px rgba(74, 132, 82, 0.16);
-}
 
 .success-code-copy {
   width: 100%;
@@ -1613,58 +1665,16 @@
   gap: 0.8rem;
 }
 
-.success-summary-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 124px;
-  gap: 0.55rem;
-  padding: 1rem 1.05rem;
-  border-radius: 22px;
-  border: 1px solid rgba(0, 33, 76, 0.08);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
-}
 
-.success-summary-card span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-text-soft);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
-.success-summary-card strong {
-  color: var(--color-text-main);
-  font-size: 1.05rem;
-  line-height: 1.42;
-}
 
 .summary-card-spotlight {
   background:
     rgba(237, 243, 247, 0.95);
 }
 
-.success-side-column {
-  align-content: start;
-  padding: 1.2rem;
-  border-left: 1px solid rgba(0, 33, 76, 0.08);
-  background: rgba(248, 251, 253, 0.96);
-}
 
 .success-next-steps-card,
-.success-management-card {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
-  border-radius: 26px;
-  border: 1px solid rgba(0, 33, 76, 0.08);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
-}
 
 .success-management-head {
   display: flex;
@@ -1741,48 +1751,14 @@
   gap: 0.7rem;
 }
 
-.success-management-pill {
-  padding: 0.95rem 1rem;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 33, 76, 0.08);
-  background: rgba(248, 251, 253, 0.96);
-}
 
-.success-management-pill span {
-  color: var(--color-text-soft);
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
-.success-management-pill strong {
-  display: block;
-  margin: 0.3rem 0 0.2rem;
-  color: var(--color-text-main);
-  font-size: 1rem;
-  line-height: 1.4;
-  word-break: break-word;
-}
 
-.success-management-pill small {
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
 
 .delivery-alert {
   border-radius: 24px;
 }
 
-.success-modal-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.2rem 1.2rem;
-  border-top: 1px solid rgba(0, 33, 76, 0.08);
-  background: rgba(255, 255, 255, 0.96);
-}
 
 .btn-portal-primary {
   min-height: 56px;
@@ -1852,13 +1828,7 @@
 [data-theme="dark"] .booking-summary-card-expanded,
 [data-theme="dark"] .summary-detail-card,
 [data-theme="dark"] .summary-management-mini-card,
-[data-theme="dark"] .success-summary-card,
 [data-theme="dark"] .success-next-steps-card,
-[data-theme="dark"] .success-management-card,
-[data-theme="dark"] .success-management-pill,
-[data-theme="dark"] .success-side-column,
-[data-theme="dark"] .success-modal-actions,
-[data-theme="dark"] .success-code-panel-prominent,
 [data-theme="dark"] .success-modal-card-wide {
   border-color: rgba(204, 217, 235, 0.14);
   background-color: rgba(13, 26, 41, 0.96);
@@ -1883,10 +1853,8 @@
 [data-theme="dark"] .summary-detail-card strong,
 [data-theme="dark"] .summary-management-copy h5,
 [data-theme="dark"] .summary-management-mini-card em,
-[data-theme="dark"] .success-summary-card strong,
 [data-theme="dark"] .success-management-head strong,
 [data-theme="dark"] .success-step-item strong,
-[data-theme="dark"] .success-management-pill strong,
 [data-theme="dark"] .btn-close-text:hover,
 [data-theme="dark"] .btn-close-text:focus-visible {
   color: #edf4fb;
@@ -1905,7 +1873,6 @@
 [data-theme="dark"] .success-code-helper,
 [data-theme="dark"] .success-management-head p,
 [data-theme="dark"] .success-step-item p,
-[data-theme="dark"] .success-management-pill small,
 [data-theme="dark"] .btn-close-text {
   color: var(--color-text-muted);
 }
@@ -1932,10 +1899,6 @@
 [data-theme="dark"] .summary-section-heading span,
 [data-theme="dark"] .summary-detail-card span,
 [data-theme="dark"] .summary-management-mini-card strong,
-[data-theme="dark"] .success-summary-card span,
-[data-theme="dark"] .success-management-pill span {
-  color: var(--color-text-soft);
-}
 
 [data-theme="dark"] .duration-limit-badge,
 [data-theme="dark"] .summary-duration-badge {
@@ -2017,10 +1980,6 @@
     grid-template-columns: 1fr;
   }
 
-  .success-side-column {
-    border-left: none;
-    border-top: 1px solid rgba(0, 33, 76, 0.08);
-  }
 }
 
 @media (max-width: 920px) {
@@ -2039,9 +1998,6 @@
     grid-column: auto;
   }
 
-  .success-code-panel-prominent {
-    grid-template-columns: 1fr;
-  }
 
   .success-code-actions {
     justify-items: stretch;
@@ -2080,11 +2036,6 @@
   .duration-selector-header,
   .duration-footer,
   .success-hero-topline,
-  .success-modal-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
 
   .summary-section-heading p {
     max-width: none;
@@ -2118,10 +2069,6 @@
   .booking-summary-card-expanded,
   .summary-management-note-rich,
   .success-modal-body,
-  .success-side-column,
-  .success-modal-actions {
-    padding: 1rem;
-  }
 
   .success-hero-band {
     padding: 1.15rem 1rem 1rem;
@@ -2360,13 +2307,8 @@
   object-fit: contain;
 }
 
-.success-side-column {
-  background:
-    rgba(255, 255, 255, 0.96);
-}
 
 .success-next-steps-card,
-.success-management-card,
 .delivery-alert {
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
 }
@@ -2375,39 +2317,15 @@
   min-height: 92px;
 }
 
-.success-code-panel-prominent {
-  border-radius: 30px;
-  background:
-    rgba(249, 252, 249, 0.98);
-}
 
-.success-code-panel-prominent h3 {
-  letter-spacing: 0.32em;
-}
 
-.success-modal-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 4;
-  border-top: 1px solid rgba(0, 33, 76, 0.1);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(18px);
-}
 
 [data-theme="dark"] .success-modal-shell {
   background:
     rgba(13, 26, 41, 0.98);
 }
 
-[data-theme="dark"] .success-side-column {
-  background:
-    rgba(17, 32, 50, 0.96);
-}
 
-[data-theme="dark"] .success-modal-actions {
-  border-top-color: rgba(204, 217, 235, 0.14);
-  background: rgba(13, 26, 41, 0.88);
-}
 
 @media (max-width: 1180px) {
   .success-modal-shell {
@@ -2429,7 +2347,4 @@
     font-size: clamp(2.1rem, 12vw, 3rem);
   }
 
-  .success-modal-actions {
-    position: static;
-  }
 }

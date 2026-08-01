@@ -10,6 +10,7 @@ import {
   FaExclamationCircle,
   FaHourglassHalf,
   FaInfoCircle,
+  FaLink,
   FaSearch,
   FaTimes,
   FaWhatsapp,
@@ -142,30 +143,53 @@ const BookingSuccessModal = ({
           </div>
         </div>
 
-        {/* Code */}
+        {/* Perforado: el corte visual que vuelve comprobante a la tarjeta. */}
+        <div className="success-perf" aria-hidden="true">
+          <span className="success-perf-notch success-perf-notch--left" />
+          <span className="success-perf-line" />
+          <span className="success-perf-notch success-perf-notch--right" />
+        </div>
+
+        {/* Código. Antes había DOS avisos sobre guardarlo (acá y en la alerta de
+            abajo) diciendo casi lo mismo: quedó uno solo, y la instrucción de
+            qué hacer con el código vive junto al código. */}
         <div className="success-code-section">
-          <span className="success-code-label">Código de gestión</span>
+          <span className="success-code-label">Tu código</span>
           <h3 className="success-code-value">{successData?.bookingCode}</h3>
           <p className="success-code-hint">
-            Guardalo — es tu llave para gestionar el turno desde Mis Turnos.
+            Con este código entrás a <strong>Mis Turnos</strong> para
+            reprogramar o cancelar.
           </p>
-          <button
-            type="button"
-            className="success-copy-btn"
-            onClick={handleCopyCode}
-          >
-            <FaCopy aria-hidden="true" /> Copiar código
-          </button>
-          <span
-            role="status"
-            aria-live="polite"
-            className="sr-only"
-          >
+          <div className="success-code-actions">
+            <button
+              type="button"
+              className="success-copy-btn"
+              onClick={handleCopyCode}
+            >
+              <FaCopy aria-hidden="true" /> Copiar código
+            </button>
+            {successData?.managementUrl && (
+              <button
+                type="button"
+                className="success-copy-btn success-copy-btn--ghost"
+                onClick={onCopyManagementLink}
+              >
+                <FaLink aria-hidden="true" /> Copiar enlace directo
+              </button>
+            )}
+          </div>
+          {successData?.managementUrl && (
+            <p className="success-code-alt">
+              El enlace directo te lleva a gestionar el turno sin escribir el
+              código.
+            </p>
+          )}
+          <span role="status" aria-live="polite" className="sr-only">
             {copyAnnouncement}
           </span>
         </div>
 
-        {/* Details */}
+        {/* Detalle del turno, en formato recibo. */}
         <div className="success-details">
           {detailRows.map((row) => (
             <div key={row.label} className="success-detail-row">
@@ -175,7 +199,7 @@ const BookingSuccessModal = ({
           ))}
         </div>
 
-        {/* Delivery alert */}
+        {/* Estado del envío del comprobante. */}
         <div
           id="booking-success-feedback"
           className={`success-alert success-alert-${alert.type}`}
@@ -184,22 +208,6 @@ const BookingSuccessModal = ({
           {alert.icon}
           <span>{alert.text}</span>
         </div>
-
-        {successData?.managementUrl && (
-          <div className="success-management-link" role="group" aria-label="Enlace seguro de gestión">
-            <strong>Enlace seguro de gestión</strong>
-            <p>
-              Guardalo: te permite reprogramar o cancelar este turno sin volver a ingresar datos.
-            </p>
-            <button
-              type="button"
-              className="success-copy-btn"
-              onClick={onCopyManagementLink}
-            >
-              <FaCopy aria-hidden="true" /> Copiar enlace seguro
-            </button>
-          </div>
-        )}
 
         {/* Actions */}
         <div className="success-actions">

@@ -178,10 +178,12 @@
   font-size: 0.8125rem;
 }
 
+/* Mismo motivo que el botón principal: fondo sólido con texto blanco, así que
+   no puede derivar de --brand-navy (se aclara en tema oscuro). */
 .reschedule-datepicker .react-datepicker__day--selected,
 .reschedule-datepicker .react-datepicker__day--keyboard-selected {
-  background: var(--brand-navy, #00214c) !important;
-  color: var(--brand-white) !important;
+  background: var(--accent-strong) !important;
+  color: #fff !important;
   border-radius: 6px;
 }
 
@@ -452,10 +454,13 @@
   background: var(--border-soft, #e2e8f0);
 }
 
+/* Superficie sólida con texto blanco: NO puede usar --brand-navy, que se
+   invierte a #aabcd5 (celeste claro) en tema oscuro y dejaba el botón principal
+   en 1.93:1. --accent-strong se mantiene oscuro en los dos temas. */
 .reschedule-btn-confirm {
   border: none;
-  background: var(--brand-navy, #00214c);
-  color: var(--brand-white);
+  background: var(--accent-strong);
+  color: #fff;
 }
 
 .reschedule-btn-confirm:hover:not(:disabled) {
