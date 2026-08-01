@@ -157,14 +157,17 @@
   background: var(--border-soft, #e2e8f0);
 }
 
+/* Par fondo+tinta: --color-error-emphasis se aclara en tema oscuro y el blanco
+   encima quedaba en 2.77:1, justo en el botón que confirma algo que no se puede
+   deshacer. Es el último lugar donde se puede dudar de lo que dice. */
 .cancel-btn-confirm {
   border: none;
-  background: var(--color-error-emphasis);
-  color: var(--brand-white);
+  background: var(--danger-solid-bg);
+  color: var(--danger-solid-ink);
 }
 
 .cancel-btn-confirm:hover {
-  background: var(--color-error-deep);
+  background: var(--danger-solid-bg-hover);
   box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.22);
 }
 
