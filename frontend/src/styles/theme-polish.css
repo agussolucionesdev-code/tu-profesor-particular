@@ -133,13 +133,7 @@ body {
 .duration-summary-card,
 .booking-summary-card-expanded,
 .summary-detail-card,
-.summary-management-mini-card,
-.success-summary-card,
-.success-management-pill,
-.success-management-card,
-.success-side-column,
-.success-modal-actions,
-.success-code-panel-prominent {
+.summary-management-mini-card {
   border-color: var(--border-soft);
   background: var(--color-surface-1);
   box-shadow: var(--shadow-card);
@@ -160,13 +154,7 @@ body {
 [data-theme="dark"] .duration-summary-card,
 [data-theme="dark"] .booking-summary-card-expanded,
 [data-theme="dark"] .summary-detail-card,
-[data-theme="dark"] .summary-management-mini-card,
-[data-theme="dark"] .success-summary-card,
-[data-theme="dark"] .success-management-pill,
-[data-theme="dark"] .success-management-card,
-[data-theme="dark"] .success-side-column,
-[data-theme="dark"] .success-modal-actions,
-[data-theme="dark"] .success-code-panel-prominent {
+[data-theme="dark"] .summary-management-mini-card {
   background: var(--color-surface-1);
   border-color: var(--border-soft);
   box-shadow: var(--shadow-card);
@@ -688,12 +676,6 @@ body {
     .booking-summary-card-expanded,
     .summary-detail-card,
     .summary-management-mini-card,
-    .success-summary-card,
-    .success-management-pill,
-    .success-management-card,
-    .success-side-column,
-    .success-modal-actions,
-    .success-code-panel-prominent,
     .journey-compass,
     .journey-meter,
     .neuro-stepper,
@@ -1101,8 +1083,7 @@ body,
 .journey-next-pill,
 .step-status-pill,
 .status-pill,
-.value-tag,
-.success-management-pill {
+.value-tag {
   background: var(--brand-surface-soft);
   border: 1px solid var(--brand-border);
   box-shadow: none;

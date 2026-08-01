@@ -318,6 +318,12 @@
   --state-selected-bg:   var(--brand-navy-50);
   --state-selected-brd:  var(--brand-navy);
 
+  /* Superficie sólida que SIEMPRE lleva texto blanco encima (botón principal,
+     día elegido, cabecera del comprobante). No puede derivar de --brand-navy:
+     ese token se invierte a un celeste claro en tema oscuro y deja el texto
+     blanco ilegible. Se mantiene oscuro en los dos temas a propósito. */
+  --accent-strong:       #00214c;
+
   /* ── Booking form local tokens ──────────────────────────────────────── */
   --bg-page:            #f6f7f8;
   --surface-card:       #ffffff;
@@ -505,6 +511,9 @@
   --state-hover-bg:      rgba(136, 206, 147, 0.14);
   --state-selected-bg:   rgba(136, 206, 147, 0.2);
   --state-selected-brd:  var(--brand-green-300);
+  /* Se mantiene oscuro (más profundo que la superficie, para que se despegue)
+     porque siempre lleva texto blanco encima. */
+  --accent-strong:       #0d1a29;
 
   /* ── Booking form local tokens (dark) ────────────────────────────────── */
   --bg-page:          #08111d;
