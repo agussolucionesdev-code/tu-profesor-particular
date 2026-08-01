@@ -264,11 +264,14 @@
   color: var(--cp-text-main);
 }
 
+/* --cp-primary sirve para TEXTO y BORDE (sigue al tema, y así debe ser), pero
+   como FONDO sólido con texto blanco se rompe: en oscuro vale #aabcd5 y el
+   blanco encima daba 1.93:1. Los fondos sólidos van con el par navy. */
 .portal-recovery-form button {
   padding: 0.7rem 1rem;
   border: 0;
-  background: var(--cp-primary);
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   font-weight: 800;
   cursor: pointer;
 }
@@ -583,8 +586,8 @@
   color: var(--cp-primary);
 }
 .client-portal-wrapper .btn-reschedule:hover {
-  background: var(--cp-primary);
-  color: var(--brand-white);
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
 }
 
 /* Cancel = red outline */

@@ -703,8 +703,8 @@
 /* El día seleccionado siempre luce seleccionado, sin importar ocupación */
 .neuro-calendar .react-datepicker__day.day-partial.react-datepicker__day--selected,
 .neuro-calendar .react-datepicker__day.day-full.react-datepicker__day--selected {
-  background: var(--brand-green, #3f8f57) !important;
-  color: #ffffff !important;
+  background: var(--cta-solid-bg) !important;
+  color: var(--cta-solid-ink) !important;
   text-decoration: none !important;
   opacity: 1 !important;
 }

@@ -191,7 +191,13 @@
 
   --text-primary:       #00214c;   /* 15.89:1 */
   --text-secondary:     #3d5980;   /*  7.15:1 */
-  --text-tertiary:      #617b9e;   /*  4.34:1 — AA-large: solo texto no esencial */
+  /* Era navy-500 (#617b9e), anotado acá mismo como "AA-large: solo texto no
+     esencial". Pero terminó usándose para etiquetas de campo, la leyenda del
+     calendario, contadores y encabezados de franja —texto chico y necesario—,
+     y medía 4.34:1 en 18 lugares del paso 3. Este tono da 4.79:1 y sigue
+     leyéndose por debajo de --text-secondary (7.15:1): la jerarquía se
+     mantiene, la lectura deja de estar al límite. */
+  --text-tertiary:      #5a7498;   /*  4.79:1 */
   --text-on-accent:     #ffffff;
 
   --border-subtle:      rgba(0, 33, 76, 0.06);
@@ -323,6 +329,34 @@
      ese token se invierte a un celeste claro en tema oscuro y deja el texto
      blanco ilegible. Se mantiene oscuro en los dos temas a propósito. */
   --accent-strong:       #00214c;
+
+  /* Botón verde sólido. Es un PAR: el fondo y la tinta cambian juntos, y por eso
+     van como tokens y no como colores sueltos en cada componente.
+
+     El patrón que rompía era pintar el fondo con --brand-green y fijar el texto
+     en blanco. --brand-green sigue al tema —en oscuro es #88ce93, claro— así que
+     el blanco encima caía a 1.86:1, y a 1.40:1 en el estado activo. En claro
+     tampoco llegaba: #fff sobre #01953c da 3.91:1, por debajo de 4.5 para el
+     tamaño que usa el CTA.
+
+     Se resuelve como corresponde en cada tema: en claro verde oscuro con tinta
+     blanca (6.55:1); en oscuro verde claro con tinta oscura (10.13:1). */
+  --cta-solid-bg:        var(--brand-green-600);   /* #006d1f */
+  --cta-solid-bg-hover:  var(--brand-green-700);   /* #004b04 */
+  --cta-solid-ink:       #ffffff;
+
+  /* El mismo par, en navy: píldoras seleccionadas, puntos del stepper activo,
+     botones secundarios. --brand-navy también se invierte (en oscuro es
+     #aabcd5) y dejaba el blanco en 1.93:1. Se usa la rampa numerada, que no se
+     invierte, y la tinta acompaña. */
+  --navy-solid-bg:       var(--brand-navy-800);    /* #00204a — 16.09:1 */
+  --navy-solid-ink:      #ffffff;
+
+  /* Verde para TEXTO (no para fondos): índices de sección, "Reservar →", pasos
+     completados. Distinto de --cta-solid-bg porque acá el verde es la tinta y
+     el fondo lo pone el tema. Un verde fijo no sirve: #006d1f se lee 6.55:1
+     sobre blanco pero cae a 2.65:1 sobre una superficie oscura. */
+  --accent-ink:          var(--brand-green-600);   /* #006d1f — 6.55:1 */
 
   /* ── Booking form local tokens ──────────────────────────────────────── */
   --bg-page:            #f6f7f8;
@@ -514,6 +548,21 @@
   /* Se mantiene oscuro (más profundo que la superficie, para que se despegue)
      porque siempre lleva texto blanco encima. */
   --accent-strong:       #0d1a29;
+
+  /* En oscuro el botón se invierte, que es como se hace bien: verde claro con
+     tinta oscura. Un verde oscuro sobre una superficie oscura tendría contraste
+     pero se vería apagado, y el CTA principal no puede verse apagado. */
+  --cta-solid-bg:        var(--brand-green-300);   /* #88ce93 */
+  --cta-solid-bg-hover:  var(--brand-green-200);   /* #b5e6bb */
+  --cta-solid-ink:       var(--brand-green-900);   /* #001600 */
+
+  /* Igual que el verde: en oscuro la píldora se aclara y la tinta se oscurece.
+     Es lo que ya hacía a mano el link activo del navbar; ahora es el sistema. */
+  --navy-solid-bg:       var(--brand-navy-200);    /* #ccd9eb */
+  --navy-solid-ink:      var(--brand-navy-900);    /* #000b2b */
+
+  /* Verde de texto, aclarado para leerse sobre las superficies oscuras. */
+  --accent-ink:          var(--brand-green-300);   /* #88ce93 */
 
   /* ── Booking form local tokens (dark) ────────────────────────────────── */
   --bg-page:          #08111d;

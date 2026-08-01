@@ -68,8 +68,8 @@ footer.footer-elite {
   gap: 0.55rem;
   padding: 0.85rem 1.5rem;
   border-radius: 12px;
-  background: var(--brand-green, #01953c);
-  color: #ffffff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   font-size: 0.98rem;
   font-weight: 800;
   text-decoration: none;
@@ -483,8 +483,8 @@ footer.footer-elite {
   height: 46px;
   border-radius: 14px;
   border: 1px solid rgba(0, 33, 76, 0.15);
-  background: var(--brand-green, #01953c);
-  color: #ffffff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   font-size: 1rem;
   cursor: pointer;
   opacity: 0;

@@ -32,7 +32,11 @@
   letter-spacing: .18em;
   text-transform: uppercase;
 }
-.sh-index { color: var(--green); flex-shrink: 0; }
+/* --accent-ink y no --green: el verde de la marca sirve sobre fondo claro, pero
+   en tema oscuro la sección es oscura y #006d1f cae a 2.65:1. El token se
+   aclara con el tema. (.sh--light sigue cubriendo el otro caso: sección oscura
+   dentro del tema claro.) */
+.sh-index { color: var(--accent-ink); flex-shrink: 0; }
 .sh-dash {
   width: 22px; height: 1px;
   background: var(--border);

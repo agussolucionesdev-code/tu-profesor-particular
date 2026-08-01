@@ -122,6 +122,10 @@
   transition: background 0.16s ease, color 0.16s ease;
 }
 .ksc-datepicker .react-datepicker__day:hover { background: var(--state-hover-bg); }
+/* OJO: final-polish.css pisa el color y la opacidad de los días deshabilitados
+   con !important (reglas globales para todos los datepickers de la app), así
+   que lo de acá sólo vale como base. El contraste real de este estado se
+   ajusta allá; tocar estos valores no cambia nada en pantalla. */
 .ksc-datepicker .react-datepicker__day--disabled {
   color: var(--text-tertiary);
   opacity: 0.4;
@@ -148,8 +152,8 @@
 }
 
 .ksc-datepicker .react-datepicker__day--selected {
-  background: var(--brand-green);
-  color: #fff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
 }
 .ksc-datepicker .react-datepicker__day--selected::after { background: #fff; }
 .ksc-datepicker .react-datepicker__day--keyboard-selected {

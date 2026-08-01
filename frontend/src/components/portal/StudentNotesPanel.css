@@ -68,8 +68,8 @@
   padding: 0.35rem 0.85rem;
   border-radius: 8px;
   border: none;
-  background: var(--brand-green, #3f8f57);
-  color: #fff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
