@@ -190,8 +190,9 @@
   font-size: 1.02rem;
 }
 /* WhatsApp con su propio verde: es el canal que más se usa y conviene que se
-   reconozca de un vistazo. */
-.ct-icon--wa { background: #1faf54; }
+   reconozca de un vistazo. Mismo tono que el botón: el glifo blanco sobre
+   #1faf54 daba 2.87:1, y los gráficos piden 3:1 (WCAG 1.4.11). Ahora 5.01:1. */
+.ct-icon--wa { background: #16803f; }
 
 .ct-card-title {
   margin: 0 0 2px;
