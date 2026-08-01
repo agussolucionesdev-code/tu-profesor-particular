@@ -52,14 +52,16 @@
   box-shadow: none;
 }
 
-/* Active icon: inherit the link text color so it contrasts with the bg.
-   Was: var(--nav-accent) = green on green tint → zero contrast. */
-.nav-link-btn.active .nav-icon {
-  color: var(--brand-navy, #00214c);
-}
+/* El ícono del link activo toma el color del texto del link, que es lo que ya
+   decía el comentario original. Pero estaba escrito repitiendo el color en dos
+   reglas, una por tema, y se desincronizaron: en oscuro el texto pasó a tinta
+   oscura sobre píldora clara y el ícono se quedó en --color-text-main, casi
+   blanco sobre #ccd9eb — 1.33:1, un ícono invisible al lado de su etiqueta
+   perfectamente legible.
 
-[data-theme="dark"] .nav-link-btn.active .nav-icon {
-  color: var(--color-text-main);
+   `inherit` lo ata al color del link: no hay dos valores que puedan divergir. */
+.nav-link-btn.active .nav-icon {
+  color: inherit;
 }
 
 /* --------------------------------------------------------------------------
