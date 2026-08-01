@@ -92,6 +92,10 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
   Secundaria: [
     "Biología",
     "Física",
+    // Fisicoquímica es una de las materias principales que se dictan y se cursa
+    // en secundaria, pero nunca había estado en esta lista: quien la buscaba
+    // desde el Inicio no la encontraba al llegar al formulario.
+    "Fisicoquímica",
     "Inglés",
     "Lengua y Literatura",
     "Matemática",
