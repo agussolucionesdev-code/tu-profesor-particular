@@ -428,12 +428,15 @@
   position: absolute; z-index: 6;
   display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 15px; border-radius: 100px;
-  background: #ffffff; color: var(--brand-navy, #00214c);
+  /* El fondo estaba fijo en blanco mientras el texto usaba --brand-navy, que en
+     tema oscuro se aclara a #aabcd5: quedaba texto claro sobre blanco, 1.93:1.
+     Ahora los dos siguen al tema y el par no se puede desincronizar. */
+  background: var(--surface-card); color: var(--text-primary);
   font-size: 13px; font-weight: 800;
-  box-shadow: 0 0 0 1px rgba(0,33,76,.1);
+  box-shadow: 0 0 0 1px var(--border-color);
   animation: float-up 3.5s ease-in-out infinite;
 }
-.hp-hero-float svg { color: var(--brand-green-600, #006d1f); }
+.hp-hero-float svg { color: var(--accent-ink); }
 /* Straddle la esquina superior derecha de la foto. */
 .hp-hero-float--a { top: 20px; right: -16px; }
 
@@ -767,7 +770,9 @@
 .hp-subj-go {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 13.5px; font-weight: 800;
-  color: var(--green);
+  /* --green es fijo (#006d1f) y en tema oscuro la fila queda sobre #0c1b2d:
+     daba 2.65:1. --accent-ink se aclara con el tema. */
+  color: var(--accent-ink);
   white-space: nowrap;
   flex-shrink: 0;
   padding-right: 12px;
@@ -1205,9 +1210,11 @@
   margin-bottom: 30px;
 }
 
+/* La dirección es dato útil, no marca de agua: al 30% daba 2.61:1 sobre el
+   navy de la sección. Al 72% se lee (8.0:1) y sigue siendo secundaria. */
 .hp-cta-location {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 13px; color: rgba(255,255,255,.3); margin: 0;
+  font-size: 13px; color: rgba(255,255,255,.72); margin: 0;
 }
 
 /* ── Web principal — bloque destacado en el footer ── */

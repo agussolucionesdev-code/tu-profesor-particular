@@ -502,14 +502,13 @@ body {
   color: var(--text-secondary);
 }
 
-[data-theme="dark"] .form-main-title,
-[data-theme="dark"] .client-portal-wrapper .portal-title,
-[data-theme="dark"] .admin-login-card h2,
-[data-theme="dark"] .brand-titles h3 {
-  background: #eef6ff;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
+/* Acá vivía el resto del degradado recortado al glifo en tema oscuro:
+   `background: #eef6ff` + `background-clip: text`, sin el `color: transparent`
+   que lo hacía funcionar. Retirado por lo mismo que ya se retiró su gemelo en
+   tema claro unas líneas más arriba: sin el color transparente no pinta nada
+   —el color sólido del texto tapa el recorte— y deja armado un andamiaje donde
+   agregar `color: transparent` o cambiar el orden de las capas hace desaparecer
+   el título. Los títulos toman su color de los tokens, como el resto. */
 
 [data-theme="dark"] .journey-meter {
   background: var(--color-surface-1);

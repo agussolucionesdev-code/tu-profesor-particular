@@ -99,8 +99,13 @@
   color: var(--text-primary) !important;
 }
 
+/* El alpha de acá se MULTIPLICA con el `opacity: 0.5` que la regla del tachado
+   aplica más abajo: 0.35 × 0.5 = 0.175 efectivo, y el número del día quedaba en
+   1.48:1 —ilegible—. El día sigue leyéndose como no disponible por el tachado y
+   por el contraste con los días libres, que van en texto pleno; no hace falta
+   además borrarlo. Con la tinta sólida el efectivo queda en 0.62 → 4.24:1. */
 [data-theme="dark"] .react-datepicker__day--disabled {
-  color: rgba(180, 195, 215, 0.35) !important;
+  color: rgb(180, 195, 215) !important;
 }
 
 /* Día seleccionado: contraste fuerte y reconocible al instante */
@@ -135,11 +140,13 @@
   color: var(--color-warning-emphasis) !important;
 }
 
-/* Día deshabilitado (pasado): tachado liviano para clarificar */
+/* Día deshabilitado (pasado): tachado liviano para clarificar.
+   0.62 y no 0.5: el tachado ya dice "no disponible", así que la opacidad no
+   necesita además tapar el número. Con la tinta sólida esto da 4.24:1. */
 .react-datepicker__day--disabled:not(.react-datepicker__day--outside-month) {
   text-decoration: line-through !important;
   text-decoration-color: rgba(148, 163, 184, 0.4) !important;
-  opacity: 0.5 !important;
+  opacity: 0.62 !important;
 }
 
 /* Hover en días navegables del mes actual */

@@ -79,8 +79,8 @@
 
 .error-page-btn--primary {
   border: none;
-  background: var(--brand-navy, #00214c);
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
 }
 
 .error-page-btn--primary:hover {

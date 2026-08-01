@@ -41,7 +41,7 @@
 .bss-frame-url {
   margin-left: 10px;
   font-size: 0.72rem;
-  color: var(--brand-gray-500, #747980);
+  color: var(--brand-gray-600, #53595f);   /* gray-500 daba 4.38:1 */
   font-family: var(--font-mono, monospace);
   white-space: nowrap;
   overflow: hidden;
@@ -54,8 +54,8 @@
   position: absolute;
   bottom: -14px;
   right: 18px;
-  background: var(--brand-navy, #00214c);
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.4rem 0.8rem;
@@ -75,8 +75,8 @@
   background: var(--brand-gray-100, #e9ebed);
   color: var(--brand-gray-500, #747980);
 }
-.bss-mini-step.is-current .bss-mini-dot { background: var(--brand-navy, #00214c); color: #fff; }
-.bss-mini-step.is-done .bss-mini-dot { background: var(--brand-green, #01953c); color: #fff; }
+.bss-mini-step.is-current .bss-mini-dot { background: var(--navy-solid-bg); color: var(--navy-solid-ink); }
+.bss-mini-step.is-done .bss-mini-dot { background: var(--cta-solid-bg); color: var(--cta-solid-ink); }
 
 .bss-demo-title { font-size: 1.05rem; font-weight: 800; color: var(--brand-navy, #00214c); margin: 0.25rem 0 0.35rem; }
 .bss-demo-label {
@@ -119,7 +119,7 @@
   border: 1.5px solid var(--border-color, rgba(0, 33, 76, 0.12));
   font-size: 0.8rem; font-weight: 700; color: var(--brand-navy, #00214c); background: #fff;
 }
-.bss-pill.is-selected { background: var(--brand-navy, #00214c); color: #fff; border-color: var(--brand-navy, #00214c); }
+.bss-pill.is-selected { background: var(--navy-solid-bg); color: var(--navy-solid-ink); border-color: var(--navy-solid-bg); }
 .bss-slot {
   min-width: 58px; text-align: center;
   padding: 0.45rem 0.6rem; border-radius: 8px;
@@ -150,7 +150,7 @@
 .bss-confirm {
   display: block; text-align: center; margin-top: 0.6rem;
   padding: 0.65rem; border-radius: 10px;
-  background: var(--brand-green, #01953c); color: #fff; font-weight: 800; font-size: 0.9rem;
+  background: var(--cta-solid-bg); color: var(--cta-solid-ink); font-weight: 800; font-size: 0.9rem;
 }
 
 /* ── Caption ── */
@@ -186,7 +186,7 @@
 .bss-step-desc { font-size: 1rem; line-height: 1.6; color: var(--brand-gray-600, #53595f); margin: 0 0 1rem; }
 .bss-step-notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
 .bss-step-notes li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--brand-navy, #00214c); }
-.bss-step-notes svg { color: var(--brand-green-600, #006d1f); flex-shrink: 0; }
+.bss-step-notes svg { color: var(--accent-ink); flex-shrink: 0; }
 
 /* ══════════════════════════════════════════════════════
    MODO INMERSIVO — scrollytelling con stage sticky
@@ -282,7 +282,7 @@
 .bss-cta-btn {
   display: inline-flex; align-items: center; gap: 0.6rem;
   padding: 1rem 2rem; border-radius: 14px;
-  background: var(--brand-green, #01953c); color: #fff;
+  background: var(--cta-solid-bg); color: var(--cta-solid-ink);
   font-size: 1.05rem; font-weight: 800; text-decoration: none;
   transition: background 0.15s ease, transform 0.1s ease;
 }
@@ -307,6 +307,13 @@
 [data-theme="dark"] .bss-summary strong,
 [data-theme="dark"] .bss-modality strong { color: #f2f7fb; }
 [data-theme="dark"] .bss-callout { box-shadow: 0 0 0 4px var(--brand-navy-900, #000b2b); }
+/* Los secundarios de la maqueta quedaron con los grises y el verde pensados
+   para fondo claro. Sobre el marco oscuro medían 1.59:1 (el subtítulo de
+   modalidad), 2.74:1 (la nota del CTA) y 3.67:1 (la barra de URL). */
+[data-theme="dark"] .bss-modality small { color: var(--brand-navy-200, #ccd9eb); }
+[data-theme="dark"] .bss-modality svg { color: var(--brand-green-300, #88ce93); }
+[data-theme="dark"] .bss-cta-note { color: var(--brand-navy-200, #ccd9eb); }
+[data-theme="dark"] .bss-frame-url { color: var(--brand-navy-300, #aabcd5); }
 /* El numeral ya no es una caja rellena; en dark hereda el rol de texto claro de
    --brand-navy. El viejo fondo verde pintaba un bloque detrás del número. */
 
