@@ -189,8 +189,12 @@ a { color: inherit; }
 }
 .btn svg { flex-shrink: 0; }
 
+/* --green y no --green-brand: el propio sistema reserva --green-brand para
+   "CTAs grandes", y este botón es de 16px. Blanco sobre #01953c da 3.91:1 y no
+   llega al 4.5 que pide el texto normal (el umbral de texto grande es 18.66px
+   con peso ≥700, y no lo alcanza). Sobre #006d1f son 6.55:1. */
 .btn--primary {
-  background: var(--green-brand);
+  background: var(--green);
   color: #fff;
 }
 .btn--primary:hover {
