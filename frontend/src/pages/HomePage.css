@@ -487,6 +487,11 @@
   .hp-ticker-track { animation: none; }
   /* El reveal por palabra no puede quedar en opacity:0 si se anula. */
   .hp-h1-word { animation: none; opacity: 1; transform: none; }
+  /* Los paneles de nivel siguen revelándose al abrirse —eso es interacción, no
+     decoración— pero sin animar el alto. */
+  .hp-level-desc,
+  .hp-level-subjects,
+  .hp-level-cta { transition: none; }
 }
 
 /* ════════════════════════════════════════════════════
@@ -731,6 +736,33 @@
   color: var(--muted);
 }
 .hp-subj-tagline b { color: var(--text); font-weight: 800; }
+
+/* Niveles en los que se dicta la materia. Línea de meta, no chips: la fila ya
+   carga número, ícono, nombre grande y tagline; otro bloque con fondo la
+   volvía un tablero. Separador por CSS para no meter puntos en el DOM. */
+.hp-subj-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hp-subj-level { display: inline-flex; align-items: center; gap: 10px; }
+.hp-subj-level + .hp-subj-level::before {
+  content: "";
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .5;
+}
+/* Al recorrer el índice, los niveles de la fila activa toman el color de la
+   materia: refuerza de qué fila estás leyendo sin agregar otro elemento. */
+.hp-subj-link:hover .hp-subj-levels,
+.hp-subj-link:focus-visible .hp-subj-levels { color: var(--subject-accent); }
 
 .hp-subj-go {
   display: inline-flex; align-items: center; gap: 8px;
@@ -1051,6 +1083,46 @@
   opacity: 1;
 }
 
+/* Materias del nivel: se revelan con el panel, igual que la descripción.
+   Contestan la pregunta que frena la reserva —"¿tendrá la mía?"— sin obligar a
+   entrar al formulario para averiguarlo. */
+.hp-level-subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height .55s var(--ease-signature),
+    opacity .35s ease;
+}
+.hp-level-card:hover .hp-level-subjects,
+.hp-levels > li:focus-within .hp-level-subjects {
+  max-height: 10rem;
+  opacity: 1;
+}
+
+/* Sobre el panel expandido el fondo es navy, así que el chip va en blanco
+   translúcido. En mobile la tarjeta queda clara y se invierte (más abajo). */
+.hp-level-chip {
+  padding: 3px 9px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .005em;
+  color: rgba(255, 255, 255, .9);
+  white-space: nowrap;
+}
+.hp-level-chip--more {
+  border-style: dashed;
+  background: none;
+  color: var(--green-on-dark);
+}
+
 .hp-level-cta {
   font-size: 12px; font-weight: 800;
   color: var(--green);
@@ -1219,6 +1291,21 @@
 [data-theme="dark"] .hp-subj-link { --subject-accent: var(--subject-ink, var(--green-on-dark)); }
 [data-theme="dark"] .hp-subj-icon { box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
 [data-theme="dark"] .hp-level-card:hover { background:var(--navy-2); }
+/* En dark la tarjeta ya es oscura colapsada (#0c1b2d) y expandida (--navy-2),
+   así que el chip nunca necesita la variante clara de mobile: si se dejara,
+   el "+N más" quedaría en --green (#006d1f) sobre fondo oscuro, ilegible. */
+[data-theme="dark"] .hp-level-chip {
+  border-color: rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .07);
+  color: rgba(255, 255, 255, .86);
+}
+[data-theme="dark"] .hp-level-chip--more {
+  background: none;
+  color: var(--green-on-dark);
+}
+/* Mismo motivo para el CTA: apilado en mobile la tarjeta ya es oscura y el
+   "Reservar →" quedaba en --green (#006d1f) sobre #0c1b2d — 2.65:1. */
+[data-theme="dark"] .hp-level-cta { color: var(--green-on-dark); }
 
 /* ════════════════════════════════════════════════════
    RESPONSIVE
@@ -1241,7 +1328,34 @@
     color: var(--muted);
   }
   .hp-level-cta { opacity: 1; color: var(--green); }
-  .hp-level-card:hover .hp-level-desc { color: rgba(255, 255, 255, .82); }
+
+  /* Acá la tarjeta está clara y sin hover: los chips en blanco translúcido
+     serían invisibles. Se invierten a tinta sobre superficie. */
+  .hp-level-subjects { max-height: none; opacity: 1; }
+  .hp-level-chip {
+    border-color: var(--border);
+    background: var(--off);
+    color: var(--muted);
+  }
+  .hp-level-chip--more { background: none; color: var(--green); }
+
+  /* Salvo cuando la tarjeta se pinta de navy. Ojo con el `:focus-within`: sin
+     él, tabular hasta una tarjeta en una ventana angosta la ponía oscura pero
+     dejaba el texto en --muted, y la descripción caía a 2.27:1 —justo para
+     quien navega por teclado, que es a quien esto tiene que servir. */
+  .hp-level-card:hover .hp-level-desc,
+  .hp-levels > li:focus-within .hp-level-desc { color: rgba(255, 255, 255, .82); }
+  .hp-level-card:hover .hp-level-chip,
+  .hp-levels > li:focus-within .hp-level-chip {
+    border-color: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .08);
+    color: rgba(255, 255, 255, .9);
+  }
+  .hp-level-card:hover .hp-level-chip--more,
+  .hp-levels > li:focus-within .hp-level-chip--more {
+    background: none;
+    color: var(--green-on-dark);
+  }
 }
 @media (max-width: 560px) {
   .hp-levels { grid-template-columns: minmax(0, 1fr); }

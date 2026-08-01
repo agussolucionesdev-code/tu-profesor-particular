@@ -37,6 +37,7 @@ import FaqSection from "../components/home/FaqSection";
 import SectionHead from "../components/home/SectionHead";
 import SectionRail from "../components/home/SectionRail";
 import { getSubjectIcon } from "../constants/subjectIcons";
+import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
 import agustinHero from "../assets/images/agustin-hero.webp";
 import "../styles/reveal-system.css";
 import "./HomePage.css";
@@ -71,7 +72,11 @@ const SUBJECTS = [
     hook:    "Nunca te las explicaron bien.",
     color:   "#1a3a6b",
     ink:     "#8fb4e8",
-    param:   "Matemáticas",
+    /* El título va en plural porque se lee mejor en el índice, pero el `param`
+       tiene que coincidir EXACTO con la lista del formulario —que usa el
+       singular, como los planes de estudio—; si no, se llegaba al paso 1 con una
+       materia que no existía entre las tarjetas y había que elegirla de nuevo. */
+    param:   "Matemática",
   },
   {
     icon:    FaBolt,
@@ -110,6 +115,11 @@ const SUBJECTS = [
     param:   "Inglés",
   },
 ];
+
+/* Cuántas materias se muestran por tarjeta antes de condensar en "+N más".
+   Seis entran en dos renglones parejos en la tarjeta más angosta; con más, las
+   tarjetas de Terciario (18 materias) y Técnica (19) se volvían un muro. */
+const LEVEL_CHIPS_SHOWN = 6;
 
 // Mapa nivel homepage → valor del formulario
 const LEVEL_FORM_MAP = {
@@ -150,6 +160,21 @@ const LEVELS = [
     desc: "El filtro de los primeros años: Análisis, Álgebra, Física, Química, Estadística y las materias que frenan a todos.",
   },
 ];
+
+/* En qué niveles se dicta una materia. Es el dato inverso al de las tarjetas de
+   nivel, y sale de la misma lista del formulario: el índice de materias decía
+   "Química" sin aclarar para quién, y quien tiene un hijo en primaria no tenía
+   forma de saber si le servía sin entrar a reservar.
+
+   Cuando la materia está en TODOS los niveles se condensa en una sola frase:
+   listar los cinco ocupa más que el nombre de la materia y no agrega nada. */
+const levelsForSubject = (param) => {
+  const nombres = LEVELS.map((l) => l.label).filter((label) =>
+    (SUBJECT_SUGGESTIONS_BY_LEVEL[LEVEL_FORM_MAP[label]] ?? []).includes(param),
+  );
+  if (nombres.length === LEVELS.length) return ["Todos los niveles"];
+  return nombres;
+};
 
 const REASONS = [
   {
@@ -504,13 +529,14 @@ const HomePage = () => {
           >
             {SUBJECTS.map((s, i) => {
               const Icon = s.icon;
+              const niveles = levelsForSubject(s.param);
               return (
                 <li key={s.label} className="hp-subj-row" data-reveal="up">
                   <Link
                     to={`/reservar?materia=${encodeURIComponent(s.param)}`}
                     className="hp-subj-link"
                     style={{ "--subject-color": s.color, "--subject-ink": s.ink }}
-                    aria-label={`Reservar clase de ${s.label}`}
+                    aria-label={`Reservar clase de ${s.label}. ${niveles.join(", ")}`}
                     onMouseEnter={() => setActiveSubject(i)}
                     onFocus={() => setActiveSubject(null)}
                     onMouseMove={(e) => {
@@ -542,6 +568,15 @@ const HomePage = () => {
                       <span className="hp-subj-tagline">
                         <b>{s.tagline}</b> {s.hook}
                       </span>
+                      {niveles.length > 0 && (
+                        <span className="hp-subj-levels" aria-hidden="true">
+                          {niveles.map((n) => (
+                            <span key={n} className="hp-subj-level">
+                              {n}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                     </span>
                     <span className="hp-subj-go">
                       Reservar
@@ -662,18 +697,53 @@ const HomePage = () => {
           <ul className="hp-levels" role="list" data-reveal-group="70">
             {LEVELS.map((l) => {
               const LevelIcon = l.icon;
+              /* Las materias reales del nivel salen de la MISMA lista que usa
+                 el formulario, no de una copia escrita a mano: si mañana se
+                 agrega o se saca una materia, el Inicio no puede quedar
+                 prometiendo algo que el paso 2 ya no ofrece. */
+              const subjects =
+                SUBJECT_SUGGESTIONS_BY_LEVEL[LEVEL_FORM_MAP[l.label]] ?? [];
+              /* Si sobrara una sola materia se muestra igual: el chip "+1 más"
+                 ocupa lo mismo que el nombre que estaría escondiendo. */
+              const cut =
+                subjects.length === LEVEL_CHIPS_SHOWN + 1
+                  ? subjects.length
+                  : LEVEL_CHIPS_SHOWN;
+              const shown = subjects.slice(0, cut);
+              const hidden = subjects.length - shown.length;
+              /* El aria-label reemplaza TODO el contenido del enlace para un
+                 lector de pantalla, así que las materias tienen que estar acá o
+                 no se oyen nunca. Van completas: el "+N más" recorta por
+                 espacio en pantalla, no el contenido. */
+              const levelLabel = subjects.length
+                ? `Reservar clase de nivel ${l.label}. Materias: ${subjects.join(", ")}`
+                : `Reservar clase de nivel ${l.label}`;
               return (
               <li key={l.label} data-reveal="up">
                 <Link
                   to={`/reservar?nivel=${encodeURIComponent(LEVEL_FORM_MAP[l.label])}`}
                   className="hp-level-card"
-                  aria-label={`Reservar clase de nivel ${l.label}`}
+                  aria-label={levelLabel}
                 >
                   <span className="hp-level-icon" aria-hidden="true">
                     <LevelIcon />
                   </span>
                   <span className="hp-level-label">{l.label}</span>
                   <span className="hp-level-desc">{l.desc}</span>
+                  {subjects.length > 0 && (
+                    <span className="hp-level-subjects">
+                      {shown.map((subject) => (
+                        <span key={subject} className="hp-level-chip">
+                          {subject}
+                        </span>
+                      ))}
+                      {hidden > 0 && (
+                        <span className="hp-level-chip hp-level-chip--more">
+                          +{hidden} más
+                        </span>
+                      )}
+                    </span>
+                  )}
                   <span className="hp-level-cta">Reservar →</span>
                 </Link>
               </li>
