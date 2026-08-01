@@ -28,7 +28,7 @@ const PERIODS = [
   { id: "night", label: "Noche", from: 19, to: 24 },
 ];
 
-const KioskSlotCalendar = ({ slotsByDay, onPick }) => {
+const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
   /* Días que tienen al menos un horario libre. Sirve para dos cosas: limitar el
      calendario a fechas elegibles y pintar el punto verde del día. */
   const availableDays = useMemo(
@@ -114,7 +114,13 @@ const KioskSlotCalendar = ({ slotsByDay, onPick }) => {
                 <button
                   type="button"
                   className="ksc-month-nav"
-                  onClick={increaseMonth}
+                  onClick={() => {
+                    increaseMonth();
+                    /* La primera carga sólo trae unas semanas para que el paso
+                       abra rápido. Si el visitante se va al mes que viene,
+                       recién ahí se pide la agenda completa. */
+                    onNeedFullRange?.();
+                  }}
                   disabled={nextMonthButtonDisabled}
                   aria-label="Mes siguiente"
                 >
