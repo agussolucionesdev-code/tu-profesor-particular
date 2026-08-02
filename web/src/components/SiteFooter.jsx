@@ -21,7 +21,15 @@ const SiteFooter = () => (
 
     <div className="shell sfoot-inner">
       <div className="sfoot-brand">
-        <img src={monogram} alt="" className="sfoot-mark" aria-hidden="true" />
+        <img
+          src={monogram}
+          alt=""
+          className="sfoot-mark"
+          aria-hidden="true"
+          width="44"
+          height="44"
+          loading="lazy"
+        />
         <p className="sfoot-tagline display display--md">
           <span>Juntos,</span> despejando el camino a <em>la meta.</em>
         </p>

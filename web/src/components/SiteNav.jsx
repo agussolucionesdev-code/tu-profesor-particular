@@ -61,7 +61,14 @@ const SiteNav = () => {
           onClick={() => setOpen(false)}
           aria-label={`${BRAND.name} — ${BRAND.person}`}
         >
-          <img src={monogram} alt="" className="snav-mark" aria-hidden="true" />
+          <img
+            src={monogram}
+            alt=""
+            className="snav-mark"
+            aria-hidden="true"
+            width="38"
+            height="38"
+          />
           <span className="snav-brand-copy">
             <span className="snav-brand-name">
               Tu Profesor <em>Particular</em>
