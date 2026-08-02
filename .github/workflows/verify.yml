@@ -1,0 +1,87 @@
+name: Verificar
+
+# Corre lint y tests en cada PR y en cada push a main.
+#
+# Antes de esto el único workflow del repo era el de deploy: cada push a main
+# llegaba a producción sin que nada lo revisara. Los tests existían —313 en el
+# backend, 110 en el frontend— y no los corría nadie salvo a mano.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un PR que recibe varios pushes seguidos cancela las corridas viejas: no tiene
+# sentido gastar minutos verificando un commit que ya quedó atrás.
+concurrency:
+  group: verificar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    # El backend levanta un mongodb-memory-server y la suite completa tarda
+    # ~3 minutos; el default de 6 h no protege de nada si algo se cuelga.
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Buenos Aires, igual que producción. Sin esto el runner corre en UTC y
+      # los tests que arman horarios de atención se corren tres horas.
+      - run: npm test
+        env:
+          TZ: America/Argentina/Buenos_Aires
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      # `npm test` corre los dos grupos: los 98 unitarios con el runner de Node
+      # y los 12 de componentes con Vitest. Son runners distintos.
+      - run: npm test
+        env:
+          TZ: America/Argentina/Buenos_Aires
+      # Que compile es parte de la verificación: un import roto no lo detecta
+      # ni el lint ni los tests.
+      - run: npm run build
+
+  web:
+    name: Sitio institucional
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      # Todavía no tiene tests. El build es la única verificación disponible.
+      - run: npm run build
