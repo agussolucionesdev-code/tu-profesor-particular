@@ -15,34 +15,49 @@ const __dirname = path.dirname(__filename);
 const LOGO_PATH = path.resolve(__dirname, "../assets/logo-icon.png");
 const LOGO_CID = "tpp-logo@tuprofesorparticular";
 
+/* Paleta de la marca, la de verdad.
+
+   Los mails venían con una paleta propia que no era la del logo: un navy más
+   claro (#1f3f63), un verde apagado (#3f8f57) y dos colores que la marca no
+   tiene —un bordó y un dorado—. Por eso no parecían del mismo negocio que la
+   web: eran otro negocio.
+
+   Estos son los valores muestreados del logo maestro, los mismos que están en
+   frontend/src/styles/tokens.css. El verde de marca da 3.91:1 sobre blanco, así
+   que para TEXTO se usa greenInk (6.55:1) y el pleno queda para superficies. */
 const BRAND = {
   teacher: "Agustín Elías Sosa",
   role: "Profesor particular",
   name: "Tu Profesor Particular",
   tagline: "Clases claras, resultados que se notan.",
-  navy: "#1f3f63",
-  navyDeep: "#142e4d",
-  navyInk: "#0a1c33",
-  navySoft: "#eaf0f8",
-  green: "#3f8f57",
-  greenDeep: "#2f7344",
-  greenSoft: "#e6f3eb",
-  amber: "#b56b18",
-  amberDeep: "#92560f",
-  amberSoft: "#fdf2e2",
-  rose: "#a82433",
-  roseDeep: "#85182a",
-  roseSoft: "#fbecee",
-  gold: "#c89b3c",
-  page: "#eef3f9",
+
+  navy: "#00214c",       // 15.89:1 sobre blanco
+  navyDeep: "#001636",
+  navyInk: "#000b2b",
+  navySoft: "#f2f7fe",
+
+  green: "#01953c",      // superficies y sellos, NO texto chico
+  greenInk: "#006d1f",   //  6.55:1 — el verde cuando es texto
+  greenDeep: "#004b04",
+  greenSoft: "#eafdec",
+
+  amber: "#b45309",
+  amberDeep: "#92400e",
+  amberSoft: "#fef6e7",
+
+  rose: "#b91c1c",       //  6.47:1 — cancelación
+  roseDeep: "#991b1b",
+  roseSoft: "#fdeceb",
+
+  page: "#f6f7f8",
   surface: "#ffffff",
-  surfaceAlt: "#f7fafd",
-  border: "#cfdce9",
-  borderSoft: "#e2ebf3",
-  text: "#0d2238",
-  muted: "#4a627d",
-  soft: "#7791ac",
-  whatsapp: "#22c25b",
+  surfaceAlt: "#f9fbfd",
+  border: "#d4dde8",
+  borderSoft: "#e6ecf3",
+  text: "#00214c",
+  muted: "#53595f",      //  7.09:1
+  soft: "#5a7498",       //  4.79:1 — el mínimo que se usa para texto
+  whatsapp: "#16803f",   //  5.01:1 con blanco
 };
 
 const TEACHER_ADDRESS =
@@ -221,8 +236,21 @@ const PUBLIC_SITE_URL = "https://turnos.tuprofesorparticular.com.ar";
 const getFrontendUrl = () =>
   String(process.env.FRONTEND_URL || PUBLIC_SITE_URL).replace(/\/$/, "");
 
-const getContactPhone = () =>
-  String(process.env.CONTACT_PHONE || "+54 9 11 3336-5937").trim();
+/* El teléfono es dato de MARCA, no configuración de infraestructura, y por eso
+   deja de leerse de CONTACT_PHONE.
+
+   Qué pasó: el número cambió a 3336-5937 y se actualizó en los 10 archivos del
+   repo donde estaba, pero la variable de entorno del servidor quedó con el
+   viejo. Y la variable le gana al código, así que los mails —lo único que la
+   usaba— siguieron mandando 15-6423-6675 durante semanas sin que nada fallara
+   ni avisara. Un dato que se cambia una vez cada varios años no justifica un
+   punto de desincronización silenciosa.
+
+   Si algún día cambia de verdad: se cambia acá y en web/src/data/site.js.
+   La variable CONTACT_PHONE de Render puede borrarse; ya no la lee nadie. */
+const CONTACT_PHONE = "+54 9 11 3336-5937";
+
+const getContactPhone = () => CONTACT_PHONE;
 
 const getWhatsappSelfUrl = () => {
   const raw = getContactPhone().replace(/\D/g, "");
@@ -453,7 +481,12 @@ const logoImg = (size = 56) =>
 
 const brandHeader = (theme) => `
   <tr>
-    <td class="tpp-header" style="background:linear-gradient(135deg, ${BRAND.navyDeep} 0%, ${BRAND.navy} 55%, ${theme.accentDeep} 100%);padding:28px 28px 22px;">
+    <!-- Navy pleno, sin degradado. El degradado iba de navy al color del
+         evento, así que el mail de cancelación abría con una franja que viraba
+         a bordó: la primera impresión era una alarma, no la marca. El estado lo
+         comunica el sello de la derecha, que para eso está. Además Outlook no
+         renderiza gradientes CSS y caía a un fondo plano cualquiera. -->
+    <td class="tpp-header" style="background:${BRAND.navy};padding:28px 28px 22px;">
       <table role="presentation" class="tpp-header-table" width="100%" cellspacing="0" cellpadding="0">
         <tr>
           <td width="64" valign="middle" style="width:64px;" class="tpp-header-logo">${logoImg(56)}</td>
@@ -495,7 +528,7 @@ const signatureBlock = ({
           <td width="64" valign="top" class="tpp-signature-logo" style="width:64px;">${logoImg(56)}</td>
           <td valign="top" style="padding-left:14px;">
             <p style="margin:0;color:${BRAND.text};font-size:16px;font-weight:800;font-family:Arial,Helvetica,sans-serif;letter-spacing:-0.01em;">${escapeHtml(BRAND.teacher)}</p>
-            <p style="margin:3px 0 0;color:${BRAND.green};font-size:13px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(BRAND.role)} · ${escapeHtml(BRAND.name)}</p>
+            <p style="margin:3px 0 0;color:${BRAND.greenInk};font-size:13px;font-weight:700;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(BRAND.role)} · ${escapeHtml(BRAND.name)}</p>
             <p style="margin:2px 0 0;color:${BRAND.soft};font-size:12px;font-style:italic;font-family:Arial,Helvetica,sans-serif;">${escapeHtml(BRAND.tagline)}</p>
 
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:12px;">
@@ -581,7 +614,7 @@ const buildScheduleChangeBlock = (safe, theme) => {
 };
 
 const addressBlock = ({ address, mapsUrl }) => `
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 4px;border:1px solid ${BRAND.borderSoft};border-radius:14px;overflow:hidden;background:linear-gradient(135deg, ${BRAND.navySoft} 0%, #ffffff 100%);">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 4px;border:1px solid ${BRAND.borderSoft};border-radius:14px;overflow:hidden;background:${BRAND.surfaceAlt};">
     <tr>
       <td style="padding:16px 18px;">
         <table role="presentation" class="tpp-address-card" width="100%" cellspacing="0" cellpadding="0">
@@ -629,9 +662,11 @@ export const buildBookingEmailHtml = ({
   const ctaHref = cancelled
     ? escapeHtml(`${getFrontendUrl()}/`)
     : safe.managementUrl || safe.portalUrl;
-  const ctaBg = cancelled
-    ? `linear-gradient(135deg, ${BRAND.navy} 0%, ${BRAND.green} 100%)`
-    : `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDeep} 100%)`;
+  /* Color pleno: el botón es lo único que se toca en el mail y tiene que
+     verse igual en Gmail que en Outlook, que ignora los gradientes CSS.
+     Después de cancelar el CTA invita a reservar de nuevo, así que va en el
+     verde de acción, no en el rojo del estado. */
+  const ctaBg = cancelled ? BRAND.greenInk : theme.accentDeep;
   const showClientCta = cancelled || Boolean(safe.managementUrl || safe.portalUrl);
 
   const nivelValue = `${safe.educationLevel}${safe.yearGrade ? ` · ${safe.yearGrade}` : ""}`;
@@ -701,7 +736,9 @@ export const buildBookingEmailHtml = ({
             ${signatureBlock({ address, mapsUrl })}
             ${footerBand(theme)}
           </table>
-          <p class="tpp-meta" style="margin:14px 0 0;color:${BRAND.soft};font-size:11px;font-family:Arial,Helvetica,sans-serif;">© ${new Date().getFullYear()} ${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.teacher)}</p>
+          <!-- muted: esta línea cae fuera de la tarjeta, sobre el gris de la
+               página, donde soft no llega a 4.5. -->
+          <p class="tpp-meta" style="margin:14px 0 0;color:${BRAND.muted};font-size:11px;font-family:Arial,Helvetica,sans-serif;">© ${new Date().getFullYear()} ${escapeHtml(BRAND.name)} · ${escapeHtml(BRAND.teacher)}</p>
         </td>
       </tr>
     </table>
@@ -794,7 +831,10 @@ export const buildManagementLinkEmailText = ({ booking, managementUrl }) =>
     "No compartas este enlace: permite administrar tu reserva.",
   ].join("\n");
 
-const buildOwnerEmailHtml = ({ booking, event, dateStr, previousDateStr }) => {
+/* Exportada igual que su gemela del cliente. Estaba privada, y por eso era la
+   única plantilla sin tests ni forma de previsualizarla: la que le llega al
+   profesor se veía recién cuando caía en su casilla. */
+export const buildOwnerEmailHtml = ({ booking, event, dateStr, previousDateStr }) => {
   const theme = getTheme(event);
   const safe = buildSafeBooking(booking, dateStr, previousDateStr);
   const whatsappDigits = String(booking?.phone || "").replace(/\D/g, "");
@@ -871,7 +911,9 @@ const buildOwnerEmailHtml = ({ booking, event, dateStr, previousDateStr }) => {
             ${signatureBlock()}
             ${footerBand(theme)}
           </table>
-          <p class="tpp-meta" style="margin:14px 0 0;color:${BRAND.soft};font-size:11px;font-family:Arial,Helvetica,sans-serif;">Notificación interna · ${escapeHtml(BRAND.name)}</p>
+          <!-- muted y no soft: esta línea va sobre el fondo gris de la página,
+               donde soft (4.79:1 contra blanco) cae a 4.46 y no llega. -->
+          <p class="tpp-meta" style="margin:14px 0 0;color:${BRAND.muted};font-size:11px;font-family:Arial,Helvetica,sans-serif;">Notificación interna · ${escapeHtml(BRAND.name)}</p>
         </td>
       </tr>
     </table>
