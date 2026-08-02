@@ -3,7 +3,9 @@ import DatePicker from "react-datepicker";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import {
+  FaArrowRight,
   FaCalendarAlt,
+  FaCheck,
   FaChevronLeft,
   FaChevronRight,
   FaClock,
@@ -28,7 +30,13 @@ const PERIODS = [
   { id: "night", label: "Noche", from: 19, to: 24 },
 ];
 
-const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
+const KioskSlotCalendar = ({
+  slotsByDay,
+  onPick,
+  onNeedFullRange,
+  selectedSlot = null,
+  onConfirm,
+}) => {
   /* Días que tienen al menos un horario libre. Sirve para dos cosas: limitar el
      calendario a fechas elegibles y pintar el punto verde del día. */
   const availableDays = useMemo(
@@ -36,9 +44,15 @@ const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
     [slotsByDay],
   );
 
+  /* Si ya hay un horario elegido, el calendario abre en SU día. Si no, en el
+     primero libre. Volver al paso y encontrarlo en otro mes desorienta. */
   const [selectedDay, setSelectedDay] = useState(
-    () => availableDays[0] ?? null,
+    () => (selectedSlot ? startOfDay(new Date(selectedSlot)) : availableDays[0]) ?? null,
   );
+
+  const slotElegido = selectedSlot ? new Date(selectedSlot) : null;
+  const esElegido = (timeObj) =>
+    Boolean(slotElegido) && slotElegido.getTime() === timeObj.getTime();
 
   const daySlots = useMemo(() => {
     if (!selectedDay) return [];
@@ -152,6 +166,16 @@ const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
             </p>
           )}
 
+          {/* Instrucción de cómo soltar lo elegido. Va ACÁ y no en un tooltip:
+              si la forma de deshacer no se lee en el mismo lugar donde se
+              elige, no existe. */}
+          {slotElegido && (
+            <p className="ksc-ayuda-soltar">
+              Para cambiarlo, tocá otro horario. Para soltarlo, tocá de nuevo el
+              que está marcado.
+            </p>
+          )}
+
           {/* aria-live: al cambiar de día se anuncia cuántos horarios hay. */}
           <div className="ksc-periods" aria-live="polite">
             {daySlots.length === 0 ? (
@@ -163,17 +187,27 @@ const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
                 <div key={period.id} className="ksc-period">
                   <h4 className="ksc-period-label">{period.label}</h4>
                   <div className="ksc-slots">
-                    {period.slots.map((slot) => (
-                      <button
-                        key={slot.timeObj.toISOString()}
-                        type="button"
-                        className="ksc-slot"
-                        onClick={() => onPick(slot.timeObj)}
-                        aria-label={`Reservar a las ${format(slot.timeObj, "HH:mm")} del ${format(slot.timeObj, "EEEE d 'de' MMMM", { locale: es })}`}
-                      >
-                        {format(slot.timeObj, "HH:mm")}
-                      </button>
-                    ))}
+                    {period.slots.map((slot) => {
+                      const elegido = esElegido(slot.timeObj);
+                      return (
+                        <button
+                          key={slot.timeObj.toISOString()}
+                          type="button"
+                          className={`ksc-slot${elegido ? " is-elegido" : ""}`}
+                          onClick={() => onPick(slot.timeObj)}
+                          /* aria-pressed y no un aria-label que diga "Reservar":
+                             esto es un botón de dos estados, y el lector de
+                             pantalla tiene que poder decir si está activado. */
+                          aria-pressed={elegido}
+                          aria-label={`${format(slot.timeObj, "HH:mm")} del ${format(slot.timeObj, "EEEE d 'de' MMMM", { locale: es })}${elegido ? ". Elegido. Tocá de nuevo para soltarlo" : ""}`}
+                        >
+                          {format(slot.timeObj, "HH:mm")}
+                          {elegido && (
+                            <FaCheck className="ksc-slot-check" aria-hidden="true" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))
@@ -181,6 +215,33 @@ const KioskSlotCalendar = ({ slotsByDay, onPick, onNeedFullRange }) => {
           </div>
         </section>
       </div>
+
+      {/* Barra de confirmación: aparece recién cuando hay algo elegido, repite
+          en palabras QUÉ se eligió —para no obligar a volver a buscarlo en la
+          grilla— y deja avanzar cuando la persona quiere, no antes. */}
+      {slotElegido && (
+        <div className="ksc-confirmar" role="status" aria-live="polite">
+          <div className="ksc-confirmar-txt">
+            <span className="ksc-confirmar-label">Elegiste</span>
+            <strong className="ksc-confirmar-valor">
+              {format(slotElegido, "EEEE d 'de' MMMM", { locale: es })} a las{" "}
+              {format(slotElegido, "HH:mm")}
+            </strong>
+          </div>
+          <div className="ksc-confirmar-acciones">
+            <button
+              type="button"
+              className="ksc-soltar"
+              onClick={() => onPick(slotElegido)}
+            >
+              Soltar
+            </button>
+            <button type="button" className="ksc-avanzar" onClick={onConfirm}>
+              Continuar <FaArrowRight aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

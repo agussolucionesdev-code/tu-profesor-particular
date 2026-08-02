@@ -244,6 +244,96 @@
   color: var(--text-secondary);
 }
 
+/* ── Horario elegido ─────────────────────────────────────────────────────────
+   Antes tocar una hora saltaba de paso y no se alcanzaba a ver la elección.
+   Ahora queda marcada, y se marca con TRES señales a la vez —color, tilde y
+   borde grueso— porque el color solo no alcanza para quien no lo distingue. */
+.ksc-slot.is-elegido {
+  position: relative;
+  border-width: 2px;
+  border-color: var(--cta-solid-bg);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  font-weight: 800;
+}
+.ksc-slot.is-elegido:hover {
+  background: var(--cta-solid-bg-hover);
+  border-color: var(--cta-solid-bg-hover);
+}
+.ksc-slot-check {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  vertical-align: baseline;
+}
+
+.ksc-ayuda-soltar {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ── Barra de confirmación ───────────────────────────────────────────────── */
+.ksc-confirmar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border: 1.5px solid var(--cta-solid-bg);
+  border-radius: var(--radius-md);
+  background: var(--state-hover-bg);
+}
+
+.ksc-confirmar-txt { display: grid; gap: 0.15rem; min-width: 0; }
+.ksc-confirmar-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.ksc-confirmar-valor {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.ksc-confirmar-valor::first-letter { text-transform: uppercase; }
+
+.ksc-confirmar-acciones { display: flex; align-items: center; gap: 0.55rem; }
+
+.ksc-soltar,
+.ksc-avanzar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-base);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.ksc-soltar:focus-visible,
+.ksc-avanzar:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.ksc-soltar {
+  border: 1.5px solid var(--border-color);
+  background: none;
+  color: var(--text-primary);
+}
+.ksc-soltar:hover { border-color: var(--text-secondary); }
+
+.ksc-avanzar {
+  border: 1.5px solid transparent;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+}
+.ksc-avanzar:hover { background: var(--cta-solid-bg-hover); }
+
 /* En pantallas táctiles los días quedan chicos para el dedo: se agrandan
    aprovechando que en una sola columna sobra ancho. */
 @media (max-width: 860px) {
