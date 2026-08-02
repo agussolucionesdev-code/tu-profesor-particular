@@ -18,7 +18,6 @@ const BlockedDatesView = ({ authConfig }) => {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [dateToUnblock, setDateToUnblock] = useState(null);
-  const [removeError, setRemoveError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,16 +72,13 @@ const BlockedDatesView = ({ authConfig }) => {
     }
   };
 
+  /* El error se deja propagar: lo muestra el diálogo, que además queda abierto
+     para reintentar. Antes se atrapaba acá y aparecía al pie de la vista con
+     el diálogo ya cerrado. El cierre en caso de éxito lo hace onCancel. */
   const handleRemove = async () => {
     if (!dateToUnblock) return;
-    setRemoveError("");
-    try {
-      await removeBlockedDate(dateToUnblock, authConfig);
-      setBlockedDates((prev) => prev.filter((r) => r.date !== dateToUnblock));
-      setDateToUnblock(null);
-    } catch {
-      setRemoveError("No se pudo desbloquear la fecha. Intentá de nuevo.");
-    }
+    await removeBlockedDate(dateToUnblock, authConfig);
+    setBlockedDates((prev) => prev.filter((r) => r.date !== dateToUnblock));
   };
 
   return (
@@ -195,14 +191,8 @@ const BlockedDatesView = ({ authConfig }) => {
         confirmLabel="Desbloquear"
         cancelLabel="Cancelar"
         onConfirm={handleRemove}
-        onCancel={() => { setDateToUnblock(null); setRemoveError(""); }}
+        onCancel={() => setDateToUnblock(null)}
       />
-
-      {removeError && (
-        <p role="alert" style={{ color: "var(--color-error-deep)", padding: "0.5rem 1rem", fontSize: "0.85rem" }}>
-          {removeError}
-        </p>
-      )}
     </>
   );
 };

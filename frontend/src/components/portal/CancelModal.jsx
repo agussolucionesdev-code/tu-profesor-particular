@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
 import {
@@ -6,11 +6,23 @@ import {
   formatTime,
 } from "../../utils/bookingFormatters";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { useAccionDeModal } from "../../hooks/useAccionDeModal";
+import EstadoAccion from "../ui/EstadoAccion";
 import "./CancelModal.css";
 
 const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
   const dialogRef = useFocusTrap(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const accion = useAccionDeModal({
+    enCurso: "Cancelando tu turno y liberando el horario…",
+    exito: "Listo, tu turno quedó cancelado.",
+    erroresPorEstado: {
+      401: "Tu acceso venció. Volvé a entrar con tu código y probá otra vez.",
+      403: "Ese turno no se puede cancelar desde acá. Escribinos y lo resolvemos.",
+      404: "No encontramos ese turno. Puede que ya estuviera cancelado.",
+      429: "Hiciste varios intentos seguidos. Esperá un momento y volvé a probar.",
+    },
+  });
+  const isSubmitting = accion.trabajando;
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -28,15 +40,10 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isSubmitting, onClose]);
 
-  const handleConfirm = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await onConfirm();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  /* Antes esto era try/finally SIN catch: si fallaba, el error se propagaba,
+     el botón volvía a la normalidad y no se decía nada. El hook se encarga de
+     los tres estados y del mensaje que se anuncia por aria-live. */
+  const handleConfirm = () => accion.ejecutar(onConfirm);
 
   return createPortal(
     <div
@@ -104,6 +111,8 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
           </span>
         </p>
 
+        <EstadoAccion estado={accion.estado} mensaje={accion.mensaje} />
+
         {/* Actions */}
         <div className="cancel-footer">
           <button
@@ -112,15 +121,19 @@ const CancelModal = ({ cancelingBooking, onClose, onConfirm }) => {
             onClick={onClose}
             disabled={isSubmitting}
           >
-            No, mantenerlo
+            {accion.fallo ? "Cerrar" : "No, mantenerlo"}
           </button>
           <button
             type="button"
             className="cancel-btn-confirm"
             onClick={handleConfirm}
-            disabled={isSubmitting}
+            disabled={isSubmitting || accion.salioBien}
           >
-            {isSubmitting ? "Liberando horario…" : "Sí, liberar horario"}
+            {isSubmitting
+              ? "Liberando horario…"
+              : accion.fallo
+                ? "Reintentar"
+                : "Sí, liberar horario"}
           </button>
         </div>
       </div>

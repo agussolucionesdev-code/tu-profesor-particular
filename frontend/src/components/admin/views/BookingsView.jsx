@@ -65,7 +65,6 @@ const BookingsView = ({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } or "all"
-  const [deleteError, setDeleteError] = useState("");
   const [bulkResult, setBulkResult] = useState(null);
 
   useEffect(() => {
@@ -145,15 +144,12 @@ const BookingsView = ({
     });
   };
 
-  const handleConfirmedDelete = async () => {
-    setDeleteError("");
-    try {
-      await onDeleteBooking(confirmDelete.id);
-      setConfirmDelete(null);
-    } catch (err) {
-      setDeleteError(err.message || "No se pudo completar la acción.");
-    }
-  };
+  /* Se deja propagar el error a propósito: ahora lo muestra el propio diálogo,
+     que además se queda abierto para reintentar. Antes se atrapaba acá y el
+     motivo aparecía en un párrafo suelto al pie de la vista, cuando el diálogo
+     ya se había cerrado — se confirmaba un borrado y el fallo quedaba lejos de
+     donde uno estaba mirando. El cierre en caso de éxito lo hace onCancel. */
+  const handleConfirmedDelete = () => onDeleteBooking(confirmDelete.id);
 
   const handleBulkAction = async (newStatus) => {
     setBulkLoading(true);
@@ -574,14 +570,8 @@ const BookingsView = ({
         cancelLabel="Cancelar"
         danger
         onConfirm={handleConfirmedDelete}
-        onCancel={() => { setConfirmDelete(null); setDeleteError(""); }}
+        onCancel={() => setConfirmDelete(null)}
       />
-
-      {deleteError && (
-        <p role="alert" style={{ color: "var(--color-error-deep)", padding: "0.5rem 1rem", fontSize: "0.85rem" }}>
-          {deleteError}
-        </p>
-      )}
     </section>
   );
 };

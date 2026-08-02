@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { FaExclamationTriangle } from "react-icons/fa";
+import { useAccionDeModal } from "../../hooks/useAccionDeModal";
+import EstadoAccion from "./EstadoAccion";
 
 /**
  * Reusable confirmation dialog.
@@ -29,13 +31,44 @@ const ConfirmDialogContent = ({
   const dialogRef = useFocusTrap(true);
   const [typed, setTyped] = useState("");
 
+  /* El diálogo pasa a hacerse cargo del resultado. Antes llamaba a onConfirm
+     sin esperarlo: los dos usos que tiene son borrados, y ambos mostraban el
+     error FUERA, en un párrafo suelto que aparecía cuando el diálogo ya se
+     había cerrado. Se confirmaba un borrado, la ventana desaparecía, y el
+     fallo quedaba abajo en la página.
+
+     Si onConfirm devuelve una promesa, acá se ve el progreso y el diálogo no
+     se cierra si falla —así se puede reintentar sin volver a empezar—. Si no
+     devuelve nada, se comporta igual que antes. */
+  const accion = useAccionDeModal({
+    enCurso: "Procesando…",
+    exito: "Listo.",
+    erroresPorEstado: {
+      401: "Tu sesión venció. Volvé a iniciar sesión e intentá de nuevo.",
+      403: "No tenés permiso para hacer esto.",
+      404: "El elemento ya no existe. Puede que lo hayan borrado antes.",
+      409: "Alguien más lo modificó mientras tanto. Recargá y probá otra vez.",
+    },
+  });
+
   useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") onCancel(); };
+    const handler = (e) => {
+      if (e.key === "Escape" && !accion.trabajando) onCancel();
+    };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [onCancel]);
+  }, [onCancel, accion.trabajando]);
 
-  const canConfirm = typeToConfirm ? typed === typeToConfirm : true;
+  const canConfirm =
+    (typeToConfirm ? typed === typeToConfirm : true) && !accion.trabajando;
+
+  const handleConfirm = async () => {
+    if (!canConfirm) return;
+    const r = await accion.ejecutar(async () => onConfirm?.());
+    /* Sólo se cierra si salió bien. Si falló, el diálogo queda abierto con el
+       motivo a la vista y el botón dice "Reintentar". */
+    if (r.ok) onCancel?.();
+  };
 
   return (
     <div className="admin-modal-overlay" onClick={onCancel}>
@@ -70,9 +103,12 @@ const ConfirmDialogContent = ({
                 className="settings-input confirm-type-input"
                 autoComplete="off"
                 spellCheck={false}
+                disabled={accion.trabajando}
               />
             </div>
           )}
+
+          <EstadoAccion estado={accion.estado} mensaje={accion.mensaje} />
         </div>
 
         <div className="confirm-dialog-actions">
@@ -80,17 +116,22 @@ const ConfirmDialogContent = ({
             type="button"
             className="btn-neuro-secondary"
             onClick={onCancel}
+            disabled={accion.trabajando}
           >
-            {cancelLabel}
+            {accion.fallo ? "Cerrar" : cancelLabel}
           </button>
           <button
             type="button"
             className={`admin-primary-btn${danger ? " danger" : ""}${!canConfirm ? " btn-disabled" : ""}`}
-            onClick={canConfirm ? onConfirm : undefined}
+            onClick={handleConfirm}
             disabled={!canConfirm}
             aria-disabled={!canConfirm}
           >
-            {confirmLabel}
+            {accion.trabajando
+              ? "Procesando…"
+              : accion.fallo
+                ? "Reintentar"
+                : confirmLabel}
           </button>
         </div>
       </div>
