@@ -17,7 +17,17 @@ const CtaBlock = ({
 }) => (
   <section className="section section--dark cta" aria-labelledby="cta-title">
     <span className="grid-texture" aria-hidden="true" />
-    <img src={monogram} alt="" className="cta-watermark" aria-hidden="true" />
+    {/* Decorativa y siempre bajo el pliegue: lazy. Las dimensiones evitan que
+        el bloque salte cuando entra. */}
+    <img
+      src={monogram}
+      alt=""
+      className="cta-watermark"
+      aria-hidden="true"
+      width="128"
+      height="128"
+      loading="lazy"
+    />
 
     <div className="shell cta-inner">
       <h2 id="cta-title" className="display display--xl" data-reveal="clip">

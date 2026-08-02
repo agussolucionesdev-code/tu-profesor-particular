@@ -123,11 +123,19 @@ const Home = () => {
           </div>
 
           <figure className="hero-photo" data-reveal="up">
+            {/* La foto del hero es el elemento más grande de la portada, así
+                que suele ser el LCP. Sin `fetchpriority` el navegador la trata
+                como una imagen más y la pide después del resto; declarándola
+                alta, la pide apenas descubre la etiqueta.
+                `decoding="async"` evita que decodificarla bloquee el hilo
+                principal mientras se pinta el texto de al lado. */}
             <img
               src={agustin}
               alt={`${BRAND.person}, profesor particular`}
               width="800"
               height="1069"
+              fetchPriority="high"
+              decoding="async"
             />
             <figcaption>
               <strong>{BRAND.person}</strong>
