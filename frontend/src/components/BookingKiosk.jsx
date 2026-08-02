@@ -231,8 +231,21 @@ const BookingKiosk = () => {
     // forzar una nueva elección coherente con la disponibilidad recalculada.
     setFormData((prev) => ({ ...prev, duration: value, timeSlot: null }));
   };
+  /* Elegir un horario ya NO salta de paso. Antes tocabas una hora y la pantalla
+     cambiaba en el acto: no llegabas a ver qué habías elegido y, si te habías
+     equivocado, tenías que volver para atrás para darte cuenta. Ahora la
+     elección se marca, se puede deshacer tocando de nuevo, y se avanza cuando
+     la persona lo decide. */
   const chooseSlot = (timeObj) => {
-    setFormData((prev) => ({ ...prev, timeSlot: timeObj }));
+    setFormData((prev) => {
+      const yaElegido =
+        prev.timeSlot && new Date(prev.timeSlot).getTime() === timeObj.getTime();
+      return { ...prev, timeSlot: yaElegido ? null : timeObj };
+    });
+  };
+
+  const confirmSlot = () => {
+    if (!formData.timeSlot) return;
     setStep(4);
   };
 
@@ -668,6 +681,8 @@ const BookingKiosk = () => {
                   <KioskSlotCalendar
                     slotsByDay={upcomingSlotsByDay}
                     onPick={chooseSlot}
+                    selectedSlot={formData.timeSlot}
+                    onConfirm={confirmSlot}
                     onNeedFullRange={() => setShowAllDays(true)}
                   />
                 )}
