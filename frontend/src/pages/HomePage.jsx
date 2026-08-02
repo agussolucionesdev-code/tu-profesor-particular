@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaArrowRight,
@@ -381,19 +381,31 @@ const HomePage = () => {
               Temperley, Buenos Aires
             </p>
 
+            {/* Los espacios entre palabras son nodos de texto REALES, no
+                margin. Sin ellos el h1 se leía "Entendédeverdad,nodememoria":
+                así lo anunciaba un lector de pantalla y así lo indexaba Google,
+                porque la separación existía sólo en el CSS. El título de la
+                portada no puede depender de una hoja de estilos para decir lo
+                que dice. */}
             <h1 className="hp-hero-h1">
               <span className="hp-h1-line">
-                {["Entendé", "de", "verdad,"].map((w, i) => (
-                  <span key={w} className="hp-h1-word" style={{ "--i": i }}>
-                    {w}
-                  </span>
+                {["Entendé", "de", "verdad,"].map((w, i, todas) => (
+                  <Fragment key={w}>
+                    <span className="hp-h1-word" style={{ "--i": i }}>
+                      {w}
+                    </span>
+                    {i < todas.length - 1 && " "}
+                  </Fragment>
                 ))}
-              </span>
+              </span>{" "}
               <span className="hp-h1-line hp-h1-line--accent">
-                {["no", "de", "memoria"].map((w, i) => (
-                  <span key={w} className="hp-h1-word" style={{ "--i": i + 3 }}>
-                    {w}
-                  </span>
+                {["no", "de", "memoria"].map((w, i, todas) => (
+                  <Fragment key={w}>
+                    <span className="hp-h1-word" style={{ "--i": i + 3 }}>
+                      {w}
+                    </span>
+                    {i < todas.length - 1 && " "}
+                  </Fragment>
                 ))}
               </span>
             </h1>

@@ -9,7 +9,8 @@ const Method = () => {
   usePageMeta(
     "Cómo trabajo · Tu Profesor Particular",
     "Primera clase de diagnóstico, plan concreto, clases con orden y seguimiento del avance. Así se trabaja en Tu Profesor Particular.",
-  );
+    { path: "/como-trabajo" },
+);
 
   return (
     <>
@@ -20,6 +21,7 @@ const Method = () => {
             kicker="Cómo trabajo"
             title="Un método, no improvisación"
             titleId="method-title"
+            as="h1"
             lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
           />
 

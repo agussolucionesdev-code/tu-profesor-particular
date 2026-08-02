@@ -30,7 +30,8 @@ const Home = () => {
   usePageMeta(
     "Tu Profesor Particular · Agustín Elías Sosa | Clases particulares en Temperley y online",
     "Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Online y presenciales en Temperley. Desde primaria hasta universitario, sin pagos por adelantado.",
-  );
+    { path: "/" },
+);
 
   return (
     <>
@@ -70,8 +71,12 @@ const Home = () => {
               </span>
             </p>
 
+            {/* El {" "} antes del <br> no es decorativo: un <br> corta la línea
+                pero no aporta espacio al texto, así que el título se leía
+                "Entendé de verdad,no de memoria" —así lo dicta un lector de
+                pantalla y así lo indexa Google—. El salto visual no cambia. */}
             <h1 className="display display--xl hero-title" data-reveal="clip">
-              Entendé de verdad,
+              Entendé de verdad,{" "}
               <br />
               <em>no de memoria</em>
             </h1>

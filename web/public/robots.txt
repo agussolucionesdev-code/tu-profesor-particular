@@ -1,0 +1,7 @@
+# Tu Profesor Particular — sitio institucional
+# Todo el sitio es público y se quiere indexar.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://tuprofesorparticular.com.ar/sitemap.xml
