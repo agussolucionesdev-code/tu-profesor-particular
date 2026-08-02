@@ -211,11 +211,15 @@ export const getEmailDeliveryHealth = () => {
   };
 };
 
+/* El dominio real es tuprofesorparticular.com.ar. El valor que estaba acá
+   —"tu-profesor-particular.com", con guiones y sin .ar— no existe: si
+   FRONTEND_URL no está seteada en el entorno, cada enlace del mail llevaba a
+   la nada. Y en desarrollo el fallback ni siquiera entra en juego, así que el
+   error solo aparecía en producción. */
+const PUBLIC_SITE_URL = "https://turnos.tuprofesorparticular.com.ar";
+
 const getFrontendUrl = () =>
-  String(process.env.FRONTEND_URL || "https://tu-profesor-particular.com").replace(
-    /\/$/,
-    "",
-  );
+  String(process.env.FRONTEND_URL || PUBLIC_SITE_URL).replace(/\/$/, "");
 
 const getContactPhone = () =>
   String(process.env.CONTACT_PHONE || "+54 9 11 3336-5937").trim();
@@ -474,7 +478,12 @@ const signatureBlock = ({
 } = {}) => {
   const email = getTeacherEmail();
   const phone = getContactPhone();
-  const web = getFrontendUrl();
+  /* La firma muestra SIEMPRE el sitio público, no getFrontendUrl(). En
+     desarrollo esa variable vale http://localhost:5174, y un mail enviado
+     desde una prueba local llegaba a la casilla real con "Web localhost:5174"
+     en la firma del profesor. Los enlaces que tienen que funcionar (gestión
+     del turno) siguen usando el entorno; esto es identidad de marca. */
+  const web = PUBLIC_SITE_URL;
   const webLabel = web.replace(/^https?:\/\//, "");
 
   return `
