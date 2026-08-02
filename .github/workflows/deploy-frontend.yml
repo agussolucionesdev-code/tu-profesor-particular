@@ -9,7 +9,31 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Se repite acá en vez de depender del workflow "Verificar": los `needs` sólo
+  # funcionan entre jobs del MISMO workflow. Sin esto, el deploy salía en
+  # paralelo a la verificación y llegaba a producción sin esperar el resultado.
+  verificar:
+    name: Lint y tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+        env:
+          TZ: America/Argentina/Buenos_Aires
+
   deploy:
+    needs: verificar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
