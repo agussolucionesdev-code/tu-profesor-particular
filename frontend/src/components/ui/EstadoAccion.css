@@ -1,0 +1,48 @@
+/* Franja de estado de una acción de modal.
+   Los colores salen de los pares de tokens: el fondo y la tinta cambian juntos
+   con el tema y no se pueden desincronizar. */
+
+.ea {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-base);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.ea-icono { flex-shrink: 0; margin-top: 0.15rem; font-size: 0.95rem; }
+
+.ea--trabajando {
+  border-color: var(--border-color);
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
+}
+
+.ea--ok {
+  border-color: var(--accent-primary);
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
+}
+.ea--ok .ea-icono { color: var(--accent-ink); }
+
+.ea--error {
+  border-color: var(--error-color);
+  background: var(--color-error-bg);
+  color: var(--text-primary);
+}
+.ea--error .ea-icono { color: var(--error-color); }
+
+@keyframes ea-girar {
+  to { transform: rotate(360deg); }
+}
+.ea-gira { animation: ea-girar 0.9s linear infinite; }
+
+/* El giro es decoración: el mensaje ya dice que está trabajando. */
+@media (prefers-reduced-motion: reduce) {
+  .ea-gira { animation: none; }
+}
