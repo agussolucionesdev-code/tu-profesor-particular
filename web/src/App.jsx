@@ -8,6 +8,7 @@ import Subjects from "./pages/Subjects.jsx";
 import Method from "./pages/Method.jsx";
 import Contact from "./pages/Contact.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import StructuredData from "./components/StructuredData.jsx";
 import useReveal from "./hooks/useReveal.js";
 
 /* Al navegar entre páginas el scroll vuelve arriba (sin animar: un smooth acá
@@ -30,6 +31,7 @@ const App = () => (
     <a className="skip-link" href="#main">
       Saltar al contenido
     </a>
+    <StructuredData />
     <SiteNav />
     <RouteChrome />
     <main id="main" tabIndex={-1}>

@@ -9,7 +9,8 @@ const Subjects = () => {
   usePageMeta(
     "Materias y niveles · Tu Profesor Particular",
     "Matemáticas, Física, Fisicoquímica, Química e Inglés, y más materias a consultar. Desde primaria hasta universitario, incluida secundaria técnica.",
-  );
+    { path: "/materias" },
+);
 
   return (
     <>
@@ -20,6 +21,7 @@ const Subjects = () => {
             kicker="Qué doy"
             title="Materias principales"
             titleId="subj-title"
+            as="h1"
             lead="Estas son las que más piden. Doy varias más: si la tuya no está, escribime y lo vemos."
           />
 

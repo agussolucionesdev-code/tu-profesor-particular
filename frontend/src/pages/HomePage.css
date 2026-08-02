@@ -292,7 +292,8 @@
 /* Reveal palabra por palabra, escalonado por --i. */
 .hp-h1-word {
   display: inline-block;
-  margin-right: .21em;
+  /* Sin margin-right: la separación ahora la dan los espacios reales del JSX.
+     Con los dos, las palabras quedaban al doble de distancia. */
   animation: hpWordIn .72s cubic-bezier(.22, 1, .36, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms + 120ms);
 }

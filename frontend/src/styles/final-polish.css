@@ -329,17 +329,30 @@ a:focus-visible {
   background: var(--surface-overlay, rgba(0, 33, 76, 0.55));
 }
 
-/* Mobile compacto del calendario */
+/* Mobile del calendario.
+
+   Los días estaban en 34px: 10 por debajo del mínimo táctil de 44 (WCAG 2.5.5),
+   justo en el control que hay que acertar para reservar. Con el dedo, esos 10px
+   son la diferencia entre elegir el 15 o el 16.
+
+   Ahora 44. Entran siete columnas en la pantalla más chica de uso real
+   (7 × 44 = 308 < 320) y sigue sin scroll horizontal. Los nombres de los días
+   sí pueden quedar más bajos: no se tocan, sólo se leen. */
 @media (max-width: 480px) {
   .react-datepicker__current-month {
     font-size: 0.95rem !important;
   }
-  .react-datepicker__day,
+  .react-datepicker__day {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 0.9rem !important;
+  }
   .react-datepicker__day-name {
-    width: 34px !important;
-    height: 34px !important;
-    line-height: 34px !important;
-    font-size: 0.85rem !important;
+    width: 44px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    font-size: 0.72rem !important;
   }
 }
 

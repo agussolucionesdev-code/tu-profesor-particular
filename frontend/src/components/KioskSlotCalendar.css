@@ -335,12 +335,14 @@
 .ksc-avanzar:hover { background: var(--cta-solid-bg-hover); }
 
 /* En pantallas táctiles los días quedan chicos para el dedo: se agrandan
-   aprovechando que en una sola columna sobra ancho. */
+   aprovechando que en una sola columna sobra ancho.
+   44 y no 42: es el mínimo táctil (WCAG 2.5.5), y en una sola columna el ancho
+   sobra de todos modos. Quedaba a 2px de cumplir por nada. */
 @media (max-width: 860px) {
   .ksc .ksc-datepicker .react-datepicker__day,
   .ksc .ksc-datepicker .react-datepicker__day-name {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
   .ksc .ksc-datepicker .react-datepicker__day-name {
     height: auto;
@@ -349,18 +351,11 @@
   .ksc-slot { padding-block: 0.85rem; }
 }
 
-/* Por debajo de 480px, final-polish.css fuerza 34px !important a TODOS los
-   calendarios de la app. Acá se compensa con la misma arma y algo más de
-   especificidad: 38px entra cómodo en 320px de ancho (7 × 38 + gaps) y sigue
-   siendo más tocable que 34. */
+/* Acá había un override a 38px para compensar los 34px que final-polish.css
+   forzaba a todos los calendarios. Ese archivo ahora pone 44px —el mínimo
+   táctil— así que este parche sobra: mantenerlo dejaría al kiosco POR DEBAJO
+   del resto de la app, al revés de para lo que se escribió. */
 @media (max-width: 480px) {
-  .ksc .ksc-datepicker .react-datepicker__day,
-  .ksc .ksc-datepicker .react-datepicker__day-name {
-    width: 38px !important;
-    height: 38px !important;
-    line-height: 38px !important;
-    font-size: 0.9rem !important;
-  }
   .ksc-slots { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
 

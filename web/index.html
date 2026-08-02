@@ -24,6 +24,30 @@
       content="Entendé de verdad, no de memoria. Clases particulares online y presenciales en Temperley."
     />
     <meta property="og:url" content="https://tuprofesorparticular.com.ar/" />
+    <!--
+      La imagen de la vista previa va acá, en el HTML servido, y no sólo desde
+      React: los bots de WhatsApp, Facebook, Instagram y LinkedIn no ejecutan
+      JavaScript. Sin esto, cada enlace compartido salía sin imagen —y el canal
+      principal de este negocio es justamente WhatsApp.
+      Absoluta y con dimensiones: WhatsApp descarta las relativas, y sin el
+      tamaño declarado muestra la tarjeta chica hasta terminar de bajarla.
+    -->
+    <meta property="og:image" content="https://tuprofesorparticular.com.ar/og-cover.png" />
+    <meta property="og:image:width" content="1536" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="Tu Profesor Particular · Agustín Elías Sosa" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Tu Profesor Particular · Agustín Elías Sosa" />
+    <meta
+      name="twitter:description"
+      content="Entendé de verdad, no de memoria. Clases particulares online y presenciales en Temperley."
+    />
+    <meta name="twitter:image" content="https://tuprofesorparticular.com.ar/og-cover.png" />
+
+    <!-- El destino de todos los CTA: adelantar el handshake ahorra ~200 ms
+         cuando la persona finalmente toca "Reservar". -->
+    <link rel="preconnect" href="https://turnos.tuprofesorparticular.com.ar" />
   </head>
   <body>
     <div id="root"></div>
