@@ -1,118 +1,113 @@
-.notes-panel {
-  margin-top: 0.75rem;
+/* Nota del alumno para el profesor, dentro de la tarjeta del turno.
+ *
+ * El CSS anterior era de antes del refactor por parejas de tokens: duplicaba
+ * cada regla en un bloque [data-theme="dark"] y apuntaba a --color-text y
+ * --color-danger, que NO existen en tokens.css. Funcionaba de casualidad,
+ * porque cada `var()` traía un hex hardcodeado de fallback y el bloque oscuro
+ * traía otro distinto. Dos paletas paralelas mantenidas a mano.
+ *
+ * Acá no hay bloque oscuro: los tokens ya invierten solos. Una regla, dos temas.
+ */
+
+.pt-notas {
+  margin-top: 0.85rem;
   padding: 0.9rem 1rem;
-  background: var(--color-surface-2, #f8fafc);
-  border-radius: 10px;
-  border: 1.5px solid var(--color-border, #e2e8f0);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-3, var(--bg-page));
 }
 
-.notes-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-  color: var(--color-text, #1a202c);
-}
-
-.notes-textarea {
-  width: 100%;
-  resize: vertical;
-  padding: 0.5rem 0.7rem;
-  border-radius: 8px;
-  border: 1.5px solid var(--color-border, #e2e8f0);
+.pt-notas-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.85rem;
-  line-height: 1.5;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.pt-notas-label svg { color: var(--accent-ink); }
+
+.pt-notas-ayuda {
+  margin: 0.3rem 0 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  /* --text-secondary y no --text-tertiary: el panel se apoya sobre una
+     superficie gris, y el tertiary está calibrado contra blanco (4.79:1); sobre
+     gris cae a 4.01 y deja de cumplir. */
+  color: var(--text-secondary);
+}
+
+.pt-notas-textarea {
+  width: 100%;
   box-sizing: border-box;
-  background: var(--color-surface, #fff);
-  color: var(--color-text, #1a202c);
+  resize: vertical;
+  padding: 0.55rem 0.7rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-base);
+  background: var(--surface-card);
+  color: var(--text-primary);
   font-family: inherit;
+  font-size: 0.86rem;
+  line-height: 1.5;
   transition: border-color 0.15s ease;
 }
-
-.notes-textarea:focus {
+.pt-notas-textarea::placeholder { color: var(--text-secondary); }
+.pt-notas-textarea:focus-visible {
   outline: none;
-  border-color: var(--brand-green, #3f8f57);
-  box-shadow: 0 0 0 3px rgba(63, 143, 87, 0.15);
+  border-color: var(--cta-solid-bg);
+  box-shadow: var(--shadow-focus);
+}
+.pt-notas-textarea:disabled {
+  cursor: progress;
+  opacity: 0.75;
 }
 
-.notes-footer {
+.pt-notas-pie {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 0.4rem;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
-.notes-counter {
+/* Antes era `opacity: 0.6` sobre el color del texto. La opacidad no exime del
+   contraste: el resultado real era lo que se medía, y no llegaba. */
+.pt-notas-contador {
   font-size: 0.78rem;
-  opacity: 0.6;
-  color: var(--color-text, #1a202c);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 
-.notes-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.notes-status-ok {
-  font-size: 0.78rem;
-  color: var(--color-success, #38a169);
-}
-
-.notes-status-error {
-  font-size: 0.78rem;
-  color: var(--color-danger, #e53e3e);
-}
-
-.notes-save-btn {
-  padding: 0.35rem 0.85rem;
-  border-radius: 8px;
-  border: none;
+.pt-notas-guardar {
+  /* 44px: mínimo táctil de WCAG 2.5.5. El botón anterior medía 28px. */
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-base);
   background: var(--cta-solid-bg);
   color: var(--cta-solid-ink);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: background 0.15s ease;
 }
+.pt-notas-guardar:not(:disabled):hover { background: var(--cta-solid-bg-hover); }
+.pt-notas-guardar:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
-.notes-save-btn:disabled {
+/* Sin `opacity` en el deshabilitado: el botón sigue diciendo "Guardar nota" y
+   tiene que poder leerse. Lo que comunica que no se puede tocar es el borde
+   apagado y el cursor, no un texto medio borrado. */
+.pt-notas-guardar:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
+  border-color: var(--border-color);
+  background: none;
+  color: var(--text-secondary);
 }
 
-.notes-save-btn:not(:disabled):hover {
-  opacity: 0.88;
-}
+.pt-notas-estado { margin-top: 0.6rem; }
 
-/* Dark mode */
-[data-theme="dark"] .notes-panel {
-  background: var(--color-surface-2, #1e2533);
-  border-color: var(--color-border, #2d3748);
-}
-
-[data-theme="dark"] .notes-label {
-  color: var(--color-text, #e2e8f0);
-}
-
-[data-theme="dark"] .notes-textarea {
-  background: var(--color-surface, #171e2b);
-  color: var(--color-text, #e2e8f0);
-  border-color: var(--color-border, #2d3748);
-}
-
-[data-theme="dark"] .notes-counter {
-  color: var(--color-text, #e2e8f0);
-}
-
-[data-theme="dark"] .notes-save-btn {
-  background: var(--brand-green, #006d1f);
-}
-
-[data-theme="dark"] .notes-status-ok {
-  color: var(--color-success-emphasis, #34d399);
-}
-
-[data-theme="dark"] .notes-status-error {
-  color: var(--color-error-emphasis, #f87171);
+@media (prefers-reduced-motion: reduce) {
+  .pt-notas-textarea,
+  .pt-notas-guardar { transition: none; }
 }

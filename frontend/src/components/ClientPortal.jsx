@@ -18,11 +18,13 @@ import "../styles/accessibility-system.css";
 import ThemeLogo from "./ui/ThemeLogo";
 import RescheduleModal from "./portal/RescheduleModal";
 import CancelModal from "./portal/CancelModal";
+import StudentNotesPanel from "./portal/StudentNotesPanel";
 import {
   cancelBooking,
   createPortalSession,
   fetchPortalHistory,
   fetchPublicSettings,
+  updateStudentNotes,
 } from "../api/bookingApi";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import {
@@ -185,7 +187,14 @@ const Entrada = ({ onEntrar, cargando, error }) => {
 /* ══════════════════════════════════════════════════════════════════════════
    Tarjeta de turno
    ══════════════════════════════════════════════════════════════════════════ */
-const TarjetaTurno = ({ turno, esActual, onReprogramar, onCancelar, ubicacion }) => {
+const TarjetaTurno = ({
+  turno,
+  esActual,
+  onReprogramar,
+  onCancelar,
+  onGuardarNotas,
+  ubicacion,
+}) => {
   const [abierto, setAbierto] = useState(false);
   const cancelado = esCancelado(turno);
   const falta = turno.isPast || cancelado ? null : cuantoFalta(turno.timeSlot);
@@ -331,6 +340,21 @@ const TarjetaTurno = ({ turno, esActual, onReprogramar, onCancelar, ubicacion })
           )}
         </dl>
       )}
+
+      {/* La nota editable, solo en los turnos que todavía se pueden gestionar:
+          el backend rechaza escribir en uno cancelado o pasado, así que ofrecer
+          el campo ahí sería prometer algo que no se puede cumplir.
+
+          Fuera del <dl> a propósito: una <div> con un textarea adentro no es
+          contenido válido de una lista de definiciones, y ahí no hay un término
+          y su definición sino un formulario. Se muestra junto al detalle porque
+          comparten el mismo gesto de "quiero ver más de este turno". */}
+      {abierto && gestionable && (
+        <StudentNotesPanel
+          booking={turno}
+          onGuardar={(notas) => onGuardarNotas(turno, notas)}
+        />
+      )}
     </li>
   );
 };
@@ -410,24 +434,45 @@ const ClientPortal = () => {
 
      Se hace así y no ampliando el alcance del token a propósito: cada operación
      sigue autorizada contra su reserva, exactamente como antes. */
+  const tokenDeTurno = useCallback(
+    async (turno) => {
+      if (turno.bookingCode === actual) return token;
+      const { data } = await createPortalSession(turno.bookingCode);
+      const tk = data?.data?.managementToken;
+      if (!tk) throw new Error("sin token");
+      return tk;
+    },
+    [actual, token],
+  );
+
   const abrirGestion = useCallback(
     async (turno, abrir) => {
-      if (turno.bookingCode === actual) {
-        abrir({ turno, tokenDelTurno: token });
-        return;
-      }
       try {
-        const { data } = await createPortalSession(turno.bookingCode);
-        const tk = data?.data?.managementToken;
-        if (!tk) throw new Error("sin token");
-        abrir({ turno, tokenDelTurno: tk });
+        abrir({ turno, tokenDelTurno: await tokenDeTurno(turno) });
       } catch {
         setAviso(
           "No pudimos abrir ese turno. Recargá la página y volvé a intentar.",
         );
       }
     },
-    [actual, token],
+    [tokenDeTurno],
+  );
+
+  /* Guardar la nota necesita el mismo token por turno que reprogramar y
+     cancelar. Se deja acá y no dentro del panel para que el token no baje por
+     props hasta un componente de presentación: vive en un solo lugar.
+
+     Se refresca el historial al terminar para que el DTO vuelva con la nota
+     guardada. Sin eso, el panel seguiría comparando contra el valor viejo y el
+     botón "Guardar nota" quedaría habilitado como si faltara guardar. Los
+     errores se dejan propagar: useAccionDeModal dentro del panel los traduce y
+     los anuncia, que es donde la persona los está mirando. */
+  const guardarNotas = useCallback(
+    async (turno, notas) => {
+      await updateStudentNotes(turno.bookingCode, notas, await tokenDeTurno(turno));
+      await refrescar();
+    },
+    [tokenDeTurno, refrescar],
   );
 
   const { proximos, pasados } = useMemo(() => {
@@ -506,6 +551,7 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  onGuardarNotas={guardarNotas}
                   ubicacion={ubicacion}
                 />
               ))}
@@ -539,6 +585,7 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  onGuardarNotas={guardarNotas}
                   ubicacion={ubicacion}
                 />
               ))}

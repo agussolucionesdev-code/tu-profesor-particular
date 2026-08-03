@@ -189,5 +189,13 @@ export const updateSetting = (key, value, authConfig) =>
 /**
  * Student notes (public, by booking code)
  */
-export const updateStudentNotes = (code, studentNotes) =>
-  apiClient.put(`/api/bookings/${encodeURIComponent(code)}/notes`, { studentNotes });
+/* La ruta exige el token de gestión: `managementBookingForCode` compara el
+   código del token contra el de la URL. Este wrapper no lo mandaba, así que
+   devolvía 401 siempre —y como el panel que lo usaba nunca se había montado en
+   ninguna pantalla, nadie lo notó—. */
+export const updateStudentNotes = (code, studentNotes, managementToken) =>
+  apiClient.put(
+    `/api/bookings/${encodeURIComponent(code)}/notes`,
+    { studentNotes },
+    managementConfig(managementToken),
+  );
