@@ -221,7 +221,10 @@ app.use((req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+// El cuarto parámetro es lo que hace que Express registre esto como manejador
+// de errores: detecta la aridad de la función. No se usa, pero no se puede
+// borrar — de ahí el guion bajo.
+app.use((err, req, res, _next) => {
   const statusCode = err.statusCode || 500;
   const expose = err.expose ?? statusCode < 500;
   const requestId = req.requestId || "unknown-request";
