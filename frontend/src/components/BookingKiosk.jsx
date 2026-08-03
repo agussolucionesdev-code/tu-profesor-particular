@@ -40,6 +40,10 @@ import {
 } from "../utils/bookingFormatters";
 import { createIdempotencyKey } from "../utils/idempotencyKey";
 import { parsePublicSubjectsByLevel } from "../utils/subjectSettings";
+import {
+  FALLBACK_TEACHER_LOCATION,
+  parseTeacherLocation,
+} from "../constants/teacherLocation";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
@@ -76,6 +80,9 @@ const BookingKiosk = () => {
   const [step, setStep] = useState(1);
   const [pricePerHour, setPricePerHour] = useState(0);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
+  // Arranca con el fallback y no en null: el paso 2 puede renderizarse antes de
+  // que responda el endpoint, y ahí es donde va la dirección.
+  const [teacherLocation, setTeacherLocation] = useState(FALLBACK_TEACHER_LOCATION);
   const [showAllDays, setShowAllDays] = useState(false);
   // Paso 1: materia escrita a mano cuando no está en las sugeridas.
   const [otherOpen, setOtherOpen] = useState(false);
@@ -141,6 +148,7 @@ const BookingKiosk = () => {
         if (price > 0) setPricePerHour(price);
         const parsed = parsePublicSubjectsByLevel(data["booking.subjectsByLevel"]);
         if (parsed) setSubjectsByLevelOverride(parsed);
+        setTeacherLocation(parseTeacherLocation(data));
       })
       .catch(() => {});
   }, []);
@@ -219,9 +227,21 @@ const BookingKiosk = () => {
     chooseSubject(value);
   };
 
-  // ── Paso 2: Modalidad ─────────────────────────────────────────────────────
+  /* ── Paso 2: Modalidad ─────────────────────────────────────────────────────
+     Tampoco salta de paso. Este paso ahora muestra la dirección de la clase
+     presencial, y avanzar en el mismo toque significaba mostrarla durante cero
+     milisegundos: quien elige Presencial tiene que poder LEER adónde va antes
+     de seguir. Misma mecánica que el horario: se marca, se suelta tocando de
+     nuevo, y se avanza cuando la persona lo decide. */
   const chooseModality = (modality) => {
-    setField("modality", modality);
+    setFormData((prev) => ({
+      ...prev,
+      modality: prev.modality === modality ? null : modality,
+    }));
+  };
+
+  const confirmModality = () => {
+    if (!formData.modality) return;
     setStep(3);
   };
 
@@ -364,6 +384,9 @@ const BookingKiosk = () => {
         phone: formData.phone,
         subject: formData.subject,
         modality: formData.modality,
+        // La ubicación viaja al comprobante y de ahí al .ics. Antes el alumno
+        // solo la recibía por email, y el archivo del calendario no la llevaba.
+        teacherLocation,
         educationLevel: [formData.educationLevel, formData.yearGrade].filter(Boolean).join(" - "),
         notifications: response.data.notifications || null,
         managementMethods,
@@ -395,6 +418,9 @@ const BookingKiosk = () => {
         `Alumno: ${successData.cleanStudentName}`,
         `Materia: ${successData.subject}`,
         `Modalidad: ${successData.modality === "presencial" ? "Presencial" : "Online"}`,
+        successData.modality === "presencial"
+          ? `Dirección: ${successData.teacherLocation?.address ?? ""}`
+          : null,
         `Fecha: ${successData.day}`,
         `Horario: ${successData.startTime} a ${successData.endTime} h`,
         `Código: ${successData.bookingCode}`,
@@ -621,10 +647,69 @@ const BookingKiosk = () => {
                     {m.value === "online" ? <FaLaptop /> : <FaMapMarkerAlt />}
                   </span>
                   <span className="kiosk-choice-label">{m.label}</span>
-                  <span className="kiosk-choice-hint">{m.hint}</span>
+                  {/* La dirección real en la tarjeta, no un "en el espacio de
+                      Temperley" hardcodeado: acá es donde se decide, y decidir
+                      sin saber a cuántas cuadras queda no es decidir. */}
+                  <span className="kiosk-choice-hint">
+                    {m.value === "presencial" ? teacherLocation.address : m.hint}
+                  </span>
                 </button>
               ))}
             </div>
+
+            <p className="kiosk-hint-deselect">
+              Tocá una opción para elegirla. Si querés cambiarla, tocala de
+              nuevo para soltarla.
+            </p>
+
+            {/* Barra de confirmación, igual que en el horario: repite en
+                palabras qué se eligió y recién ahí deja avanzar.
+                El enlace al mapa va acá y no dentro de la tarjeta porque un
+                <a> dentro de un <button> es HTML inválido: el navegador lo
+                saca del botón y queda un control que no se puede tabular. */}
+            {formData.modality && (
+              <div className="kiosk-confirmar" role="status" aria-live="polite">
+                <div className="kiosk-confirmar-txt">
+                  <span className="kiosk-confirmar-label">Elegiste</span>
+                  <strong className="kiosk-confirmar-valor">
+                    {formData.modality === "presencial" ? "Presencial" : "Online"}
+                  </strong>
+                  {formData.modality === "presencial" ? (
+                    <a
+                      className="kiosk-confirmar-mapa"
+                      href={teacherLocation.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <FaMapMarkerAlt aria-hidden="true" />
+                      {teacherLocation.address}
+                      <span className="sr-only"> — ver en el mapa (abre en una pestaña nueva)</span>
+                    </a>
+                  ) : (
+                    <span className="kiosk-confirmar-detalle">
+                      Te mandamos el enlace de la videollamada por email.
+                    </span>
+                  )}
+                </div>
+                <div className="kiosk-confirmar-acciones">
+                  <button
+                    type="button"
+                    className="kiosk-soltar"
+                    onClick={() => chooseModality(formData.modality)}
+                  >
+                    Soltar
+                  </button>
+                  <button
+                    type="button"
+                    className="kiosk-avanzar"
+                    onClick={confirmModality}
+                  >
+                    Continuar <FaArrowRight aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="kiosk-nav">
               <button type="button" className="kiosk-back" onClick={goPrev}>
                 <FaChevronLeft aria-hidden="true" /> Volver
@@ -848,6 +933,25 @@ const BookingKiosk = () => {
                 <dt>Modalidad</dt>
                 <dd>{formData.modality === "presencial" ? "Presencial" : "Online"}</dd>
               </div>
+              {/* La dirección también acá: este es el paso donde alguien revisa
+                  antes de comprometerse, y "Presencial" sin decir dónde no es
+                  algo que se pueda revisar. */}
+              {formData.modality === "presencial" && (
+                <div>
+                  <dt>Dónde</dt>
+                  <dd>
+                    <a
+                      className="kiosk-summary-link"
+                      href={teacherLocation.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {teacherLocation.address}
+                      <span className="sr-only"> — ver en el mapa (pestaña nueva)</span>
+                    </a>
+                  </dd>
+                </div>
+              )}
               <div>
                 <dt>Fecha</dt>
                 <dd>

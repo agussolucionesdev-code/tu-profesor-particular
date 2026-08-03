@@ -584,3 +584,122 @@
   .kiosk-step-label { display: none; }
   .kiosk-nav { flex-direction: row; }
 }
+
+/* ── Barra de confirmación del paso 2 (modalidad) ─────────────────────────────
+   Mismo lenguaje visual que la del horario en KioskSlotCalendar.css. La
+   modalidad tampoco salta de paso: al elegir Presencial aparece la dirección, y
+   avanzar en el mismo toque la mostraba durante cero milisegundos.
+
+   Los colores salen de las parejas de tokens, así que el contraste se sostiene
+   en los dos temas sin reglas duplicadas. Se usa --text-secondary y no
+   --text-tertiary porque el fondo es --state-hover-bg: el tertiary está
+   calibrado contra blanco y sobre gris se cae por debajo de 4.5:1. */
+.kiosk-hint-deselect {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.kiosk-confirmar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.1rem;
+  padding: 0.9rem 1.1rem;
+  border: 1.5px solid var(--cta-solid-bg);
+  border-radius: var(--radius-md);
+  background: var(--state-hover-bg);
+}
+
+.kiosk-confirmar-txt { display: grid; gap: 0.2rem; min-width: 0; }
+.kiosk-confirmar-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.kiosk-confirmar-valor {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.kiosk-confirmar-detalle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* La dirección es un enlace al mapa: subrayada siempre, porque el color solo
+   no alcanza para distinguirla (WCAG 1.4.1). */
+.kiosk-confirmar-mapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.kiosk-confirmar-mapa:hover { text-decoration-thickness: 2px; }
+.kiosk-confirmar-mapa:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-focus);
+}
+
+.kiosk-confirmar-acciones { display: flex; align-items: center; gap: 0.55rem; }
+
+.kiosk-soltar,
+.kiosk-avanzar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* 44px de alto mínimo: es el objetivo táctil de WCAG 2.5.5 y este es un
+     control del flujo de reserva, no un adorno. */
+  min-height: 44px;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-base);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.kiosk-soltar:focus-visible,
+.kiosk-avanzar:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+.kiosk-soltar {
+  border: 1.5px solid var(--border-color);
+  background: none;
+  color: var(--text-primary);
+}
+.kiosk-soltar:hover { border-color: var(--text-secondary); }
+
+.kiosk-avanzar {
+  border: 1.5px solid transparent;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+}
+.kiosk-avanzar:hover { background: var(--cta-solid-bg-hover); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-soltar,
+  .kiosk-avanzar { transition: none; }
+}
+
+/* Enlace dentro del resumen del paso 5. Subrayado permanente: el color solo no
+   distingue un enlace del resto del texto del resumen (WCAG 1.4.1). */
+.kiosk-summary-link {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.kiosk-summary-link:hover { text-decoration-thickness: 2px; }
+.kiosk-summary-link:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-focus);
+}

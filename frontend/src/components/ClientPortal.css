@@ -377,6 +377,22 @@
 .pt-turno-meta svg { font-size: 0.76rem; margin-right: 0.2rem; }
 .pt-turno-codigo { font-family: var(--font-mono, monospace); letter-spacing: 0.04em; }
 
+/* La dirección del turno presencial, enlazada al mapa. Subrayada siempre: en
+   una línea de metadatos donde todo comparte color, el subrayado es lo único
+   que la distingue como enlace (WCAG 1.4.1). */
+.pt-turno-mapa {
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pt-turno-mapa:hover { text-decoration-thickness: 2px; }
+.pt-turno-mapa:focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-focus);
+}
+
 .pt-turno-acciones { display: grid; gap: 0.45rem; flex-shrink: 0; }
 
 .pt-btn {

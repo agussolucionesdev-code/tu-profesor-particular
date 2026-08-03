@@ -11,6 +11,7 @@ import {
   FaHourglassHalf,
   FaInfoCircle,
   FaLink,
+  FaMapMarkerAlt,
   FaSearch,
   FaTimes,
   FaWhatsapp,
@@ -90,6 +91,9 @@ const BookingSuccessModal = ({
     successData?.durationLabel ||
     `${successData?.actualDuration || "--"} h`;
 
+  /* La modalidad faltaba en el comprobante: se elegía en el paso 2 y después no
+     volvía a aparecer en ningún lado de la app. */
+  const esPresencial = successData?.modality === "presencial";
   const detailRows = [
     { label: "Alumno", value: successData?.cleanStudentName },
     { label: "Responsable", value: successData?.responsibleLabel },
@@ -97,6 +101,7 @@ const BookingSuccessModal = ({
     { label: "Nivel", value: successData?.educationLevel },
     { label: "Materia", value: successData?.subject },
     { label: "Institución", value: successData?.school },
+    { label: "Modalidad", value: esPresencial ? "Presencial" : "Online" },
   ].filter((r) => r.value);
 
   return createPortal(
@@ -199,6 +204,26 @@ const BookingSuccessModal = ({
           ))}
         </div>
 
+        {/* Adónde ir. Es lo primero que alguien va a buscar el día de la clase,
+            así que va en el comprobante y no solo en el email: si el correo se
+            pierde en spam, esta pantalla y el .ics son lo único que queda. */}
+        {esPresencial && successData?.teacherLocation?.address && (
+          <div className="success-location">
+            <span className="success-location-label">
+              <FaMapMarkerAlt aria-hidden="true" /> Dónde
+            </span>
+            <a
+              className="success-location-address"
+              href={successData.teacherLocation.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {successData.teacherLocation.address}
+              <span className="sr-only"> — abrir en el mapa (pestaña nueva)</span>
+            </a>
+          </div>
+        )}
+
         {/* Estado del envío del comprobante. */}
         <div
           id="booking-success-feedback"
@@ -248,8 +273,13 @@ const BookingSuccessModal = ({
                     timeSlot: successData.rawTimeSlot,
                     endTime: successData.rawEndTime,
                     duration: successData.actualDuration,
+                    modality: successData.modality,
+                    location: successData.teacherLocation?.address,
                   },
                   `turno-${successData.bookingCode}.ics`,
+                  // Quien descarga acá es el alumno, no el profesor: el título
+                  // del evento nombra la materia, no a sí mismo.
+                  { audience: "student" },
                 )
               }
             >
