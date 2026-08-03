@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa6";
 import usePageMeta from "../hooks/usePageMeta.js";
+import { META_404 } from "../data/meta.js";
 import "./Inner.css";
 
 const NotFound = () => {
-  usePageMeta(
-    "Página no encontrada · Tu Profesor Particular",
-    "La página que buscabas no existe. Volvé al inicio para ver materias, niveles y reservar tu clase.",
-  );
+  usePageMeta("/404", { meta: META_404 });
 
   return (
     <section className="section pagehead nf" aria-labelledby="nf-title">

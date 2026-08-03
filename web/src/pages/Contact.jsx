@@ -90,11 +90,7 @@ const CopyButton = ({ value, label }) => {
 };
 
 const Contact = () => {
-  usePageMeta(
-    "Contacto · Tu Profesor Particular",
-    `Escribime por WhatsApp al ${CONTACT.whatsappDisplay} o por email. Clases presenciales en ${CONTACT.addressLine} y online para toda Argentina.`,
-    { path: "/contacto" },
-);
+  usePageMeta("/contacto");
 
   // El motivo elegido define con qué mensaje se abre WhatsApp.
   const [intent, setIntent] = useState(INTENTS[0]);
