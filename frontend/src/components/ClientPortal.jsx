@@ -22,8 +22,13 @@ import {
   cancelBooking,
   createPortalSession,
   fetchPortalHistory,
+  fetchPublicSettings,
 } from "../api/bookingApi";
 import { usePageMeta } from "../hooks/useDocumentTitle";
+import {
+  FALLBACK_TEACHER_LOCATION,
+  parseTeacherLocation,
+} from "../constants/teacherLocation";
 
 const WHATSAPP_URL =
   "https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn%2C%20necesito%20ayuda%20con%20un%20turno.";
@@ -180,7 +185,7 @@ const Entrada = ({ onEntrar, cargando, error }) => {
 /* ══════════════════════════════════════════════════════════════════════════
    Tarjeta de turno
    ══════════════════════════════════════════════════════════════════════════ */
-const TarjetaTurno = ({ turno, esActual, onReprogramar, onCancelar }) => {
+const TarjetaTurno = ({ turno, esActual, onReprogramar, onCancelar, ubicacion }) => {
   const [abierto, setAbierto] = useState(false);
   const cancelado = esCancelado(turno);
   const falta = turno.isPast || cancelado ? null : cuantoFalta(turno.timeSlot);
@@ -236,6 +241,21 @@ const TarjetaTurno = ({ turno, esActual, onReprogramar, onCancelar }) => {
                 </>
               )}
             </span>
+            {/* La dirección, enlazada al mapa, y solo en los turnos que todavía
+                no pasaron: en un turno viejo o cancelado es ruido. Acá es donde
+                alguien la busca de verdad —el día antes de la clase—, y hasta
+                ahora el portal decía "Presencial" sin decir dónde. */}
+            {turno.modality === "presencial" && gestionable && (
+              <a
+                className="pt-turno-mapa"
+                href={ubicacion.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {ubicacion.address}
+                <span className="sr-only"> — ver en el mapa (pestaña nueva)</span>
+              </a>
+            )}
             <span>
               <FaGraduationCap aria-hidden="true" /> {turno.educationLevel}
               {turno.yearGrade ? ` · ${turno.yearGrade}` : ""}
@@ -334,6 +354,16 @@ const ClientPortal = () => {
   const [reprogramando, setReprogramando] = useState(null);
   const [cancelando, setCancelando] = useState(null);
   const [aviso, setAviso] = useState("");
+  const [ubicacion, setUbicacion] = useState(FALLBACK_TEACHER_LOCATION);
+
+  /* La dirección del espacio presencial. Es público y no depende del token, así
+     que se pide una sola vez al montar y no cuando alguien entra con su código:
+     si esta llamada falla, queda el fallback y el portal sigue funcionando. */
+  useEffect(() => {
+    fetchPublicSettings()
+      .then((res) => setUbicacion(parseTeacherLocation(res.data?.data)))
+      .catch(() => {});
+  }, []);
 
   const cargarHistorial = useCallback(async (tk) => {
     const { data } = await fetchPortalHistory(tk);
@@ -476,6 +506,7 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  ubicacion={ubicacion}
                 />
               ))}
             </ul>
@@ -508,6 +539,7 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  ubicacion={ubicacion}
                 />
               ))}
             </ul>

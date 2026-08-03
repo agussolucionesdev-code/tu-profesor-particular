@@ -31,15 +31,34 @@ import {
 
 const SCHEDULE_KEYS = SCHEDULE_SETTING_KEYS;
 
-const PUBLIC_KEYS = [...SCHEDULE_KEYS, "booking.pricePerHour", "booking.subjectsByLevel"];
-const PUBLIC_NON_SCHEDULE_KEYS = ["booking.pricePerHour", "booking.subjectsByLevel"];
+/* La ubicación es pública a propósito. Estaba en ADMIN_ONLY_KEYS, así que quien
+   elegía "Presencial" reservaba sin ver nunca DÓNDE es la clase dentro de la
+   app: se enteraba recién por el email, y el .ics que descargaba no llevaba
+   ubicación. No hay divulgación nueva —la dirección ya está publicada en
+   tuprofesorparticular.com.ar y en el JSON-LD de LocalBusiness que lee
+   Google—; la asimetría era ocultarla justo en el único lugar donde alguien
+   necesita saberla para llegar. */
+const PUBLIC_LOCATION_KEYS = ["teacher.address", "teacher.mapsUrl"];
 
+const PUBLIC_KEYS = [
+  ...SCHEDULE_KEYS,
+  "booking.pricePerHour",
+  "booking.subjectsByLevel",
+  ...PUBLIC_LOCATION_KEYS,
+];
+const PUBLIC_NON_SCHEDULE_KEYS = [
+  "booking.pricePerHour",
+  "booking.subjectsByLevel",
+  ...PUBLIC_LOCATION_KEYS,
+];
+
+/* Sigue privado: son decisiones operativas y estado de infraestructura.
+   requireManualConfirmation delataría si una reserva va a quedar Pendiente
+   antes de mandarla; las otras dos son ruido interno. */
 const ADMIN_ONLY_KEYS = [
   "booking.requireManualConfirmation",
   "sheets.syncStatus",
   "cron.lastReminderRun",
-  "teacher.address",
-  "teacher.mapsUrl",
 ];
 const ALLOWED_KEYS = [...PUBLIC_KEYS, ...ADMIN_ONLY_KEYS];
 
@@ -489,11 +508,11 @@ export const updateSetting = async (req, res, next) => {
   try {
     const { key } = req.params;
 
+    // Las de ubicación ya vienen dentro de PUBLIC_KEYS: pública para leer no es
+    // pública para escribir, esta ruta sigue detrás de requireAdmin.
     const WRITABLE_KEYS = [
       ...PUBLIC_KEYS.filter((writableKey) => writableKey !== SUBJECTS_SETTINGS_KEY),
       "booking.requireManualConfirmation",
-      "teacher.address",
-      "teacher.mapsUrl",
     ];
     if (!WRITABLE_KEYS.includes(key)) {
       return res.status(400).json({

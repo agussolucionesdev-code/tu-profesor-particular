@@ -2348,3 +2348,47 @@
   }
 
 }
+
+/* ── Dónde es la clase (solo presencial) ──────────────────────────────────────
+   Va entre el detalle y el estado del envío, con el mismo margen lateral que la
+   alerta. Es información de acción, no un dato más de la lista: el día de la
+   clase alguien va a abrir esta pantalla buscando exactamente esto. */
+.success-location {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0 1.5rem 0.85rem;
+  padding: 0.8rem 1rem;
+  border: 1.5px solid var(--cta-solid-bg);
+  border-radius: 12px;
+  background: var(--state-hover-bg);
+}
+
+.success-location-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  /* --text-secondary y no --text-tertiary: el fondo acá es --state-hover-bg.
+     El tertiary está calibrado contra blanco y sobre gris baja de 4.5:1. */
+  color: var(--text-secondary);
+}
+.success-location-label svg { color: var(--accent-ink); }
+
+/* Subrayado permanente: el color solo no alcanza para señalar un enlace
+   dentro de un bloque que ya es de color (WCAG 1.4.1). */
+.success-location-address {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.success-location-address:hover { text-decoration-thickness: 2px; }
+.success-location-address:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: var(--shadow-focus);
+}
