@@ -6,11 +6,7 @@ import agustin from "../assets/agustin.webp";
 import "./Inner.css";
 
 const About = () => {
-  usePageMeta(
-    "Sobre mí · Agustín Elías Sosa | Tu Profesor Particular",
-    `Profesor particular con más de ${BRAND.yearsTeaching} años de experiencia. Clases de Matemáticas, Física, Química e Inglés en Temperley y online.`,
-    { path: "/sobre-mi" },
-);
+  usePageMeta("/sobre-mi");
 
   return (
     <>

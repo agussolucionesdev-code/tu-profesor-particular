@@ -27,11 +27,7 @@ import agustin from "../assets/agustin.webp";
 import "./Home.css";
 
 const Home = () => {
-  usePageMeta(
-    "Tu Profesor Particular · Agustín Elías Sosa | Clases particulares en Temperley y online",
-    "Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Online y presenciales en Temperley. Desde primaria hasta universitario, sin pagos por adelantado.",
-    { path: "/" },
-);
+  usePageMeta("/");
 
   return (
     <>

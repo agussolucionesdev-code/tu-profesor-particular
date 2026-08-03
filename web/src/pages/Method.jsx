@@ -6,11 +6,7 @@ import usePageMeta from "../hooks/usePageMeta.js";
 import "./Inner.css";
 
 const Method = () => {
-  usePageMeta(
-    "Cómo trabajo · Tu Profesor Particular",
-    "Primera clase de diagnóstico, plan concreto, clases con orden y seguimiento del avance. Así se trabaja en Tu Profesor Particular.",
-    { path: "/como-trabajo" },
-);
+  usePageMeta("/como-trabajo");
 
   return (
     <>

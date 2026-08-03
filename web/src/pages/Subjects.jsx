@@ -6,11 +6,7 @@ import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
 import "./Inner.css";
 
 const Subjects = () => {
-  usePageMeta(
-    "Materias y niveles · Tu Profesor Particular",
-    "Matemáticas, Física, Fisicoquímica, Química e Inglés, y más materias a consultar. Desde primaria hasta universitario, incluida secundaria técnica.",
-    { path: "/materias" },
-);
+  usePageMeta("/materias");
 
   return (
     <>

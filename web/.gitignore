@@ -4,3 +4,9 @@ dist-ssr
 *.local
 .vercel
 .DS_Store
+
+# Cache de Vite: se regenera en cada arranque del dev server.
+.vite
+
+# Temporal del prerender, si algo lo dejara a medias.
+.prerender-tmp.mjs

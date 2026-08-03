@@ -1,9 +1,5 @@
 import { useEffect } from "react";
-
-const SITIO = "https://tuprofesorparticular.com.ar";
-/* Imagen que se ve al compartir el enlace. Se referencia por URL absoluta y
-   vive en /public: los crawlers la piden por HTTP, no resuelven imports. */
-const IMAGEN_POR_DEFECTO = `${SITIO}/og-cover.png`;
+import { IMAGEN_POR_DEFECTO, META_POR_RUTA, urlDe } from "../data/meta.js";
 
 /* Escribe o actualiza una etiqueta del <head>, creándola si no existe: así
    sumar un metadato nuevo no obliga a tocar también el index.html. */
@@ -25,16 +21,23 @@ const fijarEtiqueta = (selector, { crearCon, campo, valor }) => {
  * le declaraban a Google ser la portada, y compartir /materias por WhatsApp
  * mostraba el texto de la portada.
  *
- * Alcance real, para no prometer de más: los bots de WhatsApp, Facebook y
- * LinkedIn NO ejecutan JavaScript, así que leen el HTML servido. Esto corrige
- * el canonical y el OG para Google —que sí ejecuta JS— y deja las etiquetas
- * bien puestas en el DOM; la vista previa al compartir queda del todo resuelta
- * recién cuando el sitio se prerenderice.
+ * Los textos salen de data/meta.js, el mismo módulo que lee el script de
+ * prerender. Así el HTML servido y lo que escribe React dicen lo mismo por
+ * construcción, no por disciplina.
+ *
+ * Se pasa la RUTA, no los textos: si además hubiera que pasarlos, cada página
+ * podría escribir algo distinto de lo que el build ya dejó en el HTML, y el
+ * único síntoma sería una vista previa de WhatsApp que no coincide con la
+ * pestaña. Con la ruta como única entrada, esa divergencia no puede existir.
  */
-export default function usePageMeta(title, description, opciones = {}) {
-  const { path, image } = opciones;
+export default function usePageMeta(ruta, opciones = {}) {
+  const { image, meta } = opciones;
 
   useEffect(() => {
+    const datos = meta ?? META_POR_RUTA[ruta];
+    if (!datos) return;
+
+    const { title, description } = datos;
     if (title) document.title = title;
 
     if (description) {
@@ -45,8 +48,7 @@ export default function usePageMeta(title, description, opciones = {}) {
       });
     }
 
-    const ruta = path ?? window.location.pathname;
-    const url = ruta === "/" ? `${SITIO}/` : `${SITIO}${ruta}`;
+    const url = urlDe(ruta);
     const imagen = image ?? IMAGEN_POR_DEFECTO;
 
     fijarEtiqueta('link[rel="canonical"]', {
@@ -84,5 +86,5 @@ export default function usePageMeta(title, description, opciones = {}) {
         valor,
       });
     }
-  }, [title, description, path, image]);
+  }, [ruta, image, meta]);
 }
