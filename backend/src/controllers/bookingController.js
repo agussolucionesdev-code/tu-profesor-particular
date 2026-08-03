@@ -130,6 +130,11 @@ const managedBooking = (booking) => ({
   endTime: booking.endTime,
   duration: booking.duration,
   status: booking.status,
+  /* Las notas que el alumno escribe para el profesor. Faltaban acá, así que la
+     pantalla del portal no podía mostrar lo ya guardado: se abría vacía y el
+     primer "Guardar" borraba la nota sin que nadie se diera cuenta. Es un dato
+     que la propia persona escribió, así que le vuelve a ella. */
+  studentNotes: booking.studentNotes ?? "",
 });
 
 const adminBooking = (booking) => {
