@@ -78,8 +78,12 @@ import { isScheduleGridChangeInProgress } from "../services/scheduleGridChangeLe
 
 const activeStatusFilter = SLOT_OWNING_BOOKING_FILTER;
 
+/* Pendiente → Finalizado se agregó porque sin él los Pendiente vencidos no
+   tenían salida: el cron los ignoraba y el profesor tampoco podía cerrarlos a
+   mano desde el panel. Se acumulaban en la agenda para siempre.
+   Cancelado y Finalizado siguen siendo terminales: de ahí no se vuelve. */
 const STATUS_TRANSITIONS = {
-  Pendiente: ["Confirmado", "Cancelado"],
+  Pendiente: ["Confirmado", "Finalizado", "Cancelado"],
   Confirmado: ["Finalizado", "Cancelado"],
   Finalizado: [],
   Cancelado: [],

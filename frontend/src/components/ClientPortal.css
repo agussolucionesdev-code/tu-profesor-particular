@@ -331,6 +331,20 @@
 .pt-chip.is-confirmado { background: var(--state-hover-bg); color: var(--accent-ink); }
 .pt-chip.is-pasado { background: var(--state-selected-bg); color: var(--text-secondary); }
 .pt-chip.is-cancelado { background: var(--color-error-bg); color: var(--error-color); }
+/* "Falta confirmar". Antes este chip no existía y un turno Pendiente se
+   mostraba como "Confirmado", que era falso.
+
+   El fondo ámbar señala que hay algo por hacer, pero el TEXTO va en
+   --text-primary y no en --warning-color por dos razones: con el ámbar sobre
+   ámbar medía 4.58, apenas 0.08 arriba del mínimo —cualquier ajuste de token lo
+   rompía—, y el significado no puede depender del color (WCAG 1.4.1). Acá lo
+   carga la palabra: "Falta confirmar". El borde ámbar mantiene la señal visual
+   sin apoyarse en ella. */
+.pt-chip.is-pendiente {
+  background: var(--warning-bg);
+  box-shadow: inset 0 0 0 1px var(--warning-color);
+  color: var(--text-primary);
+}
 .pt-chip.is-actual {
   background: none;
   border: 1px dashed var(--border-color);
@@ -424,6 +438,38 @@
 }
 .pt-btn--cancelar { color: var(--error-color); }
 .pt-btn--cancelar:hover { background: var(--color-error-bg); }
+
+/* Confirmar es la acción principal mientras el turno esté Pendiente: es lo
+   único que falta hacer, así que lleva el relleno sólido y las otras dos quedan
+   como contorno. */
+.pt-btn--confirmar {
+  border-color: transparent;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  font-weight: 800;
+}
+.pt-btn--confirmar:not(:disabled):hover { background: var(--cta-solid-bg-hover); }
+/* Sin `opacity` en el deshabilitado: el botón dice "Confirmando…" y ese texto
+   tiene que poder leerse mientras trabaja. */
+.pt-btn--confirmar:disabled {
+  cursor: progress;
+  border-color: var(--border-color);
+  background: none;
+  color: var(--text-secondary);
+}
+
+/* Por qué hay que confirmar. Va en la tarjeta y no escondido en el detalle:
+   quien no sabe que falta algo no abre el detalle a buscarlo. */
+.pt-turno-pendiente-aviso {
+  margin: 0.5rem 0 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--warning-color);
+  border-radius: var(--radius-sm);
+  background: var(--warning-bg);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
 
 .pt-btn--reservar {
   background: var(--cta-solid-bg);

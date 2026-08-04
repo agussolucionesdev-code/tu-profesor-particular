@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FaArrowRight,
   FaCalendarAlt,
+  FaCheck,
   FaChevronDown,
   FaClock,
   FaGraduationCap,
@@ -21,11 +22,13 @@ import CancelModal from "./portal/CancelModal";
 import StudentNotesPanel from "./portal/StudentNotesPanel";
 import {
   cancelBooking,
+  confirmAttendance,
   createPortalSession,
   fetchPortalHistory,
   fetchPublicSettings,
   updateStudentNotes,
 } from "../api/bookingApi";
+import { clasificarFalla, mensajeDeFalla } from "../api/errorClassification";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import {
   FALLBACK_TEACHER_LOCATION,
@@ -84,6 +87,7 @@ const cuantoFalta = (iso) => {
 };
 
 const esCancelado = (b) => String(b.status || "").toLowerCase() === "cancelado";
+const esPendiente = (b) => String(b.status || "").toLowerCase() === "pendiente";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Pantalla de entrada
@@ -192,7 +196,9 @@ const TarjetaTurno = ({
   esActual,
   onReprogramar,
   onCancelar,
+  onConfirmar,
   onGuardarNotas,
+  confirmando,
   ubicacion,
 }) => {
   const [abierto, setAbierto] = useState(false);
@@ -201,11 +207,20 @@ const TarjetaTurno = ({
   const gestionable = !turno.isPast && !cancelado;
   const detalleId = `pt-detalle-${turno.bookingCode}`;
 
+  /* El chip decía "Confirmado" a cualquier turno que no estuviera cancelado ni
+     hubiera pasado, sin mirar `turno.status`. Un turno Pendiente —el estado en
+     que entran TODAS las reservas cuando el profesor pide confirmación manual—
+     se mostraba como confirmado. Eso es peor que no tener el botón: quien lo
+     leía nunca iba a buscar cómo confirmarlo, porque la app ya le había dicho
+     que estaba listo. */
+  const pendiente = esPendiente(turno);
   const estado = cancelado
     ? { texto: "Cancelado", clase: "is-cancelado" }
     : turno.isPast
       ? { texto: "Ya pasó", clase: "is-pasado" }
-      : { texto: "Confirmado", clase: "is-confirmado" };
+      : pendiente
+        ? { texto: "Falta confirmar", clase: "is-pendiente" }
+        : { texto: "Confirmado", clase: "is-confirmado" };
 
   return (
     <li className={`pt-turno ${cancelado ? "is-cancelado" : ""} ${turno.isPast ? "is-pasado" : ""}`}>
@@ -271,10 +286,38 @@ const TarjetaTurno = ({
             </span>
             <span className="pt-turno-codigo">#{turno.bookingCode}</span>
           </p>
+
+          {/* Por qué hay que confirmar. Sin esto el botón es una orden sin
+              motivo, y quien no entiende para qué sirve no lo toca. */}
+          {pendiente && gestionable && (
+            <p className="pt-turno-pendiente-aviso">
+              Agustín todavía está esperando que confirmes. Avisale que vas y el
+              turno queda reservado en firme.
+            </p>
+          )}
         </div>
 
         {gestionable && (
           <div className="pt-turno-acciones">
+            {/* Confirmar va primero y con el estilo principal: mientras el turno
+                esté Pendiente es lo único que hay que hacer, y las otras dos
+                acciones pueden esperar. */}
+            {pendiente && (
+              <button
+                type="button"
+                className="pt-btn pt-btn--confirmar"
+                onClick={() => onConfirmar(turno)}
+                disabled={confirmando}
+              >
+                {confirmando ? (
+                  "Confirmando…"
+                ) : (
+                  <>
+                    <FaCheck aria-hidden="true" /> Confirmar que voy
+                  </>
+                )}
+              </button>
+            )}
             <button
               type="button"
               className="pt-btn pt-btn--reprogramar"
@@ -475,6 +518,35 @@ const ClientPortal = () => {
     [tokenDeTurno, refrescar],
   );
 
+  /* Confirmar asistencia: el endpoint existía desde hace tiempo y ninguna
+     pantalla lo llamaba, así que un turno Pendiente no tenía forma de pasar a
+     Confirmado. Peor: el chip decía "Confirmado" igual, así que nadie sabía que
+     faltaba hacer algo.
+
+     No abre modal a propósito. Cancelar y reprogramar sí lo hacen porque son
+     irreversibles o cambian el horario; confirmar es aditivo y no destruye
+     nada, y pedir una confirmación de la confirmación es fricción sin motivo. */
+  const [confirmando, setConfirmando] = useState(null);
+
+  const confirmarAsistencia = useCallback(
+    async (turno) => {
+      setConfirmando(turno.bookingCode);
+      setAviso("");
+      try {
+        await confirmAttendance(turno.bookingCode, await tokenDeTurno(turno));
+        await refrescar();
+        setAviso("¡Listo! Tu turno quedó confirmado. Nos vemos en la clase.");
+      } catch (error) {
+        const falla = error?.falla ?? clasificarFalla(error);
+        if (!falla.seMuestra) return;
+        setAviso(mensajeDeFalla(falla));
+      } finally {
+        setConfirmando(null);
+      }
+    },
+    [tokenDeTurno, refrescar],
+  );
+
   const { proximos, pasados } = useMemo(() => {
     const p = [];
     const q = [];
@@ -531,12 +603,19 @@ const ClientPortal = () => {
           </button>
         </header>
 
-        {aviso && (
-          <p className="pt-aviso" role="status" aria-live="polite">
-            <FaRegCalendarCheck aria-hidden="true" />
-            {aviso}
-          </p>
-        )}
+        {/* La región live se renderiza SIEMPRE, aunque esté vacía. Antes se
+            montaba junto con su contenido, y un lector de pantalla solo anuncia
+            los cambios de una región que ya existía en el DOM: si aparece al
+            mismo tiempo que el texto, varios se lo pierden. El que cambia es el
+            contenido, no el contenedor. */}
+        <div role="status" aria-live="polite">
+          {aviso && (
+            <p className="pt-aviso">
+              <FaRegCalendarCheck aria-hidden="true" />
+              {aviso}
+            </p>
+          )}
+        </div>
 
         {proximos.length > 0 && (
           <section aria-labelledby="pt-proximos">
@@ -551,7 +630,9 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  onConfirmar={confirmarAsistencia}
                   onGuardarNotas={guardarNotas}
+                  confirmando={confirmando === t.bookingCode}
                   ubicacion={ubicacion}
                 />
               ))}
@@ -585,7 +666,9 @@ const ClientPortal = () => {
                   esActual={t.bookingCode === actual}
                   onReprogramar={(t) => abrirGestion(t, setReprogramando)}
                   onCancelar={(t) => abrirGestion(t, setCancelando)}
+                  onConfirmar={confirmarAsistencia}
                   onGuardarNotas={guardarNotas}
+                  confirmando={confirmando === t.bookingCode}
                   ubicacion={ubicacion}
                 />
               ))}
