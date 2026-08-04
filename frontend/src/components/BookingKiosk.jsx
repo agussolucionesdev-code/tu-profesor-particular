@@ -83,6 +83,7 @@ const BookingKiosk = () => {
   // Arranca con el fallback y no en null: el paso 2 puede renderizarse antes de
   // que responda el endpoint, y ahí es donde va la dirección.
   const [teacherLocation, setTeacherLocation] = useState(FALLBACK_TEACHER_LOCATION);
+  const [ajustesFallaron, setAjustesFallaron] = useState(false);
   const [showAllDays, setShowAllDays] = useState(false);
   // Paso 1: materia escrita a mano cuando no está en las sugeridas.
   const [otherOpen, setOtherOpen] = useState(false);
@@ -140,6 +141,14 @@ const BookingKiosk = () => {
     funnelRef.current.start(1);
   }, []);
 
+  /* Los ajustes públicos son mejoras sobre valores que ya tienen fallback: el
+     precio, las materias configuradas y la dirección. Si la llamada falla, el
+     wizard tiene que seguir funcionando —bloquear una reserva porque no cargó un
+     precio estimado sería absurdo—, así que no hay toast ni error acá.
+
+     Lo que sí cambia: antes era un `.catch(() => {})` a secas y el estimado
+     simplemente no aparecía, sin ninguna explicación. Ahora se recuerda que
+     falló para poder decirlo en el paso donde se nota. */
   useEffect(() => {
     fetchPublicSettings()
       .then((res) => {
@@ -150,7 +159,10 @@ const BookingKiosk = () => {
         if (parsed) setSubjectsByLevelOverride(parsed);
         setTeacherLocation(parseTeacherLocation(data));
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (error?.falla?.seMuestra === false) return; // Desmontaje.
+        setAjustesFallaron(true);
+      });
   }, []);
 
   // Al cambiar de paso: (1) llevar la tarjeta al tope del viewport solo si quedó
@@ -973,6 +985,15 @@ const BookingKiosk = () => {
                 <div><dt>Estimado</dt><dd>{priceLabel}</dd></div>
               )}
             </dl>
+
+            {/* Decirlo en lugar de dejar un hueco. La reserva se puede confirmar
+                igual: el precio es informativo y nunca fue lo que se cobra. */}
+            {ajustesFallaron && !priceLabel && (
+              <p className="kiosk-aviso-suave" role="status">
+                No pudimos cargar el precio estimado. Podés confirmar igual y lo
+                acordás con Agustín; el valor no cambia por esto.
+              </p>
+            )}
 
             {submitError && (
               <p className="kiosk-error" role="alert">{submitError}</p>

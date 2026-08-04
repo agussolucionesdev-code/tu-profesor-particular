@@ -1,3 +1,5 @@
+import { clasificarFalla, mensajeDeFalla } from "../api/errorClassification";
+
 export const displayValue = (v, fallback = "—") =>
   v === null || v === undefined || String(v).trim() === "" ? fallback : String(v);
 
@@ -176,29 +178,19 @@ export const formatCuitMaskAr = (value) => {
   return `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10)}`;
 };
 
-const FRIENDLY_CONNECTION_MESSAGE =
-  "No pudimos conectar con el sistema. Revisá tu conexión e intentá otra vez; tus datos siguen acá.";
-
-const TECHNICAL_ERROR_PATTERN =
-  /(localhost|127\.0\.0\.1|0\.0\.0\.0|ECONN|ENOTFOUND|ETIMEDOUT|Network Error|Failed to fetch|ERR_|http:\/\/|https:\/\/)/i;
-
-export const getBookingApiMessage = (error) => {
-  if (!error?.response) {
-    return FRIENDLY_CONNECTION_MESSAGE;
-  }
-
-  if (error.response.status >= 500) {
-    return FRIENDLY_CONNECTION_MESSAGE;
-  }
-
-  const apiMessage = String(error.response?.data?.message ?? "").trim();
-
-  if (!apiMessage || TECHNICAL_ERROR_PATTERN.test(apiMessage)) {
-    return "No pudimos completar la operación ahora mismo. Intentá nuevamente en unos segundos o comunicate por WhatsApp si necesitás ayuda.";
-  }
-
-  return apiMessage;
-};
+/* Un solo catálogo de mensajes, en errorClassification.js.
+ *
+ * Esto tenía su propia lógica —"sin response" o "5xx" se volvían el mismo texto
+ * de conexión— y era la segunda mitad del problema: un timeout y un 503 se
+ * contaban igual, y un 404 se contaba como si fuera culpa de los datos. Ahora
+ * delega en la misma clasificación que adjunta el interceptor, así el mensaje no
+ * depende de por dónde entró el error.
+ *
+ * Se mantiene la firma porque la usan seis pantallas. `error.falla` ya viene
+ * puesta por el interceptor; el `clasificarFalla` de respaldo cubre los errores
+ * que no pasaron por axios. */
+export const getBookingApiMessage = (error) =>
+  mensajeDeFalla(error?.falla ?? clasificarFalla(error));
 
 export const isAdultBooking = (booking) => {
   const relationship = String(booking?.responsibleRelationship ?? "")

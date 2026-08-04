@@ -703,3 +703,16 @@
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-focus);
 }
+
+/* Aviso informativo, no un error: algo secundario no cargó pero se puede seguir.
+   Sin rojo ni ícono de alarma justamente por eso. */
+.kiosk-aviso-suave {
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--warning-color);
+  border-radius: var(--radius-sm);
+  background: var(--warning-bg);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
