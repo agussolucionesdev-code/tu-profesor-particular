@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaCheckCircle, FaLock, FaTimesCircle } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaLock,
+  FaRedo,
+  FaTimesCircle,
+} from "react-icons/fa";
 import BookingTicket from "./BookingTicket";
 import CancelModal from "./portal/CancelModal";
 import RescheduleModal from "./portal/RescheduleModal";
@@ -10,6 +16,11 @@ import {
   revokeManagementAccess,
 } from "../api/bookingApi";
 import { getBookingApiMessage } from "../utils/bookingFormatters";
+import {
+  clasificarFalla,
+  esProblemaDeAcceso,
+  mensajeDeFalla,
+} from "../api/errorClassification";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import "./ClientPortal.css";
 import "./ManageBooking.css";
@@ -44,15 +55,32 @@ const ManageBooking = () => {
   const [cancelingBooking, setCancelingBooking] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null);
 
+  /* Antes esto era `catch { setState("invalid") }`, y esa línea le decía a
+     cualquiera que se le cayera el wifi que su enlace de gestión no era válido.
+     El enlace estaba perfecto —recargando entraba— pero la pantalla ya lo había
+     mandado a pedir otro.
+
+     Ahora se separan las dos cosas: si el token es el problema (401, 403, 404),
+     efectivamente hay que pedir uno nuevo. Si el problema fue la red o el
+     servidor, el enlace sigue sirviendo y lo único que hace falta es
+     reintentar. */
   const loadBooking = async () => {
     if (!managementToken) return;
     setState("loading");
+    setMessage("");
     try {
       const response = await getManagedBooking(managementToken);
       setBooking(response.data.data);
       setState("ready");
-    } catch {
-      setState("invalid");
+    } catch (error) {
+      const falla = error?.falla ?? clasificarFalla(error);
+      if (!falla.seMuestra) return; // Desmontaje: no hay nada que contar.
+      if (esProblemaDeAcceso(falla)) {
+        setState("invalid");
+        return;
+      }
+      setMessage(mensajeDeFalla(falla));
+      setState("unreachable");
     }
   };
 
@@ -97,6 +125,26 @@ const ManageBooking = () => {
         <h1>Enlace no disponible</h1>
         <p>Este enlace venció, fue revocado o no es válido. Pedí uno nuevo desde Mis Turnos.</p>
         <Link to="/portal">Ir a Mis Turnos</Link>
+      </section>
+    );
+  }
+
+  /* No pudimos llegar al servidor. El enlace no tiene nada de malo, así que acá
+     lo importante es el botón de reintentar y NO mandar a pedir otro. El acceso
+     al portal queda como salida secundaria, no como la acción principal. */
+  if (state === "unreachable") {
+    return (
+      <section className="manage-page-state manage-page-state--unreachable">
+        <FaExclamationTriangle aria-hidden="true" />
+        <h1>No pudimos cargar tu turno</h1>
+        <p role="alert">{message}</p>
+        <p className="manage-page-state-reassure">
+          Tu enlace sigue siendo válido: esto fue un problema de conexión.
+        </p>
+        <button type="button" className="manage-page-retry" onClick={loadBooking}>
+          <FaRedo aria-hidden="true" /> Probar de nuevo
+        </button>
+        <Link to="/portal">O entrá con tu código de reserva</Link>
       </section>
     );
   }

@@ -39,3 +39,54 @@
 @media (max-width: 600px) {
   .manage-booking-security { align-items: flex-start; flex-direction: column; }
 }
+
+/* ── No pudimos llegar al servidor ────────────────────────────────────────────
+   Antes este caso no existía: cualquier fallo caía en --invalid y le decía a la
+   persona que su enlace no servía. Comparte la caja con --invalid, pero el
+   ícono es de advertencia y no de error, y la acción principal es reintentar. */
+.manage-page-state--unreachable {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  border: 1px solid var(--border-soft, var(--border-color));
+  border-radius: 1rem;
+  background: var(--surface-card);
+}
+
+/* Ámbar y no verde: esto no salió bien, aunque tampoco esté roto el enlace.
+   --warning-color ya invierte por tema (#b45309 claro / #fcd34d oscuro), así que
+   no hace falta duplicar la regla para el modo oscuro. */
+.manage-page-state--unreachable > svg {
+  font-size: 2rem;
+  color: var(--warning-color);
+}
+
+.manage-page-state-reassure {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.manage-page-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* 44px: mínimo táctil (WCAG 2.5.5). Es la acción principal de la pantalla. */
+  min-height: 44px;
+  padding: 0.7rem 1.4rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-base);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.manage-page-retry:hover { background: var(--cta-solid-bg-hover); }
+.manage-page-retry:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+@media (prefers-reduced-motion: reduce) {
+  .manage-page-retry { transition: none; }
+}
