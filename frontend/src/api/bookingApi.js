@@ -64,8 +64,15 @@ export const cancelBooking = (data, managementToken) =>
     managementToken ? managementConfig(managementToken) : undefined,
   );
 
-export const confirmAttendance = (bookingCode) =>
-  apiClient.post("/api/bookings/confirm-attendance", { bookingCode });
+/* Mismo caso que updateStudentNotes: la ruta exige el token de gestión y este
+   wrapper no lo mandaba, así que habría dado 401 siempre. Nadie lo notó porque
+   ninguna pantalla lo llamaba —el endpoint estaba construido y sin usar—. */
+export const confirmAttendance = (bookingCode, managementToken) =>
+  apiClient.post(
+    "/api/bookings/confirm-attendance",
+    { bookingCode },
+    managementConfig(managementToken),
+  );
 
 /**
  * Admin-only endpoints — require Authorization header via authConfig
