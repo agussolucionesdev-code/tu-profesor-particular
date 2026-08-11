@@ -177,6 +177,38 @@ export const createBookingSchema = z
     academicSituation: z.string().trim().max(1200).optional().default(""),
     timeSlot: z.union([z.string(), z.date()]),
     duration: z.coerce.number(),
+
+    /* Serie semanal. El cliente los manda: el wizard genera un seriesId y hace una
+       llamada por semana, cada una con su clave de idempotencia. Que lo genere el
+       cliente es aceptable porque el seriesId AGRUPA y no autoriza —cada clase
+       sigue protegida por su token— así que lo peor que alguien puede hacer con
+       uno inventado es agrupar sus propias reservas de forma rara.
+       Igual se valida el formato: es un UUID y termina en la base, así que no
+       tiene sentido aceptar texto arbitrario. */
+    seriesId: z.string().uuid().optional().default(null).nullable(),
+    seriesIndex: z.coerce.number().int().min(1).max(60).optional().default(null).nullable(),
+    seriesTotal: z.coerce.number().int().min(1).max(60).optional().default(null).nullable(),
+  })
+  .superRefine((data, ctx) => {
+    /* Los tres campos de serie van juntos o no van. Una reserva con seriesId pero
+       sin posición no se puede mostrar como "clase 3 de 8", y una con posición sin
+       seriesId no se puede agrupar con nada. */
+    const deSerie = [data.seriesId, data.seriesIndex, data.seriesTotal];
+    const puestos = deSerie.filter((v) => v !== null && v !== undefined).length;
+    if (puestos > 0 && puestos < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Una clase de una serie necesita seriesId, seriesIndex y seriesTotal.",
+        path: ["seriesId"],
+      });
+    }
+    if (data.seriesIndex && data.seriesTotal && data.seriesIndex > data.seriesTotal) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La posición no puede ser mayor que el total de la serie.",
+        path: ["seriesIndex"],
+      });
+    }
   })
   .superRefine((data, ctx) => {
     if (

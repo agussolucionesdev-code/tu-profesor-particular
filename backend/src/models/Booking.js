@@ -199,6 +199,24 @@ const bookingSchema = new mongoose.Schema(
        null en las reservas anteriores a este campo y en las que carga el profesor
        a mano, donde el precio lo pone él y no se deriva de ninguna tarifa. */
     pricePerHourAtBooking: { type: Number, default: null, min: 0, max: 99999999 },
+
+    /* Serie de clases semanales.
+     *
+     * Decisión de producto: una serie de 8 clases son 8 reservas con 8 códigos,
+     * como en Google Calendar. Cada clase se cancela y se reprograma sola; si te
+     * agarra un examen la semana que viene, cancelás esa y las otras siete siguen.
+     *
+     * `seriesId` AGRUPA, no autoriza. Cada clase sigue protegida por su propio
+     * token de gestión: si el seriesId diera acceso, alguien podría inventarse el
+     * de otra persona y tocar sus turnos. Por eso no hay ningún endpoint que lo
+     * acepte como credencial, y hay un test que se rompe si aparece uno.
+     *
+     * null en las reservas de una sola clase, que son la mayoría: no tienen que
+     * arrastrar campos de serie con valores inventados. */
+    seriesId: { type: String, default: null, trim: true, maxlength: 64 },
+    // Posición dentro de la serie, para poder decir "clase 3 de 8".
+    seriesIndex: { type: Number, default: null, min: 1, max: 60 },
+    seriesTotal: { type: Number, default: null, min: 1, max: 60 },
     notes: { type: String, trim: true, default: "", maxlength: 2000 },
     studentNotes: { type: String, trim: true, default: "", maxlength: 500 },
     studentEvolution: { type: String, trim: true, default: "", maxlength: 5000 },
@@ -413,6 +431,9 @@ bookingSchema.index({ timeSlot: 1, status: 1 });
 bookingSchema.index({ status: 1, timeSlot: 1, endTime: 1 }); // for hasConflict + getAvailability
 bookingSchema.index({ deletedAt: 1, timeSlot: -1 });
 bookingSchema.index({ deletedAt: 1, status: 1, timeSlot: 1, _id: 1 });
+/* Sparse: la enorme mayoría de las reservas no son de una serie y tienen
+   seriesId en null. Sin sparse, el índice guardaría una entrada por cada null. */
+bookingSchema.index({ seriesId: 1, timeSlot: 1 }, { sparse: true });
 bookingSchema.index({ email: 1 });
 bookingSchema.index({ phone: 1 });
 bookingSchema.index({ studentId: 1, timeSlot: -1 });

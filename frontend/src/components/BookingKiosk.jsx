@@ -39,6 +39,11 @@ import {
   getBookingApiMessage,
 } from "../utils/bookingFormatters";
 import { createIdempotencyKey } from "../utils/idempotencyKey";
+import {
+  OPCIONES_DE_REPETICION,
+  reservarSerie,
+  resumirSerie,
+} from "../utils/bookingSeries";
 import { parsePublicSubjectsByLevel } from "../utils/subjectSettings";
 import {
   FALLBACK_TEACHER_LOCATION,
@@ -84,6 +89,8 @@ const BookingKiosk = () => {
   // que responda el endpoint, y ahí es donde va la dirección.
   const [teacherLocation, setTeacherLocation] = useState(FALLBACK_TEACHER_LOCATION);
   const [ajustesFallaron, setAjustesFallaron] = useState(false);
+  // Cuántas semanas repetir. 1 = una sola clase, que es el default.
+  const [semanas, setSemanas] = useState(1);
   const [showAllDays, setShowAllDays] = useState(false);
   // Paso 1: materia escrita a mano cuando no está en las sugeridas.
   const [otherOpen, setOtherOpen] = useState(false);
@@ -362,9 +369,43 @@ const BookingKiosk = () => {
 
       const fingerprint = JSON.stringify(payload);
       if (bookingAttemptRef.current?.fingerprint !== fingerprint) {
-        bookingAttemptRef.current = { fingerprint, key: createIdempotencyKey() };
+        /* Las claves se generan UNA vez por intento y se guardan: si la primera
+           llamada falla por red y la persona reintenta, el backend reconoce la
+           repetición en lugar de crear una reserva más. Con claves nuevas en cada
+           reintento, dos clics seguidos serían dos clases. */
+        bookingAttemptRef.current = {
+          fingerprint,
+          key: createIdempotencyKey(),
+          claves: Array.from({ length: semanas }, () => createIdempotencyKey()),
+        };
       }
-      const response = await createBooking(payload, bookingAttemptRef.current.key);
+
+      /* Una clase o una serie. El camino de una clase queda exactamente como
+         estaba —es el que mueve la plata y no hay motivo para tocarlo—; la serie
+         hace una llamada por semana al mismo endpoint. */
+      let response;
+      let serie = null;
+      if (semanas > 1) {
+        let i = 0;
+        const claves = bookingAttemptRef.current.claves;
+        const { resultados } = await reservarSerie({
+          payloadBase: payload,
+          primeraFecha: dateObj,
+          semanas,
+          aFormatoApi: (f) => format(f, "dd/MM/yyyy HH:mm"),
+          nuevaClave: () => claves[i++] ?? createIdempotencyKey(),
+          crearReserva: (cuerpo, clave) => createBooking(cuerpo, clave),
+        });
+        serie = resumirSerie(resultados);
+        if (serie.ningunaOk) {
+          // Ni la primera se pudo reservar: se trata como un fallo común y se
+          // muestra el error de esa primera, que es el que explica por qué.
+          throw resultados[0].error;
+        }
+        response = { data: { data: serie.logradas[0].datos } };
+      } else {
+        response = await createBooking(payload, bookingAttemptRef.current.key);
+      }
       bookingAttemptRef.current = null;
       funnelRef.current.complete(5);
 
@@ -393,6 +434,22 @@ const BookingKiosk = () => {
            que lo que se cotizó y lo que queda por escrito sean lo mismo: hasta
            ahora el número aparecía antes de confirmar y después desaparecía. */
         priceLabel,
+        /* El detalle de la serie: qué semanas quedaron reservadas, con su código,
+           y cuáles no. Sin esto, ocho reservas se verían como un comprobante
+           suelto y la persona no tendría los otros siete códigos. */
+        serie: serie && {
+          total: serie.total,
+          logradas: serie.logradas.map((r) => ({
+            fecha: format(r.fecha, "EEEE d 'de' MMMM", { locale: es }),
+            hora: format(r.fecha, "HH:mm"),
+            bookingCode: r.datos?.bookingCode ?? null,
+          })),
+          falladas: serie.falladas.map((r) => ({
+            fecha: format(r.fecha, "EEEE d 'de' MMMM", { locale: es }),
+            hora: format(r.fecha, "HH:mm"),
+          })),
+          todasOk: serie.todasOk,
+        },
         cleanStudentName: formData.studentName,
         responsibleLabel: isAdult ? null : formData.responsibleName,
         responsibleRelationshipLabel: isAdult ? null : responsibleRelationshipLabel,
@@ -423,6 +480,9 @@ const BookingKiosk = () => {
     resetForm();
     setStep(1);
     setShowAllDays(false);
+    // Sin esto, quien reserva una serie de 8 y después vuelve a reservar se
+    // encuentra con "8 semanas" ya elegido y reserva 8 clases sin querer.
+    setSemanas(1);
     funnelRef.current = createBookingFunnelTracker();
     funnelRef.current.start(1);
   };
@@ -755,6 +815,34 @@ const BookingKiosk = () => {
               ))}
             </div>
 
+            {/* Repetir semanalmente. Va después de la duración y antes del
+                calendario porque cambia el significado del horario que se elija:
+                no es "este miércoles" sino "todos los miércoles".
+
+                El default es una sola clase, a propósito: repetir tiene que ser
+                algo que se elige, no algo que pasa sin querer. */}
+            <div className="kiosk-field-label">¿Se repite?</div>
+            <div className="kiosk-chips">
+              {OPCIONES_DE_REPETICION.map((opt) => (
+                <button
+                  key={opt.semanas}
+                  type="button"
+                  className={`kiosk-chip ${semanas === opt.semanas ? "is-selected" : ""}`}
+                  onClick={() => setSemanas(opt.semanas)}
+                >
+                  {opt.label}
+                  {opt.recomendado && <span className="kiosk-chip-tag">Lo habitual</span>}
+                </button>
+              ))}
+            </div>
+            {semanas > 1 && (
+              <p className="kiosk-repeticion-aviso" role="status">
+                Se van a reservar {semanas} clases, una por semana, el mismo día y
+                a la misma hora. Cada una queda con su propio código, así que
+                podés cancelar o mover una sin tocar las demás.
+              </p>
+            )}
+
             {formData.duration ? (
               <div role="status" aria-live="polite">
                 <div className="kiosk-field-label">Elegí el día y el horario</div>
@@ -984,6 +1072,17 @@ const BookingKiosk = () => {
                     : "—"}
                 </dd>
               </div>
+              {/* Cuántas clases se están por reservar. Faltaba, y es el dato más
+                  importante de este paso cuando la serie es de ocho: confirmar
+                  sin ver que son ocho clases es confirmar a ciegas. */}
+              {semanas > 1 && (
+                <div>
+                  <dt>Repite</dt>
+                  <dd>
+                    {semanas} clases, una por semana
+                  </dd>
+                </div>
+              )}
               <div><dt>Alumno</dt><dd>{formData.studentName}</dd></div>
               {priceLabel && (
                 <div><dt>Estimado</dt><dd>{priceLabel}</dd></div>

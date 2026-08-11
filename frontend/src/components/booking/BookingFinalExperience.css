@@ -2392,3 +2392,68 @@
   border-radius: 6px;
   box-shadow: var(--shadow-focus);
 }
+
+/* ── Serie de clases semanales ────────────────────────────────────────────────
+   Ocho reservas con ocho códigos: la lista es el único lugar donde la persona los
+   ve todos juntos. */
+.success-serie {
+  margin: 0 1.5rem 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--cta-solid-bg);
+  border-radius: 12px;
+  background: var(--state-hover-bg);
+}
+
+.success-serie-titulo {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.success-serie-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+.success-serie-lista li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.84rem;
+}
+/* --text-secondary y no --text-tertiary: el fondo es --state-hover-bg, y el
+   tertiary está calibrado contra blanco. */
+.success-serie-fecha {
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+.success-serie-codigo {
+  font-family: var(--font-mono, monospace);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* Las semanas que no se pudieron reservar. En ámbar y con role="alert": no es un
+   error del que reservó, pero tiene que enterarse sí o sí. */
+.success-serie-faltantes {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.success-serie-faltantes p { margin: 0 0 0.35rem; }
+.success-serie-faltantes ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+  color: var(--warning-color);
+  font-weight: 700;
+}
+.success-serie-faltantes-salida { color: var(--text-secondary); }
