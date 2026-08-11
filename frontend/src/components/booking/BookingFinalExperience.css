@@ -2457,3 +2457,15 @@
   font-weight: 700;
 }
 .success-serie-faltantes-salida { color: var(--text-secondary); }
+
+/* El resumen por email no salió. Ámbar y no rojo: las clases están reservadas,
+   lo único que falta es el correo. */
+.success-serie-sin-email {
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border-left: 3px solid var(--warning-color);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}

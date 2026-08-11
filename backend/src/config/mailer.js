@@ -1350,3 +1350,160 @@ export const sendContactMessage = async ({ name, email, phone, subjectLabel, mes
       .join("\n"),
   });
 };
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Resumen de una serie de clases semanales.
+
+   Una serie de 8 clases son 8 reservas —cada una con su código, para poder
+   cancelar o mover una sin tocar las otras— y cada una encolaba su propia
+   confirmación. Ocho correos que llegan juntos, con los mismos datos y códigos
+   distintos, se leen como un error del sistema aunque cada uno sea correcto.
+
+   Este es UNO: las fechas y los códigos en una tabla, y el código de cada clase
+   al lado de su fecha, que es la única forma de que sirvan para algo. Si están
+   sueltos en una lista, nadie sabe cuál corresponde a cuál.
+
+   El recordatorio de 24 h de cada clase NO se toca: sigue llegando antes de cada
+   una, que es el sentido de tener ocho reservas independientes.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+const filaDeClase = ({ fecha, hora, code, esPrimera }) => `
+        <tr>
+          <td style="padding:12px 14px;border-top:1px solid #e6ecf5;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.navyInk};">
+            <span style="display:block;font-weight:700;text-transform:capitalize;">${escapeHtml(fecha)}</span>
+            <span style="display:block;margin-top:2px;font-size:13px;color:${BRAND.navy};opacity:0.75;">${escapeHtml(hora)} h${esPrimera ? " · primera clase" : ""}</span>
+          </td>
+          <td style="padding:12px 14px;border-top:1px solid #e6ecf5;text-align:right;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:0.08em;color:${BRAND.navy};white-space:nowrap;">
+            ${escapeHtml(code)}
+          </td>
+        </tr>`;
+
+export const buildSeriesSummaryHtml = ({
+  greetingName,
+  studentName,
+  subject,
+  modality,
+  clases,
+  managePortalUrl,
+  address,
+}) => {
+  const total = clases.length;
+  const esPresencial = String(modality || "").toLowerCase() === "presencial";
+  const filas = clases
+    .map((c, i) => filaDeClase({ ...c, esPrimera: i === 0 }))
+    .join("");
+
+  return `<!doctype html>
+<html lang="es-AR">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Tus ${total} clases</title></head>
+<body style="margin:0;padding:24px 12px;background:${BRAND.navySoft};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="width:600px;max-width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
+
+    <tr>
+      <td style="padding:24px 26px;background:${BRAND.navy};">
+        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;opacity:0.8;">${escapeHtml(BRAND.name)}</p>
+        <p style="margin:8px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#ffffff;line-height:1.3;">
+          ${total === 1 ? "Tu clase está reservada" : `Tus ${total} clases están reservadas`}
+        </p>
+      </td>
+    </tr>
+
+    <!-- Lo primero, en una línea: qué se reservó. Nadie lee un párrafo antes de
+         saber si su reserva salió bien. -->
+    <tr>
+      <td style="padding:22px 26px 6px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:${BRAND.navyInk};">
+        <p style="margin:0 0 12px;">Hola ${escapeHtml(greetingName)}, quedó todo confirmado.</p>
+        <p style="margin:0;">
+          <strong>${escapeHtml(subject)}</strong> para ${escapeHtml(studentName)},
+          ${total === 1 ? "una clase" : `${total} clases`} ${escapeHtml(String(modality || "").toLowerCase() === "presencial" ? "presenciales" : "online")}${total > 1 ? ", una por semana" : ""}.
+        </p>
+      </td>
+    </tr>
+
+    <!-- Cada código al lado de SU fecha. Una lista de ocho códigos sueltos no
+         sirve: hay que saber cuál corresponde a cuál para poder gestionarlos. -->
+    <tr>
+      <td style="padding:18px 26px 6px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid #e6ecf5;border-radius:10px;">
+          <tr>
+            <td style="padding:10px 14px;background:${BRAND.navySoft};font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.navy};">Cuándo</td>
+            <td style="padding:10px 14px;background:${BRAND.navySoft};text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.navy};">Código</td>
+          </tr>
+          ${filas}
+        </table>
+      </td>
+    </tr>
+
+    ${
+      esPresencial && address
+        ? `<tr>
+      <td style="padding:14px 26px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${BRAND.navyInk};">
+        <strong>Dónde:</strong> ${escapeHtml(address)}
+      </td>
+    </tr>`
+        : ""
+    }
+
+    <!-- Lo único que hay que saber hacer con esos códigos, dicho en una frase. -->
+    <tr>
+      <td style="padding:18px 26px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:${BRAND.navyInk};">
+        <p style="margin:0;">
+          ${
+            total === 1
+              ? "Con ese código podés ver el turno, cambiar el horario o cancelarlo."
+              : "Cada clase tiene su propio código y se gestiona sola: si una semana no podés, cambiás o cancelás <strong>esa</strong> y las demás siguen en pie."
+          }
+        </p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:18px 26px 24px;">
+        <a href="${escapeHtml(managePortalUrl)}" style="display:inline-block;padding:13px 22px;background:${BRAND.navy};color:#ffffff;text-decoration:none;border-radius:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:800;">Ver mis clases</a>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:0 26px 26px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:${BRAND.navy};opacity:0.8;">
+        <p style="margin:0;">Cualquier cosa, respondé este mail y lo vemos.</p>
+      </td>
+    </tr>
+
+    ${signatureBlock()}
+  </table>
+</body>
+</html>`;
+};
+
+export const sendSeriesSummary = async (payload) => {
+  const transport = getTransporter();
+  if (!transport) {
+    throw new Error("El correo no está configurado en este entorno.");
+  }
+  const total = payload.clases.length;
+
+  return transport.sendMail({
+    from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+    to: payload.to,
+    /* El asunto dice el número: en una bandeja llena, "Tus 8 clases" se distingue
+       de un comprobante suelto sin abrirlo. */
+    subject:
+      total === 1
+        ? `Clase confirmada · ${payload.subject}`
+        : `Tus ${total} clases de ${payload.subject} están reservadas`,
+    html: buildSeriesSummaryHtml(payload),
+    text: [
+      total === 1 ? "Tu clase está reservada." : `Tus ${total} clases están reservadas.`,
+      "",
+      `${payload.subject} para ${payload.studentName}.`,
+      "",
+      ...payload.clases.map((c) => `${c.fecha} ${c.hora} h — código ${c.code}`),
+      "",
+      total > 1
+        ? "Cada clase tiene su propio código y se gestiona sola: si una semana no podés, cambiás o cancelás esa y las demás siguen."
+        : "Con ese código podés ver el turno, cambiar el horario o cancelarlo.",
+      "",
+      `Ver mis clases: ${payload.managePortalUrl}`,
+    ].join("\n"),
+  });
+};

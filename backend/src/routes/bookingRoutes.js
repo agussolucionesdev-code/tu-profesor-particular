@@ -20,6 +20,7 @@ import {
   getManagedBooking,
   revokeManagementAccess,
   createPortalSession,
+  sendSeriesSummaryEmail,
   getPortalHistory,
 } from "../controllers/bookingController.js";
 import { requireAdmin } from "../middleware/authMiddleware.js";
@@ -40,6 +41,9 @@ router.get("/manage", publicMutationLimiter, getManagedBooking);
 // Entrada al portal con el código. Limitador propio y más estricto: es el
 // único lugar donde se pueden probar códigos a ciegas.
 router.post("/portal/session", portalSessionLimiter, createPortalSession);
+/* Resumen de una serie por email. Detrás del token de gestión: el seriesId agrupa
+   y no autoriza, asi que el endpoint compara que el token sea de ESA serie. */
+router.post("/series/summary", publicMutationLimiter, sendSeriesSummaryEmail);
 router.get("/portal/history", publicMutationLimiter, getPortalHistory);
 router.post("/manage/revoke", publicMutationLimiter, revokeManagementAccess);
 router.post("/reschedule", publicMutationLimiter, rescheduleBooking);

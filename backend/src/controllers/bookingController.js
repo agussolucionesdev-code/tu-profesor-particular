@@ -75,6 +75,7 @@ import {
 import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
 import { STUDENT_IDENTITY_ALGORITHM_VERSION } from "../services/studentIdentityService.js";
 import { isScheduleGridChangeInProgress } from "../services/scheduleGridChangeLeaseService.js";
+import { sendSeriesSummary } from "../config/mailer.js";
 import {
   buildPricingForNewBooking,
   repricingForReschedule,
@@ -429,18 +430,29 @@ const buildDurableBookingNotificationIntents = ({
   previousTimeSlot,
   managementUrl,
   auditCommitOperationId = null,
+  /* Las clases de una serie no mandan confirmación individual: ocho correos que
+     llegan juntos, con los mismos datos y códigos distintos, se leen como un
+     error del sistema aunque cada uno sea correcto. En su lugar va UN resumen.
+
+     Ojo con el alcance: esto suprime SOLO la confirmación. El recordatorio de
+     24 h de cada clase se mantiene —está más abajo, fuera de `primary`— porque
+     es el sentido de tener ocho reservas independientes: te avisa antes de cada
+     una. Suprimirlo convertiría la serie en una clase con siete fantasmas. */
+  suppressPrimary = false,
 }) => {
   const eventKey = crypto.randomUUID();
   const now = new Date();
-  const primary = buildBookingNotificationIntents({
-    booking,
-    type,
-    eventKey,
-    previousTimeSlot,
-    managementUrl,
-    now,
-    auditCommitOperationId,
-  });
+  const primary = suppressPrimary
+    ? []
+    : buildBookingNotificationIntents({
+      booking,
+      type,
+      eventKey,
+      previousTimeSlot,
+      managementUrl,
+      now,
+      auditCommitOperationId,
+    });
   const reminder = type !== "booking_cancelled" && booking.status === "Confirmado"
     ? buildBookingNotificationIntents({
       booking,
@@ -1192,6 +1204,8 @@ export const createBooking = async (req, res, next) => {
       booking: newBooking,
       type: "booking_confirmation",
       managementUrl,
+      // Las de una serie las cubre el resumen; el recordatorio de cada una sigue.
+      suppressPrimary: Boolean(payload.seriesId),
     });
     const creationLease = await persistCreationDraft(newBooking);
     creationLock = creationLease.lock;
@@ -3105,6 +3119,145 @@ export const confirmAttendanceClient = async (req, res, next) => {
       return next(error);
     }
 
+    return res.status(500).json({
+      success: false,
+      message: "Error interno del servidor.",
+      requestId: req.requestId,
+    });
+  }
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Resumen de una serie por email.
+
+   Las clases de una serie no mandan confirmación individual, así que este endpoint
+   es el que le da a la persona el registro durable de sus 8 fechas y sus 8
+   códigos. Lo llama el wizard al terminar el bucle de reservas.
+
+   AUTORIZACIÓN: el seriesId AGRUPA y NO autoriza. Sin el chequeo de que el token
+   pertenece a una reserva DE ESA serie, cualquiera con un token propio podría
+   pedir el resumen —o sea, las fechas y los códigos— de la serie de otra persona
+   pasando su seriesId. Por eso se exige el token y además se compara la serie.
+   ──────────────────────────────────────────────────────────────────────────── */
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/* Fecha y hora en la zona del negocio, no en la del servidor: Render corre en UTC
+   y sin fijar la zona el email diría un día distinto para las clases de la noche. */
+const SERIES_TZ = "America/Argentina/Buenos_Aires";
+const fechaLegible = (fecha) =>
+  new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: SERIES_TZ,
+  }).format(new Date(fecha));
+const horaLegible = (fecha) =>
+  new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: SERIES_TZ,
+  }).format(new Date(fecha));
+
+export const sendSeriesSummaryEmail = async (req, res, next) => {
+  try {
+    const seriesId = String(req.body?.seriesId ?? "").trim();
+    if (!UUID_PATTERN.test(seriesId)) {
+      return badRequest(res, "Identificador de serie inválido.");
+    }
+
+    // 401 si el token no vale; el helper ya distingue ese caso.
+    const booking = await findManagedBooking(req);
+    if (!booking) return unauthorizedManagementLink(res);
+
+    /* 403 y no 404: el token es válido —está autenticado— pero no tiene permiso
+       sobre esta serie. Y con el mismo 403 para "no es tu serie" y "la serie no
+       existe", que si no se podría averiguar qué seriesId existen probando. */
+    if (!booking.seriesId || booking.seriesId !== seriesId) {
+      return res.status(403).json({
+        success: false,
+        message: "Este acceso no corresponde a esa serie de clases.",
+        requestId: req.requestId,
+      });
+    }
+
+    /* Se lista lo que EXISTE, no lo que se intentó: si una semana estaba ocupada o
+       ya se canceló, prometer 8 y mandar 6 es peor que decir 6. */
+    const clases = await Booking.find(
+      trustedFilter({ seriesId, status: { $in: ["Confirmado", "Pendiente"] } }),
+    )
+      .sort({ timeSlot: 1 })
+      .lean();
+
+    if (clases.length === 0) {
+      return res.status(409).json({
+        success: false,
+        message: "Esa serie no tiene clases activas para resumir.",
+        requestId: req.requestId,
+      });
+    }
+
+    const destinatario = String(booking.email ?? "").trim();
+    if (!destinatario) {
+      /* Sin email no hay a dónde mandarlo. No es un error de la persona: el email
+         es opcional al reservar, y el comprobante en pantalla ya tiene los códigos. */
+      return res.status(200).json({
+        success: true,
+        message: "La serie quedó reservada. No hay email para enviar el resumen.",
+        data: { clases: clases.length, enviado: false },
+        requestId: req.requestId,
+      });
+    }
+
+    /* El envío va en su propio try: las clases YA están reservadas, así que un
+       fallo de correo no puede presentarse como si la reserva hubiera fallado.
+       Antes el catch de abajo filtraba por /correo/ en el mensaje y cualquier otro
+       error de nodemailer —"Missing credentials", por ejemplo— terminaba en un 500
+       genérico en lugar del 502 que explica qué pasó de verdad. */
+    try {
+      await sendSeriesSummary({
+      to: destinatario,
+      greetingName: booking.responsibleName || booking.studentName || "Hola",
+      studentName: booking.studentName,
+      subject: booking.subject,
+      modality: booking.modality,
+      address: process.env.TEACHER_ADDRESS || "Jujuy 414, Temperley, Buenos Aires",
+      managePortalUrl: "https://turnos.tuprofesorparticular.com.ar/portal",
+      clases: clases.map((c) => ({
+        fecha: fechaLegible(c.timeSlot),
+        hora: horaLegible(c.timeSlot),
+        code: c.bookingCode,
+      })),
+      });
+    } catch (errorDeEnvio) {
+      console.error("[series-summary]", errorDeEnvio.message);
+      setNoStore(res);
+      return res.status(502).json({
+        success: false,
+        message:
+          "Las clases quedaron reservadas, pero no pudimos enviar el resumen por email.",
+        data: { clases: clases.length, enviado: false },
+        requestId: req.requestId,
+      });
+    }
+
+    setNoStore(res);
+    /* La respuesta NO devuelve los códigos: el wizard ya los tiene de las reservas
+       que hizo, y ponerlos acá los expondría a cualquier registro de red sin
+       ninguna necesidad. */
+    return res.status(200).json({
+      success: true,
+      message: "Te mandamos un resumen con todas las clases.",
+      data: { clases: clases.length, enviado: true },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    /* Acá solo llegan errores que NO son del envío —el envío tiene su propio
+       catch—, o sea problemas de la base o bugs nuestros. Esos van al manejador
+       general, que es el que sabe qué loguear y qué no exponer. */
+    console.error("[series-summary]", error.message);
+    if (typeof next === "function") return next(error);
     return res.status(500).json({
       success: false,
       message: "Error interno del servidor.",

@@ -18,7 +18,11 @@ import {
 } from "react-icons/fa";
 import BookingSuccessModal from "./booking/BookingSuccessModal";
 import KioskSlotCalendar from "./KioskSlotCalendar";
-import { createBooking, fetchPublicSettings } from "../api/bookingApi";
+import {
+  createBooking,
+  fetchPublicSettings,
+  sendSeriesSummary,
+} from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
@@ -388,7 +392,7 @@ const BookingKiosk = () => {
       if (semanas > 1) {
         let i = 0;
         const claves = bookingAttemptRef.current.claves;
-        const { resultados } = await reservarSerie({
+        const { resultados, seriesId } = await reservarSerie({
           payloadBase: payload,
           primeraFecha: dateObj,
           semanas,
@@ -403,6 +407,23 @@ const BookingKiosk = () => {
           throw resultados[0].error;
         }
         response = { data: { data: serie.logradas[0].datos } };
+
+        /* UN email con todas las fechas y códigos, en lugar de ocho
+           confirmaciones que llegan juntas y se leen como un error del sistema.
+           Las reservas de una serie no encolan confirmación individual, así que
+           este pedido es el que le deja el registro durable a la persona.
+
+           Si falla, las clases igual están reservadas y el comprobante en
+           pantalla tiene todos los códigos: se avisa y se sigue, nunca se
+           presenta como si la reserva hubiera fallado. */
+        const tokenDeLaSerie = serie.logradas[0].datos?.managementToken;
+        if (tokenDeLaSerie) {
+          try {
+            await sendSeriesSummary(seriesId, tokenDeLaSerie);
+          } catch {
+            serie.resumenFallo = true;
+          }
+        }
       } else {
         response = await createBooking(payload, bookingAttemptRef.current.key);
       }
@@ -449,6 +470,7 @@ const BookingKiosk = () => {
             hora: format(r.fecha, "HH:mm"),
           })),
           todasOk: serie.todasOk,
+          resumenFallo: Boolean(serie.resumenFallo),
         },
         cleanStudentName: formData.studentName,
         responsibleLabel: isAdult ? null : formData.responsibleName,
