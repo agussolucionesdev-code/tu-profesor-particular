@@ -36,4 +36,12 @@
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- La prioridad más baja del sitio, y a propósito: tiene que ser encontrable
+       —quien busca cómo se manejan sus datos merece encontrarla— pero no debe
+       competir con las páginas que traen alumnos. -->
+  <url>
+    <loc>https://tuprofesorparticular.com.ar/privacidad</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>

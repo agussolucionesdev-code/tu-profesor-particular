@@ -16,6 +16,7 @@ const About = lazy(() => import("./pages/About.jsx"));
 const Subjects = lazy(() => import("./pages/Subjects.jsx"));
 const Method = lazy(() => import("./pages/Method.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
+const Privacy = lazy(() => import("./pages/Privacy.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 /* Al navegar entre páginas el scroll vuelve arriba (sin animar: un smooth acá
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/materias" element={<Subjects />} />
           <Route path="/como-trabajo" element={<Method />} />
           <Route path="/contacto" element={<Contact />} />
+          <Route path="/privacidad" element={<Privacy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
@@ -71,11 +73,12 @@ const App = () => (
         cualquier decisión sobre el sitio era una corazonada.
 
         Vercel Analytics y no GA4 a propósito: no usa cookies ni identificadores
-        persistentes, así que no hace falta un banner de consentimiento —y este
-        sitio todavía no tiene aviso de privacidad—. Speed Insights mide las
-        Core Web Vitals de visitantes reales, que es la única forma honesta de
-        saber si el sitio carga rápido: en una máquina de desarrollo siempre
-        carga rápido. */}
+        persistentes, así que no hace falta un banner de consentimiento. Esa
+        elección está declarada en /privacidad, y si algún día se cambia por una
+        herramienta que sí rastree, hay que actualizar esa página y agregar el
+        consentimiento. Speed Insights mide las Core Web Vitals de visitantes
+        reales, que es la única forma honesta de saber si el sitio carga rápido:
+        en una máquina de desarrollo siempre carga rápido. */}
     <Analytics />
     <SpeedInsights />
   </>

@@ -39,9 +39,20 @@ export const META_POR_RUTA = {
     title: "Contacto · Tu Profesor Particular",
     description: `Escribime por WhatsApp al ${CONTACT.whatsappDisplay} o por email. Clases presenciales en ${CONTACT.addressLine} y online para toda Argentina.`,
   },
+  /* Va acá, y no como un caso aparte, para que se prerenderice y tenga su propio
+     canonical: alguien que busca "cómo manejan mis datos" tiene que poder
+     encontrarla, y quien la comparte tiene que ver la vista previa correcta. */
+  "/privacidad": {
+    title: "Privacidad y datos personales · Tu Profesor Particular",
+    description:
+      "Qué datos se piden al reservar una clase, para qué se usan, quién más los ve y cómo pedir que se corrijan o se borren.",
+  },
 };
 
-/* El 404 va aparte: no se prerenderiza ni entra al sitemap. */
+/* El 404 va aparte de META_POR_RUTA porque no es una ruta del sitio: no entra al
+   sitemap y su <head> se arma distinto —noindex, sin canonical y sin Open
+   Graph—. Sí se prerenderiza, pero a `dist/404.html`, que es el archivo que
+   Vercel sirve con status 404 para cualquier ruta inexistente. */
 export const META_404 = {
   title: "Página no encontrada · Tu Profesor Particular",
   description:
