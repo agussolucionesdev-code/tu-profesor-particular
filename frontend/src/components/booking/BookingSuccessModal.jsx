@@ -102,6 +102,9 @@ const BookingSuccessModal = ({
     { label: "Materia", value: successData?.subject },
     { label: "Institución", value: successData?.school },
     { label: "Modalidad", value: esPresencial ? "Presencial" : "Online" },
+    /* Solo si hay un estimado: cuando el profesor no configuró tarifa el precio
+       es 0, y una fila que dice "$0" haría creer que la clase es gratis. */
+    { label: "Estimado", value: successData?.priceLabel },
   ].filter((r) => r.value);
 
   return createPortal(

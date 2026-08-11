@@ -191,6 +191,14 @@ const bookingSchema = new mongoose.Schema(
     bufferAfterMinutes: { type: Number, default: 0, min: 0, max: 240 },
 
     price: { type: Number, default: 0, min: 0, max: 99999999 },
+    /* La tarifa por hora con la que se cotizó ESTA reserva.
+       Existe porque reprogramar puede cambiar la duración, y sin guardarla el
+       recálculo quedaba mal de las dos maneras posibles: con la tarifa actual, un
+       aumento posterior le encarece el turno a alguien que solo movió el horario;
+       sin recalcular, una clase de 1 h extendida a 2 h conserva el precio de 1 h.
+       null en las reservas anteriores a este campo y en las que carga el profesor
+       a mano, donde el precio lo pone él y no se deriva de ninguna tarifa. */
+    pricePerHourAtBooking: { type: Number, default: null, min: 0, max: 99999999 },
     notes: { type: String, trim: true, default: "", maxlength: 2000 },
     studentNotes: { type: String, trim: true, default: "", maxlength: 500 },
     studentEvolution: { type: String, trim: true, default: "", maxlength: 5000 },

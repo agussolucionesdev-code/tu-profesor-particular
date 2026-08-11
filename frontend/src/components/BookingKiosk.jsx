@@ -389,6 +389,10 @@ const BookingKiosk = () => {
         endTime: format(end, "HH:mm"),
         actualDuration: formData.duration,
         durationLabel: formatDurationOptionLabel(formData.duration),
+        /* El mismo estimado que se mostró en el paso 5. Va al comprobante para
+           que lo que se cotizó y lo que queda por escrito sean lo mismo: hasta
+           ahora el número aparecía antes de confirmar y después desaparecía. */
+        priceLabel,
         cleanStudentName: formData.studentName,
         responsibleLabel: isAdult ? null : formData.responsibleName,
         responsibleRelationshipLabel: isAdult ? null : responsibleRelationshipLabel,
