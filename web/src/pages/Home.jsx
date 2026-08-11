@@ -204,11 +204,25 @@ const Home = () => {
           <SectionHead
             index="02"
             kicker="Cómo trabajo"
-            title="Un método, no improvisación"
+            /* Título y lead distintos de los de /como-trabajo, que es la dueña
+               del método. Antes los dos eran idénticos palabra por palabra, y con
+               eso Google tenía que elegir cuál de las dos páginas indexar para el
+               mismo contenido: competían entre sí en lugar de sumar. */
+            title="El mismo recorrido con cada alumno"
             titleId="home-method"
-            lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
+            lead="Cuatro etapas, en este orden, sin improvisar sobre la marcha."
           />
-          <MethodSteps />
+          {/* Compacto: solo los títulos de los cuatro pasos. El texto completo
+              vive en /como-trabajo y estaba duplicado acá carácter por carácter,
+              lo que hacía que las dos páginas compitieran por el mismo contenido
+              en lugar de sumar. */}
+          <MethodSteps compacto />
+          <p className="hp-method-mas" data-reveal="up">
+            <Link to="/como-trabajo">
+              Cómo funciona cada paso
+              <FaArrowRight aria-hidden="true" />
+            </Link>
+          </p>
         </div>
       </section>
 

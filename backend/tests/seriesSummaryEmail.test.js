@@ -294,3 +294,84 @@ describe("qué incluye el resumen", () => {
     }
   });
 });
+
+describe("qué datos lleva cada clase en el email", () => {
+  it("la fecha incluye el año", async () => {
+    /* Un email se guarda y se vuelve a leer. "miércoles 12 de agosto" no dice
+       nada dentro de seis meses, ni cuando la casilla tiene clases de dos años
+       distintos. */
+    const { seriesId, hechas } = await crearSerie(2);
+    const token = await tokenPara(hechas[0].bookingCode);
+
+    await pedirResumen({ seriesId, token });
+
+    const anio = String(new Date(hechas[0].timeSlot ?? Date.now()).getFullYear());
+    for (const c of enviados[0].clases) {
+      expect(c.fecha).toMatch(/\bde \d{4}$/);
+    }
+    expect(anio.length).toBe(4);
+  });
+
+  it("lleva el rango horario completo, no solo el inicio", async () => {
+    /* Una clase puede ser de media hora o de tres. "19:30 h" obliga a adivinar
+       cuándo termina; el rango dice exactamente qué se reservó. */
+    const { seriesId, hechas } = await crearSerie(2);
+    const token = await tokenPara(hechas[0].bookingCode);
+
+    await pedirResumen({ seriesId, token });
+
+    for (const c of enviados[0].clases) {
+      expect(c.desde).toMatch(/^\d{2}:\d{2}$/);
+      expect(c.hasta).toMatch(/^\d{2}:\d{2}$/);
+      expect(c.desde).not.toBe(c.hasta);
+    }
+  });
+
+  it("dice la duración en palabras", async () => {
+    const { seriesId, hechas } = await crearSerie(2);
+    const token = await tokenPara(hechas[0].bookingCode);
+
+    await pedirResumen({ seriesId, token });
+
+    expect(enviados[0].clases[0].duracion).toBe("1 hora");
+  });
+
+  it("el rango de una clase de 2 horas abarca dos horas", async () => {
+    const seriesId = crypto.randomUUID();
+    const res = await reservar({
+      semana: 7,
+      duration: 2,
+      seriesId,
+      seriesIndex: 1,
+      seriesTotal: 1,
+    });
+    expect(res.status).toBe(201);
+    const token = await tokenPara(res.body.data.bookingCode);
+
+    await pedirResumen({ seriesId, token });
+
+    const c = enviados[0].clases[0];
+    const [h1] = c.desde.split(":").map(Number);
+    const [h2] = c.hasta.split(":").map(Number);
+    expect(h2 - h1).toBe(2);
+    expect(c.duracion).toBe("2 horas");
+  });
+
+  it("pasa la modalidad para poder destacarla", async () => {
+    // La modalidad define si la persona tiene que viajar o abrir una videollamada.
+    const seriesId = crypto.randomUUID();
+    const res = await reservar({
+      semana: 8,
+      modality: "presencial",
+      seriesId,
+      seriesIndex: 1,
+      seriesTotal: 1,
+    });
+    const token = await tokenPara(res.body.data.bookingCode);
+
+    await pedirResumen({ seriesId, token });
+
+    expect(enviados[0].modality).toBe("presencial");
+    expect(enviados[0].address).toBeTruthy();
+  });
+});

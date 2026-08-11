@@ -3145,13 +3145,18 @@ const UUID_PATTERN =
 /* Fecha y hora en la zona del negocio, no en la del servidor: Render corre en UTC
    y sin fijar la zona el email diría un día distinto para las clases de la noche. */
 const SERIES_TZ = "America/Argentina/Buenos_Aires";
+
+/* Con AÑO. Un email se guarda y se vuelve a leer: "miércoles 12 de agosto" no dice
+   nada dentro de seis meses, ni cuando la casilla tiene clases de dos años. */
 const fechaLegible = (fecha) =>
   new Intl.DateTimeFormat("es-AR", {
     weekday: "long",
     day: "numeric",
     month: "long",
+    year: "numeric",
     timeZone: SERIES_TZ,
   }).format(new Date(fecha));
+
 const horaLegible = (fecha) =>
   new Intl.DateTimeFormat("es-AR", {
     hour: "2-digit",
@@ -3159,6 +3164,27 @@ const horaLegible = (fecha) =>
     hour12: false,
     timeZone: SERIES_TZ,
   }).format(new Date(fecha));
+
+/* "1 hora", "1 h 30", "2 horas". La duración se dice en palabras además del rango
+   porque una clase puede ser de media hora o de tres, y restar dos horarios
+   mentalmente es trabajo que el email puede ahorrar. */
+const duracionLegible = (horas) => {
+  const n = Number(horas);
+  if (!Number.isFinite(n) || n <= 0) return "";
+  const enteras = Math.floor(n);
+  const minutos = Math.round((n - enteras) * 60);
+  if (enteras === 0) return `${minutos} min`;
+  const parteHoras = enteras === 1 ? "1 hora" : `${enteras} horas`;
+  return minutos > 0 ? `${parteHoras} ${minutos} min` : parteHoras;
+};
+
+/* El fin se calcula desde endTime si está, y si no desde la duración: las reservas
+   viejas pueden no tener endTime y el email no puede quedar sin hora de fin. */
+const finDeClase = (booking) => {
+  if (booking.endTime) return new Date(booking.endTime);
+  const horas = Number(booking.duration) || 1;
+  return new Date(new Date(booking.timeSlot).getTime() + horas * 3600000);
+};
 
 export const sendSeriesSummaryEmail = async (req, res, next) => {
   try {
@@ -3226,7 +3252,9 @@ export const sendSeriesSummaryEmail = async (req, res, next) => {
       managePortalUrl: "https://turnos.tuprofesorparticular.com.ar/portal",
       clases: clases.map((c) => ({
         fecha: fechaLegible(c.timeSlot),
-        hora: horaLegible(c.timeSlot),
+        desde: horaLegible(c.timeSlot),
+        hasta: horaLegible(finDeClase(c)),
+        duracion: duracionLegible(c.duration),
         code: c.bookingCode,
       })),
       });

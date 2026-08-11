@@ -183,3 +183,12 @@
   .subj-card:hover { transform: none; }
   .faq-item::details-content { transition: none; }
 }
+
+/* Acciones del bloque "¿Te quedó alguna duda?" en /como-trabajo. Reemplaza la FAQ
+   que estaba duplicada del Inicio: enlaza en lugar de repetir. */
+.mt-dudas-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}

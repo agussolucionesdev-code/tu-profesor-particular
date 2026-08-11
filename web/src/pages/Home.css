@@ -384,3 +384,20 @@
   .lvl-card:hover,
   .why-card:hover { transform: none; }
 }
+
+/* Enlace al método completo. El Inicio muestra solo los títulos de los cuatro
+   pasos; el texto entero vive en /como-trabajo y estaba duplicado acá. */
+.hp-method-mas {
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.hp-method-mas a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.hp-method-mas a:hover { text-decoration-thickness: 2px; }
