@@ -206,3 +206,14 @@ export const updateStudentNotes = (code, studentNotes, managementToken) =>
     { studentNotes },
     managementConfig(managementToken),
   );
+
+/* Resumen de una serie por email: un correo con todas las fechas y códigos en
+   lugar de ocho confirmaciones que llegan juntas.
+   Va con el token de gestión de CUALQUIER clase de la serie. El backend verifica
+   que ese token sea de esa serie: el seriesId agrupa y no autoriza. */
+export const sendSeriesSummary = (seriesId, managementToken) =>
+  apiClient.post(
+    "/api/bookings/series/summary",
+    { seriesId },
+    managementConfig(managementToken),
+  );

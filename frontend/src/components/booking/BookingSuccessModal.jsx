@@ -231,6 +231,16 @@ const BookingSuccessModal = ({
             {/* Qué semanas quedaron afuera y por qué. Es la mitad honesta del
                 best-effort: reservar 6 de 8 sin decir cuáles faltan deja a la
                 persona creyendo que tiene 8. */}
+            {/* El resumen por email no salio. Las clases SI estan reservadas y
+                los códigos están arriba, así que esto es un aviso y no un error. */}
+            {successData.serie.resumenFallo && (
+              <p className="success-serie-sin-email" role="status">
+                No pudimos enviarte el resumen por email. Tus clases están
+                reservadas igual: guardate los códigos de arriba o entrá con
+                cualquiera de ellos a Mis Turnos.
+              </p>
+            )}
+
             {successData.serie.falladas.length > 0 && (
               <div className="success-serie-faltantes" role="alert">
                 <p>
