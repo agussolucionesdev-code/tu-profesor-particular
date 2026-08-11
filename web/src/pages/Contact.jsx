@@ -7,7 +7,9 @@ import {
   FaEnvelope,
   FaLocationDot,
   FaWhatsapp,
+  FaPaperPlane,
 } from "react-icons/fa6";
+import ContactForm from "../components/ContactForm.jsx";
 import SectionHead from "../components/SectionHead.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import { BOOKING_RESERVE_URL, CONTACT, waLink } from "../data/site.js";
@@ -104,7 +106,7 @@ const Contact = () => {
           title="Contacto"
           titleId="contact-title"
             as="h1"
-          lead="Dos caminos: reservás directo, o me escribís y lo charlamos antes. Los dos terminan en el mismo lugar."
+          lead="Reservás directo, me escribís por WhatsApp, o me dejás tu mensaje acá sin salir del sitio. Los tres terminan en el mismo lugar."
         />
 
         <div className="ct-layout">
@@ -270,6 +272,32 @@ const Contact = () => {
               </p>
             </article>
           </div>
+
+          {/* ── Camino 3: escribir sin salir del sitio ──
+              Los dos caminos de arriba comparten un supuesto: que la persona
+              quiere abrir otra app y dar su teléfono ahora. Quien está en una
+              computadora ajena, o todavía no quiere dar el número, o prefiere
+              escribir y seguir navegando, se iba sin dejar nada. */}
+          <article
+            className="ct-card ct-card--form"
+            aria-labelledby="ct-form-title"
+            data-reveal="up"
+          >
+            <header className="ct-card-head">
+              <span className="ct-icon" aria-hidden="true">
+                <FaPaperPlane />
+              </span>
+              <div>
+                <h3 className="ct-card-title" id="ct-form-title">
+                  O dejame tu mensaje acá
+                </h3>
+                <p className="ct-card-sub">
+                  Sin abrir WhatsApp y sin dejar tu teléfono si no querés
+                </p>
+              </div>
+            </header>
+            <ContactForm />
+          </article>
         </div>
       </div>
     </section>

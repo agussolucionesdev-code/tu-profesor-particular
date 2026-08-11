@@ -371,3 +371,19 @@
   .ct-wa-cta:hover,
   .ct-link:hover { transform: none; }
 }
+
+/* ── Camino 3: el formulario propio ────────────────────
+   Ocupa las dos columnas y va debajo: es el camino para quien NO quiere abrir
+   otra app, así que no compite lado a lado con WhatsApp —lo complementa—. Un
+   formulario en media columna además queda incómodo de completar. */
+.ct-card--form {
+  grid-column: 1 / -1;
+  margin-top: clamp(18px, 2.4vw, 28px);
+}
+
+/* El grid de la página es sticky en la primera columna. Al agregar una fila que
+   cruza las dos, el sticky ya no tiene sentido: la columna izquierda dejaría de
+   acompañar y se quedaría flotando sobre el formulario. */
+@media (min-width: 941px) {
+  .ct-primary { position: static; }
+}

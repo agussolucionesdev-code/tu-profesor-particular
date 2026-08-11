@@ -10,6 +10,7 @@ import blockedDatesRoutes from "./routes/blockedDatesRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { getRuntimeSchedulerHealth } from "./services/runtimeScheduler.js";
 import { globalApiLimiter } from "./middleware/rateLimiters.js";
@@ -80,8 +81,27 @@ const defaultDevOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
+/* Los dos sitios de producción de este proyecto, en código y no en una variable
+   de entorno.
+   `turnos.` es la app de reservas; el apex es el sitio institucional, que desde
+   que tiene formulario de contacto también le habla a esta API. Si dependieran de
+   CORS_ORIGIN, un despliegue con esa variable a medio configurar dejaría el
+   formulario roto en producción, y el síntoma sería un error de CORS en la
+   consola de un visitante —o sea, nadie se enteraría—. Son constantes: los
+   dominios del proyecto no cambian de un deploy a otro.
+   CORS_ORIGIN se sigue respetando y se suma a estos, para previews de Vercel o
+   cualquier origen extra. */
+const productionOrigins = [
+  "https://tuprofesorparticular.com.ar",
+  "https://www.tuprofesorparticular.com.ar",
+  "https://turnos.tuprofesorparticular.com.ar",
+];
 const allowedOrigins = [
-  ...new Set([...configuredOrigins, ...(isProduction ? [] : defaultDevOrigins)]),
+  ...new Set([
+    ...configuredOrigins,
+    ...productionOrigins,
+    ...(isProduction ? [] : defaultDevOrigins),
+  ]),
 ];
 const trustProxy = parseTrustProxy(process.env.TRUST_PROXY);
 const isDevelopmentLoopback = !isProduction;
@@ -212,6 +232,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/push", pushRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

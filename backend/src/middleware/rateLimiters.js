@@ -67,3 +67,17 @@ export const portalSessionLimiter = createLimiter({
     "Demasiados intentos con códigos distintos. Esperá unos minutos y volvé a probar.",
   skipSuccessfulRequests: true,
 });
+
+/* Formulario de contacto.
+   Más bajo que el resto porque cada envío exitoso manda un email, y un email
+   que sale del servidor y llega a una casilla real es la única cosa de esta API
+   que un abuso puede convertir en un problema con Gmail. Cinco por ventana deja
+   escribir, corregir y reenviar sin trabas; nadie manda cinco consultas
+   distintas en minutos.
+   Acá NO se usa skipSuccessfulRequests: el costo está justamente en el envío
+   exitoso, así que los que cuentan son esos. */
+export const contactLimiter = createLimiter({
+  limit: parseLimit(process.env.CONTACT_RATE_LIMIT_MAX, 5),
+  message:
+    "Ya enviaste varias consultas seguidas. Esperá unos minutos o escribinos por WhatsApp.",
+});

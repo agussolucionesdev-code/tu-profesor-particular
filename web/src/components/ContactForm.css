@@ -1,0 +1,168 @@
+/* Formulario de contacto.
+   Usa los tokens del sitio —--text, --muted, --border, --off, --green— y no una
+   paleta propia: así el contraste se sostiene sin reglas duplicadas. */
+
+.cf {
+  display: grid;
+  gap: 1rem;
+}
+
+.cf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 620px) {
+  .cf-grid { grid-template-columns: 1fr; }
+}
+
+.cf-field {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  min-width: 0;
+}
+.cf-field--full { margin: 0; }
+
+.cf-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.cf-input {
+  width: 100%;
+  box-sizing: border-box;
+  /* 44px: mínimo táctil de WCAG 2.5.5. Los campos de un formulario en un
+     teléfono son de los controles que más se tocan de todo el sitio. */
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+}
+.cf-input::placeholder { color: var(--muted); }
+.cf-input:focus-visible {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.18);
+}
+.cf-input:disabled {
+  cursor: progress;
+  background: var(--off);
+}
+
+/* El borde rojo no alcanza: hay gente que no lo distingue. Lo que comunica el
+   error es el TEXTO debajo, y el borde solo lo acompaña (WCAG 1.4.1). */
+.cf-input.is-invalid {
+  border-color: #b3261e;
+}
+
+.cf-textarea {
+  min-height: 8rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.cf-hint,
+.cf-error {
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.cf-hint { color: var(--muted); }
+/* #b3261e sobre blanco da 5.9:1. El rojo de marca no llegaba a 4.5 en texto
+   chico, y un mensaje de error que no se lee no es un mensaje de error. */
+.cf-error { color: #b3261e; font-weight: 600; }
+
+/* El campo trampa. Fuera de la pantalla y no `display:none`: hay bots que
+   saltean los campos ocultos con display/visibility, y este tiene que parecer
+   un campo normal para que lo completen. */
+.cf-trampa {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.cf-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.cf-enviar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), transform 0.16s var(--ease);
+}
+.cf-enviar:not(:disabled):hover { background: var(--green-deep); transform: translateY(-1px); }
+.cf-enviar:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.3);
+}
+/* Sin `opacity` en el deshabilitado: el botón dice "Enviando…" y ese texto tiene
+   que poder leerse mientras trabaja. */
+.cf-enviar:disabled {
+  cursor: progress;
+  background: var(--navy-600, #35507a);
+}
+
+.cf-privacidad {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.cf-privacidad a { color: var(--green); }
+
+/* La región live está siempre en el DOM, así que cuando está vacía no tiene que
+   ocupar lugar ni dejar un hueco. */
+.cf-estado-live:empty { display: none; }
+
+.cf-estado {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.cf-estado svg { flex-shrink: 0; margin-top: 0.15em; }
+
+.cf-estado--enviando { background: var(--off); color: var(--text); }
+.cf-estado--ok { background: var(--green-50); color: var(--green-deep); }
+.cf-estado--error { background: #fdecea; color: #8c1d18; }
+
+.cf-salida {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+.cf-salida svg { color: #25d366; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-input,
+  .cf-enviar { transition: none; }
+  .cf-enviar:not(:disabled):hover { transform: none; }
+}

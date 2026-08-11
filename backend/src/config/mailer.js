@@ -1239,3 +1239,114 @@ export const sendNotificationOutboxMessage = async (payload) => {
   const prepared = await prepareNotificationOutboxMessage(payload);
   return prepared.send();
 };
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Mensaje del formulario de contacto del sitio institucional.
+
+   No es una notificación de turno, así que no pasa por el outbox: el outbox
+   existe para garantizar la entrega de comprobantes y recordatorios, con
+   reintentos y revisiones atadas a una reserva. Un mensaje de contacto no tiene
+   reserva ni revisión, y si falla el envío la persona lo ve al instante en la
+   pantalla y puede reintentar o escribir por WhatsApp.
+
+   El destinatario lo decide el SERVIDOR con getTeacherEmail(), nunca el cuerpo
+   del pedido. Si lo decidiera quien envía, esto sería un relay de spam abierto:
+   cualquiera podría mandar correo a cualquier dirección desde esta casilla.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* El texto del visitante va en el CUERPO de un email HTML, así que se escapa. Y
+   los saltos de línea se convierten en <br> DESPUÉS de escapar: al revés, los
+   <br> que agrega la función se escaparían y llegarían literales. */
+const contactBodyHtml = (message) =>
+  escapeHtml(message).replace(/\r?\n/g, "<br />");
+
+const buildContactEmailHtml = ({ name, email, phone, subjectLabel, message }) => {
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const mailTo = `mailto:${encodeURIComponent(email)}`;
+  const whatsappDigits = String(phone || "").replace(/\D/g, "");
+  const whatsappUrl = whatsappDigits
+    ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
+        `Hola ${name}, te escribo por tu consulta desde el sitio.`,
+      )}`
+    : "";
+
+  /* Responder es la única acción de este mail, así que va arriba y grande. El
+     profesor lo abre en el teléfono: tiene que poder contestar de un toque. */
+  const acciones = [
+    `<a href="${escapeHtml(mailTo)}" style="display:inline-block;margin:0 6px 8px 0;padding:11px 16px;background:${BRAND.navy};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:800;font-size:13px;font-family:Arial,Helvetica,sans-serif;">Responder por mail</a>`,
+    whatsappUrl
+      ? `<a href="${escapeHtml(whatsappUrl)}" style="display:inline-block;margin:0 6px 8px 0;padding:11px 16px;background:${BRAND.whatsapp};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:800;font-size:13px;font-family:Arial,Helvetica,sans-serif;">Responder por WhatsApp</a>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const fila = (etiqueta, valor) => `
+        <tr>
+          <td style="padding:8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${BRAND.navy};opacity:0.75;width:38%;vertical-align:top;">${etiqueta}</td>
+          <td style="padding:8px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.navyInk};font-weight:700;">${valor}</td>
+        </tr>`;
+
+  return `<!doctype html>
+<html lang="es-AR">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Consulta desde el sitio</title></head>
+<body style="margin:0;padding:24px 12px;background:${BRAND.navySoft};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="width:600px;max-width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
+    <tr>
+      <td style="padding:22px 26px;background:${BRAND.navy};">
+        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;opacity:0.8;">Formulario del sitio</p>
+        <p style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:800;color:#ffffff;">${escapeHtml(subjectLabel)}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:22px 26px 6px;">${acciones}</td>
+    </tr>
+    <tr>
+      <td style="padding:0 26px 8px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+          ${fila("Nombre", safeName)}
+          ${fila("Email", `<a href="${escapeHtml(mailTo)}" style="color:${BRAND.navy};text-decoration:none;font-weight:700;">${safeEmail}</a>`)}
+          ${phone ? fila("Teléfono", escapeHtml(phone)) : ""}
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 26px 26px;">
+        <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.navy};opacity:0.75;">Lo que escribió</p>
+        <div style="padding:14px 16px;background:${BRAND.navySoft};border-radius:10px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${BRAND.navyInk};">${contactBodyHtml(message)}</div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+export const sendContactMessage = async ({ name, email, phone, subjectLabel, message }) => {
+  const transport = getTransporter();
+  if (!transport) {
+    throw new Error("El correo no está configurado en este entorno.");
+  }
+
+  return transport.sendMail({
+    from: `"${BRAND.name}" <${process.env.EMAIL_USER}>`,
+    to: getTeacherEmail(),
+    /* replyTo y no from: poner la dirección del visitante en el From haría que
+       Gmail lo trate como suplantación y lo mande a spam. Con replyTo, apretar
+       "Responder" le contesta a la persona, que es lo que se busca. */
+    replyTo: email,
+    subject: `${subjectLabel} — ${name}`,
+    html: buildContactEmailHtml({ name, email, phone, subjectLabel, message }),
+    text: [
+      subjectLabel,
+      "",
+      `Nombre: ${name}`,
+      `Email: ${email}`,
+      phone ? `Teléfono: ${phone}` : null,
+      "",
+      message,
+    ]
+      .filter((linea) => linea !== null)
+      .join("\n"),
+  });
+};
