@@ -31,15 +31,22 @@ const MAXIMO_MENSAJE = 5000;
 const MINIMO_MENSAJE = 10;
 
 /* La API vive en el backend de Render, que es otro origen. Su CORS ya acepta este
-   dominio desde el código —no desde una variable de entorno— justamente para que
-   este formulario no dependa de que alguien se acuerde de configurarla.
+ * dominio desde el código —no desde una variable de entorno— justamente para que
+ * este formulario no dependa de que alguien se acuerde de configurarla.
  *
  * El mismo patrón que usa la app de turnos en apiClient.js: variable de entorno
  * con fallback según el modo. Hardcodear la URL de producción dejaba el
- * formulario imposible de probar en local, que es donde se lo prueba. */
+ * formulario imposible de probar en local, que es donde se lo prueba.
+ *
+ * `import.meta.env` NO existe cuando este módulo corre en Node durante el
+ * prerender: ahí `import.meta` está definido pero sin `env`, así que leerlo
+ * directo tiraba un TypeError. React atrapaba ese error, devolvía la página vacía
+ * y el build seguía sin avisar — /contacto se publicó con solo el header y el
+ * footer. Por eso se lee con optional chaining. */
+const ENV = import.meta.env ?? {};
 const API_BASE =
-  import.meta.env.VITE_BACKEND_URL ||
-  (import.meta.env.PROD
+  ENV.VITE_BACKEND_URL ||
+  (ENV.PROD
     ? "https://tu-profesor-particular-backend.onrender.com"
     : "http://localhost:4100");
 const API = `${API_BASE}/api/contact`;

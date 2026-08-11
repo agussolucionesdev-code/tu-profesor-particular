@@ -65,6 +65,50 @@ const compilarModulo = async (entrada) => {
 const escaparAtributo = (s) =>
   String(s).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 
+/* Quita SOLO los metadatos que este script vuelve a escribir.
+ *
+ * Antes esto era un `html.replace(/<title>[\s\S]*?<\/head>/, nuevoHead)`, o sea
+ * borraba TODO lo que hubiera entre el <title> y el cierre del head. Y ahí es
+ * exactamente donde Vite inyecta el bundle:
+ *
+ *   <script type="module" crossorigin src="/assets/index-*.js">
+ *   <link rel="stylesheet" crossorigin href="/assets/index-*.css">
+ *
+ * Resultado: el sitio quedó sirviendo HTML sin CSS ni JavaScript. Los bots veían
+ * el contenido perfecto —que era lo que yo estaba verificando— y una persona veía
+ * la página en blanco y negro, con la navegación como lista de puntos.
+ *
+ * La lección: verificar lo que se buscaba arreglar no alcanza. Había que verificar
+ * también lo que no se quería romper. Para eso está `verificarAssets` más abajo,
+ * que hace fallar el build si el bundle no sobrevive. */
+const quitarMetadatosViejos = (html) =>
+  html
+    .replace(/\s*<title>[\s\S]*?<\/title>/gi, "")
+    .replace(/\s*<meta\s+name="description"[^>]*>/gi, "")
+    .replace(/\s*<link\s+rel="canonical"[^>]*>/gi, "")
+    .replace(/\s*<meta\s+property="og:[^"]*"[^>]*>/gi, "")
+    .replace(/\s*<meta\s+name="twitter:[^"]*"[^>]*>/gi, "")
+    .replace(/\s*<meta\s+name="robots"[^>]*>/gi, "")
+    .replace(/\s*<script\s+type="application\/ld\+json"[\s\S]*?<\/script>/gi, "");
+
+/* El build tiene que FALLAR si el bundle no está en el HTML.
+ *
+ * Es la red que faltaba. Un prerender que borra el CSS produce un archivo que
+ * pasa todas las verificaciones de SEO —título, canonical, h1, contenido— y sirve
+ * una página inservible para una persona. Sin este chequeo, el error volvió a
+ * producción y estuvo horas ahí. */
+const verificarAssets = (html, ruta) => {
+  const tieneJs = /<script[^>]+type="module"[^>]+src="[^"]+"/.test(html);
+  const tieneCss = /<link[^>]+rel="stylesheet"[^>]+href="[^"]+"/.test(html);
+  if (!tieneJs || !tieneCss) {
+    throw new Error(
+      `${ruta}: el HTML quedó sin ${[!tieneJs && "JavaScript", !tieneCss && "CSS"]
+        .filter(Boolean)
+        .join(" ni ")}. El prerender no debe tocar las etiquetas que inyecta Vite.`,
+    );
+  }
+};
+
 const construirHead = ({ title, description, url, imagen, jsonLd }) => {
   const t = escaparAtributo(title);
   const d = escaparAtributo(description);
@@ -124,11 +168,36 @@ const main = async () => {
   const { prerenderToNodeStream } = await import("react-dom/static");
   const React = await import("react");
 
-  const renderizar = async (elemento) => {
-    const { prelude } = await prerenderToNodeStream(elemento);
+  /* onError hace que un fallo de render REVIENTE el build.
+   *
+   * Sin esto React atrapa el error, devuelve el subárbol vacío y el stream cierra
+   * igual: el build termina en verde y publica una página con solo el header y el
+   * footer. Es lo que pasó con /contacto —un `import.meta.env` inexistente en
+   * Node— y estuvo así en producción sin que ninguna verificación lo notara.
+   *
+   * Un prerender que falla en silencio es peor que uno que no existe. */
+  const renderizar = async (elemento, ruta) => {
+    const errores = [];
+    const { prelude } = await prerenderToNodeStream(elemento, {
+      onError: (error) => errores.push(error),
+    });
     let html = "";
     for await (const trozo of prelude) html += trozo;
+    if (errores.length > 0) {
+      throw new Error(
+        `${ruta}: falló el render — ${errores.map((e) => e.message).join(" | ")}`,
+      );
+    }
     return html;
+  };
+
+  /* Y una segunda red, por si algún día un componente devuelve vacío sin lanzar:
+     lo que se publica tiene que tener contenido de verdad. El h1 es el marcador
+     más simple y no ambiguo —toda página del sitio tiene exactamente uno—. */
+  const verificarContenido = (html, ruta) => {
+    if (!/<h1[\s>]/.test(html)) {
+      throw new Error(`${ruta}: el HTML salió sin <h1>, o sea sin contenido.`);
+    }
   };
   /* En react-router 7 el StaticRouter vive en `react-router`, no en
      `react-router-dom/server` como en v6: ese subpath ya no existe. */
@@ -146,6 +215,7 @@ const main = async () => {
         { location: ruta },
         React.createElement(App),
       ),
+      ruta,
     );
 
     const { title, description } = META_POR_RUTA[ruta];
@@ -154,15 +224,21 @@ const main = async () => {
       `<div id="root">${markup}</div>`,
     );
 
-    /* Se reemplaza todo el bloque entre el viewport y el cierre del head: la
-       plantilla trae los metadatos de la portada y quedarían duplicados. */
-    html = html.replace(/<title>[\s\S]*?<\/head>/, `${construirHead({
-      title,
-      description,
-      url: urlDe(ruta),
-      imagen: IMAGEN_POR_DEFECTO,
-      jsonLd,
-    })}\n  </head>`);
+    /* Se quitan SOLO los metadatos de la portada —si no quedarían duplicados— y
+       el bloque nuevo se inserta justo antes de </head>. Todo lo demás que haya
+       en el head queda intacto: el bundle, el favicon, las fuentes. */
+    html = quitarMetadatosViejos(html).replace(
+      "</head>",
+      `${construirHead({
+        title,
+        description,
+        url: urlDe(ruta),
+        imagen: IMAGEN_POR_DEFECTO,
+        jsonLd,
+      })}\n  </head>`,
+    );
+    verificarAssets(html, ruta);
+    verificarContenido(html, ruta);
 
     const destino =
       ruta === "/"
@@ -195,15 +271,18 @@ const main = async () => {
       { location: "/404" },
       React.createElement(App),
     ),
+    "404.html",
   );
   let html404 = plantilla.replace(
     '<div id="root"></div>',
     `<div id="root">${markup404}</div>`,
   );
-  html404 = html404.replace(
-    /<title>[\s\S]*?<\/head>/,
+  html404 = quitarMetadatosViejos(html404).replace(
+    "</head>",
     `${construirHead404(META_404)}\n  </head>`,
   );
+  verificarAssets(html404, "404.html");
+  verificarContenido(html404, "404.html");
   fs.writeFileSync(path.join(DIST, "404.html"), html404);
   generadas.push(`(no encontrado) → 404.html (${Math.round(html404.length / 1024)} KB)`);
 
