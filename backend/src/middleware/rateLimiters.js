@@ -54,17 +54,15 @@ export const publicMutationLimiter = createLimiter({
   message: "Superaste el límite temporal para gestionar turnos. Espera un momento e inténtalo de nuevo.",
 });
 
-/* Entrada al portal con el código de reserva.
-   Este límite es más bajo que el resto a propósito: desde que el código es la
-   única llave del portal, este endpoint es el único punto donde se puede
-   probar códigos a ciegas. El espacio es de 31^6 (887 millones), así que con
-   8 intentos por ventana adivinar uno deja de ser viable, y a quien escribe
-   bien el suyo —o lo corrige una o dos veces— no lo toca nunca.
+/* Entrada al portal con código y dato de contacto.
+   Este límite es más bajo que el resto a propósito: es el único punto donde se
+   pueden probar credenciales públicas a ciegas. Ocho intentos por ventana dan
+   margen para corregir errores humanos sin habilitar búsquedas automatizadas.
    `skipSuccessfulRequests` hace que entrar bien no gaste intentos. */
 export const portalSessionLimiter = createLimiter({
   limit: parseLimit(process.env.PORTAL_SESSION_RATE_LIMIT_MAX, 8),
   message:
-    "Demasiados intentos con códigos distintos. Esperá unos minutos y volvé a probar.",
+    "Demasiados intentos seguidos. Esperá unos minutos y volvé a probar.",
   skipSuccessfulRequests: true,
 });
 

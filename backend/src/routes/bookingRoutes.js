@@ -38,8 +38,7 @@ router.get("/availability", getAvailability);
 // route parameter (and therefore never reach access logs).
 router.post("/manage/request-link", publicMutationLimiter, requestManagementLink);
 router.get("/manage", publicMutationLimiter, getManagedBooking);
-// Entrada al portal con el código. Limitador propio y más estricto: es el
-// único lugar donde se pueden probar códigos a ciegas.
+// Entrada al portal con código + contacto. Limitador propio y más estricto.
 router.post("/portal/session", portalSessionLimiter, createPortalSession);
 /* Resumen de una serie por email. Detrás del token de gestión: el seriesId agrupa
    y no autoriza, asi que el endpoint compara que el token sea de ESA serie. */

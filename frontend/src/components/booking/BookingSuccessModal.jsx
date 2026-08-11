@@ -13,12 +13,15 @@ import {
   FaLink,
   FaMapMarkerAlt,
   FaSearch,
+  FaShieldAlt,
   FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { downloadIcs } from "../../utils/icsExport";
+import { getSafeManagementUrl } from "../../utils/managementUrl";
+import ThemeLogo from "../ui/ThemeLogo";
 
 const getDeliveryAlert = (successData) => {
   const emailRecipient = successData?.notifications?.client?.recipient;
@@ -94,6 +97,8 @@ const BookingSuccessModal = ({
   /* La modalidad faltaba en el comprobante: se elegía en el paso 2 y después no
      volvía a aparecer en ningún lado de la app. */
   const esPresencial = successData?.modality === "presencial";
+  const esPendiente = successData?.status === "Pendiente";
+  const safeManagementUrl = getSafeManagementUrl(successData?.managementUrl);
   const detailRows = [
     { label: "Alumno", value: successData?.cleanStudentName },
     { label: "Responsable", value: successData?.responsibleLabel },
@@ -135,8 +140,27 @@ const BookingSuccessModal = ({
 
         {/* Header */}
         <div className="success-header">
-          <FaCheckCircle className="success-check-icon" aria-hidden="true" />
-          <h2 id="booking-success-title">Tu turno ya quedó listo</h2>
+          <div className="success-header-top">
+            <ThemeLogo
+              variant="monogram"
+              imgClassName="success-brand-mark"
+              alt="Tu Profesor Particular"
+            />
+            <span className="success-status-badge">
+              <FaCheckCircle aria-hidden="true" />
+              {esPendiente ? "Solicitud recibida" : "Reserva confirmada"}
+            </span>
+          </div>
+          <h2 id="booking-success-title">
+            {esPendiente
+              ? "Tu solicitud quedó registrada"
+              : "Tu clase quedó reservada"}
+          </h2>
+          <p className="success-header-copy">
+            {esPendiente
+              ? "Agustín revisará la solicitud. Mientras tanto, guardá este comprobante y tu código de gestión."
+              : "Este es tu comprobante. Guardá el código para gestionar cualquier cambio de forma segura."}
+          </p>
           <div className="success-header-facts">
             <span>
               <FaCalendarAlt aria-hidden="true" /> {successData?.day}
@@ -162,11 +186,16 @@ const BookingSuccessModal = ({
             abajo) diciendo casi lo mismo: quedó uno solo, y la instrucción de
             qué hacer con el código vive junto al código. */}
         <div className="success-code-section">
-          <span className="success-code-label">Tu código</span>
+          <div className="success-code-heading">
+            <span className="success-code-label">Código de gestión</span>
+            <span className="success-code-secure">
+              <FaShieldAlt aria-hidden="true" /> Acceso protegido
+            </span>
+          </div>
           <h3 className="success-code-value">{successData?.bookingCode}</h3>
           <p className="success-code-hint">
-            Con este código entrás a <strong>Mis Turnos</strong> para
-            reprogramar o cancelar.
+            Para entrar a <strong>Mis Turnos</strong> vas a usar este código y
+            el mismo email o teléfono que cargaste al reservar.
           </p>
           <div className="success-code-actions">
             <button
@@ -176,7 +205,7 @@ const BookingSuccessModal = ({
             >
               <FaCopy aria-hidden="true" /> Copiar código
             </button>
-            {successData?.managementUrl && (
+            {safeManagementUrl && (
               <button
                 type="button"
                 className="success-copy-btn success-copy-btn--ghost"
@@ -186,10 +215,10 @@ const BookingSuccessModal = ({
               </button>
             )}
           </div>
-          {successData?.managementUrl && (
+          {safeManagementUrl && (
             <p className="success-code-alt">
-              El enlace directo te lleva a gestionar el turno sin escribir el
-              código.
+              El enlace directo contiene una credencial privada. No lo reenvíes
+              a otras personas.
             </p>
           )}
           <span role="status" aria-live="polite" className="sr-only">
@@ -294,11 +323,11 @@ const BookingSuccessModal = ({
 
         {/* Actions */}
         <div className="success-actions">
-          {successData?.managementUrl ? (
+          {safeManagementUrl ? (
             <button
               type="button"
               className="success-btn-primary"
-              onClick={() => window.location.assign(successData.managementUrl)}
+              onClick={() => window.location.assign(safeManagementUrl)}
             >
               <FaSearch aria-hidden="true" /> Gestionar este turno
             </button>

@@ -94,13 +94,19 @@ const esPendiente = (b) => String(b.status || "").toLowerCase() === "pendiente";
    ══════════════════════════════════════════════════════════════════════════ */
 const Entrada = ({ onEntrar, cargando, error }) => {
   const [codigo, setCodigo] = useState("");
+  const [contacto, setContacto] = useState("");
   const inputRef = useRef(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const listo = CODIGO_VALIDO.test(codigo);
+  const contactoLimpio = contacto.trim();
+  const contactoValido = contactoLimpio.includes("@")
+    ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactoLimpio)
+    : contactoLimpio.replace(/\D/g, "").length >= 8 &&
+      contactoLimpio.replace(/\D/g, "").length <= 15;
+  const listo = CODIGO_VALIDO.test(codigo) && contactoValido;
   /* Avisar del carácter confuso ANTES de que la persona toque el botón y le
      rebote: si escribió una O es casi seguro que en el papel dice cero. */
   const confuso = [...codigo].find((c) => "ILO01".includes(c));
@@ -115,54 +121,78 @@ const Entrada = ({ onEntrar, cargando, error }) => {
         />
         <h1 className="pt-gate-title">Tus turnos</h1>
         <p className="pt-gate-lead">
-          Escribí el código que te dimos al reservar y entrás directo. Ahí vas a
-          ver todas tus clases y vas a poder cambiarlas o cancelarlas.
+          Ingresá el código de la reserva y el mismo email o teléfono que
+          cargaste. Es un paso breve que protege el historial de tus clases.
         </p>
 
         <form
           className="pt-gate-form"
           onSubmit={(e) => {
             e.preventDefault();
-            if (listo && !cargando) onEntrar(codigo);
+            if (listo && !cargando) onEntrar(codigo, contactoLimpio);
           }}
         >
-          <label className="pt-gate-label" htmlFor="pt-codigo">
-            Código de reserva
-          </label>
-          <input
-            id="pt-codigo"
-            ref={inputRef}
-            className="pt-gate-input"
-            value={codigo}
-            onChange={(e) => setCodigo(normalizarCodigo(e.target.value))}
-            placeholder="A3K9PQ"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck="false"
-            inputMode="text"
-            aria-describedby="pt-codigo-ayuda"
-            aria-invalid={Boolean(error)}
-          />
-          <p className="pt-gate-hint" id="pt-codigo-ayuda">
-            {confuso ? (
-              <span className="pt-gate-hint--warn">
-                Ojo: el código no lleva {confuso === "1" || confuso === "0"
-                  ? `${confuso === "1" ? "unos" : "ceros"}`
-                  : `la letra ${confuso}`}
-                . Si dudás, probá con {CONFUSIONES[confuso] === "1" ? "un 1" : "un 0"}
-                {confuso === "1" ? " una I o una L" : confuso === "0" ? " una O" : ""}.
-              </span>
-            ) : (
-              "Son 6 caracteres. Está en el mail de confirmación y en tu comprobante."
-            )}
-          </p>
+          <div className="pt-gate-field">
+            <label className="pt-gate-label" htmlFor="pt-codigo">
+              Código de reserva
+            </label>
+            <input
+              id="pt-codigo"
+              ref={inputRef}
+              className="pt-gate-input"
+              value={codigo}
+              onChange={(e) => setCodigo(normalizarCodigo(e.target.value))}
+              placeholder="A3K9PQ"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck="false"
+              inputMode="text"
+              aria-describedby="pt-codigo-ayuda"
+              aria-invalid={Boolean(error)}
+            />
+            <p className="pt-gate-hint" id="pt-codigo-ayuda">
+              {confuso ? (
+                <span className="pt-gate-hint--warn">
+                  Ojo: el código no lleva {confuso === "1" || confuso === "0"
+                    ? `${confuso === "1" ? "unos" : "ceros"}`
+                    : `la letra ${confuso}`}
+                  . Si dudás, probá con {CONFUSIONES[confuso] === "1" ? "un 1" : "un 0"}
+                  {confuso === "1" ? " una I o una L" : confuso === "0" ? " una O" : ""}.
+                </span>
+              ) : (
+                "Son 6 caracteres. Está en el mail y en tu comprobante."
+              )}
+            </p>
+          </div>
+
+          <div className="pt-gate-field">
+            <label className="pt-gate-label" htmlFor="pt-contacto">
+              Email o teléfono cargado
+            </label>
+            <input
+              id="pt-contacto"
+              className="pt-gate-input pt-gate-contact"
+              value={contacto}
+              onChange={(e) => setContacto(e.target.value.slice(0, 254))}
+              placeholder="tu@email.com o 11 1234 5678"
+              autoComplete="username"
+              spellCheck="false"
+              inputMode="text"
+              aria-describedby="pt-contacto-ayuda"
+              aria-invalid={Boolean(error)}
+            />
+            <p className="pt-gate-hint" id="pt-contacto-ayuda">
+              Puede ser el dato del alumno o del adulto responsable usado en la
+              reserva.
+            </p>
+          </div>
 
           <button
             type="submit"
             className="pt-gate-btn"
             disabled={!listo || cargando}
           >
-            {cargando ? "Entrando…" : "Ver mis turnos"}
+            {cargando ? "Verificando…" : "Entrar de forma segura"}
             {!cargando && <FaArrowRight aria-hidden="true" />}
           </button>
         </form>
@@ -408,7 +438,7 @@ const TarjetaTurno = ({
 const ClientPortal = () => {
   usePageMeta(
     "Tus turnos",
-    "Entrá con tu código de reserva y gestioná tus clases: consultá, cambiá el horario o cancelá.",
+    "Entrá con tu código y dato de contacto para consultar, reprogramar o cancelar tus clases.",
   );
 
   /* El token vive SOLO acá, en memoria. No va a localStorage ni a la URL: es
@@ -438,11 +468,11 @@ const ClientPortal = () => {
     setActual(data?.data?.current ?? null);
   }, []);
 
-  const entrar = async (codigo) => {
+  const entrar = async (codigo, contacto) => {
     setCargando(true);
     setError("");
     try {
-      const { data } = await createPortalSession(codigo);
+      const { data } = await createPortalSession(codigo, contacto);
       const tk = data?.data?.managementToken;
       if (!tk) throw new Error("sin token");
       await cargarHistorial(tk);
@@ -452,8 +482,9 @@ const ClientPortal = () => {
          persona sigue probando su código correcto creyendo que falla. */
       setError(
         err?.response?.status === 429
-          ? "Probaste varios códigos seguidos. Esperá unos minutos y volvé a intentar."
-          : "Ese código no corresponde a ninguna reserva. Revisalo y probá de nuevo.",
+          ? "Hiciste varios intentos seguidos. Esperá unos minutos y volvé a intentar."
+          : err?.response?.data?.message ||
+            "No pudimos validar esos datos. Revisalos y volvé a intentar.",
       );
     } finally {
       setCargando(false);
@@ -472,15 +503,22 @@ const ClientPortal = () => {
   /* El token de gestión vale para UNA reserva: el backend compara el código del
      pedido contra el de la reserva a la que se emitió. Como el portal lista
      todos los turnos del titular, para tocar uno que no es aquel con el que se
-     entró hay que pedir su propio token. El código ya está en la lista, así que
-     no se le pide nada más a la persona.
+     entró hay que pedir su propio token. El portal ya validó la identidad y la
+     ficha contiene el contacto de esa reserva, así que no se le vuelve a pedir
+     el dato a la persona.
 
      Se hace así y no ampliando el alcance del token a propósito: cada operación
      sigue autorizada contra su reserva, exactamente como antes. */
   const tokenDeTurno = useCallback(
     async (turno) => {
       if (turno.bookingCode === actual) return token;
-      const { data } = await createPortalSession(turno.bookingCode);
+      const contactoTurno = turno.email?.includes("@")
+        ? turno.email
+        : turno.phone;
+      const { data } = await createPortalSession(
+        turno.bookingCode,
+        contactoTurno,
+      );
       const tk = data?.data?.managementToken;
       if (!tk) throw new Error("sin token");
       return tk;

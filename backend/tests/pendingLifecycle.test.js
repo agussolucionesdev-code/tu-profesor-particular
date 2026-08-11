@@ -62,7 +62,7 @@ const yaPaso = (overrides = {}) => {
 const tokenPara = async (bookingCode) => {
   const res = await request(app)
     .post("/api/bookings/portal/session")
-    .send({ bookingCode });
+    .send({ bookingCode, contact: "familia@example.com" });
   expect(res.status).toBe(200);
   return res.body.data.managementToken;
 };

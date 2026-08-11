@@ -433,6 +433,7 @@ const BookingKiosk = () => {
       const end = addMinutes(dateObj, Number(formData.duration) * 60);
       const bookingCode = response.data.data.bookingCode;
       const managementUrl = response.data.data.managementUrl;
+      const bookingStatus = response.data.data.status;
       const managementMethods = [
         { label: "Código", value: bookingCode, helper: "Pegalo tal cual en Mis Turnos." },
         ...(safeEmail
@@ -444,6 +445,7 @@ const BookingKiosk = () => {
       ];
       setSuccessData({
         bookingCode,
+        status: bookingStatus,
         rawTimeSlot: dateObj.toISOString(),
         rawEndTime: end.toISOString(),
         day: format(dateObj, "EEEE d 'de' MMMM 'de' yyyy", { locale: es }),
