@@ -46,6 +46,9 @@ const SiteFooter = () => (
           <li><Link to="/materias">Materias y niveles</Link></li>
           <li><Link to="/como-trabajo">Cómo trabajo</Link></li>
           <li><Link to="/contacto">Contacto</Link></li>
+          {/* En el footer y no en la navegación principal: es donde la gente ya
+              la busca, y no compite con las páginas que traen alumnos. */}
+          <li><Link to="/privacidad">Privacidad y datos</Link></li>
         </ul>
       </nav>
 

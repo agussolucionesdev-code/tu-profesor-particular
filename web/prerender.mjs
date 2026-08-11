@@ -89,10 +89,27 @@ const construirHead = ({ title, description, url, imagen, jsonLd }) => {
     <script type="application/ld+json">${jsonLd}</script>`;
 };
 
+/* El <head> del 404 es distinto al de una página real, y las diferencias
+   importan:
+
+   · noindex. Un 404 no se indexa. Sin esto, Google puede llegar a listarlo.
+   · Sin canonical. Un canonical declara "esta es la versión buena de esta
+     página", y en un 404 eso es una contradicción: le estaría diciendo a Google
+     que la página existe.
+   · Sin JSON-LD. El grafo describe al negocio y a los cursos; colgarlo de una
+     página que no existe no aporta nada y ensucia los datos estructurados.
+   · Sin Open Graph. Nadie comparte a propósito un 404, y si se comparte por
+     error es mejor que la vista previa quede vacía que que muestre la portada
+     como si el enlace funcionara. */
+const construirHead404 = ({ title, description }) => `
+    <title>${escaparAtributo(title)}</title>
+    <meta name="description" content="${escaparAtributo(description)}" />
+    <meta name="robots" content="noindex, follow" />`;
+
 const main = async () => {
   const plantilla = fs.readFileSync(path.join(DIST, "index.html"), "utf8");
 
-  const { META_POR_RUTA, IMAGEN_POR_DEFECTO, urlDe } = await compilarModulo(
+  const { META_POR_RUTA, META_404, IMAGEN_POR_DEFECTO, urlDe } = await compilarModulo(
     path.join(__dirname, "src/data/meta.js"),
   );
   const { construirGrafo } = await compilarModulo(
@@ -155,6 +172,40 @@ const main = async () => {
     fs.writeFileSync(destino, html);
     generadas.push(`${ruta} → ${path.relative(DIST, destino)} (${Math.round(html.length / 1024)} KB)`);
   }
+
+  /* dist/404.html — el archivo que Vercel sirve, con status 404, para cualquier
+     ruta que no exista.
+
+     Hace falta porque `cleanUrls` cambió el comportamiento: antes el rewrite
+     catch-all mandaba todo al index, así que una ruta inventada devolvía 200 y
+     el router del navegador pintaba esta misma pantalla. Malo para Google
+     —indexaba páginas que no existen— pero al menos la persona veía una página
+     con la marca y un camino de vuelta.
+
+     Con cleanUrls, Vercel resuelve contra el filesystem antes de llegar al
+     rewrite y devolvía SU propio 404: 78 bytes de "The page could not be found",
+     sin navegación ni forma de volver. Status correcto, experiencia peor.
+
+     Con este archivo se obtienen las dos cosas: 404 de verdad para los bots y la
+     pantalla del sitio para la persona. */
+  const markup404 = await renderizar(
+    React.createElement(
+      StaticRouter,
+      // Cualquier ruta inexistente cae en la <Route path="*"> del App.
+      { location: "/404" },
+      React.createElement(App),
+    ),
+  );
+  let html404 = plantilla.replace(
+    '<div id="root"></div>',
+    `<div id="root">${markup404}</div>`,
+  );
+  html404 = html404.replace(
+    /<title>[\s\S]*?<\/head>/,
+    `${construirHead404(META_404)}\n  </head>`,
+  );
+  fs.writeFileSync(path.join(DIST, "404.html"), html404);
+  generadas.push(`(no encontrado) → 404.html (${Math.round(html404.length / 1024)} KB)`);
 
   console.log("Prerender:\n  " + generadas.join("\n  "));
 };
