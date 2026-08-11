@@ -75,6 +75,10 @@ import {
 import { SLOT_MUTATION_LOCK_MS } from "../config/bookingMutationLease.js";
 import { STUDENT_IDENTITY_ALGORITHM_VERSION } from "../services/studentIdentityService.js";
 import { isScheduleGridChangeInProgress } from "../services/scheduleGridChangeLeaseService.js";
+import {
+  buildPricingForNewBooking,
+  repricingForReschedule,
+} from "../services/bookingPricing.js";
 
 const activeStatusFilter = SLOT_OWNING_BOOKING_FILTER;
 
@@ -1131,7 +1135,13 @@ export const createBooking = async (req, res, next) => {
       return badRequest(res, "Horario ocupado.");
     }
 
+    /* El precio se resuelve en el servidor con la tarifa configurada. Antes esto
+       no existía y toda reserva self-service quedaba en 0, así que el KPI de
+       ingresos solo veía lo que el profesor cargaba a mano. */
+    const pricing = await buildPricingForNewBooking(duration);
+
     newBooking = new Booking({
+      ...pricing,
       responsibleName: payload.responsibleName,
       responsibleRelationship: payload.responsibleRelationship,
       responsibleRelationshipOther: payload.responsibleRelationshipOther,
@@ -2727,6 +2737,15 @@ export const rescheduleBooking = async (req, res, next) => {
     });
 
     await renewSlotMutationLock(slotMutationLock);
+    /* Si la duración cambió, el precio se recalcula con la tarifa que se le
+       cotizó a esta persona, no con la actual: mover un horario no puede
+       encarecerle el turno porque el profesor subió los valores en el medio.
+       Devuelve null —y no se toca el precio— cuando la duración es la misma o
+       cuando la reserva no tiene tarifa guardada. */
+    const repricing = repricingForReschedule({
+      booking: slotMutationLock.booking,
+      nuevaDuracion: duration,
+    });
     lockedBooking = await Booking.findOneAndUpdate(
       ownedSlotMutationFilter(slotMutationLock),
       {
@@ -2737,6 +2756,7 @@ export const rescheduleBooking = async (req, res, next) => {
           bufferBeforeMinutes: schedule.bufferBeforeMinutes,
           bufferAfterMinutes: schedule.bufferAfterMinutes,
           status: "Confirmado",
+          ...(repricing ?? {}),
         },
         $push: { notificationIntents: { $each: rescheduledNotificationIntents } },
         $inc: { notificationRevision: 1, reminderRevision: 1, scheduleRevision: 1 },
