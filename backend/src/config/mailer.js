@@ -1367,11 +1367,21 @@ export const sendContactMessage = async ({ name, email, phone, subjectLabel, mes
    una, que es el sentido de tener ocho reservas independientes.
    ──────────────────────────────────────────────────────────────────────────── */
 
-const filaDeClase = ({ fecha, hora, code, esPrimera }) => `
+/* La fecha lleva el AÑO y la hora lleva el RANGO COMPLETO.
+ *
+ * El año, porque un email se guarda y se vuelve a leer: "miércoles 12 de agosto"
+ * no dice nada dentro de seis meses, ni cuando la casilla tiene clases de dos años
+ * distintos.
+ *
+ * El rango, porque una clase puede ser de media hora o de tres. "19:30 h" obliga a
+ * adivinar cuándo termina; "19:30 a 21:30 h · 2 horas" dice exactamente qué se
+ * reservó, y es el dato que la persona necesita para organizar el día. */
+const filaDeClase = ({ fecha, desde, hasta, duracion, code, esPrimera }) => `
         <tr>
           <td style="padding:12px 14px;border-top:1px solid #e6ecf5;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.navyInk};">
             <span style="display:block;font-weight:700;text-transform:capitalize;">${escapeHtml(fecha)}</span>
-            <span style="display:block;margin-top:2px;font-size:13px;color:${BRAND.navy};opacity:0.75;">${escapeHtml(hora)} h${esPrimera ? " · primera clase" : ""}</span>
+            <span style="display:block;margin-top:3px;font-size:13px;font-weight:700;color:${BRAND.navyInk};">${escapeHtml(desde)} a ${escapeHtml(hasta)} h</span>
+            <span style="display:block;margin-top:1px;font-size:12px;color:${BRAND.navy};opacity:0.7;">${escapeHtml(duracion)}${esPrimera ? " · primera clase" : ""}</span>
           </td>
           <td style="padding:12px 14px;border-top:1px solid #e6ecf5;text-align:right;font-family:'Courier New',Courier,monospace;font-size:16px;font-weight:700;letter-spacing:0.08em;color:${BRAND.navy};white-space:nowrap;">
             ${escapeHtml(code)}
@@ -1390,12 +1400,12 @@ export const buildSeriesSummaryHtml = ({
   const total = clases.length;
   const esPresencial = String(modality || "").toLowerCase() === "presencial";
   const filas = clases
-    .map((c, i) => filaDeClase({ ...c, esPrimera: i === 0 }))
+    .map((c, i) => filaDeClase({ ...c, esPrimera: total > 1 && i === 0 }))
     .join("");
 
   return `<!doctype html>
 <html lang="es-AR">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Tus ${total} clases</title></head>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${total === 1 ? "Tu clase" : `Tus ${total} clases`}</title></head>
 <body style="margin:0;padding:24px 12px;background:${BRAND.navySoft};">
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="width:600px;max-width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
 
@@ -1415,8 +1425,36 @@ export const buildSeriesSummaryHtml = ({
         <p style="margin:0 0 12px;">Hola ${escapeHtml(greetingName)}, quedó todo confirmado.</p>
         <p style="margin:0;">
           <strong>${escapeHtml(subject)}</strong> para ${escapeHtml(studentName)},
-          ${total === 1 ? "una clase" : `${total} clases`} ${escapeHtml(String(modality || "").toLowerCase() === "presencial" ? "presenciales" : "online")}${total > 1 ? ", una por semana" : ""}.
+          ${total === 1 ? "una clase" : `${total} clases`}${total > 1 ? ", una por semana" : ""}.
         </p>
+      </td>
+    </tr>
+
+    <!-- La modalidad en su propio bloque y no como una palabra dentro de una
+         oración: es lo que define si la persona tiene que viajar o abrir una
+         videollamada, y perdida en el medio de una frase se pasa por alto.
+         Presencial lleva la dirección al lado; online, dónde llega el enlace. -->
+    <tr>
+      <td style="padding:16px 26px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${esPresencial ? BRAND.greenSoft : BRAND.navySoft};border-radius:10px;">
+          <tr>
+            <td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:${BRAND.navy};opacity:0.75;">Modalidad</p>
+              <p style="margin:5px 0 0;font-size:17px;font-weight:800;color:${esPresencial ? BRAND.greenDeep : BRAND.navy};">
+                ${esPresencial ? "Presencial" : "Online"}
+              </p>
+              <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:${BRAND.navyInk};">
+                ${
+                  esPresencial
+                    ? address
+                      ? `En ${escapeHtml(address)}`
+                      : "En el espacio de Temperley"
+                    : "Por videollamada. El enlace te llega antes de cada clase."
+                }
+              </p>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
 
@@ -1434,15 +1472,6 @@ export const buildSeriesSummaryHtml = ({
       </td>
     </tr>
 
-    ${
-      esPresencial && address
-        ? `<tr>
-      <td style="padding:14px 26px 0;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${BRAND.navyInk};">
-        <strong>Dónde:</strong> ${escapeHtml(address)}
-      </td>
-    </tr>`
-        : ""
-    }
 
     <!-- Lo único que hay que saber hacer con esos códigos, dicho en una frase. -->
     <tr>
@@ -1497,7 +1526,11 @@ export const sendSeriesSummary = async (payload) => {
       "",
       `${payload.subject} para ${payload.studentName}.`,
       "",
-      ...payload.clases.map((c) => `${c.fecha} ${c.hora} h — código ${c.code}`),
+      `Modalidad: ${String(payload.modality || "").toLowerCase() === "presencial" ? `Presencial — en ${payload.address}` : "Online — por videollamada, el enlace llega antes de cada clase"}`,
+      "",
+      ...payload.clases.map(
+        (c) => `${c.fecha}, de ${c.desde} a ${c.hasta} h (${c.duracion}) — código ${c.code}`,
+      ),
       "",
       total > 1
         ? "Cada clase tiene su propio código y se gestiona sola: si una semana no podés, cambiás o cancelás esa y las demás siguen."

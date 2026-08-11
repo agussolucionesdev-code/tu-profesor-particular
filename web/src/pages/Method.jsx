@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
+import { FaWhatsapp } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
 import MethodSteps from "../components/MethodSteps.jsx";
-import FaqList from "../components/FaqList.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
+import { waLink } from "../data/site.js";
 import "./Inner.css";
 
 const Method = () => {
@@ -25,17 +27,35 @@ const Method = () => {
         </div>
       </section>
 
-      <section className="section section--soft" aria-labelledby="method-faq">
+      {/* Las preguntas frecuentes estaban ACÁ y en el Inicio, las mismas seis,
+          palabra por palabra. Quedan solo en el Inicio: ahí cierran las dudas
+          justo antes del CTA, que es donde hacen falta. Esta página enlaza en
+          lugar de repetir, así el JSON-LD de FAQPage tampoco queda declarado dos
+          veces para el mismo contenido. */}
+      <section className="section section--soft" aria-labelledby="method-dudas">
         <div className="shell">
           <SectionHead
             index="02"
             kicker="Antes de reservar"
-            title="Preguntas frecuentes"
-            titleId="method-faq"
-            lead="Lo que casi todos quieren saber antes de la primera clase."
+            title="¿Te quedó alguna duda?"
+            titleId="method-dudas"
+            lead="Las preguntas que aparecen siempre —precios, cómo son las clases online, qué pasa si falto— están respondidas en el inicio."
           />
-
-          <FaqList />
+          <p className="mt-dudas-acciones">
+            <Link className="btn btn--ghost" to="/#home-faq">
+              Ver preguntas frecuentes
+            </Link>
+            <a
+              className="btn btn--ghost"
+              href={waLink(
+                "Hola Agustín, leí cómo trabajás y me quedó una duda.",
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaWhatsapp aria-hidden="true" /> Preguntame por WhatsApp
+            </a>
+          </p>
         </div>
       </section>
 
