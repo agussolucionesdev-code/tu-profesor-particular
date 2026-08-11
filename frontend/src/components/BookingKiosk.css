@@ -716,3 +716,17 @@
   line-height: 1.5;
   color: var(--text-primary);
 }
+
+/* Aviso de repetición semanal. Informativo y no una alarma: explica qué implica
+   la opción que se acaba de elegir. Usa la pareja de tokens del CTA porque es un
+   estado deseado, no una advertencia. */
+.kiosk-repeticion-aviso {
+  margin: 0.75rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--cta-solid-bg);
+  border-radius: var(--radius-sm);
+  background: var(--state-hover-bg);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}

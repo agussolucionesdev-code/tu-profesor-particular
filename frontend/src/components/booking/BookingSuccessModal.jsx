@@ -207,6 +207,51 @@ const BookingSuccessModal = ({
           ))}
         </div>
 
+        {/* Las clases de la serie, con su código cada una.
+            Sin esta lista la persona se iría con UN código de los ocho, y los
+            otros siete solo existirían en su email. */}
+        {successData?.serie && (
+          <div className="success-serie">
+            <p className="success-serie-titulo">
+              {successData.serie.todasOk
+                ? `Quedaron reservadas las ${successData.serie.logradas.length} clases`
+                : `Se reservaron ${successData.serie.logradas.length} de ${successData.serie.total} clases`}
+            </p>
+            <ul className="success-serie-lista">
+              {successData.serie.logradas.map((c) => (
+                <li key={c.bookingCode ?? c.fecha}>
+                  <span className="success-serie-fecha">
+                    {c.fecha} · {c.hora}
+                  </span>
+                  <code className="success-serie-codigo">{c.bookingCode}</code>
+                </li>
+              ))}
+            </ul>
+
+            {/* Qué semanas quedaron afuera y por qué. Es la mitad honesta del
+                best-effort: reservar 6 de 8 sin decir cuáles faltan deja a la
+                persona creyendo que tiene 8. */}
+            {successData.serie.falladas.length > 0 && (
+              <div className="success-serie-faltantes" role="alert">
+                <p>
+                  Estas fechas ya estaban ocupadas y no se reservaron:
+                </p>
+                <ul>
+                  {successData.serie.falladas.map((c) => (
+                    <li key={c.fecha}>
+                      {c.fecha} · {c.hora}
+                    </li>
+                  ))}
+                </ul>
+                <p className="success-serie-faltantes-salida">
+                  Podés reservarlas en otro horario desde el formulario, o
+                  escribirme y las coordinamos.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Adónde ir. Es lo primero que alguien va a buscar el día de la clase,
             así que va en el comprobante y no solo en el email: si el correo se
             pierde en spam, esta pantalla y el .ics son lo único que queda. */}

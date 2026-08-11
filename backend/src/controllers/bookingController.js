@@ -143,6 +143,13 @@ const managedBooking = (booking) => ({
      primer "Guardar" borraba la nota sin que nadie se diera cuenta. Es un dato
      que la propia persona escribió, así que le vuelve a ella. */
   studentNotes: booking.studentNotes ?? "",
+  /* Para que el portal pueda mostrar las clases de una serie juntas y decir
+     "clase 3 de 8" en lugar de ocho tarjetas que parecen sin relación. Es una
+     etiqueta de agrupación, no una credencial: cada clase sigue necesitando su
+     propio token. */
+  seriesId: booking.seriesId ?? null,
+  seriesIndex: booking.seriesIndex ?? null,
+  seriesTotal: booking.seriesTotal ?? null,
 });
 
 const adminBooking = (booking) => {
@@ -1142,6 +1149,9 @@ export const createBooking = async (req, res, next) => {
 
     newBooking = new Booking({
       ...pricing,
+      seriesId: payload.seriesId ?? null,
+      seriesIndex: payload.seriesIndex ?? null,
+      seriesTotal: payload.seriesTotal ?? null,
       responsibleName: payload.responsibleName,
       responsibleRelationship: payload.responsibleRelationship,
       responsibleRelationshipOther: payload.responsibleRelationshipOther,
