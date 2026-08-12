@@ -27,8 +27,7 @@ test("Vercel proxies health and API requests before the SPA fallback", () => {
     },
     {
       source: "/api/(.*)",
-      destination:
-        "https://tu-profesor-particular-backend.onrender.com/api/$1",
+      destination: "/api/preview-proxy?__proxy_path=$1",
     },
   ]);
   assert.equal(vercelConfig.rewrites.at(-1).destination, "/index.html");
