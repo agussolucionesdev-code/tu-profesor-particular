@@ -35,14 +35,17 @@ export const SCHEDULE_AGGREGATE_KEY = "schedule.aggregate";
  * buffer global no puede distinguir esos dos casos, así que regalaría agenda en el
  * primero o vendería un imposible en el segundo. */
 export const MODALITY_SCHEDULE_DEFAULTS = Object.freeze({
-  /* Online no lleva ventana propia: su horario ES el general (07:00–22:00), y
-     escribirlo acá sería repetir el mismo dato en dos lugares para que se
-     desincronicen la primera vez que se cambie uno.
-     Presencial recorta a 09:00–21:00: abrir el espacio a las 7 le cuesta al profesor,
-     y a las 21 ya nadie tiene que estar volviendo a su casa desde Temperley. */
-  "schedule.modalityWindows": Object.freeze({
-    presencial: Object.freeze({ openingHour: 9, closingHour: 21 }),
-  }),
+  /* Sin ventana propia para ninguna: las DOS atienden 07:00–22:00, que es la ventana
+     general.
+     Decisión de Agustín, y es la correcta para su negocio: las 8 de la mañana es un
+     horario que se pide. La primera versión recortaba presencial a 09:00–21:00 —fue mi
+     recomendación, por el costo de abrir el espacio temprano— y él la revirtió antes
+     de que llegara a producción.
+     Va `null` y no `{online: 07-22, presencial: 07-22}` a propósito: ese dato ya vive
+     en openingHour/closingHour, y escribirlo dos veces garantiza que el día que se
+     cambie uno el otro quede viejo. El mecanismo sigue armado y probado; el día que
+     convenga separarlos se carga solo la modalidad que se recorta. */
+  "schedule.modalityWindows": null,
   /* 45 minutos de traslado entre una clase online y una presencial. Se aplica SOLO
      cuando la modalidad cambia: entre dos online seguidas es cero. */
   "schedule.modalityChangeBufferMinutes": 45,

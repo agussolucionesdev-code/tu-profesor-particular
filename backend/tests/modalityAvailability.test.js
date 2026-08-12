@@ -336,28 +336,45 @@ describe("3. buffer de traslado cuando cambia la modalidad", () => {
     expect(slots).toContain("19:00");
   });
 
-  it("los valores por defecto son los acordados con el profesor", () => {
-    /* Un default de cero dejaría la función escrita y apagada, que es peor que no
-       tenerla: parece que anda. Estos son los valores que Agustín aprobó —presencial
-       09:00–21:00 y 45 minutos de traslado— y quedan fijados acá para que un cambio
-       sea una decisión y no un descuido. Online no aparece porque su horario es el
-       general y duplicarlo garantizaría que los dos se desincronicen. */
+  it("los valores por defecto son los que decidió el profesor", () => {
+    /* Las dos modalidades atienden 07:00–22:00, así que NO hay ventana propia: ese dato
+       ya vive en openingHour/closingHour y duplicarlo garantiza que un día se cambie
+       uno y el otro quede viejo.
+       El traslado sí viene activo en 45. Un default de cero dejaría la función escrita
+       y apagada, que es peor que no tenerla: parece que anda. */
+    expect(MODALITY_SCHEDULE_DEFAULTS["schedule.modalityWindows"]).toBe(null);
     expect(MODALITY_SCHEDULE_DEFAULTS["schedule.modalityChangeBufferMinutes"]).toBe(45);
-    expect(MODALITY_SCHEDULE_DEFAULTS["schedule.modalityWindows"]).toEqual({
-      presencial: { openingHour: 9, closingHour: 21 },
-    });
   });
 
-  it("la ventana de presencial que viene por defecto se aplica de verdad", () => {
-    /* El default tiene que llegar hasta la agenda. Si `normalizeSchedule` no leyera la
-       clave, todo lo de arriba pasaría igual y la función no haría nada en producción:
-       es exactamente la forma en que una feature queda escrita y muerta. */
+  it("por defecto ninguna modalidad recorta su horario", () => {
+    // Presencial y online ven la misma ventana. Si mañana se separan, es una decisión
+    // explícita en el panel, no un efecto de estrenar esta función.
     const conDefaults = normalizeSchedule({ ...SCHEDULE_DEFAULTS });
-    expect(resolveModalityWindow(conDefaults, "presencial")).toEqual({
+    expect(resolveModalityWindow(conDefaults, "presencial")).toBe(null);
+    expect(resolveModalityWindow(conDefaults, "online")).toBe(null);
+  });
+
+  it("el traslado de 45 minutos del default llega hasta la agenda", () => {
+    /* El default tiene que atravesar `normalizeSchedule`. Si no leyera la clave, los
+       tests de arriba pasarían igual y la función no haría NADA en producción: es
+       exactamente la forma en que una feature queda escrita y muerta. Ya pasó una vez
+       en este mismo cambio, con el `.select()` que no traía `modality`. */
+    expect(normalizeSchedule({ ...SCHEDULE_DEFAULTS }).modalityChangeBufferMinutes)
+      .toBe(45);
+  });
+
+  it("la ventana por modalidad sigue funcionando cuando se configura", () => {
+    /* El default es "sin recorte", pero el mecanismo tiene que quedar vivo: es lo que
+       permite separar los horarios el día que convenga, sin volver a construir nada. */
+    const conPresencialRecortado = normalizeSchedule({
+      ...SCHEDULE_DEFAULTS,
+      "schedule.modalityWindows": { presencial: { openingHour: 9, closingHour: 21 } },
+    });
+
+    expect(resolveModalityWindow(conPresencialRecortado, "presencial")).toEqual({
       openingHour: 9,
       closingHour: 21,
     });
-    expect(resolveModalityWindow(conDefaults, "online")).toBe(null);
-    expect(conDefaults.modalityChangeBufferMinutes).toBe(45);
+    expect(resolveModalityWindow(conPresencialRecortado, "online")).toBe(null);
   });
 });
