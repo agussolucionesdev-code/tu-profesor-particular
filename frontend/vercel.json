@@ -5,6 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/health",
+      "destination": "https://tu-profesor-particular-backend.onrender.com/health"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://tu-profesor-particular-backend.onrender.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
