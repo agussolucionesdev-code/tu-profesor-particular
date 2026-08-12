@@ -34,11 +34,15 @@ export const MODALITY_OPTIONS = [
 
 // Duraciones ofrecidas. 1 hora es la recomendada. maxAllowedDuration del hook
 // recorta lo que no entra en el turno elegido.
+/* 2 horas es la recomendada, y viene preseleccionada desde
+   BOOKING_INITIAL_FORM_DATA. Es el tiempo que alcanza para explicar un tema y
+   además practicarlo: con una hora se va en entender la teoría y la clase termina
+   justo cuando el alumno tendría que empezar a resolver solo. */
 export const KIOSK_DURATION_OPTIONS = [
   { value: 0.5, label: "30 min" },
-  { value: 1, label: "1 hora", recommended: true },
+  { value: 1, label: "1 hora" },
   { value: 1.5, label: "1 h 30" },
-  { value: 2, label: "2 horas" },
+  { value: 2, label: "2 horas", recommended: true },
   { value: 2.5, label: "2 h 30" },
   { value: 3, label: "3 horas" },
 ];
