@@ -945,11 +945,42 @@
   font-size: clamp(0.94rem, 1.5vw, 1.05rem);
 }
 
+.kiosk-learning-route {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.48rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: -0.45rem 0 1rem;
+  padding: 0.58rem 0.78rem;
+  border: 1px solid rgba(1, 149, 60, 0.18);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--state-hover-bg) 72%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.kiosk-learning-route-label {
+  margin-right: 0.1rem;
+  color: var(--accent-ink);
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.kiosk-learning-route strong {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
 .kiosk-grid { gap: clamp(0.7rem, 1.3vw, 1rem); }
 .kiosk-grid-levels { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.kiosk-grid-subjects { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+.kiosk-grid-subjects { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .kiosk-choice-card.kiosk-visual-card {
+  --subject-glow: rgba(1, 149, 60, 0.2);
   position: relative;
   display: grid;
   align-content: stretch;
@@ -970,15 +1001,59 @@
     background 0.24s ease;
 }
 
+.kiosk-choice-card.kiosk-visual-card::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: -38%;
+  left: -70%;
+  width: 54%;
+  height: 176%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  opacity: 0;
+  transform: rotate(16deg);
+  transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+}
+
 .kiosk-level-card {
   grid-template-rows: minmax(164px, 1fr) auto;
   min-height: 326px;
 }
 
 .kiosk-choice-card.kiosk-choice-subject {
-  grid-template-rows: minmax(140px, 1fr) auto;
-  min-height: 238px;
+  grid-template-rows: minmax(172px, 1fr) auto;
+  min-height: 346px;
   align-items: stretch;
+  animation: kioskSubjectReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--kiosk-card-delay, 0ms);
+}
+
+@keyframes kioskSubjectReveal {
+  from { opacity: 0; transform: translateY(16px) scale(0.975); }
+  to { opacity: 1; transform: none; }
+}
+
+.kiosk-choice-subject[data-subject-kind="fisica"],
+.kiosk-choice-subject[data-subject-kind="ingles"] {
+  --subject-glow: rgba(56, 141, 211, 0.24);
+}
+
+.kiosk-choice-subject[data-subject-kind="quimica"],
+.kiosk-choice-subject[data-subject-kind="fisicoquimica"] {
+  --subject-glow: rgba(26, 173, 145, 0.24);
+}
+
+.kiosk-choice-subject[data-subject-kind="biologia"] {
+  --subject-glow: rgba(74, 170, 91, 0.25);
+}
+
+.kiosk-choice-subject[data-subject-kind="practicasDelLenguaje"] {
+  --subject-glow: rgba(107, 86, 173, 0.21);
+}
+
+.kiosk-choice-subject[data-subject-kind="historia"] {
+  --subject-glow: rgba(188, 126, 52, 0.23);
 }
 
 .kiosk-visual-media {
@@ -997,7 +1072,7 @@
   width: 78%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(1, 149, 60, 0.16), rgba(0, 33, 76, 0.04) 54%, transparent 72%);
+  background: radial-gradient(circle, var(--subject-glow), rgba(0, 33, 76, 0.04) 54%, transparent 72%);
   filter: blur(7px);
   transform: translateY(8%);
 }
@@ -1013,7 +1088,7 @@
   transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), filter 0.32s ease;
 }
 
-.kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 158px); }
+.kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 192px); }
 
 .kiosk-visual-copy {
   position: relative;
@@ -1045,6 +1120,52 @@
 .kiosk-visual-card .kiosk-choice-hint {
   font-size: 0.75rem;
   line-height: 1.35;
+}
+
+.kiosk-choice-subject .kiosk-visual-copy {
+  align-content: start;
+  gap: 0.38rem;
+  min-height: 166px;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.kiosk-choice-subject .kiosk-choice-label {
+  font-family: var(--font-display, "Fraunces Variable", Georgia, serif);
+  font-size: clamp(1.18rem, 1.8vw, 1.5rem);
+  font-weight: 760;
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.kiosk-subject-description {
+  color: var(--text-secondary);
+  font-size: 0.79rem;
+  line-height: 1.48;
+  text-wrap: pretty;
+}
+
+.kiosk-subject-focus {
+  display: grid;
+  gap: 0.12rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.kiosk-subject-focus > span {
+  color: var(--text-tertiary);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.kiosk-subject-focus strong {
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.3;
 }
 
 .kiosk-card-arrow,
@@ -1189,6 +1310,11 @@
     transform: translateY(-8px) rotateX(1.3deg);
   }
 
+  .kiosk-choice-card.kiosk-visual-card:hover::before {
+    left: 118%;
+    opacity: 1;
+  }
+
   .kiosk-choice-card.kiosk-visual-card:hover .kiosk-visual-media img {
     filter: drop-shadow(0 19px 17px rgba(0, 33, 76, 0.24));
     transform: translateY(-3px) scale(1.035) rotate(-0.6deg);
@@ -1208,6 +1334,12 @@
     transform: translateY(-2px);
     box-shadow: 0 14px 24px rgba(0, 33, 76, 0.12);
   }
+}
+
+.kiosk-choice-card.kiosk-visual-card:focus-visible {
+  border-color: var(--brand-green);
+  box-shadow: var(--shadow-focus), var(--kiosk-card-shadow-hover);
+  transform: translateY(-4px);
 }
 
 [data-theme="dark"] .kiosk-wrapper {
@@ -1245,6 +1377,15 @@
   background: linear-gradient(180deg, rgba(10, 23, 37, 0.34), rgba(7, 17, 29, 0.92));
 }
 
+[data-theme="dark"] .kiosk-learning-route {
+  border-color: rgba(86, 201, 110, 0.19);
+  background: rgba(12, 38, 33, 0.58);
+}
+
+[data-theme="dark"] .kiosk-subject-focus {
+  border-top-color: rgba(170, 188, 213, 0.15);
+}
+
 [data-theme="dark"] .kiosk-card-arrow {
   color: #dbe9f7;
   background: rgba(15, 37, 58, 0.9);
@@ -1268,6 +1409,7 @@
 
 @media (max-width: 980px) {
   .kiosk-grid-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kiosk-grid-subjects { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .kiosk-level-card { min-height: 300px; }
 }
 
@@ -1278,10 +1420,13 @@
   .kiosk-grid-levels,
   .kiosk-grid-subjects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kiosk-level-card { min-height: 258px; grid-template-rows: minmax(132px, 1fr) auto; }
-  .kiosk-choice-card.kiosk-choice-subject { min-height: 218px; grid-template-rows: minmax(126px, 1fr) auto; }
+  .kiosk-choice-card.kiosk-choice-subject { min-height: 312px; grid-template-rows: minmax(142px, 1fr) auto; }
   .kiosk-visual-media img { width: min(100%, 168px); }
-  .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 136px); }
+  .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 152px); }
   .kiosk-visual-copy { padding: 0.7rem 0.78rem 0.85rem; }
+  .kiosk-choice-subject .kiosk-visual-copy { min-height: 164px; padding: 0.78rem 0.82rem 0.86rem; }
+  .kiosk-choice-subject .kiosk-choice-label { font-size: clamp(1.05rem, 4vw, 1.28rem); }
+  .kiosk-subject-description { font-size: 0.75rem; }
   .kiosk-card-arrow,
   .kiosk-selected-mark { top: 0.55rem; right: 0.55rem; width: 29px; height: 29px; }
   .kiosk-title-row { flex-direction: column; gap: 0.2rem; }
@@ -1295,12 +1440,22 @@
   .kiosk-portal-link { font-size: 0.76rem; padding-inline: 0.68rem; }
   .kiosk-stepper { padding-inline: 0.35rem; }
   .kiosk-level-card { min-height: 232px; }
-  .kiosk-choice-card.kiosk-choice-subject { min-height: 202px; }
+  .kiosk-grid-subjects { grid-template-columns: minmax(0, 1fr); }
+  .kiosk-choice-card.kiosk-choice-subject {
+    grid-template-columns: minmax(118px, 0.72fr) minmax(0, 1.28fr);
+    grid-template-rows: minmax(188px, auto);
+    min-height: 188px;
+  }
   .kiosk-visual-media { padding-top: 0.35rem; }
   .kiosk-visual-media img { width: min(100%, 144px); }
-  .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 120px); }
+  .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 130px); }
+  .kiosk-choice-subject .kiosk-visual-copy { min-height: 100%; padding: 0.82rem 0.82rem 0.78rem; }
   .kiosk-visual-card .kiosk-choice-label { font-size: 0.86rem; }
+  .kiosk-choice-subject .kiosk-choice-label { font-size: 1.08rem; }
   .kiosk-visual-card .kiosk-choice-hint { font-size: 0.69rem; }
+  .kiosk-subject-description { font-size: 0.72rem; line-height: 1.4; }
+  .kiosk-subject-focus strong { font-size: 0.66rem; }
+  .kiosk-learning-route { width: 100%; border-radius: 16px; }
   .kiosk-selection-dock { align-items: stretch; flex-direction: column; }
   .kiosk-selection-dock .kiosk-avanzar { justify-content: center; width: 100%; }
 }
@@ -1318,6 +1473,7 @@
   .kiosk-visual-media img,
   .kiosk-card-arrow,
   .kiosk-selected-mark,
+  .kiosk-choice-card.kiosk-visual-card::before,
   .kiosk-input,
   .kiosk-back,
   .kiosk-primary,
