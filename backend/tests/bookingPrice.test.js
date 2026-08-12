@@ -241,7 +241,7 @@ describe("reprogramar y el precio", () => {
   const tokenPara = async (bookingCode) => {
     const r = await request(app)
       .post("/api/bookings/portal/session")
-      .send({ bookingCode });
+      .send({ bookingCode, contact: "familia@example.com" });
     expect(r.status).toBe(200);
     return r.body.data.managementToken;
   };

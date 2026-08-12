@@ -1,11 +1,21 @@
 import axios from "axios";
 import { clasificarFalla } from "./errorClassification";
 
-const API_BASE =
-  import.meta.env.VITE_BACKEND_URL ||
-  (import.meta.env.PROD
-    ? "https://tu-profesor-particular-backend.onrender.com"
-    : "http://localhost:3000");
+const isVercelDeployment =
+  import.meta.env.PROD &&
+  globalThis.location?.hostname?.endsWith(".vercel.app");
+
+/* Las previews de Vercel cambian de hostname en cada rama. En esos despliegues
+   la API se consume mediante rewrites del mismo origen: el navegador nunca
+   cruza CORS y la preview sigue siendo utilizable sin abrir el backend a todos
+   los subdominios de vercel.app. Los dominios oficiales continúan hablando
+   directamente con Render. */
+const API_BASE = isVercelDeployment
+  ? globalThis.location.origin
+  : import.meta.env.VITE_BACKEND_URL ||
+    (import.meta.env.PROD
+      ? "https://tu-profesor-particular-backend.onrender.com"
+      : "http://localhost:3000");
 
 const apiClient = axios.create({
   baseURL: API_BASE,

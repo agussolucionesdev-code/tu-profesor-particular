@@ -47,11 +47,11 @@ const crear = async (overrides = {}) => {
   });
 };
 
-/* El token se pide igual que lo pide el portal: con el código de reserva. */
+/* El token se pide igual que lo pide el portal: código + contacto. */
 const tokenPara = async (bookingCode) => {
   const res = await request(app)
     .post("/api/bookings/portal/session")
-    .send({ bookingCode });
+    .send({ bookingCode, contact: "familia@example.com" });
   expect(res.status).toBe(200);
   return res.body.data.managementToken;
 };

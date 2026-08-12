@@ -55,6 +55,7 @@ import {
   normalizeCode,
   normalizeEmail,
   normalizePhone,
+  normalizePhoneDigits,
   parseDateTimeInput,
   rescheduleSchema,
   updateBookingSchema,
@@ -104,6 +105,8 @@ const BOOKING_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,12}$/;
 const IDEMPOTENCY_KEY_TTL_MS = 24 * 60 * 60 * 1000;
 const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/;
 const INVALID_MANAGEMENT_LINK_MESSAGE = "El enlace de gestión no es válido o venció.";
+const INVALID_PORTAL_ACCESS_MESSAGE =
+  "No pudimos validar esos datos. Revisalos y volvé a intentar.";
 
 const publicBooking = (booking) => ({
   bookingCode: booking.bookingCode,
@@ -242,6 +245,30 @@ const unauthorizedManagementLink = (res) =>
     message: INVALID_MANAGEMENT_LINK_MESSAGE,
     requestId: res.req.requestId,
   });
+
+const unauthorizedPortalAccess = (res) => {
+  setNoStore(res);
+  return res.status(401).json({
+    success: false,
+    message: INVALID_PORTAL_ACCESS_MESSAGE,
+    requestId: res.req.requestId,
+  });
+};
+
+const portalContactMatches = (booking, rawContact) => {
+  const contact = String(rawContact || "").trim();
+  if (!contact) return false;
+
+  if (contact.includes("@")) {
+    const email = normalizeEmail(contact);
+    if (validateContact({ email, phone: "" })) return false;
+    return email === normalizeEmail(booking.email);
+  }
+
+  const phone = normalizePhone(contact);
+  if (validateContact({ email: "", phone })) return false;
+  return normalizePhoneDigits(phone) === normalizePhoneDigits(booking.phone);
+};
 
 const forbiddenManagementBooking = (res) =>
   res.status(403).json({
@@ -2476,32 +2503,33 @@ export const getManagedBooking = async (req, res, next) => {
   }
 };
 
-/* ── Portal: entrar con el código de reserva ────────────────────────────────
-   Reemplaza al flujo de "pedí un enlace y buscalo en tu correo". La decisión de
-   producto es que el código alcanza: son 6 caracteres sobre un alfabeto de 31
-   sin ambiguos (887 millones de combinaciones) generados con crypto.randomInt,
-   y sólo lo tiene quien reservó.
+/* ── Portal: entrar con código + dato de contacto ───────────────────────────
+   El código identifica la reserva, pero ya no autoriza por sí solo. Para abrir
+   el historial también debe coincidir el email o teléfono cargado al reservar.
+   Así, una captura o reenvío accidental del comprobante no expone todas las
+   clases vinculadas al titular.
 
    No se inventa un mecanismo de sesión nuevo: se emite el MISMO token de
    gestión que hasta ahora viajaba por mail, con su expiración y su revocación.
    Así reprogramar y cancelar siguen funcionando sin tocarse, y todo lo que ya
    estaba probado sobre ese token sigue valiendo.
 
-   Dos cuidados, porque el código pasó a ser la única llave:
-   · el endpoint tiene su propio limitador, más estricto que el resto;
-   · la respuesta a un código que no existe es idéntica a la de uno mal
-     formado, para no confirmar cuáles existen. */
+   Se conserva el limitador estricto y todos los fallos devuelven la misma
+   respuesta para no revelar si falló el código, el email o el teléfono. */
 export const createPortalSession = async (req, res, next) => {
   try {
     const bookingCode = normalizeCode(req.body?.bookingCode);
+    const contact = String(req.body?.contact || "").trim().slice(0, 254);
     if (!BOOKING_CODE_PATTERN.test(bookingCode)) {
-      return unauthorizedManagementLink(res);
+      return unauthorizedPortalAccess(res);
     }
 
     const booking = await Booking.findOne(
       withActiveBooking({ bookingCode }),
     ).exec();
-    if (!booking) return unauthorizedManagementLink(res);
+    if (!booking || !portalContactMatches(booking, contact)) {
+      return unauthorizedPortalAccess(res);
+    }
 
     const { managementToken } = issueManagementToken(booking);
     await booking.save();
@@ -2524,19 +2552,26 @@ export const createPortalSession = async (req, res, next) => {
   }
 };
 
-/* Historial completo del titular: todos los turnos que comparten el email de
-   la reserva con la que entró. Incluye los pasados y los cancelados —el pedido
-   es ver el historial, no sólo lo que viene— y cada uno viene marcado para que
-   el frontend no tenga que recalcular contra el reloj del navegador. */
+/* Historial del titular. Se usa el mismo canal de contacto validado por la
+   reserva: email y, si no existe, teléfono. Nunca se consulta por email vacío:
+   eso mezclaría a todas las personas que reservaron sin correo. Las reservas
+   borradas tampoco vuelven al portal. */
 export const getPortalHistory = async (req, res, next) => {
   try {
     const booking = await findManagedBooking(req);
     if (!booking) return unauthorizedManagementLink(res);
 
+    const identityFilter = normalizeEmail(booking.email)
+      ? { email: normalizeEmail(booking.email) }
+      : normalizePhoneDigits(booking.phone)
+        ? { phone: booking.phone }
+        : { bookingCode: booking.bookingCode };
+
     const bookings = await Booking.find(
-      trustedFilter({ email: booking.email }),
+      trustedFilter(withActiveBooking(identityFilter)),
     )
       .sort({ timeSlot: 1 })
+      .limit(100)
       .exec();
 
     const ahora = Date.now();

@@ -8,6 +8,10 @@ import {
   formatResponsibleRelationshipLabel,
 } from "../utils/bookingRules.js";
 import { getSetting } from "../controllers/settingsController.js";
+import {
+  DEFAULT_PUBLIC_FRONTEND_URL,
+  getPublicFrontendUrl,
+} from "./publicFrontendUrl.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -231,10 +235,9 @@ export const getEmailDeliveryHealth = () => {
    FRONTEND_URL no está seteada en el entorno, cada enlace del mail llevaba a
    la nada. Y en desarrollo el fallback ni siquiera entra en juego, así que el
    error solo aparecía en producción. */
-const PUBLIC_SITE_URL = "https://turnos.tuprofesorparticular.com.ar";
+const PUBLIC_SITE_URL = DEFAULT_PUBLIC_FRONTEND_URL;
 
-const getFrontendUrl = () =>
-  String(process.env.FRONTEND_URL || PUBLIC_SITE_URL).replace(/\/$/, "");
+const getFrontendUrl = () => getPublicFrontendUrl();
 
 /* El teléfono es dato de MARCA, no configuración de infraestructura, y por eso
    deja de leerse de CONTACT_PHONE.

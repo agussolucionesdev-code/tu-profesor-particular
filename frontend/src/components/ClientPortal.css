@@ -56,7 +56,9 @@
   color: var(--text-secondary);
 }
 
-.pt-gate-form { display: grid; gap: 0.4rem; text-align: left; }
+.pt-gate-form { display: grid; gap: 0.9rem; text-align: left; }
+
+.pt-gate-field { display: grid; gap: 0.4rem; }
 
 .pt-gate-label {
   font-size: 0.74rem;
@@ -94,8 +96,22 @@
   box-shadow: var(--shadow-focus);
 }
 
+.pt-gate-contact {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-align: left;
+  text-transform: none;
+}
+
+.pt-gate-contact::placeholder {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .pt-gate-hint {
-  margin: 0.15rem 0 0.9rem;
+  margin: 0.15rem 0 0;
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--text-secondary);

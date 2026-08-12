@@ -18,6 +18,7 @@ import {
 } from "react-icons/fa";
 import BookingSuccessModal from "./booking/BookingSuccessModal";
 import KioskSlotCalendar from "./KioskSlotCalendar";
+import ThemeLogo from "./ui/ThemeLogo";
 import {
   createBooking,
   fetchPublicSettings,
@@ -26,7 +27,11 @@ import {
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
-import { getSubjectIcon, getLevelIcon } from "../constants/subjectIcons";
+import {
+  getLevelVisual,
+  getSubjectVisual,
+  OTHER_SUBJECT_VISUAL,
+} from "../constants/bookingVisuals";
 import {
   KIOSK_STEPS,
   LEVEL_OPTIONS,
@@ -224,10 +229,17 @@ const BookingKiosk = () => {
   // ── Paso 1: Materia ───────────────────────────────────────────────────────
   const chooseLevel = (level) => {
     setField("educationLevel", level); // handleChange limpia subject y yearGrade
+    setOtherOpen(false);
+    setOtherSubject("");
+    setOtherSubjectError("");
     funnelRef.current.stageChange(1, 1);
   };
   const chooseSubject = (subject) => {
     setField("subject", subject);
+    setOtherOpen(false);
+  };
+  const confirmSubject = () => {
+    if (!formData.subject) return;
     setStep(2);
   };
 
@@ -247,7 +259,8 @@ const BookingKiosk = () => {
       return;
     }
     setOtherSubjectError("");
-    chooseSubject(value);
+    setField("subject", value);
+    setStep(2);
   };
 
   /* ── Paso 2: Modalidad ─────────────────────────────────────────────────────
@@ -433,6 +446,7 @@ const BookingKiosk = () => {
       const end = addMinutes(dateObj, Number(formData.duration) * 60);
       const bookingCode = response.data.data.bookingCode;
       const managementUrl = response.data.data.managementUrl;
+      const bookingStatus = response.data.data.status;
       const managementMethods = [
         { label: "Código", value: bookingCode, helper: "Pegalo tal cual en Mis Turnos." },
         ...(safeEmail
@@ -444,6 +458,7 @@ const BookingKiosk = () => {
       ];
       setSuccessData({
         bookingCode,
+        status: bookingStatus,
         rawTimeSlot: dateObj.toISOString(),
         rawEndTime: end.toISOString(),
         day: format(dateObj, "EEEE d 'de' MMMM 'de' yyyy", { locale: es }),
@@ -552,8 +567,21 @@ const BookingKiosk = () => {
         </div>
       </div>
 
-      <div className="kiosk-card" ref={cardRef}>
+      <div className={`kiosk-card kiosk-card--step-${step}`} ref={cardRef}>
         <div className="kiosk-card-head">
+          <div className="kiosk-brand-lockup" aria-label="Tu Profesor Particular">
+            <ThemeLogo
+              variant="monogram"
+              className="kiosk-brand-logo"
+              imgClassName="kiosk-brand-logo-image"
+              alt=""
+              loading="eager"
+            />
+            <span className="kiosk-brand-copy">
+              <strong>Tu Profesor Particular</strong>
+              <span>Reserva inteligente</span>
+            </span>
+          </div>
           <Link to="/portal" className="kiosk-portal-link">
             <FaTicketAlt aria-hidden="true" /> Ver mis turnos
           </Link>
@@ -563,12 +591,10 @@ const BookingKiosk = () => {
         <nav
           className="kiosk-stepper"
           aria-label="Progreso de la reserva"
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={KIOSK_STEPS.length}
-          aria-valuenow={step}
-          aria-valuetext={`Paso ${step} de ${KIOSK_STEPS.length}: ${KIOSK_STEPS[step - 1].label}`}
         >
+          <span className="sr-only" aria-live="polite">
+            Paso {step} de {KIOSK_STEPS.length}: {KIOSK_STEPS[step - 1].label}
+          </span>
           {KIOSK_STEPS.map((s) => {
             const state = step > s.id ? "done" : step === s.id ? "current" : "todo";
             return (
@@ -594,23 +620,37 @@ const BookingKiosk = () => {
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s1-title">
             {!formData.educationLevel ? (
               <>
-                <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué estás cursando?</h1>
-                <p className="kiosk-subtitle">Elegí el nivel para ver las materias.</p>
+                <span className="kiosk-eyebrow">Tu recorrido empieza acá</span>
+                <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué nivel estás cursando?</h1>
+                <p className="kiosk-subtitle">Elegí una tarjeta y te mostramos únicamente las materias que corresponden.</p>
                 <div className="kiosk-grid kiosk-grid-levels">
-                  {LEVEL_OPTIONS.map((lvl) => {
-                    const LevelIcon = getLevelIcon(lvl.value);
+                  {LEVEL_OPTIONS.map((lvl, index) => {
+                    const visual = getLevelVisual(lvl.value);
                     return (
                       <button
                         key={lvl.value}
                         type="button"
-                        className="kiosk-choice-card"
+                        className="kiosk-choice-card kiosk-visual-card kiosk-level-card"
                         onClick={() => chooseLevel(lvl.value)}
+                        aria-label={`${lvl.label}. ${lvl.hint}`}
                       >
-                        <span className="kiosk-choice-icon" aria-hidden="true">
-                          <LevelIcon />
+                        <span className="kiosk-visual-media" aria-hidden="true">
+                          <span className="kiosk-visual-halo" />
+                          <img
+                            src={visual.src}
+                            width={visual.width}
+                            height={visual.height}
+                            alt=""
+                            loading={index < 3 ? "eager" : "lazy"}
+                            decoding="async"
+                          />
                         </span>
-                        <span className="kiosk-choice-label">{lvl.label}</span>
-                        <span className="kiosk-choice-hint">{lvl.hint}</span>
+                        <span className="kiosk-visual-copy">
+                          <span className="kiosk-choice-kicker">Nivel educativo</span>
+                          <span className="kiosk-choice-label">{lvl.label}</span>
+                          <span className="kiosk-choice-hint">{lvl.hint}</span>
+                        </span>
+                        <span className="kiosk-card-arrow" aria-hidden="true"><FaArrowRight /></span>
                       </button>
                     );
                   })}
@@ -620,9 +660,10 @@ const BookingKiosk = () => {
               <>
                 <div className="kiosk-title-row">
                   <div>
-                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué materia?</h1>
+                    <span className="kiosk-eyebrow">Elegí tu materia</span>
+                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué querés aprender?</h1>
                     <p className="kiosk-subtitle">
-                      Nivel: <strong>{formData.educationLevel}</strong>
+                      Estás buscando clases para <strong>{formData.educationLevel}</strong>.
                     </p>
                   </div>
                   <button
@@ -634,19 +675,32 @@ const BookingKiosk = () => {
                   </button>
                 </div>
                 <div className="kiosk-grid kiosk-grid-subjects">
-                  {subjectsForLevel.map((subject) => {
-                    const SubjectIcon = getSubjectIcon(subject);
+                  {subjectsForLevel.map((subject, index) => {
+                    const visual = getSubjectVisual(subject);
                     return (
                       <button
                         key={subject}
                         type="button"
-                        className={`kiosk-choice-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
+                        className={`kiosk-choice-card kiosk-visual-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
                         onClick={() => chooseSubject(subject)}
+                        aria-pressed={formData.subject === subject}
                       >
-                        <span className="kiosk-choice-icon kiosk-choice-icon-sm" aria-hidden="true">
-                          <SubjectIcon />
+                        <span className="kiosk-visual-media" aria-hidden="true">
+                          <span className="kiosk-visual-halo" />
+                          <img
+                            src={visual.src}
+                            width={visual.width}
+                            height={visual.height}
+                            alt=""
+                            loading={index < 6 ? "eager" : "lazy"}
+                            decoding="async"
+                          />
                         </span>
-                        <span className="kiosk-choice-label">{subject}</span>
+                        <span className="kiosk-visual-copy">
+                          <span className="kiosk-choice-kicker">Materia</span>
+                          <span className="kiosk-choice-label">{subject}</span>
+                        </span>
+                        <span className="kiosk-selected-mark" aria-hidden="true"><FaCheckCircle /></span>
                       </button>
                     );
                   })}
@@ -654,20 +708,45 @@ const BookingKiosk = () => {
                   {/* Última tarjeta: escribir una materia que no está listada. */}
                   <button
                     type="button"
-                    className={`kiosk-choice-card kiosk-choice-subject kiosk-choice-other ${otherOpen ? "is-selected" : ""}`}
-                    onClick={() => setOtherOpen((v) => !v)}
+                    className={`kiosk-choice-card kiosk-visual-card kiosk-choice-subject kiosk-choice-other ${otherOpen ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setField("subject", "");
+                      setOtherOpen((v) => !v);
+                    }}
                     aria-expanded={otherOpen}
                     aria-controls="kiosk-other-subject"
                   >
-                    <span
-                      className="kiosk-choice-icon kiosk-choice-icon-sm"
-                      aria-hidden="true"
-                    >
-                      <FaPencilAlt />
+                    <span className="kiosk-visual-media" aria-hidden="true">
+                      <span className="kiosk-visual-halo" />
+                      <img
+                        src={OTHER_SUBJECT_VISUAL.src}
+                        width={OTHER_SUBJECT_VISUAL.width}
+                        height={OTHER_SUBJECT_VISUAL.height}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </span>
-                    <span className="kiosk-choice-label">Otra materia</span>
+                    <span className="kiosk-visual-copy">
+                      <span className="kiosk-choice-kicker">Personalizada</span>
+                      <span className="kiosk-choice-label">Otra materia</span>
+                    </span>
+                    <span className="kiosk-card-arrow" aria-hidden="true"><FaPencilAlt /></span>
                   </button>
                 </div>
+
+                {formData.subject && !otherOpen && (
+                  <div className="kiosk-selection-dock" role="status" aria-live="polite">
+                    <div className="kiosk-selection-copy">
+                      <span className="kiosk-confirmar-label">Tu elección</span>
+                      <strong>{formData.subject}</strong>
+                      <span>{formData.educationLevel}</span>
+                    </div>
+                    <button type="button" className="kiosk-avanzar" onClick={confirmSubject}>
+                      Continuar <FaArrowRight aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
 
                 {otherOpen && (
                   <div className="kiosk-other" id="kiosk-other-subject">
