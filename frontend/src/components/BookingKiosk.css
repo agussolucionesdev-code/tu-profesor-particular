@@ -104,7 +104,19 @@
 }
 /* Recibe foco programático al cambiar de paso (lo anuncia el lector de
    pantalla). No es un control interactivo, así que no lleva anillo visible. */
-.kiosk-title:focus { outline: none; }
+/* El título recibe el foco por código al cambiar de paso, para que un lector de
+   pantalla anuncie la pantalla nueva en lugar de quedar huérfano cuando la
+   anterior se desmonta. Eso hay que conservarlo.
+   Lo que NO va es el anillo: una regla global de :focus-visible le pintaba un
+   contorno verde con halo alrededor del h1, y un recuadro alrededor de un título
+   se lee como un campo editable o como un error de validación. Nadie llega acá
+   con Tab —tiene tabindex="-1"— así que el indicador no orienta a nadie.
+   Se apagan los dos estados y el halo, porque el anillo venía de más de una regla. */
+.kiosk-title:focus,
+.kiosk-title:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 .kiosk-subtitle {
   font-size: 0.98rem;
   color: var(--text-secondary);
@@ -323,9 +335,11 @@
   font-weight: 800;
   /* --brand-navy es fijo y oscuro: sobre el tema oscuro casi no se leía. */
   color: var(--text-primary);
-  text-transform: capitalize;
   margin-bottom: 0.5rem;
 }
+/* Igual que en el resumen: solo la primera letra. Con `capitalize` el título del
+   día salía "Miércoles 12 De Agosto", con la preposición en mayúscula. */
+.kiosk-day-label::first-letter { text-transform: uppercase; }
 
 /* Cuántos horarios tiene el día: evita que haya que contarlos a ojo. */
 .kiosk-day-count {
@@ -483,8 +497,13 @@
   font-weight: 700;
   color: var(--text-primary);
   text-align: right;
-  text-transform: capitalize;
 }
+/* Solo la PRIMERA letra del valor, no la de cada palabra.
+   `text-transform: capitalize` capitaliza todas: en el DOM dice "miércoles 12 de
+   agosto" y "18:00 a 19:00 h", y se renderizaba "Miércoles 12 De Agosto" y
+   "18:00 A 19:00 H". En castellano eso está mal —los artículos y las unidades van
+   en minúscula— y encima el dato ya venía bien escrito desde el código. */
+.kiosk-summary dd::first-letter { text-transform: uppercase; }
 
 /* ── Navegación ──────────────────────────────────────────────────────────── */
 .kiosk-nav {
