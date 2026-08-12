@@ -52,17 +52,24 @@ const endOfDayAfter = (days) => {
  */
 export const availabilityRequestParams = (
   duration,
-  { days = AVAILABILITY_INITIAL_DAYS } = {},
+  { days = AVAILABILITY_INITIAL_DAYS, modality = null } = {},
 ) => {
   const numericDuration = Number(duration);
   if (!Number.isFinite(numericDuration) || numericDuration < 0.5) {
     return undefined;
   }
-  if (days === null) return { duration: numericDuration };
+  /* La modalidad va en la consulta porque cada una tiene su propia ventana horaria:
+     online abre más temprano y cierra más tarde que presencial. Sin mandarla, el
+     backend devuelve la ventana general y el calendario ofrece horarios que después
+     rechaza al confirmar — el peor error posible en un flujo de reserva, porque el
+     usuario ya invirtió cuatro pasos antes de enterarse. */
+  const modalidad = modality ? { modality } : {};
+  if (days === null) return { duration: numericDuration, ...modalidad };
 
   // El backend valida `from`/`to` y acota el resultado a ese intervalo.
   return {
     duration: numericDuration,
+    ...modalidad,
     from: new Date().toISOString(),
     to: endOfDayAfter(days).toISOString(),
   };

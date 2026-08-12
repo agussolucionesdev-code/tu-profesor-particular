@@ -151,6 +151,7 @@ const BookingKiosk = () => {
     formData.duration,
     showToast,
     showAllDays,
+    formData.modality,
   );
 
   useEffect(() => {

@@ -90,13 +90,24 @@ const toAdminScheduleDto = ({ revision, schedule }) => ({
   availabilityPolicy: schedule.availabilityPolicy,
 });
 
-const settingsFromAdminScheduleDto = (schedule) => ({
+/* `actuales` son los settings ya guardados, y son la red de seguridad de este DTO.
+   Este endpoint reemplaza la configuración entera con lo que venga en el body: una
+   clave ausente se guarda como ausente. Sin el fallback, un panel que todavía no
+   conoce los horarios por modalidad los borraría la primera vez que el profesor
+   toque cualquier otra cosa del horario —y el borrado se vería recién semanas
+   después, como presenciales entrando a las 7 de la mañana. */
+const settingsFromAdminScheduleDto = (schedule, actuales = {}) => ({
   "schedule.openingHour": schedule?.openingHour,
   "schedule.closingHour": schedule?.closingHour,
   "schedule.advanceNoticeMinutes": schedule?.advanceNoticeMinutes,
   "schedule.slotDurationMinutes": schedule?.slotDurationMinutes,
   "schedule.timeZone": schedule?.timeZone,
   "schedule.activeWeekdays": schedule?.activeWeekdays,
+  "schedule.modalityWindows":
+    schedule?.modalityWindows ?? actuales["schedule.modalityWindows"],
+  "schedule.modalityChangeBufferMinutes":
+    schedule?.modalityChangeBufferMinutes
+    ?? actuales["schedule.modalityChangeBufferMinutes"],
   [AVAILABILITY_POLICY_KEY]: schedule?.availabilityPolicy,
 });
 
@@ -349,7 +360,7 @@ export const updateAdminSchedule = async (req, res, next) => {
       });
     }
 
-    const candidate = settingsFromAdminScheduleDto(req.body?.schedule);
+    const candidate = settingsFromAdminScheduleDto(req.body?.schedule, snapshot.settings);
     let normalized;
     try {
       normalized = validateScheduleSettings(candidate);

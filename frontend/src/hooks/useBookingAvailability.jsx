@@ -45,6 +45,11 @@ export const useBookingAvailability = (
   selectedDuration,
   showToast,
   fullRange = false,
+  /* La modalidad ya elegida en el paso 2. Va al backend porque cada modalidad tiene
+     su propia ventana horaria: presencial abre más tarde y cierra antes que online.
+     Sin mandarla, el calendario ofrece horarios que la confirmación después rechaza,
+     y el usuario se entera recién en el último paso. */
+  modality = null,
 ) => {
   const [existingBookings, setExistingBookings] = useState([]);
   const [blockedDates, setBlockedDates] = useState([]);
@@ -61,6 +66,7 @@ export const useBookingAvailability = (
     let isCurrentRequest = true;
     const requestParams = availabilityRequestParams(selectedDuration, {
       days: fullRange ? null : undefined,
+      modality,
     });
     const requestedDuration = requestParams?.duration ?? null;
 
@@ -104,7 +110,9 @@ export const useBookingAvailability = (
     };
     // fullRange entra como dependencia: al abrir el calendario hay que volver a
     // pedir la agenda, esta vez completa.
-  }, [availabilityRequestVersion, selectedDuration, showToast, fullRange]);
+    // modality entra como dependencia: cambiar de online a presencial cambia la
+    // ventana horaria, así que hay que volver a pedir la agenda.
+  }, [availabilityRequestVersion, selectedDuration, showToast, fullRange, modality]);
 
   const requestedDuration = availabilityRequestParams(selectedDuration)?.duration ?? null;
   const effectiveAvailabilityStatus = resolvedAvailabilityDuration === requestedDuration
