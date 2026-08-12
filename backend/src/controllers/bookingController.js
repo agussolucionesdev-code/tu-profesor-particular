@@ -27,6 +27,7 @@ import {
   withoutActiveSlotMutation,
 } from "../services/bookingMutationFenceService.js";
 import {
+  MODALITIES,
   calculateAvailableSlots,
   getScheduleConfiguration,
   normalizeDurationMinutes,
@@ -714,23 +715,55 @@ const existingBookingOverlapExpression = (startTime, endTime) => ({
   ],
 });
 
+/* Una modalidad conocida, o null. Lo que no está en la lista no se pasa a la agenda:
+   `null` significa "no se puede afirmar nada", y todo lo que decide por modalidad
+   —ventana y traslado— se abstiene en ese caso en lugar de adivinar. */
+const modalidadConocida = (valor) =>
+  MODALITIES.includes(valor) ? valor : null;
+
+/* `modality` es la del turno que se quiere escribir, y solo se usa para el tiempo de
+   traslado. La detección de choques NO discrimina modalidad: el profesor es uno y un
+   presencial de 18 a 20 ocupa las 18 también para online. */
 const hasConflict = async (
   startTime,
   endTime,
   excludeId = null,
   buffers = {},
+  modality = null,
 ) => {
   const claim = bufferedBounds(startTime, endTime, buffers);
-  const criteria = {
-    ...activeStatusFilter,
+  const base = { ...activeStatusFilter };
+  if (excludeId) base._id = { $ne: excludeId };
+
+  const pisa = await Booking.exists(trustedFilter({
+    ...base,
     $expr: existingBookingOverlapExpression(claim.start, claim.end),
-  };
+  }));
+  if (pisa) return true;
 
-  if (excludeId) {
-    criteria._id = { $ne: excludeId };
-  }
+  /* Segunda pasada, solo contra la OTRA modalidad: entre una clase online y una
+     presencial hay que viajar, así que el turno necesita ese margen extra alrededor.
+     Va en una consulta aparte y no en la primera porque el margen se aplica a unas
+     reservas y no a otras, y meter esa condición dentro del $expr de solapamiento lo
+     volvería ilegible sin ganar nada: son dos `exists` sobre el mismo índice.
 
-  return Booking.exists(trustedFilter(criteria));
+     Este chequeo tiene que existir acá y no solo al listar horarios: el listado es
+     una sugerencia, esto es lo que decide si la reserva se escribe. */
+  const trasladoMinutos = Number(buffers.modalityChangeBufferMinutes || 0);
+  const otras = modality ? MODALITIES.filter((m) => m !== modality) : [];
+  if (!trasladoMinutos || otras.length === 0) return false;
+
+  const margen = trasladoMinutos * 60 * 1000;
+  return Booking.exists(trustedFilter({
+    ...base,
+    // $in y no $ne: una reserva vieja sin modalidad no permite deducir un cambio, y
+    // ante el dato ausente es mejor no bloquear que bloquear de más.
+    modality: { $in: otras },
+    $expr: existingBookingOverlapExpression(
+      new Date(claim.start.getTime() - margen),
+      new Date(claim.end.getTime() + margen),
+    ),
+  }));
 };
 
 const isManageableByClient = (booking) =>
@@ -896,7 +929,7 @@ export const createAdminBooking = async (req, res, next) => {
       }
     }
 
-    if (await hasConflict(startTime, endTime, null, schedule)) {
+    if (await hasConflict(startTime, endTime, null, schedule, modalidadConocida(payload.modality))) {
       await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
       idempotencyRecord = null;
       return res.status(409).json({
@@ -1104,7 +1137,10 @@ export const createBooking = async (req, res, next) => {
     const requestedDuration = Number(payload.duration);
 
     const [{ error: slotError, schedule, durationMinutes, endTime }, requireManual] = await Promise.all([
-      validateConfiguredSlot(startTime, requestedDuration),
+      // Camino público: acá SÍ se aplica la ventana de la modalidad.
+      validateConfiguredSlot(startTime, requestedDuration, {
+        modality: modalidadConocida(payload.modality),
+      }),
       getSetting("booking.requireManualConfirmation"),
     ]);
 
@@ -1167,7 +1203,7 @@ export const createBooking = async (req, res, next) => {
       }
     }
 
-    if (await hasConflict(startTime, endTime, null, schedule)) {
+    if (await hasConflict(startTime, endTime, null, schedule, modalidadConocida(payload.modality))) {
       if (idempotencyRecord) {
         await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
       }
@@ -1381,7 +1417,7 @@ export const getAvailability = async (req, res, next) => {
           $expr: existingBookingOverlapExpression(range.from, range.to),
         }),
       )
-        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status")
+        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status modality")
         .lean()
         .sort({ timeSlot: 1 }),
       BlockedDate.find().select("date").lean(),
@@ -1394,6 +1430,10 @@ export const getAvailability = async (req, res, next) => {
       blockedDates,
       schedule,
       durationHours: requestedDuration,
+      /* Sin modalidad en la consulta se devuelve la ventana general, que es la unión
+         de las dos: el calendario muestra de más y la validación al reservar rechaza.
+         Por eso el wizard manda la modalidad ya elegida en el paso 2. */
+      modality: modalidadConocida(req.query.modality),
     });
 
     res.status(200).json({
@@ -1463,7 +1503,7 @@ export const getAdminAvailability = async (req, res, next) => {
         ...exclusionFilter,
         $expr: existingBookingOverlapExpression(range.from, range.to),
       }))
-        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status")
+        .select("timeSlot endTime duration bufferBeforeMinutes bufferAfterMinutes status modality")
         .lean()
         .sort({ timeSlot: 1 }),
       BlockedDate.find().select("date").lean(),
@@ -1475,6 +1515,11 @@ export const getAdminAvailability = async (req, res, next) => {
       blockedDates: blockedRecords.map(({ date }) => date),
       schedule,
       durationHours: durationValidation.durationMinutes / 60,
+      /* El panel ve el traslado —es tiempo real de viaje— pero NO la ventana de
+         oferta: el profesor tiene que poder agendarse un presencial a las 8 aunque al
+         público le abra a las 9. */
+      modality: modalidadConocida(req.query.modality),
+      applyModalityWindow: false,
     });
 
     setNoStore(res);
@@ -1696,7 +1741,9 @@ export const updateBooking = async (req, res, next) => {
         slotMutationLock = null;
         return badRequest(res, slotError);
       }
-      if (await hasConflict(startTime, endTime, beforeBooking._id, schedule)) {
+      if (await hasConflict(startTime, endTime, beforeBooking._id, schedule,
+        // La modalidad que va a quedar: la nueva si se está cambiando, la guardada si no.
+        modalidadConocida(parsed.data.modality ?? beforeBooking.modality))) {
         await releaseSlotMutationLock(beforeBooking._id, slotMutationLock.lock);
         slotMutationLock = null;
         return res.status(409).json({
@@ -2272,6 +2319,7 @@ export const restoreBooking = async (req, res, next) => {
       endTime,
       trashedBooking._id,
       restoredBuffers,
+      modalidadConocida(trashedBooking.modality),
     )) {
       await releaseSlotMutationLock(trashedBooking._id, slotMutationLock.lock);
       slotMutationLock = null;
@@ -2681,7 +2729,12 @@ export const rescheduleBooking = async (req, res, next) => {
       schedule,
       durationMinutes,
       endTime,
-    } = await validateConfiguredSlot(startTime, requestedDuration);
+      /* Reprogramar no cambia de modalidad, así que se valida contra la ventana de la
+         que la reserva ya tiene: si es presencial, el nuevo horario tiene que caer en
+         la ventana presencial, no en la general. */
+    } = await validateConfiguredSlot(startTime, requestedDuration, {
+      modality: modalidadConocida(booking.modality),
+    });
     if (slotError) {
       return badRequest(res, slotError);
     }
@@ -2752,6 +2805,7 @@ export const rescheduleBooking = async (req, res, next) => {
       endTime,
       booking._id,
       schedule,
+      modalidadConocida(booking.modality),
     );
     if (conflict) {
       await releaseSlotMutationLock(booking._id, slotMutationLock.lock);

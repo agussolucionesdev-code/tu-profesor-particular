@@ -79,7 +79,11 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
   // Load availability
   useEffect(() => {
     let isCurrentRequest = true;
-    const requestParams = availabilityRequestParams(newDuration);
+    /* Reprogramar no cambia la modalidad: se piden los horarios de la que la reserva
+       ya tiene, que es contra la que el backend va a validar el nuevo turno. */
+    const requestParams = availabilityRequestParams(newDuration, {
+      modality: editingBooking?.modality ?? null,
+    });
     fetchAvailability(requestParams, managementToken)
       .then((res) => {
         const parsed = parsePublicAvailabilityResponse(res.data);
@@ -119,7 +123,14 @@ const RescheduleModal = ({ editingBooking, managementToken, onClose, onSuccess, 
     return () => {
       isCurrentRequest = false;
     };
-  }, [availabilityRequestVersion, editingBooking.duration, managementToken, newDuration, showToast]);
+  }, [
+    availabilityRequestVersion,
+    editingBooking.duration,
+    editingBooking.modality,
+    managementToken,
+    newDuration,
+    showToast,
+  ]);
 
   // Derive full datetime from day + selected time slot
   const newDate = useMemo(() => {
