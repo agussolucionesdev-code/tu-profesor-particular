@@ -6,11 +6,18 @@ import { isConfiguredSocialUrl } from "../../src/utils/socialUrl.js";
 const readSource = (relativePath) =>
   readFileSync(new URL(relativePath, import.meta.url), "utf8");
 
+/* Quita comentarios de bloque y de línea. Sirve para las aserciones que prohíben algo:
+   sin esto, explicar en un comentario qué se dejó de usar hace fallar el test que
+   verifica que ya no se usa. */
+const sinComentarios = (fuente) =>
+  fuente.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
 const navbarSource = readSource("../../src/layouts/Navbar.jsx");
 const footerSource = readSource("../../src/layouts/Footer.jsx");
 const homeSource = readSource("../../src/pages/HomePage.jsx");
 const kioskSource = readSource("../../src/components/BookingKiosk.jsx");
 const kioskConstants = readSource("../../src/constants/kioskWizard.js");
+const channelsSource = readSource("../../src/constants/contactChannels.js");
 
 test("offers an explicit home destination and makes the brand return home", () => {
   assert.match(navbarSource, /title:\s*"Inicio",\s*path:\s*"\/"/);
@@ -24,9 +31,13 @@ test("does not advertise the already-live principal website as upcoming", () => 
 
 test("renders only explicitly configured social profiles", () => {
   assert.doesNotMatch(footerSource, /\|\|\s*"https:\/\/(instagram|facebook|linkedin)\.com"/);
+  /* El filtro se movió de Footer.jsx a constants/contactChannels.js con el rediseño del
+     pie. La DECISIÓN que este test protege no cambió —no se publica un enlace a una red
+     sin perfil— así que se afirma en su ubicación nueva en lugar de borrar la
+     protección. */
   assert.match(
-    footerSource,
-    /SOCIAL_LINKS\.filter\(\(item\)\s*=>[\s\S]*?isConfiguredSocialUrl\(item\.href\)/,
+    channelsSource,
+    /PERFILES\.filter\(\(perfil\)\s*=>\s*isConfiguredSocialUrl\(perfil\.href\)\)/,
   );
 
   for (const href of [
@@ -49,6 +60,36 @@ test("renders only explicitly configured social profiles", () => {
   ]) {
     assert.equal(isConfiguredSocialUrl(href), true, `${href} must stay visible`);
   }
+});
+
+test("keeps public profile URLs in code, not in environment variables", () => {
+  /* Las URLs de los perfiles se leían de `import.meta.env.VITE_INSTAGRAM_URL` y
+     compañía. No son secretos —son perfiles públicos— y lo único que aportaba esa
+     indirección era una forma de equivocarse invisible. Se materializó: producción
+     estuvo apuntando a `instagram.com/agustinsosa.profe`, que no es el perfil de
+     Agustín. No falló el build, no falló ningún test y no hubo aviso, porque el valor
+     vivía en un panel que nadie mira en un code review.
+
+     Este test es el que hace que un perfil equivocado sea un diff que alguien lee. */
+  /* Se afirma sobre el CÓDIGO, no sobre los comentarios. Ambos archivos explican en
+     prosa de qué variable de entorno venían estas URLs, y una aserción sobre el texto
+     crudo fallaba por la explicación misma: castigaba documentar el motivo del cambio,
+     que es justo lo que queremos que quede escrito. */
+  assert.doesNotMatch(sinComentarios(channelsSource), /import\.meta\.env/);
+  assert.doesNotMatch(sinComentarios(footerSource), /import\.meta\.env/);
+
+  // El perfil real, verificado con Agustín.
+  assert.match(channelsSource, /https:\/\/www\.instagram\.com\/tuprofesor\.ar\//);
+  assert.doesNotMatch(channelsSource, /agustinsosa\.profe["']/);
+});
+
+test("keeps one source of truth for the WhatsApp number", () => {
+  /* El número estaba escrito a mano en 7 archivos de este proyecto. La última vez que
+     cambió hubo que tocarlos todos, y alcanzaba con olvidarse de uno para dejar un
+     teléfono viejo en producción. El pie ahora lo lee de la constante. */
+  assert.doesNotMatch(footerSource, /wa\.me\/\d/);
+  assert.match(footerSource, /waLink\(/);
+  assert.match(channelsSource, /WHATSAPP_NUMBER = "5491133365937"/);
 });
 
 test("states one consistent online and in-person offer", () => {

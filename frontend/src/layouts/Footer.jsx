@@ -1,283 +1,173 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FaArrowRight,
   FaArrowUp,
-  FaBrain,
   FaCalendarAlt,
   FaEnvelope,
-  FaFacebookF,
-  FaGlobe,
   FaInstagram,
   FaLinkedinIn,
   FaMapMarkerAlt,
-  FaUserCheck,
   FaUserCog,
   FaUserLock,
   FaWhatsapp,
 } from "react-icons/fa";
 import ThemeLogo from "../components/ui/ThemeLogo";
-import Reveal from "../components/ui/Reveal";
-import useInView from "../hooks/useInView";
-import { isConfiguredSocialUrl } from "../utils/socialUrl";
+import { FALLBACK_TEACHER_LOCATION } from "../constants/teacherLocation";
+import {
+  CONTACT_EMAIL,
+  SOCIAL_PROFILES,
+  WHATSAPP_DEFAULT_MESSAGE,
+  WHATSAPP_DISPLAY,
+  waLink,
+} from "../constants/contactChannels";
 import "./Footer.css";
 
-const FOOTER_LINKS = [
-  {
-    to: "/reservar",
-    label: "Reservar tu turno",
-    hint: "Materia, horario y listo",
-    icon: <FaCalendarAlt aria-hidden="true" />,
-  },
-  {
-    to: "/portal",
-    label: "Ver mis turnos",
-    hint: "Consultá, reprogramá o cancelá",
-    icon: <FaUserLock aria-hidden="true" />,
-  },
-  {
-    to: "/admin",
-    label: "Panel del profesor",
-    hint: "Acceso exclusivo",
-    icon: <FaUserCog aria-hidden="true" />,
-  },
+/* El pie de página de una HERRAMIENTA, no de un sitio de marketing.
+ *
+ * La versión anterior medía 1434px de alto en un teléfono de 375px. El contenido de
+ * /portal mide 961px y el de /reservar 1252px: el pie era más grande que la página en
+ * las dos rutas que la gente realmente usa. Traía una cinta con el eslogan, un CTA
+ * para reservar, un párrafo de filosofía, tres etiquetas de valor, tres columnas y un
+ * panel inferior — todo repitiendo lo que la página de arriba ya dijo mejor.
+ *
+ * Y arrastraba dos problemas concretos: tres tarjetas de contacto que se salían 8px
+ * del viewport (WhatsApp, email y ubicación quedaban cortadas a la derecha), y 554
+ * líneas de CSS para hacer lo que `web/src/components/SiteFooter.css` hace en 99.
+ *
+ * Un footer se lee cuando alguien busca ALGO PUNTUAL: cómo contactarte, adónde
+ * volver, si sos real. Eso es lo que quedó. Nada más.
+ *
+ * Se quitó también el envoltorio `Reveal`: animar la aparición del pie no aporta nada
+ * —nadie llega ahí buscando un efecto— y depende de un IntersectionObserver que, si
+ * no dispara, deja todo en `opacity: 0`.
+ */
+
+const RUTAS = [
+  { to: "/reservar", label: "Reservar un turno", icon: FaCalendarAlt },
+  { to: "/portal", label: "Ver mis turnos", icon: FaUserLock },
+  { to: "/admin", label: "Panel del profesor", icon: FaUserCog },
 ];
 
-const SOCIAL_LINKS = [
-  {
-    href: import.meta.env.VITE_INSTAGRAM_URL,
-    label: "Instagram",
-    icon: <FaInstagram aria-hidden="true" />,
-    className: "social-bubble insta",
-  },
-  {
-    href: import.meta.env.VITE_FACEBOOK_URL,
-    label: "Facebook",
-    icon: <FaFacebookF aria-hidden="true" />,
-    className: "social-bubble fb",
-  },
-  {
-    href: import.meta.env.VITE_LINKEDIN_URL,
-    label: "LinkedIn",
-    icon: <FaLinkedinIn aria-hidden="true" />,
-    className: "social-bubble in",
-  },
-];
-
-const CONFIGURED_SOCIAL_LINKS = SOCIAL_LINKS.filter((item) =>
-  isConfiguredSocialUrl(item.href),
-);
+const ICONO_SOCIAL = {
+  instagram: FaInstagram,
+  linkedin: FaLinkedinIn,
+};
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
-  const [showTopBtn, setShowTopBtn] = useState(false);
-  const [linksRef, linksVisible] = useInView({ threshold: 0.2 });
+  const anio = new Date().getFullYear();
+  const [mostrarSubir, setMostrarSubir] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowTopBtn(window.scrollY > 400);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const alScrollear = () => setMostrarSubir(window.scrollY > 400);
+    alScrollear();
+    window.addEventListener("scroll", alScrollear, { passive: true });
+    return () => window.removeEventListener("scroll", alScrollear);
   }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
 
   return (
     <>
-      <footer className="footer-elite">
-        <div className="footer-texture" aria-hidden="true" />
-
-        {/* ── Cinta de firma: slogan + acción rápida ── */}
-        <Reveal direction="fade" delay={0} as="div">
-          <div className="footer-ribbon">
-            <p className="footer-ribbon-slogan">
-              <span className="ribbon-a">Juntos,</span>{" "}
-              <span className="ribbon-b">despejando el camino a</span>{" "}
-              <span className="ribbon-c">la meta.</span>
+      <footer className="tpp-footer">
+        <div className="tpp-footer-inner">
+          <div className="tpp-footer-brand">
+            {/* El tamaño se contiene desde el CSS del pie con especificidad de dos
+                clases, no con una clase en la imagen: `.theme-logo__image` declara
+                `width: auto` y le gana a una clase sola. Es la misma trampa que
+                documenta BrandLoader.css, y acá dejaba el monograma de 1254px
+                ocupando 267px de ancho. */}
+            <ThemeLogo variant="monogram" alt="Tu Profesor Particular" />
+            <p className="tpp-footer-person">
+              <strong>Agustín Elías Sosa</strong>
+              <span>Clases particulares · Temperley, Buenos Aires</span>
             </p>
-            <div className="footer-ribbon-actions">
-              <Link to="/reservar" className="footer-ribbon-cta">
-                <FaCalendarAlt aria-hidden="true" />
-                Reservar mi clase
-                <FaArrowRight className="ribbon-cta-arrow" aria-hidden="true" />
-              </Link>
-              <a
-                href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
-                target="_blank"
-                rel="noreferrer"
-                className="footer-ribbon-ghost"
-              >
-                <FaWhatsapp aria-hidden="true" />
-                Consultar
-              </a>
-            </div>
           </div>
-        </Reveal>
 
-        <div className="footer-grid-container">
-          <Reveal direction="left" delay={0} className="footer-brand-col">
-            <div className="footer-header-brand">
-              <div className="logo-premium-wrapper">
-                <ThemeLogo
-                  variant="monogram"
-                  imgClassName="logo-img-transparent"
-                  alt="Tu Profesor Particular"
-                />
-              </div>
-
-              <div className="brand-titles">
-                <h3>Agustín Elías Sosa</h3>
-                <span>Tu profesor de confianza</span>
-              </div>
-            </div>
-
-            <div className="brand-philosophy">
-              <h4 className="neuro-hook">
-                Clases particulares con orden, cercanía y seguimiento.
-              </h4>
-              <p className="neuro-copy">
-                Un espacio para aprender con claridad, resolver dudas y llegar
-                a cada clase con un plan concreto, humano y adaptado a vos.
-              </p>
-            </div>
-
-            <div className="footer-value-tags">
-              <span className="value-tag">
-                <FaUserCheck aria-hidden="true" /> Atención personalizada
-              </span>
-              <span className="value-tag">
-                <FaBrain aria-hidden="true" /> Acompañamiento claro
-              </span>
-              <span className="value-tag">
-                <FaGlobe aria-hidden="true" /> Gestión simple
-              </span>
-            </div>
-          </Reveal>
-
-          <Reveal direction="up" delay={80} className="footer-nav-col">
-            <h4 className="footer-section-title">Explorar</h4>
-            <nav aria-label="Navegación del pie de página">
-              <ul
-                ref={linksRef}
-                className={`footer-links-list reveal-list stagger-auto${linksVisible ? " is-visible" : ""}`}
-              >
-                {FOOTER_LINKS.map((item) => (
-                  <li key={item.to}>
-                    <Link to={item.to} className="footer-link-item">
-                      <div className="link-icon-box">{item.icon}</div>
-                      <span className="link-copy">
-                        <span className="link-text">{item.label}</span>
-                        <span className="link-hint">{item.hint}</span>
-                      </span>
-                      <FaArrowRight className="link-arrow" aria-hidden="true" />
+          <nav className="tpp-footer-col" aria-label="Secciones del sistema de turnos">
+            <h2 className="tpp-footer-title">Tus turnos</h2>
+            <ul>
+              {RUTAS.map((ruta) => {
+                /* El icono se saca a una const en mayúscula en lugar de
+                   desestructurarlo en los parámetros: ESLint no reconoce el uso de un
+                   componente en JSX cuando llega como argumento, y lo reportaba como
+                   variable sin usar. */
+                const Icono = ruta.icon;
+                return (
+                  <li key={ruta.to}>
+                    <Link to={ruta.to}>
+                      <Icono aria-hidden="true" />
+                      {ruta.label}
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </nav>
-          </Reveal>
+                );
+              })}
+            </ul>
+          </nav>
 
-          <Reveal direction="right" delay={160} className="footer-contact-col">
-            <h4 className="footer-section-title">Hablemos</h4>
-            <address className="footer-contact-address">
-              <a
-                href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20vengo%20desde%20tu%20sitio%20web%20y%20me%20gustar%C3%ADa%20consultar%20por%20clases."
-                target="_blank"
-                rel="noreferrer"
-                className="contact-card wp-card"
-              >
-                <div className="contact-icon" aria-hidden="true">
-                  <FaWhatsapp />
-                </div>
-                <div className="contact-details">
-                  <span className="contact-label">WhatsApp</span>
-                  <span className="contact-value">+54 9 11 3336-5937</span>
-                </div>
-                <FaArrowRight className="contact-arrow" aria-hidden="true" />
-              </a>
-
-              <a
-                href="mailto:agustinsosa.profe@gmail.com"
-                className="contact-card email-card"
-              >
-                <div className="contact-icon" aria-hidden="true">
-                  <FaEnvelope />
-                </div>
-                <div className="contact-details">
-                  <span className="contact-label">Email</span>
-                  <span className="contact-value">
-                    agustinsosa.profe@gmail.com
-                  </span>
-                </div>
-                <FaArrowRight className="contact-arrow" aria-hidden="true" />
-              </a>
-
-              <a
-                href="https://maps.google.com/?q=Jujuy+414,Temperley,Buenos+Aires"
-                target="_blank"
-                rel="noreferrer"
-                className="contact-card location-card"
-              >
-                <div className="contact-icon" aria-hidden="true">
-                  <FaMapMarkerAlt />
-                </div>
-                <div className="contact-details">
-                  <span className="contact-label">Presencial</span>
-                  <span className="contact-value">Temperley, Bs. As.</span>
-                </div>
-                <FaArrowRight className="contact-arrow" aria-hidden="true" />
-              </a>
-            </address>
-          </Reveal>
+          <div className="tpp-footer-col">
+            <h2 className="tpp-footer-title">Hablemos</h2>
+            <ul>
+              {/* WhatsApp primero y con el número a la vista: es el canal principal
+                  del negocio, y antes estaba al mismo nivel visual que el resto. */}
+              <li>
+                <a
+                  href={waLink(WHATSAPP_DEFAULT_MESSAGE)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="tpp-footer-wa"
+                >
+                  <FaWhatsapp aria-hidden="true" />
+                  {WHATSAPP_DISPLAY}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${CONTACT_EMAIL}`}>
+                  <FaEnvelope aria-hidden="true" />
+                  {CONTACT_EMAIL}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={FALLBACK_TEACHER_LOCATION.mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <FaMapMarkerAlt aria-hidden="true" />
+                  {FALLBACK_TEACHER_LOCATION.address}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <Reveal direction="fade" delay={200} as="div">
-          <div className="footer-bottom-panel">
-            <div className="bottom-panel-container">
-              <div className="copyright-area">
-                <p>
-                  &copy; {currentYear} <strong>Agustín Elías Sosa</strong>.
-                  Todos los derechos reservados.
-                </p>
-                <span className="copyright-sub">
-                  Experiencia digital diseñada para reservar, gestionar y
-                  volver con claridad.
-                </span>
-              </div>
+        <div className="tpp-footer-base">
+          <p>© {anio} Agustín Elías Sosa. Todos los derechos reservados.</p>
 
-              {CONFIGURED_SOCIAL_LINKS.length > 0 && (
-                <div className="social-area" aria-label="Redes sociales">
-                  {CONFIGURED_SOCIAL_LINKS.map((item) => (
+          {SOCIAL_PROFILES.length > 0 && (
+            <ul className="tpp-footer-social" aria-label="Redes sociales">
+              {SOCIAL_PROFILES.map(({ id, label, href }) => {
+                const Icono = ICONO_SOCIAL[id];
+                if (!Icono) return null;
+                return (
+                  <li key={id}>
                     <a
-                      key={item.label}
-                      href={item.href}
+                      href={href}
                       target="_blank"
                       rel="noreferrer"
-                      className={item.className}
-                      aria-label={item.label}
-                      title={item.label}
+                      aria-label={label}
                     >
-                      {item.icon}
+                      <Icono aria-hidden="true" />
                     </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </Reveal>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </footer>
 
       <button
         type="button"
-        className={`btn-up-floating ${showTopBtn ? "visible" : ""}`}
-        onClick={scrollToTop}
+        className={`btn-up-floating${mostrarSubir ? " visible" : ""}`}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Volver al inicio de la página"
       >
         <FaArrowUp aria-hidden="true" />
