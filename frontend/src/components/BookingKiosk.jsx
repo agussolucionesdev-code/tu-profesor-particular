@@ -58,6 +58,11 @@ import {
   FALLBACK_TEACHER_LOCATION,
   parseTeacherLocation,
 } from "../constants/teacherLocation";
+import {
+  OPCIONES_PARA_QUIEN,
+  PARA_MI,
+  vozDelWizard,
+} from "../constants/kioskVoz";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
@@ -129,14 +134,38 @@ const BookingKiosk = () => {
     formData,
     setFormData,
     isAdult,
+    setIsAdult,
     setHasAttemptedNext,
     isValidField,
     isPersonalInfoComplete,
     handleChange,
-    toggleAdultMode,
     resetForm,
     getFieldStateClass,
   } = useBookingWizard(showToast, prefill);
+
+  /* Para quién es la clase. `null` = todavía no se preguntó, y es un estado propio a
+     propósito: `isAdult === false` significaba a la vez "reserva para otro" y "no
+     contestó todavía", así que con ese único dato el paso 1 no podía exigir la
+     respuesta ni el wizard sabía si ya podía tutear. */
+  const [paraQuien, setParaQuien] = useState(null);
+  const voz = vozDelWizard(paraQuien);
+
+  const elegirParaQuien = (valor) => {
+    setParaQuien(valor);
+    /* `isAdult` pasa a ser una consecuencia de esta respuesta y no un checkbox aparte.
+       Se usa `setIsAdult` y no `toggleAdultMode` porque acá el valor se conoce: un
+       toggle podría dejarlo invertido si la persona vuelve y elige lo mismo. */
+    setIsAdult(valor === PARA_MI);
+    if (valor === PARA_MI) {
+      // Reserva para uno mismo: no hay adulto responsable que cargar.
+      setFormData((prev) => ({
+        ...prev,
+        responsibleName: "",
+        responsibleRelationship: "",
+        responsibleRelationshipOther: "",
+      }));
+    }
+  };
 
   const {
     upcomingSlotsByDay,
@@ -619,11 +648,56 @@ const BookingKiosk = () => {
         {/* ─── PASO 1: MATERIA ─── */}
         {step === 1 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s1-title">
-            {!formData.educationLevel ? (
+            {/* FASE CERO: para quién es la clase.
+                Va antes que todo porque de esta respuesta sale el trato del resto del
+                wizard. Es un solo toque, y va acá arriba —donde la paciencia está
+                intacta— en lugar de sumar un sexto paso. */}
+            {!paraQuien ? (
               <>
-                <span className="kiosk-eyebrow">Tu recorrido empieza acá</span>
-                <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué nivel estás cursando?</h1>
-                <p className="kiosk-subtitle">Elegí una tarjeta y te mostramos únicamente las materias que corresponden.</p>
+                <span className="kiosk-eyebrow">Antes de empezar</span>
+                <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>
+                  ¿Para quién es la clase?
+                </h1>
+                <p className="kiosk-subtitle">
+                  Con esto sabemos a quién le estamos hablando y qué datos hace falta
+                  pedirte. Un solo toque.
+                </p>
+                <div className="kiosk-grid kiosk-grid-para-quien">
+                  {OPCIONES_PARA_QUIEN.map((opcion) => (
+                    <button
+                      key={opcion.value}
+                      type="button"
+                      className="kiosk-choice-card kiosk-para-quien-card"
+                      onClick={() => elegirParaQuien(opcion.value)}
+                      aria-label={`${opcion.label}. ${opcion.hint}`}
+                    >
+                      <span className="kiosk-visual-copy">
+                        <span className="kiosk-choice-label">{opcion.label}</span>
+                        <span className="kiosk-choice-hint">{opcion.hint}</span>
+                      </span>
+                      <span className="kiosk-card-arrow" aria-hidden="true"><FaArrowRight /></span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : !formData.educationLevel ? (
+              <>
+                <div className="kiosk-title-row">
+                  <div>
+                    <span className="kiosk-eyebrow">{voz.nivelEyebrow}</span>
+                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>{voz.nivelTitulo}</h1>
+                    <p className="kiosk-subtitle">{voz.nivelSubtitulo}</p>
+                  </div>
+                  {/* Sin esta salida, elegir mal en la fase cero es una trampa: no hay
+                      paso anterior al que volver desde el paso 1. */}
+                  <button
+                    type="button"
+                    className="kiosk-inline-btn"
+                    onClick={() => elegirParaQuien(null)}
+                  >
+                    <FaPencilAlt aria-hidden="true" /> ¿Para quién es?
+                  </button>
+                </div>
                 <div className="kiosk-grid kiosk-grid-levels">
                   {LEVEL_OPTIONS.map((lvl, index) => {
                     const visual = getLevelVisual(lvl.value);
@@ -661,8 +735,8 @@ const BookingKiosk = () => {
               <>
                 <div className="kiosk-title-row">
                   <div>
-                    <span className="kiosk-eyebrow">Elegí tu materia</span>
-                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué querés aprender?</h1>
+                    <span className="kiosk-eyebrow">{voz.materiaEyebrow}</span>
+                    <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>{voz.materiaTitulo}</h1>
                     <p className="kiosk-subtitle">
                       Estás buscando clases para <strong>{formData.educationLevel}</strong>.
                     </p>
@@ -685,6 +759,12 @@ const BookingKiosk = () => {
                         className={`kiosk-choice-card kiosk-visual-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
                         onClick={() => chooseSubject(subject)}
                         aria-pressed={formData.subject === subject}
+                        /* Sin aria-label, el nombre accesible sale de concatenar los
+                           dos spans de adentro y queda "MateriaMatemática", sin
+                           espacio: es lo que anuncia un lector de pantalla. Las
+                           tarjetas de nivel ya se salvaban porque tienen su propio
+                           aria-label; estas no lo tenían. */
+                        aria-label={`Materia: ${subject}`}
                       >
                         <span className="kiosk-visual-media" aria-hidden="true">
                           <span className="kiosk-visual-halo" />
@@ -716,6 +796,8 @@ const BookingKiosk = () => {
                     }}
                     aria-expanded={otherOpen}
                     aria-controls="kiosk-other-subject"
+                    // Mismo caso: sin esto se anuncia "PersonalizadaOtra materia".
+                    aria-label="Otra materia: escribirla a mano"
                   >
                     <span className="kiosk-visual-media" aria-hidden="true">
                       <span className="kiosk-visual-halo" />
@@ -752,10 +834,10 @@ const BookingKiosk = () => {
                 {otherOpen && (
                   <div className="kiosk-other" id="kiosk-other-subject">
                     <label className="kiosk-other-label" htmlFor="kiosk-other-input">
-                      ¿Cuál es tu materia?
+                      {voz.otraMateriaTitulo}
                     </label>
                     <p className="kiosk-other-hint">
-                      Escribila como figura en tu plan de estudios. Por ejemplo:
+                      {voz.otraMateriaAyuda}
                       Análisis Matemático II, Álgebra Lineal, Fisicoquímica.
                     </p>
                     <div className="kiosk-other-row">
@@ -820,6 +902,11 @@ const BookingKiosk = () => {
                   type="button"
                   className={`kiosk-choice-card kiosk-choice-modality ${formData.modality === m.value ? "is-selected" : ""}`}
                   onClick={() => chooseModality(m.value)}
+                  aria-pressed={formData.modality === m.value}
+                  /* Mismo caso que las materias: sin aria-label el nombre accesible
+                     concatena los spans y se anuncia "OnlineVideollamada. Recibís el
+                     enlace por email.", sin espacio después de la modalidad. */
+                  aria-label={`${m.label}. ${m.value === "presencial" ? teacherLocation.address : m.hint}`}
                 >
                   <span className="kiosk-choice-icon" aria-hidden="true">
                     {m.value === "online" ? <FaLaptop /> : <FaMapMarkerAlt />}
@@ -900,7 +987,7 @@ const BookingKiosk = () => {
         {step === 3 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s3-title">
             <h1 id="kiosk-s3-title" className="kiosk-title" tabIndex={-1}>¿Cuánto dura y cuándo?</h1>
-            <p className="kiosk-subtitle">Elegí la duración y después el horario que más te sirva.</p>
+            <p className="kiosk-subtitle">{voz.turnoSubtitulo}</p>
 
             <div className="kiosk-field-label">Duración</div>
             <div className="kiosk-chips">
@@ -993,7 +1080,7 @@ const BookingKiosk = () => {
         {/* ─── PASO 4: DATOS ─── */}
         {step === 4 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s4-title">
-            <h1 id="kiosk-s4-title" className="kiosk-title" tabIndex={-1}>Tus datos</h1>
+            <h1 id="kiosk-s4-title" className="kiosk-title" tabIndex={-1}>{voz.datosTitulo}</h1>
             <p className="kiosk-subtitle">Solo lo necesario para confirmar y avisarte.</p>
 
             <div className="kiosk-form-grid">
@@ -1006,7 +1093,7 @@ const BookingKiosk = () => {
                   value={formData.studentName}
                   onChange={handleChange}
                   placeholder="Nombre y apellido"
-                  autoComplete="name"
+                  autoComplete={voz.autoCompleteAlumno}
                 />
               </label>
 
@@ -1052,11 +1139,27 @@ const BookingKiosk = () => {
               </label>
             </div>
 
-            <div className="kiosk-adult-toggle">
-              <label className="kiosk-check">
-                <input type="checkbox" checked={isAdult} onChange={toggleAdultMode} />
-                <span>Soy el alumno y soy mayor de edad</span>
-              </label>
+            {/* Antes acá había un checkbox: «Soy el alumno y soy mayor de edad».
+                Preguntaba en el paso 4 algo que decide el trato de los pasos 1 al 3,
+                así que ahora se pregunta al principio y esto sólo confirma la
+                respuesta —con salida, porque una respuesta que no se puede corregir
+                obliga a reiniciar toda la reserva—. */}
+            <div className="kiosk-para-quien-recap">
+              <p>
+                {isAdult
+                  ? "Reservás para vos, como mayor de edad."
+                  : "Reservás para otra persona, así que abajo van también tus datos como responsable."}
+              </p>
+              <button
+                type="button"
+                className="kiosk-inline-btn"
+                onClick={() => {
+                  elegirParaQuien(null);
+                  setStep(1);
+                }}
+              >
+                <FaPencilAlt aria-hidden="true" /> Cambiar
+              </button>
             </div>
 
             {!isAdult && (
@@ -1070,6 +1173,7 @@ const BookingKiosk = () => {
                     value={formData.responsibleName}
                     onChange={handleChange}
                     placeholder="Nombre y apellido"
+                    autoComplete={voz.autoCompleteResponsable}
                   />
                 </label>
                 <label className="kiosk-field">
@@ -1103,7 +1207,7 @@ const BookingKiosk = () => {
             )}
 
             <label className="kiosk-field">
-              <span className="kiosk-field-label">¿Qué querés lograr en la clase? *</span>
+              <span className="kiosk-field-label">{voz.objetivoLabel}</span>
               <textarea
                 name="objective"
                 className={`kiosk-input kiosk-textarea ${getFieldStateClass("objective")}`}
