@@ -54,6 +54,7 @@ import {
   resumirSerie,
 } from "../utils/bookingSeries";
 import { parsePublicSubjectsByLevel } from "../utils/subjectSettings";
+import { desglosarPrecio } from "../utils/precio";
 import {
   FALLBACK_TEACHER_LOCATION,
   parseTeacherLocation,
@@ -364,14 +365,16 @@ const BookingKiosk = () => {
     formData.responsibleRelationshipOther,
   );
 
-  const priceLabel =
-    pricePerHour > 0 && formData.duration
-      ? new Intl.NumberFormat("es-AR", {
-          style: "currency",
-          currency: "ARS",
-          maximumFractionDigits: 0,
-        }).format(pricePerHour * Number(formData.duration))
-      : "";
+  /* El desglose se calcula una vez y lo usan los pasos 3 y 5. Devuelve null cuando no
+     hay tarifa cargada, y eso es deliberado: nunca se muestra «$0», que se leería como
+     «es gratis». */
+  const precio = desglosarPrecio({
+    tarifaPorHora: pricePerHour,
+    duracionHoras: formData.duration,
+    clases: semanas,
+  });
+  // El paso 5 y el comprobante siguen esperando un string.
+  const priceLabel = precio?.porClaseTexto ?? "";
 
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
@@ -1029,6 +1032,42 @@ const BookingKiosk = () => {
                 Se van a reservar {semanas} clases, una por semana, el mismo día y
                 a la misma hora. Cada una queda con su propio código, así que
                 podés cancelar o mover una sin tocar las demás.
+              </p>
+            )}
+
+            {/* EL PRECIO, ACÁ Y NO EN EL PASO 5.
+                Antes aparecía sólo al confirmar, o sea después de entregar nombre,
+                teléfono, email y objetivo: el dato que más pesa para decidir llegaba
+                último. Un costo que aparece al final no genera un reclamo, genera una
+                pestaña cerrada, y deja la sensación de que estaba escondido.
+                Va debajo de la duración porque es donde el número se vuelve calculable
+                —precio = tarifa × horas— y donde de verdad informa la decisión. */}
+            {precio && (
+              <div className="kiosk-precio" role="status">
+                <p className="kiosk-precio-monto">
+                  {precio.porClaseTexto}
+                  <span> por clase de {formatDurationOptionLabel(precio.duracionHoras)}</span>
+                </p>
+                {precio.totalSerieTexto && (
+                  /* El total de la serie es EL número cuando alguien reserva ocho
+                     clases: confirmar viendo sólo el precio por clase es enterarse del
+                     total más tarde. */
+                  <p className="kiosk-precio-total">
+                    {precio.clases} clases: <strong>{precio.totalSerieTexto}</strong> en total
+                  </p>
+                )}
+                <p className="kiosk-precio-nota">
+                  Es el valor de referencia ({precio.tarifaTexto} por hora). No se paga
+                  nada por adelantado: lo arreglás con Agustín.
+                </p>
+              </div>
+            )}
+
+            {/* Sin tarifa cargada no se inventa un número ni se deja un hueco mudo. */}
+            {!precio && (
+              <p className="kiosk-muted kiosk-precio-sin-dato">
+                El valor de la clase lo acordás directamente con Agustín. No se paga nada
+                por adelantado.
               </p>
             )}
 
