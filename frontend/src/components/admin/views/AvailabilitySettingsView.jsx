@@ -4,6 +4,7 @@ import {
   FaCalendarAlt,
   FaClock,
   FaCoffee,
+  FaLaptop,
   FaPlus,
   FaSave,
   FaSyncAlt,
@@ -16,6 +17,9 @@ import {
   updateAdminSchedule,
 } from "../../../api/bookingApi";
 import {
+  MODALITIES,
+  MODALITY_LABELS,
+  campoDe,
   classifyScheduleSaveError,
   parseAdminScheduleResponse,
   parseLegacyBlockedDatesResponse,
@@ -38,6 +42,9 @@ const focusById = (id) => {
   if (!id || typeof document === "undefined") return;
   window.requestAnimationFrame(() => document.getElementById(id)?.focus());
 };
+
+// Una hora entera con dos dígitos, para leer "09:00" y no "9:00" al lado de "22:00".
+const pad2 = (hora) => String(hora ?? "").padStart(2, "0");
 
 const formatMinutes = (minutes) => {
   if (minutes === 1440) return "24:00";
@@ -229,6 +236,22 @@ const AvailabilitySettingsView = ({ authConfig }) => {
       [weekday]: updater(policy.weeklyAvailability[weekday]),
     },
   }));
+
+  /* Una `ventana` en null borra la clave de la modalidad en lugar de dejarla en null,
+     y si no queda ninguna el objeto entero vuelve a null. Es para que haya UNA sola
+     forma de decir "sin recorte": con `{online: null}` y `null` conviviendo, cada
+     lector tendría que chequear los dos casos y alguno se va a olvidar. */
+  const setModalityWindow = (modality, ventana) => {
+    setDraft((current) => {
+      const siguiente = { ...(current.modalityWindows ?? {}) };
+      if (ventana) siguiente[modality] = ventana;
+      else delete siguiente[modality];
+      return {
+        ...current,
+        modalityWindows: Object.keys(siguiente).length > 0 ? siguiente : null,
+      };
+    });
+  };
 
   const handleSave = async () => {
     const validation = validateScheduleDraft(draft);
@@ -485,6 +508,126 @@ const AvailabilitySettingsView = ({ authConfig }) => {
             <strong>{draft.timeZone}</strong>
           </div>
         </div>
+      </article>
+
+      <article className="admin-card settings-card">
+        <div className="admin-card-header">
+          <div>
+            <span className="card-kicker">Online y presencial</span>
+            <h3><FaLaptop aria-hidden="true" /> Horarios por modalidad</h3>
+          </div>
+        </div>
+        <p className="availability-hint">
+          Por defecto las dos modalidades usan el horario general
+          ({pad2(draft.openingHour)}:00 a {pad2(draft.closingHour)}:00). Acá podés
+          recortar una sin tocar la otra —por ejemplo, que presencial abra más tarde—.
+          Recortar nunca amplía: no se puede habilitar una hora fuera del horario general.
+        </p>
+        <p className="availability-hint">
+          <strong>La agenda sigue siendo una sola.</strong> Si tenés un presencial de 18
+          a 20, esas horas quedan ocupadas también para online: no podés estar en dos
+          lados al mismo tiempo.
+        </p>
+
+        <div className="availability-modality-grid">
+          {MODALITIES.map((modality) => {
+            const ventana = draft.modalityWindows?.[modality] ?? null;
+            const recorta = Boolean(ventana);
+            return (
+              <fieldset key={modality} className="availability-modality-card">
+                <legend>{MODALITY_LABELS[modality]}</legend>
+                <label
+                  className="availability-modality-toggle"
+                  htmlFor={`availability-modality-${modality}-enabled`}
+                >
+                  <input
+                    id={`availability-modality-${modality}-enabled`}
+                    type="checkbox"
+                    checked={recorta}
+                    onChange={(event) => setModalityWindow(
+                      modality,
+                      /* Al tildar se arranca desde el horario general, que es lo que esa
+                         modalidad tenía hasta ahora: así el primer guardado no cambia
+                         nada por accidente y el profesor ajusta desde lo conocido.
+                         Al destildar vuelve a null, NO a las horas que había cargado:
+                         null significa "seguí al horario general", y conservar números
+                         viejos ahí los dejaría desincronizados para siempre. */
+                      event.target.checked
+                        ? { openingHour: draft.openingHour, closingHour: draft.closingHour }
+                        : null,
+                    )}
+                  />
+                  <span>Tiene su propio horario</span>
+                </label>
+
+                {recorta ? (
+                  <div className="availability-modality-hours">
+                    <label htmlFor={campoDe(modality, "opening")}>
+                      Abre
+                      <input
+                        id={campoDe(modality, "opening")}
+                        type="number"
+                        min="0"
+                        max="23"
+                        step="1"
+                        value={ventana.openingHour}
+                        onChange={(event) => setModalityWindow(modality, {
+                          ...ventana,
+                          openingHour: event.target.value === "" ? "" : Number(event.target.value),
+                        })}
+                        className="settings-input"
+                      />
+                    </label>
+                    <label htmlFor={campoDe(modality, "closing")}>
+                      Cierra
+                      <input
+                        id={campoDe(modality, "closing")}
+                        type="number"
+                        min="1"
+                        max="24"
+                        step="1"
+                        value={ventana.closingHour}
+                        onChange={(event) => setModalityWindow(modality, {
+                          ...ventana,
+                          closingHour: event.target.value === "" ? "" : Number(event.target.value),
+                        })}
+                        className="settings-input"
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <p className="availability-modality-inherits">
+                    Usa el horario general: {pad2(draft.openingHour)}:00 a{" "}
+                    {pad2(draft.closingHour)}:00.
+                  </p>
+                )}
+              </fieldset>
+            );
+          })}
+        </div>
+
+        <label htmlFor="availability-modality-buffer" className="availability-modality-buffer">
+          Traslado al cambiar de modalidad (minutos)
+          <input
+            id="availability-modality-buffer"
+            type="number"
+            min="0"
+            max="240"
+            step="5"
+            value={draft.modalityChangeBufferMinutes}
+            onChange={(event) => setDraft((current) => ({
+              ...current,
+              modalityChangeBufferMinutes:
+                event.target.value === "" ? "" : Number(event.target.value),
+            }))}
+            className="settings-input"
+          />
+          <span className="availability-field-hint">
+            Se aplica <strong>solo</strong> cuando dos turnos seguidos tienen modalidad
+            distinta, porque ahí hay que viajar. Entre dos clases online seguidas es
+            cero: no se pierde agenda.
+          </span>
+        </label>
       </article>
 
       <article className="admin-card settings-card">

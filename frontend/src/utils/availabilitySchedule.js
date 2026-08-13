@@ -18,6 +18,13 @@ const isObject = (value) =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 const integer = (value, min, max, label, fieldId) => {
+  /* Un input numérico vacío manda "", y `Number("")` es 0. Sin este chequeo, borrar el
+     contenido de un campo cuyo mínimo sea 0 —el buffer previo, el traslado, la
+     anticipación— lo guarda en cero en silencio y la pantalla dice "guardado". El que
+     lo borró creía estar dejándolo sin definir. */
+  if (typeof value === "string" && value.trim() === "") {
+    fail(`${label} no puede quedar vacío.`, fieldId);
+  }
   const number = typeof value === "number" ? value : Number(value);
   if (!Number.isInteger(number) || number < min || number > max) {
     fail(`${label} debe ser un entero entre ${min} y ${max}.`, fieldId);
@@ -298,9 +305,71 @@ const normalizeSchedule = (value, { requireRevision = false, requireSource = fal
     slotDurationMinutes,
     timeZone: TIME_ZONE,
     activeWeekdays,
+    modalityWindows: normalizeModalityWindows(value.modalityWindows),
+    modalityChangeBufferMinutes: integer(
+      value.modalityChangeBufferMinutes ?? 0,
+      0,
+      240,
+      "El tiempo de traslado",
+      "availability-modality-buffer",
+    ),
     availabilityPolicy,
   };
 };
+
+export const MODALITIES = ["online", "presencial"];
+
+export const MODALITY_LABELS = {
+  online: "Online",
+  presencial: "Presencial",
+};
+
+/* `null` = esta modalidad usa el horario general. Es un estado real y distinto de
+   "07:00–22:00": guardar las horas generales duplicadas haría que el día que se cambie
+   el horario general, la modalidad quede con el viejo y nadie entienda por qué.
+   Una modalidad con la casilla destildada vuelve a `null`, no a las horas que tenía. */
+const normalizeModalityWindows = (value) => {
+  if (value === null || value === undefined) return null;
+  if (!isObject(value)) fail("Los horarios por modalidad son inválidos.");
+
+  const limpio = {};
+  for (const modality of MODALITIES) {
+    const ventana = value[modality];
+    if (ventana === null || ventana === undefined) continue;
+    if (!isObject(ventana)) {
+      fail(`El horario de ${MODALITY_LABELS[modality]} es inválido.`, campoDe(modality, "opening"));
+    }
+
+    const openingHour = integer(
+      ventana.openingHour,
+      0,
+      23,
+      `La apertura de ${MODALITY_LABELS[modality]}`,
+      campoDe(modality, "opening"),
+    );
+    const closingHour = integer(
+      ventana.closingHour,
+      1,
+      24,
+      `El cierre de ${MODALITY_LABELS[modality]}`,
+      campoDe(modality, "closing"),
+    );
+    if (closingHour <= openingHour) {
+      fail(
+        `En ${MODALITY_LABELS[modality]}, el cierre debe ser posterior a la apertura.`,
+        campoDe(modality, "closing"),
+      );
+    }
+    limpio[modality] = { openingHour, closingHour };
+  }
+
+  // Sin ninguna modalidad recortada se devuelve null y no {}: es el mismo estado y
+  // tener dos formas de decir lo mismo obliga a chequear las dos en todos lados.
+  return Object.keys(limpio).length > 0 ? limpio : null;
+};
+
+export const campoDe = (modality, lado) =>
+  `availability-modality-${modality}-${lado}`;
 
 export const validateScheduleDraft = (draft) => {
   try {
