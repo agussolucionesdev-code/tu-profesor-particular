@@ -1,477 +1,229 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   Footer — cierre de página premium, plano y de marca.
-   Navy profundo (más oscuro que el hero = profundidad), retícula hairline,
-   cinta de firma con el slogan, columnas claras y micro-interacciones.
+/* Pie de página del sistema de turnos.
+ *
+ * Reemplaza 554 líneas. El archivo anterior sostenía una cinta con eslogan, un CTA, un
+ * párrafo de filosofía, tres etiquetas de valor, tres columnas de tarjetas y un panel
+ * inferior: 1434px de alto en un teléfono de 375px, más que el contenido de /reservar
+ * (1252px) y /portal (961px). El pie era más grande que la página.
+ * `web/src/components/SiteFooter.css` hace lo mismo en 99 líneas y fue el modelo.
+ *
+ * ── DOS TRAMPAS QUE DEJÓ EL ARCHIVO VIEJO, DOCUMENTADAS PARA QUE NO VUELVAN ──
+ *
+ * 1. ESPECIFICIDAD PELEADA. `theme-polish.css` declaraba
+ *    `.footer-elite { background: rgba(248,251,253,0.98) }` —casi BLANCO— y el archivo
+ *    viejo la vencía escribiendo `footer.footer-elite` (elemento + clase). El color del
+ *    pie era un accidente del cascade: dos hojas en desacuerdo y la especificidad
+ *    desempatando. El día que alguien "limpiara" ese selector a una sola clase, el pie
+ *    se volvía blanco con la tinta clara encima: ilegible. Esas reglas se borraron de
+ *    `theme-polish.css` junto con este archivo. El fondo se declara UNA vez, acá.
+ *
+ * 2. TINTA CLARA SOBRE RAMPA NUMERADA. El fondo es `--brand-navy-900`, de la rampa
+ *    NUMERADA, que es estable: vale igual en tema claro y oscuro. Por eso la tinta de
+ *    acá NO puede salir de `--text-primary` ni de ningún alias sin número —esos siguen
+ *    al tema y en claro se vuelven oscuros, ilegibles sobre este navy—. Va tinta clara
+ *    explícita. Que no haya bloque `[data-theme="dark"]` en este archivo es correcto,
+ *    no un olvido.
+ *
+ * Tampoco hay animación de entrada. La versión anterior envolvía las columnas en
+ * `Reveal`, que las posiciona 28px corridas y las devuelve cuando dispara un
+ * IntersectionObserver. Mientras no dispara, la columna de contacto vive FUERA del
+ * viewport. Nadie llega al pie buscando un efecto; el riesgo no compraba nada.
+ */
 
-   Nota de especificidad: theme-polish.css y brand-identity-refresh.css tienen
-   reglas sueltas sobre .footer-elite/.contact-card/.footer-link-item. Acá se
-   usa `footer.footer-elite` y reglas descendientes para ganarles sin tocarlas.
-   (De paso murió el :root duplicado que este archivo declaraba.)
-   ══════════════════════════════════════════════════════════════════════════ */
-
-footer.footer-elite {
-  position: relative;
+.tpp-footer {
   margin-top: auto;
   background: var(--brand-navy-900, #000b2b);
   border-top: 1px solid rgba(1, 149, 60, 0.35);
-  overflow: hidden;
-  box-shadow: none;
+  /* La tinta base se declara una vez y la heredan los hijos. */
+  color: #dbe4f2;
 }
 
-/* Retícula sutil, misma textura plana que el hero. */
-.footer-elite .footer-texture {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
-
-/* ── Cinta de firma ──────────────────────────────────────────────────────── */
-.footer-elite .footer-ribbon {
-  position: relative;
-  max-width: 1160px;
+.tpp-footer-inner {
+  display: grid;
+  /* 210px es el ancho al que "agustinsosa.profe@gmail.com" entra sin romper la grilla.
+     A 375px da una columna; desde ~700px, tres. Sin una sola media query. */
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.25rem 2rem;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2rem);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  border-bottom: 1px solid rgba(204, 217, 235, 0.1);
+  padding: 1.75rem 1.25rem 1.25rem;
 }
 
-.footer-elite .footer-ribbon-slogan {
-  margin: 0;
-  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+/* min-width: 0 en los hijos de la grilla. Un hijo de grilla no baja de su contenido
+   mínimo por defecto, y el email largo no tiene espacios donde cortar: sin esto
+   ensancha la columna y empuja el layout. */
+.tpp-footer-inner > * {
+  min-width: 0;
 }
 
-.footer-elite .ribbon-a { color: #ffffff; }
-.footer-elite .ribbon-b { color: rgba(255, 255, 255, 0.55); font-weight: 700; }
-.footer-elite .ribbon-c { color: var(--brand-green-300, #88ce93); }
+/* ── Marca ────────────────────────────────────────────────────────────────── */
 
-.footer-elite .footer-ribbon-actions {
+.tpp-footer-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
-.footer-elite .footer-ribbon-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.85rem 1.5rem;
-  border-radius: 12px;
-  background: var(--cta-solid-bg);
-  color: var(--cta-solid-ink);
-  font-size: 0.98rem;
-  font-weight: 800;
-  text-decoration: none;
-  transition: background 160ms ease, transform 160ms ease;
+/* CONTENER EL MONOGRAMA, pase lo que pase con la cascada global.
+   `tokens.css` declara `.theme-logo__image { width: auto }`, y el monograma mide
+   1254×1254: sin contenerlo se dibujaba a 267px de ancho, se comía la fila y aplastaba
+   el nombre a 56px, que envolvía en cuatro líneas. Por eso el brand medía 267px de alto
+   en lugar de 40.
+   Van dos clases y no una porque una clase sola empata con `.theme-logo__image` y
+   desempata el orden de los archivos. Mismo arreglo que `.brand-loader-mark`. */
+.tpp-footer-brand .theme-logo {
+  flex: 0 0 auto;
+  display: block;
+  width: 40px;
+  height: 40px;
 }
 
-.footer-elite .footer-ribbon-cta:hover {
-  background: var(--brand-green-deep, #006d1f);
-  transform: translateY(-2px);
-}
-
-.footer-elite .ribbon-cta-arrow {
-  font-size: 0.78rem;
-  transition: transform 180ms ease;
-}
-
-.footer-elite .footer-ribbon-cta:hover .ribbon-cta-arrow {
-  transform: translateX(4px);
-}
-
-.footer-elite .footer-ribbon-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1.35rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
-  font-size: 0.95rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
-}
-
-.footer-elite .footer-ribbon-ghost:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.45);
-  transform: translateY(-2px);
-}
-
-/* ── Grid principal ──────────────────────────────────────────────────────── */
-.footer-elite .footer-grid-container {
-  position: relative;
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: clamp(2.5rem, 5vw, 3.75rem) clamp(1.25rem, 4vw, 2rem);
-  display: grid;
-  grid-template-columns: 1.25fr 1fr 1.1fr;
-  gap: clamp(2rem, 4vw, 3.5rem);
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-/* Columna de marca */
-.footer-elite .footer-header-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 1.1rem;
-}
-
-.footer-elite .logo-premium-wrapper {
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(204, 217, 235, 0.2);
-  flex-shrink: 0;
-}
-
-.footer-elite .logo-img-transparent {
-  width: 44px;
-  height: 44px;
+.tpp-footer-brand .theme-logo__image {
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-.footer-elite .brand-titles h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: #ffffff;
-}
-
-.footer-elite .brand-titles span {
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--brand-green-300, #88ce93);
-}
-
-.footer-elite .neuro-hook {
-  margin: 0 0 0.5rem;
-  font-size: 1.02rem;
-  font-weight: 800;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.footer-elite .neuro-copy {
-  margin: 0 0 1.25rem;
-  font-size: 0.92rem;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.55);
-  max-width: 40ch;
-}
-
-.footer-elite .footer-value-tags {
+.tpp-footer-person {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+  /* Ocupa lo que sobra, y min-width: 0 le permite envolver en lugar de empujar. */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.footer-elite .value-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(204, 217, 235, 0.16);
-  background: rgba(204, 217, 235, 0.05);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+.tpp-footer-person strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tpp-footer-person span {
+  color: #a9bcd8;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+/* ── Columnas de enlaces ──────────────────────────────────────────────────── */
+
+.tpp-footer-title {
+  margin: 0 0 0.2rem;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
-  backdrop-filter: none;
+  letter-spacing: 0.09em;
 }
 
-.footer-elite .value-tag svg {
-  color: var(--brand-green-300, #88ce93);
-  font-size: 0.8rem;
-}
-
-/* Títulos de sección */
-.footer-elite .footer-section-title {
-  position: relative;
-  margin: 0 0 1.2rem;
-  padding-bottom: 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.footer-elite .footer-section-title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 34px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--brand-green, #01953c);
-}
-
-/* Links Explorar */
-.footer-elite .footer-links-list {
-  list-style: none;
+.tpp-footer-col ul {
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  list-style: none;
 }
 
-.footer-elite .footer-link-item {
+.tpp-footer-col a {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 14px;
-  border: 1px solid rgba(204, 217, 235, 0.12);
-  background: rgba(204, 217, 235, 0.04);
+  gap: 0.55rem;
+  /* 44px de blanco táctil, el mínimo de WCAG 2.5.5, con padding y no con altura fija:
+     si el email envuelve en dos líneas el enlace crece en lugar de recortarlo. */
+  min-height: 44px;
+  padding: 0.3rem 0;
+  color: #dbe4f2;
+  font-size: 0.84rem;
+  line-height: 1.3;
   text-decoration: none;
-  box-shadow: none;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  /* El email no tiene espacios donde cortar. El punto de corte preferido lo marca un
+     `<wbr>` después de la arroba, en el JSX; esto queda sólo como red por si ni así
+     entra. `break-word` y no `anywhere`: `anywhere` parte en cualquier letra incluso
+     cuando el `<wbr>` alcanzaba, y quedaba "…@gm / ail.com". */
+  overflow-wrap: break-word;
+  transition: color 160ms ease;
 }
 
-.footer-elite .footer-link-item:hover {
-  border-color: rgba(1, 149, 60, 0.55);
-  background: rgba(1, 149, 60, 0.1);
-  transform: translateX(4px);
-}
-
-.footer-elite .link-icon-box {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: rgba(1, 149, 60, 0.14);
-  color: var(--brand-green-300, #88ce93);
-  font-size: 0.95rem;
-  flex-shrink: 0;
-  box-shadow: none;
-}
-
-.footer-elite .link-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.footer-elite .link-text {
+.tpp-footer-col a svg {
+  flex: 0 0 auto;
   font-size: 0.92rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.footer-elite .link-hint {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.footer-elite .link-arrow {
-  font-size: 0.75rem;
   color: var(--brand-green-300, #88ce93);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 160ms ease, transform 160ms ease;
 }
 
-.footer-elite .footer-link-item:hover .link-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* Contacto */
-.footer-elite .footer-contact-address {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  font-style: normal;
-}
-
-.footer-elite .contact-card {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 14px;
-  border: 1px solid rgba(204, 217, 235, 0.12);
-  background: rgba(204, 217, 235, 0.04);
-  text-decoration: none;
-  box-shadow: none;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-
-.footer-elite .contact-card:hover {
-  transform: translateX(4px);
-  box-shadow: none;
-}
-
-.footer-elite .contact-card.wp-card:hover {
-  border-color: rgba(37, 211, 102, 0.6);
-  background: rgba(37, 211, 102, 0.09);
-}
-
-.footer-elite .contact-card.email-card:hover {
-  border-color: rgba(204, 217, 235, 0.4);
-  background: rgba(204, 217, 235, 0.08);
-}
-
-.footer-elite .contact-card.location-card:hover {
-  border-color: rgba(245, 158, 11, 0.55);
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.footer-elite .contact-icon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  font-size: 1rem;
-  flex-shrink: 0;
-  background: rgba(204, 217, 235, 0.08);
+.tpp-footer-col a:hover,
+.tpp-footer-col a:focus-visible {
   color: #ffffff;
-  box-shadow: none;
 }
 
-.footer-elite .wp-card .contact-icon { background: rgba(37, 211, 102, 0.16); color: #4ade80; }
-.footer-elite .email-card .contact-icon { background: rgba(204, 217, 235, 0.12); color: var(--brand-navy-200, #ccd9eb); }
-.footer-elite .location-card .contact-icon { background: rgba(245, 158, 11, 0.14); color: #fbbf24; }
+/* WhatsApp es el canal principal del negocio: se lee primero y se nota que es un
+   canal, no un dato más de la lista. */
+.tpp-footer-wa {
+  font-weight: 650;
+}
 
-.footer-elite .contact-details {
+.tpp-footer-wa svg {
+  font-size: 1.08rem;
+}
+
+/* ── Base: copyright y redes ──────────────────────────────────────────────── */
+
+.tpp-footer-base {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.footer-elite .contact-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.footer-elite .contact-value {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.footer-elite .contact-arrow {
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.4);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-.footer-elite .contact-card:hover .contact-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-/* ── Barra final ─────────────────────────────────────────────────────────── */
-.footer-elite .footer-bottom-panel {
-  position: relative;
-  border-top: 1px solid rgba(204, 217, 235, 0.1);
-}
-
-.footer-elite .bottom-panel-container {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 1.25rem clamp(1.25rem, 4vw, 2rem);
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
+  gap: 0.5rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.6rem 1.25rem 0.9rem;
+  border-top: 1px solid rgba(219, 228, 242, 0.14);
 }
 
-.footer-elite .copyright-area p {
+.tpp-footer-base p {
   margin: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #a9bcd8;
+  font-size: 0.75rem;
 }
 
-.footer-elite .copyright-area strong {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.footer-elite .copyright-sub {
-  display: block;
-  margin-top: 0.2rem;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.footer-elite .social-area {
+.tpp-footer-social {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.footer-elite .social-bubble {
+.tpp-footer-social a {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  /* 44px también acá: son los objetivos más chicos del pie y los más fáciles de errar
+     con el pulgar. */
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  border: 1px solid rgba(204, 217, 235, 0.16);
-  background: rgba(204, 217, 235, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.95rem;
-  text-decoration: none;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, color 160ms ease;
+  border: 1px solid rgba(219, 228, 242, 0.2);
+  color: #dbe4f2;
+  font-size: 1.05rem;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.footer-elite .social-bubble:hover {
-  transform: translateY(-3px);
+.tpp-footer-social a:hover,
+.tpp-footer-social a:focus-visible {
+  background: var(--brand-green-deep, #006d1f);
+  border-color: transparent;
   color: #ffffff;
 }
 
-.footer-elite .social-bubble.insta:hover { border-color: #e1306c; background: rgba(225, 48, 108, 0.16); }
-.footer-elite .social-bubble.fb:hover { border-color: #1877f2; background: rgba(24, 119, 242, 0.16); }
-.footer-elite .social-bubble.in:hover { border-color: #0a66c2; background: rgba(10, 102, 194, 0.16); }
+/* Un solo anillo de foco para todo el pie, calculado para fondo oscuro. */
+.tpp-footer a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(136, 206, 147, 0.6);
+  border-radius: 8px;
+}
 
-/* ── Botón volver arriba ─────────────────────────────────────────────────── */
+/* ── Botón flotante para volver arriba ────────────────────────────────────── */
+
 .btn-up-floating {
   position: fixed;
   right: 1.25rem;
@@ -490,7 +242,8 @@ footer.footer-elite {
   opacity: 0;
   visibility: hidden;
   transform: translateY(10px);
-  transition: opacity 220ms ease, transform 220ms ease, visibility 0s 220ms, background 160ms ease;
+  transition: opacity 220ms ease, transform 220ms ease, visibility 0s 220ms,
+    background 160ms ease;
 }
 
 .btn-up-floating.visible {
@@ -509,45 +262,9 @@ footer.footer-elite {
   box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 960px) {
-  .footer-elite .footer-grid-container {
-    grid-template-columns: 1fr 1fr;
-  }
-  .footer-elite .footer-brand-col {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 640px) {
-  .footer-elite .footer-grid-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .footer-elite .footer-ribbon {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .footer-elite .footer-ribbon-actions {
-    width: 100%;
-  }
-  .footer-elite .footer-ribbon-cta {
-    flex: 1;
-    justify-content: center;
-  }
-  .footer-elite .bottom-panel-container {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-/* ── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .footer-elite .footer-link-item,
-  .footer-elite .contact-card,
-  .footer-elite .social-bubble,
-  .footer-elite .footer-ribbon-cta,
-  .footer-elite .footer-ribbon-ghost,
+  .tpp-footer-col a,
+  .tpp-footer-social a,
   .btn-up-floating {
     transition: none;
   }

@@ -702,10 +702,9 @@ body {
     .admin-logout-btn,
     .status-filter-chip,
     .inline-link-btn,
-    .footer-elite,
-    .footer-link-item,
-    .contact-card,
-    .social-bubble,
+    /* El pie ya no cambia de color entre temas —su fondo es de la rampa numerada, que
+       es estable— así que no necesita transición de tema. Sólo el botón flotante, que
+       sí usa tokens que siguen al tema. */
     .btn-up-floating
   ),
   html.theme-transitioning :where(
@@ -714,8 +713,7 @@ body {
     .journey-meter,
     .form-card-elevation,
     .ticket-card,
-    .admin-login-card,
-    .footer-elite
+    .admin-login-card
   )::before,
   html.theme-transitioning :where(
     .navbar-elite,
@@ -723,8 +721,7 @@ body {
     .journey-meter,
     .form-card-elevation,
     .ticket-card,
-    .admin-login-card,
-    .footer-elite
+    .admin-login-card
   )::after {
     transition:
       background-color 260ms ease,
@@ -844,18 +841,22 @@ body {
   position: relative;
 }
 
-.footer-elite {
-  background:
-    rgba(248, 251, 253, 0.98);
-}
+/* Acá vivían las reglas del pie de página viejo: `.footer-elite`, `.footer-link-item`,
+   `.contact-card` y `.social-bubble`. Se fueron con el rediseño del footer, y una de
+   ellas merece quedar documentada porque era una trampa:
 
-[data-theme="dark"] .footer-elite {
-  background: var(--color-surface-0);
-}
+     .footer-elite { background: rgba(248, 251, 253, 0.98); }   // casi BLANCO
 
-.footer-link-item,
-.contact-card,
-.social-bubble,
+   `Footer.css` pintaba el pie de navy oscuro y esta regla lo pintaba de casi blanco. No
+   había conflicto visible sólo porque el otro archivo escribía `footer.footer-elite`
+   —elemento + clase— y le ganaba por especificidad. O sea: el color del pie dependía de
+   que nadie simplificara ese selector. El día que alguien lo hiciera, el pie quedaba
+   blanco con toda su tinta clara encima, ilegible, y el culpable habría sido un cambio
+   que se ve inofensivo en el diff.
+
+   Ahora el fondo del pie se declara una sola vez, en `Footer.css`, sobre `.tpp-footer`.
+   Si algo del pie necesita un ajuste de tema, va ahí y no acá. */
+
 .btn-up-floating {
   transition:
     transform 0.28s ease,
@@ -863,24 +864,6 @@ body {
     background 0.28s ease,
     color 0.28s ease,
     border-color 0.28s ease;
-}
-
-.contact-card,
-.footer-link-item {
-  border-radius: 18px;
-}
-
-.footer-link-item:hover,
-.contact-card:hover {
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
-}
-
-.social-bubble {
-  border: 1px solid transparent;
-}
-
-[data-theme="dark"] .social-bubble {
-  border-color: rgba(204, 217, 235, 0.12);
 }
 
 .btn-up-floating {

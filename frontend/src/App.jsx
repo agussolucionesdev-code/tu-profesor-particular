@@ -5,6 +5,8 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import AccessibilityControls from "./components/accessibility/AccessibilityControls";
 import { UISettingsProvider } from "./components/accessibility/UISettingsContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -128,6 +130,32 @@ function App() {
           <ScrollToTop />
           <AppContent />
         </Router>
+
+        {/* Medición. Hasta ahora la app de turnos no tenía ninguna —el sitio
+            institucional sí— así que era imposible saber cuánta gente entra a
+            /reservar y en qué paso abandona. Sin ese dato, cualquier decisión sobre
+            el flujo de reserva es una corazonada, y el flujo de reserva ES el
+            negocio.
+
+            Vercel Analytics y no GA4, la misma elección que ya se tomó en `web/`:
+            no usa cookies ni identificadores persistentes, así que no hace falta
+            banner de consentimiento. Si algún día se cambia por una herramienta que
+            sí rastree, hay que agregar el consentimiento.
+
+            POR QUÉ ES SEGURO ACÁ, que no era obvio: la analítica registra el
+            pathname, y las seis rutas de esta app son estáticas —no hay ningún
+            `:param` donde pudiera colarse un código de reserva—. El único dato
+            sensible es el token de gestión, y viaja en el FRAGMENTO de la URL
+            (`ManageBooking.jsx:31`), que el navegador nunca manda a ningún
+            servidor y que además se borra del historial con `replaceState` antes
+            del primer render. Si alguna vez se agrega una ruta con el código en el
+            path, esto hay que revisarlo de nuevo.
+
+            Speed Insights mide Core Web Vitals de visitantes reales, que es la
+            única forma honesta de saberlo: en una máquina de desarrollo todo carga
+            rápido. */}
+        <Analytics />
+        <SpeedInsights />
       </UISettingsProvider>
     </ErrorBoundary>
   );
