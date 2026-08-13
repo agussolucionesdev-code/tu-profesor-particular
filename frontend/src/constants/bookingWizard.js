@@ -92,8 +92,8 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     "Ciencias Naturales",
     "Ciencias Sociales",
     "Inglés",
-    "Lengua y Literatura",
     "Matemática",
+    "Prácticas del Lenguaje",
   ],
   Secundaria: [
     "Biología",
@@ -102,9 +102,10 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     // en secundaria, pero nunca había estado en esta lista: quien la buscaba
     // desde el Inicio no la encontraba al llegar al formulario.
     "Fisicoquímica",
+    "Historia",
     "Inglés",
-    "Lengua y Literatura",
     "Matemática",
+    "Prácticas del Lenguaje",
     "Química",
   ],
   "Secundaria Tecnica": [
@@ -120,10 +121,10 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     "Informática",
     "Inglés",
     "Instalaciones",
-    "Lengua y Literatura",
     "Matemática",
     "Máquinas",
     "Mecánica",
+    "Prácticas del Lenguaje",
     "Química",
     "Sistemas Automáticos",
     "Tecnología",
@@ -173,9 +174,12 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
 const MATERIAS_PRIORITARIAS = [
   "Matemática",
   "Física",
-  "Fisicoquímica",
   "Química",
+  "Fisicoquímica",
+  "Biología",
   "Inglés",
+  "Prácticas del Lenguaje",
+  "Historia",
 ];
 
 const prioridadDe = (materia) => {

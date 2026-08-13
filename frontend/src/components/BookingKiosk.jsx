@@ -26,10 +26,11 @@ import {
 } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
-import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
+import { getSubjectSuggestions } from "../constants/bookingWizard";
 import {
   getLevelVisual,
-  getSubjectVisual,
+  getSubjectPresentation,
+  OTHER_SUBJECT_PRESENTATION,
   OTHER_SUBJECT_VISUAL,
 } from "../constants/bookingVisuals";
 import {
@@ -209,8 +210,10 @@ const BookingKiosk = () => {
   }, [step]);
 
   const subjectsForLevel = useMemo(() => {
-    const source = subjectsByLevelOverride ?? SUBJECT_SUGGESTIONS_BY_LEVEL;
-    return source[formData.educationLevel] ?? [];
+    if (subjectsByLevelOverride) {
+      return subjectsByLevelOverride[formData.educationLevel] ?? [];
+    }
+    return getSubjectSuggestions(formData.educationLevel);
   }, [subjectsByLevelOverride, formData.educationLevel]);
 
   const selectableDurations = useMemo(
@@ -664,7 +667,8 @@ const BookingKiosk = () => {
                     <span className="kiosk-eyebrow">Elegí tu materia</span>
                     <h1 id="kiosk-s1-title" className="kiosk-title" tabIndex={-1}>¿Qué querés aprender?</h1>
                     <p className="kiosk-subtitle">
-                      Estás buscando clases para <strong>{formData.educationLevel}</strong>.
+                      Elegí la materia que querés fortalecer en <strong>{formData.educationLevel}</strong>.
+                      Cada recorrido combina explicación clara, práctica guiada y aplicación.
                     </p>
                   </div>
                   <button
@@ -675,9 +679,20 @@ const BookingKiosk = () => {
                     <FaPencilAlt aria-hidden="true" /> Cambiar nivel
                   </button>
                 </div>
+                <div
+                  className="kiosk-learning-route"
+                  aria-label="Ruta de aprendizaje: comprender, practicar y aplicar"
+                >
+                  <span className="kiosk-learning-route-label">Ruta de aprendizaje</span>
+                  <strong>Comprender</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Practicar</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>Aplicar</strong>
+                </div>
                 <div className="kiosk-grid kiosk-grid-subjects">
                   {subjectsForLevel.map((subject, index) => {
-                    const visual = getSubjectVisual(subject);
+                    const presentation = getSubjectPresentation(subject);
                     return (
                       <button
                         key={subject}
@@ -685,21 +700,31 @@ const BookingKiosk = () => {
                         className={`kiosk-choice-card kiosk-visual-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
                         onClick={() => chooseSubject(subject)}
                         aria-pressed={formData.subject === subject}
+                        aria-label={`${subject}. ${presentation.description} Enfoque: ${presentation.focus}.`}
+                        data-subject-kind={presentation.key}
+                        style={{ "--kiosk-card-delay": `${Math.min(index, 8) * 42}ms` }}
                       >
                         <span className="kiosk-visual-media" aria-hidden="true">
                           <span className="kiosk-visual-halo" />
                           <img
-                            src={visual.src}
-                            width={visual.width}
-                            height={visual.height}
+                            src={presentation.src}
+                            width={presentation.width}
+                            height={presentation.height}
                             alt=""
-                            loading={index < 6 ? "eager" : "lazy"}
+                            loading={index < 4 ? "eager" : "lazy"}
                             decoding="async"
                           />
                         </span>
                         <span className="kiosk-visual-copy">
-                          <span className="kiosk-choice-kicker">Materia</span>
+                          <span className="kiosk-choice-kicker">{presentation.kicker}</span>
                           <span className="kiosk-choice-label">{subject}</span>
+                          <span className="kiosk-subject-description">
+                            {presentation.description}
+                          </span>
+                          <span className="kiosk-subject-focus">
+                            <span>Enfoque</span>
+                            <strong>{presentation.focus}</strong>
+                          </span>
                         </span>
                         <span className="kiosk-selected-mark" aria-hidden="true"><FaCheckCircle /></span>
                       </button>
@@ -716,6 +741,11 @@ const BookingKiosk = () => {
                     }}
                     aria-expanded={otherOpen}
                     aria-controls="kiosk-other-subject"
+                    aria-label={`Otra materia. ${OTHER_SUBJECT_PRESENTATION.description}`}
+                    data-subject-kind="otraMateria"
+                    style={{
+                      "--kiosk-card-delay": `${Math.min(subjectsForLevel.length, 8) * 42}ms`,
+                    }}
                   >
                     <span className="kiosk-visual-media" aria-hidden="true">
                       <span className="kiosk-visual-halo" />
@@ -729,15 +759,25 @@ const BookingKiosk = () => {
                       />
                     </span>
                     <span className="kiosk-visual-copy">
-                      <span className="kiosk-choice-kicker">Personalizada</span>
+                      <span className="kiosk-choice-kicker">{OTHER_SUBJECT_PRESENTATION.kicker}</span>
                       <span className="kiosk-choice-label">Otra materia</span>
+                      <span className="kiosk-subject-description">
+                        {OTHER_SUBJECT_PRESENTATION.description}
+                      </span>
+                      <span className="kiosk-subject-focus">
+                        <span>Enfoque</span>
+                        <strong>{OTHER_SUBJECT_PRESENTATION.focus}</strong>
+                      </span>
                     </span>
                     <span className="kiosk-card-arrow" aria-hidden="true"><FaPencilAlt /></span>
                   </button>
                 </div>
 
                 {formData.subject && !otherOpen && (
-                  <div className="kiosk-selection-dock" role="status" aria-live="polite">
+                  <div className="kiosk-selection-dock">
+                    <span className="sr-only" role="status" aria-live="polite">
+                      Materia seleccionada: {formData.subject}.
+                    </span>
                     <div className="kiosk-selection-copy">
                       <span className="kiosk-confirmar-label">Tu elección</span>
                       <strong>{formData.subject}</strong>

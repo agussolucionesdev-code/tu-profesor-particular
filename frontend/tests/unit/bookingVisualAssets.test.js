@@ -16,10 +16,11 @@ const subjectAssets = [
   "biologia.webp",
   "fisica.webp",
   "fisicoquimica.webp",
+  "historia.webp",
   "ingles.webp",
-  "lengua-literatura.webp",
   "matematica.webp",
   "otra-materia.webp",
+  "practicas-del-lenguaje.webp",
   "quimica.webp",
 ];
 
@@ -68,17 +69,22 @@ test("maps configured levels and subjects to resilient visual fallbacks", () => 
   for (const filename of [...levelAssets, ...subjectAssets]) {
     assert.match(visualMapSource, new RegExp(filename.replace(".", "\\.")));
   }
-  assert.match(visualMapSource, /return SUBJECT_VISUALS\.otraMateria/);
+  assert.match(visualMapSource, /return "otraMateria"/);
   assert.match(visualMapSource, /Fisicoquímica debe resolverse antes/);
+  assert.match(visualMapSource, /normalized\.includes\("historia"\)/);
+  assert.match(visualMapSource, /normalized\.includes\("practicas del lenguaje"\)/);
+  assert.match(visualMapSource, /getSubjectPresentation/);
 });
 
 test("keeps visual cards semantic, responsive and motion-safe", () => {
   assert.match(kioskSource, /aria-pressed=\{formData\.subject === subject\}/);
-  assert.match(kioskSource, /loading=\{index < 6 \? "eager" : "lazy"\}/);
+  assert.match(kioskSource, /loading=\{index < 4 \? "eager" : "lazy"\}/);
   assert.match(kioskSource, /decoding="async"/);
   assert.match(kioskSource, /<img[\s\S]*?alt=""/);
   assert.match(kioskSource, /aria-live="polite"/);
   assert.doesNotMatch(kioskSource, /role="progressbar"/);
+  assert.match(kioskSource, /kiosk-subject-description/);
+  assert.match(kioskSource, /Ruta de aprendizaje/);
   assert.match(kioskCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(kioskCss, /@media \(forced-colors: active\)/);
   assert.match(kioskCss, /kiosk-grid-levels[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);

@@ -3,10 +3,24 @@ import test from "node:test";
 import {
   BOOKING_INITIAL_FORM_DATA,
   WIZARD_STEPS,
+  getSubjectSuggestions,
   isAcademicDraftComplete,
   toBookingApiAcademicSituation,
   updateBookingDraft,
 } from "../../src/constants/bookingWizard.js";
+
+test("offers the eight principal secondary subjects in decision-friendly order", () => {
+  assert.deepEqual(getSubjectSuggestions("Secundaria"), [
+    "Matemática",
+    "Física",
+    "Química",
+    "Fisicoquímica",
+    "Biología",
+    "Inglés",
+    "Prácticas del Lenguaje",
+    "Historia",
+  ]);
+});
 
 test("exposes exactly three user-facing booking stages", () => {
   assert.deepEqual(
