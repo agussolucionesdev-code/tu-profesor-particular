@@ -15,6 +15,11 @@ import {
 import monogram from "../assets/monogram.png";
 import "./SiteFooter.css";
 
+/* Se corta en la PRIMERA arroba: es la que separa usuario de dominio, y un email con
+   dos arrobas no es válido. Si algún día el dato viniera vacío, `split` devuelve
+   ["" ] y el enlace muestra sólo la arroba en lugar de romper el render. */
+const [emailAntesDeArroba, emailDespuesDeArroba = ""] = CONTACT.email.split("@");
+
 const SiteFooter = () => (
   <footer className="sfoot">
     <span className="grid-texture" aria-hidden="true" />
@@ -38,7 +43,9 @@ const SiteFooter = () => (
         </p>
       </div>
 
-      <nav className="sfoot-col" aria-label="Secciones del sitio">
+      {/* --links marca la única lista larga del pie: en teléfonos va en dos columnas
+          para que los seis enlaces quepan con 44px de alto cada uno. */}
+      <nav className="sfoot-col sfoot-col--links" aria-label="Secciones del sitio">
         <h2 className="sfoot-title">El sitio</h2>
         <ul>
           <li><Link to="/">Inicio</Link></li>
@@ -87,7 +94,17 @@ const SiteFooter = () => (
           <li>
             <a href={`mailto:${CONTACT.email}`}>
               <FaEnvelope aria-hidden="true" />
-              {CONTACT.email}
+              {/* El email se parte en la arroba y en ningún otro lado.
+                  Es la cadena más larga del pie y no tiene espacios: si el navegador
+                  necesita cortarla, `<wbr>` le dice DÓNDE. Sin esto partía en cualquier
+                  letra ("agustinsosa.profe@gm / ail.com"), que se lee como un error de
+                  tipeo y no como una dirección.
+                  El texto sigue siendo uno: `<wbr>` no aporta caracteres, así que copiar
+                  y pegar, y los lectores de pantalla, funcionan igual. */}
+              <span>
+                {emailAntesDeArroba}@<wbr />
+                {emailDespuesDeArroba}
+              </span>
             </a>
           </li>
           <li>

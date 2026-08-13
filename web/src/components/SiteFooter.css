@@ -50,12 +50,27 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.65rem;
+  /* Sin separación entre ítems: ahora cada enlace trae sus propios 44px de alto, y
+     sumarle gap encima estiraba el pie sin agrandar el blanco táctil. */
+  gap: 0;
 }
+
+/* LOS 11 ENLACES DE ESTE PIE MEDÍAN 24px DE ALTO.
+ *
+ * Eran `inline-flex` sin `min-height`, así que la caja del enlace era la caja de línea
+ * del texto y nada más: "Inicio" era un blanco de 37×24 px separado del siguiente por
+ * 10px de gap. El mínimo de WCAG 2.5.5 es 44px. En un teléfono, tocar "Contacto" era
+ * una apuesta, y un toque errado caía en el enlace de al lado.
+ *
+ * Dos cambios: `min-height: 44px` para el alto, y `flex` en lugar de `inline-flex` para
+ * que el enlace ocupe el ancho de la columna. Lo segundo es lo que más cambia la
+ * experiencia real: el blanco pasa de 37×24 a 335×44 en un teléfono. */
 .sfoot-col a {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: 44px;
+  padding-block: 0.3rem;
   font-size: 0.92rem;
   color: rgba(255, 255, 255, 0.74);
   text-decoration: none;
@@ -66,7 +81,15 @@
   transform: translateX(3px);
 }
 .sfoot-col a svg { font-size: 0.72rem; flex-shrink: 0; opacity: 0.75; }
-.sfoot-contact a { word-break: break-word; }
+
+/* El email es la cadena más larga del pie y no tiene espacios donde cortar.
+   El punto de corte preferido lo marca un `<wbr>` después de la arroba, en el JSX:
+   si hace falta partirlo, se parte en "agustinsosa.profe@ / gmail.com", que se sigue
+   leyendo como una dirección. `overflow-wrap: break-word` queda sólo como red por si
+   ni así entra —parte en cualquier letra, que es feo pero mejor que desbordar—.
+   Antes había `word-break: break-word`, que parte en cualquier punto SIEMPRE, sin
+   preferir la arroba. */
+.sfoot-contact a { overflow-wrap: break-word; }
 .sfoot-contact a svg { font-size: 0.95rem; opacity: 1; color: var(--green-on-dark); }
 
 .sfoot-base {
@@ -92,7 +115,17 @@
   .sfoot-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
-  .sfoot-inner { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+  .sfoot-inner { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  /* Las seis secciones del sitio, en dos columnas.
+     Con los enlaces a 44px de alto —que es lo correcto— una lista de seis en una sola
+     columna suma 264px, y el pie crecía en vez de mejorar. En dos columnas son tres
+     filas: mismo blanco táctil, la mitad de alto. Se aplica sólo a la navegación del
+     sitio; los datos de contacto siguen a lo ancho, que se leen de un tirón. */
+  .sfoot-col--links ul { grid-template-columns: 1fr 1fr; column-gap: 0.75rem; }
+  /* El padding superior de 56px es de una portada de marketing, no de un pie. */
+  .sfoot { padding-top: 40px; }
+  .sfoot-inner { padding-bottom: 28px; }
+  .sfoot-mark { margin-bottom: 0.75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sfoot-col a:hover { transform: none; }

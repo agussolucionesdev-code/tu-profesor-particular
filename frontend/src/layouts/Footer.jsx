@@ -15,6 +15,8 @@ import ThemeLogo from "../components/ui/ThemeLogo";
 import { FALLBACK_TEACHER_LOCATION } from "../constants/teacherLocation";
 import {
   CONTACT_EMAIL,
+  CONTACT_EMAIL_DOMAIN,
+  CONTACT_EMAIL_USER,
   SOCIAL_PROFILES,
   WHATSAPP_DEFAULT_MESSAGE,
   WHATSAPP_DISPLAY,
@@ -121,7 +123,14 @@ const Footer = () => {
               <li>
                 <a href={`mailto:${CONTACT_EMAIL}`}>
                   <FaEnvelope aria-hidden="true" />
-                  {CONTACT_EMAIL}
+                  {/* `<wbr>` marca la arroba como el único punto de corte: si el email
+                      no entra en la columna, se parte ahí y no en cualquier letra. No
+                      aporta caracteres, así que copiar y pegar sigue dando la dirección
+                      completa. */}
+                  <span>
+                    {CONTACT_EMAIL_USER}@<wbr />
+                    {CONTACT_EMAIL_DOMAIN}
+                  </span>
                 </a>
               </li>
               <li>

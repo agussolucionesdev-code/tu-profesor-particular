@@ -25,6 +25,18 @@ export const WHATSAPP_NUMBER = "5491133365937";
 export const WHATSAPP_DISPLAY = "+54 9 11 3336-5937";
 export const CONTACT_EMAIL = "agustinsosa.profe@gmail.com";
 
+/* El email partido en la arroba, para poder marcar ahí el punto de corte con `<wbr>`.
+ *
+ * Es la cadena más larga que muestra el pie —27 caracteres sin un solo espacio— y en
+ * una columna angosta el navegador la parte donde le toca: "agustinsosa.profe@gm /
+ * ail.com" se lee como un error de tipeo, no como una dirección. Marcando la arroba se
+ * parte en "agustinsosa.profe@ / gmail.com", que sigue siendo legible.
+ *
+ * El corte va en la PRIMERA arroba, que es la que separa usuario de dominio. */
+const [usuario, dominio = ""] = CONTACT_EMAIL.split("@");
+export const CONTACT_EMAIL_USER = usuario;
+export const CONTACT_EMAIL_DOMAIN = dominio;
+
 /* Un wa.me con el mensaje ya escrito. Que el mensaje venga puesto no es un detalle
    estético: quien abre WhatsApp sin saber qué decir muchas veces cierra sin escribir. */
 export const waLink = (mensaje) =>

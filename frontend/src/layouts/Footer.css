@@ -136,8 +136,11 @@
   font-size: 0.84rem;
   line-height: 1.3;
   text-decoration: none;
-  /* El email no tiene espacios donde cortar; sin esto desborda la columna. */
-  overflow-wrap: anywhere;
+  /* El email no tiene espacios donde cortar. El punto de corte preferido lo marca un
+     `<wbr>` después de la arroba, en el JSX; esto queda sólo como red por si ni así
+     entra. `break-word` y no `anywhere`: `anywhere` parte en cualquier letra incluso
+     cuando el `<wbr>` alcanzaba, y quedaba "…@gm / ail.com". */
+  overflow-wrap: break-word;
   transition: color 160ms ease;
 }
 
