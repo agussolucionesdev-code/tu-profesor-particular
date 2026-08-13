@@ -136,6 +136,11 @@
 .kiosk-grid-levels { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .kiosk-grid-subjects { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .kiosk-grid-modality { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+/* Dos opciones y nada más, así que 240px: entran lado a lado desde ~520px y se apilan
+   en un teléfono. No llevan imagen a propósito —es una pregunta administrativa, no una
+   elección de producto— y sumarle ilustraciones le daría más peso visual que a la
+   materia, que es lo que la persona vino a elegir. */
+.kiosk-grid-para-quien { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 
 .kiosk-choice-card {
   display: flex;
@@ -160,6 +165,23 @@
   background: var(--state-selected-bg);
 }
 .kiosk-choice-compact { padding: 0.85rem 1rem; }
+
+/* Tiene que venir DESPUÉS de `.kiosk-choice-card`, y no es un detalle de orden:
+   esa regla declara `padding` en atajo, así que resetea `padding-right` de cualquier
+   regla anterior con la misma especificidad. Estando arriba, el `padding-right` de acá
+   se perdía y el texto llegaba hasta debajo de la flecha —medido: texto hasta x=315,
+   flecha desde x=309—. No se veía roto sólo porque el contenido queda centrado en
+   vertical y las líneas caían más abajo que la flecha: con una etiqueta de una sola
+   línea se habrían pisado. */
+.kiosk-para-quien-card {
+  /* Ancla del `.kiosk-card-arrow`, que es `position: absolute`. Sin esto la flecha se
+     posiciona contra el ancestro posicionado más cercano y se va a otra parte. */
+  position: relative;
+  justify-content: center;
+  min-height: 84px;
+  /* Lugar para la flecha, que vive arriba a la derecha. */
+  padding-right: 3.2rem;
+}
 
 .kiosk-choice-label {
   font-size: 1.05rem;
@@ -458,15 +480,29 @@
 .kiosk-input.error { border-color: var(--error-color); }
 .kiosk-textarea { resize: vertical; min-height: 76px; }
 
-.kiosk-adult-toggle { margin: 0.5rem 0 1rem; }
-.kiosk-check {
-  display: inline-flex;
+/* Acá vivían `.kiosk-adult-toggle` y `.kiosk-check`, del checkbox «Soy el alumno y soy
+   mayor de edad» que estaba en el paso 4. La pregunta se movió al principio del paso 1
+   —decide el trato de los pasos 1 al 3, así que preguntarla en el 4 llegaba tarde— y en
+   el paso 4 quedó este resumen con salida. */
+.kiosk-para-quien-recap {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+.kiosk-para-quien-recap p {
+  margin: 0;
+  /* --text-secondary y no --text-tertiary: tertiary está calibrado contra blanco puro
+     (4.79:1) y sobre esta superficie cae por debajo del 4.5 de AA. */
   color: var(--text-secondary);
-  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 .kiosk-check input { width: 18px; height: 18px; accent-color: var(--brand-green); }
 
