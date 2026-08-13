@@ -455,6 +455,93 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
   font-size: 0.82rem;
 }
 
+/* ── Horarios por modalidad ────────────────────────────────────────────── */
+
+.availability-hint {
+  margin: 0 0 0.7rem;
+  color: var(--color-text-secondary, #475569);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.availability-modality-grid {
+  display: grid;
+  /* 260px y no 310px: son dos tarjetas cortas y a 310 quedaban una debajo de la otra
+     en pantallas medianas, justo donde conviene compararlas de un vistazo. */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.availability-modality-card {
+  min-width: 0;
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.2));
+  border-radius: 12px;
+}
+
+.availability-modality-card legend {
+  padding: 0 0.35rem;
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.availability-modality-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.availability-modality-hours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  /* Reserva la altura del texto "Usa el horario general", para que tildar la casilla
+     no empuje la tarjeta de al lado y el foco no se mueva bajo el cursor. */
+  margin-top: 0.7rem;
+  min-height: 4.1rem;
+}
+
+.availability-modality-hours > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.availability-modality-inherits {
+  margin: 0.7rem 0 0;
+  min-height: 4.1rem;
+  color: var(--color-text-secondary, #475569);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.availability-modality-buffer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 22rem;
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.availability-field-hint {
+  color: var(--color-text-secondary, #475569);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
 .availability-week-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
@@ -557,8 +644,25 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
 [data-theme="dark"] .availability-interval-row > label,
 [data-theme="dark"] .availability-enabled-toggle,
 [data-theme="dark"] .availability-day-card legend,
-[data-theme="dark"] .availability-exception-card legend {
+[data-theme="dark"] .availability-exception-card legend,
+[data-theme="dark"] .availability-modality-card legend,
+[data-theme="dark"] .availability-modality-toggle,
+[data-theme="dark"] .availability-modality-hours > label,
+[data-theme="dark"] .availability-modality-buffer {
   color: var(--color-text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .availability-modality-card {
+  background: var(--color-surface-2, #0f172a);
+}
+
+/* Los textos de apoyo van a --text-secondary y no a --text-tertiary: tertiary está
+   calibrado contra BLANCO (4.79:1) y sobre estas tarjetas grises cae a 4.01, debajo
+   del 4.5 de AA. */
+[data-theme="dark"] .availability-hint,
+[data-theme="dark"] .availability-modality-inherits,
+[data-theme="dark"] .availability-field-hint {
+  color: var(--color-text-secondary, #cbd5e1);
 }
 
 /* ═══════════════════════════════════════

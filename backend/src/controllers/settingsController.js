@@ -87,6 +87,11 @@ const toAdminScheduleDto = ({ revision, schedule }) => ({
   slotDurationMinutes: schedule.slotDurationMinutes,
   timeZone: schedule.timeZone,
   activeWeekdays: schedule.activeWeekdays,
+  /* `null` significa "esta modalidad usa el horario general", y el panel lo muestra
+     así en lugar de repetir las horas generales en dos campos editables: dos campos
+     con el mismo dato se desincronizan el primer día. */
+  modalityWindows: schedule.modalityWindows,
+  modalityChangeBufferMinutes: schedule.modalityChangeBufferMinutes,
   availabilityPolicy: schedule.availabilityPolicy,
 });
 
@@ -96,6 +101,13 @@ const toAdminScheduleDto = ({ revision, schedule }) => ({
    conoce los horarios por modalidad los borraría la primera vez que el profesor
    toque cualquier otra cosa del horario —y el borrado se vería recién semanas
    después, como presenciales entrando a las 7 de la mañana. */
+/* Clave ausente = "no la conozco, dejá lo que había". `null` explícito = "borrala".
+   Con `??` los dos casos son el mismo, y destildar una modalidad en el panel no se
+   podía guardar nunca: volvía sola al recargar. Por eso el chequeo es por presencia de
+   la clave y no por su valor. */
+const heredaSiFalta = (body, clave, actuales, claveGuardada) =>
+  (body && Object.hasOwn(body, clave) ? body[clave] : actuales[claveGuardada]);
+
 const settingsFromAdminScheduleDto = (schedule, actuales = {}) => ({
   "schedule.openingHour": schedule?.openingHour,
   "schedule.closingHour": schedule?.closingHour,
@@ -103,11 +115,18 @@ const settingsFromAdminScheduleDto = (schedule, actuales = {}) => ({
   "schedule.slotDurationMinutes": schedule?.slotDurationMinutes,
   "schedule.timeZone": schedule?.timeZone,
   "schedule.activeWeekdays": schedule?.activeWeekdays,
-  "schedule.modalityWindows":
-    schedule?.modalityWindows ?? actuales["schedule.modalityWindows"],
-  "schedule.modalityChangeBufferMinutes":
-    schedule?.modalityChangeBufferMinutes
-    ?? actuales["schedule.modalityChangeBufferMinutes"],
+  "schedule.modalityWindows": heredaSiFalta(
+    schedule,
+    "modalityWindows",
+    actuales,
+    "schedule.modalityWindows",
+  ),
+  "schedule.modalityChangeBufferMinutes": heredaSiFalta(
+    schedule,
+    "modalityChangeBufferMinutes",
+    actuales,
+    "schedule.modalityChangeBufferMinutes",
+  ),
   [AVAILABILITY_POLICY_KEY]: schedule?.availabilityPolicy,
 });
 

@@ -253,8 +253,65 @@ export const validateScheduleSettings = (settings) => {
       "La zona horaria debe ser America/Argentina/Buenos_Aires.",
     );
   }
+  validateModalityWindows(settings["schedule.modalityWindows"]);
+  if (settings["schedule.modalityChangeBufferMinutes"] !== undefined) {
+    strictInteger(
+      settings["schedule.modalityChangeBufferMinutes"],
+      0,
+      240,
+      "schedule.modalityChangeBufferMinutes",
+    );
+  }
 
   return normalizeSchedule(settings);
+};
+
+/* Valida y NO normaliza: normalizar acá haría que un error de carga se guarde en
+   silencio.
+   `normalizeModalityWindows` descarta lo que no entiende —está bien para leer datos
+   viejos de la base— pero en el panel descartar en silencio es lo peor que puede
+   pasar: el profesor escribe una hora, guarda, la pantalla dice "listo" y el valor no
+   está. Acá se rechaza con un mensaje que dice exactamente qué corregir. */
+const validateModalityWindows = (valor) => {
+  if (valor === undefined || valor === null) return;
+  if (typeof valor !== "object" || Array.isArray(valor)) {
+    throw new AvailabilityPolicyValidationError(
+      "Los horarios por modalidad deben venir como un objeto por modalidad.",
+    );
+  }
+
+  for (const [modality, ventana] of Object.entries(valor)) {
+    // Una modalidad mal escrita ("presencia") no haría nada y no se notaría hasta que
+    // alguien reserve a una hora que el profesor creía cerrada.
+    if (!MODALITIES.includes(modality)) {
+      throw new AvailabilityPolicyValidationError(
+        `"${modality}" no es una modalidad válida. Las válidas son: ${MODALITIES.join(", ")}.`,
+      );
+    }
+    if (ventana === null || ventana === undefined) continue;
+    if (typeof ventana !== "object" || Array.isArray(ventana)) {
+      throw new AvailabilityPolicyValidationError(
+        `El horario de ${modality} debe tener hora de apertura y de cierre.`,
+      );
+    }
+
+    const { openingHour, closingHour } = ventana;
+    if (openingHour !== undefined && openingHour !== null) {
+      strictInteger(openingHour, 0, 23, `El horario de apertura de ${modality}`);
+    }
+    if (closingHour !== undefined && closingHour !== null) {
+      strictInteger(closingHour, 1, 24, `El horario de cierre de ${modality}`);
+    }
+    if (
+      Number.isInteger(openingHour) &&
+      Number.isInteger(closingHour) &&
+      closingHour <= openingHour
+    ) {
+      throw new AvailabilityPolicyValidationError(
+        `En ${modality}, el cierre debe ser posterior a la apertura.`,
+      );
+    }
+  }
 };
 
 export const getScheduleSettingsSnapshot = async () => {
