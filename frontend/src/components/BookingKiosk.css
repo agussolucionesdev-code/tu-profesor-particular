@@ -484,6 +484,59 @@
    mayor de edad» que estaba en el paso 4. La pregunta se movió al principio del paso 1
    —decide el trato de los pasos 1 al 3, así que preguntarla en el 4 llegaba tarde— y en
    el paso 4 quedó este resumen con salida. */
+/* El precio en el paso 3.
+   Antes vivía sólo en el paso 5, o sea después de entregar los datos personales. Va con
+   jerarquía visual real —el monto grande— porque es el dato que la persona vino a
+   buscar, no una nota al pie. */
+.kiosk-precio {
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--state-selected-brd, var(--border-color));
+  border-radius: var(--radius-md);
+  background: var(--state-selected-bg, var(--surface-card));
+}
+
+.kiosk-precio-monto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* La duración, al lado del monto y no debajo: «$X por clase de 2 horas» es una sola
+   idea y partirla en dos líneas obliga a rearmarla. */
+.kiosk-precio-monto span {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0;
+}
+
+.kiosk-precio-total {
+  margin: 0.4rem 0 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.kiosk-precio-nota,
+.kiosk-precio-sin-dato {
+  margin: 0.45rem 0 0;
+  /* --text-secondary y no --text-tertiary: tertiary está calibrado contra blanco puro
+     (4.79:1) y sobre esta superficie tintada cae por debajo del 4.5 de AA. */
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.kiosk-precio-sin-dato {
+  margin: 0.75rem 0 1.25rem;
+}
+
 .kiosk-para-quien-recap {
   display: flex;
   flex-wrap: wrap;

@@ -18,6 +18,7 @@ const homeSource = readSource("../../src/pages/HomePage.jsx");
 const kioskSource = readSource("../../src/components/BookingKiosk.jsx");
 const kioskConstants = readSource("../../src/constants/kioskWizard.js");
 const channelsSource = readSource("../../src/constants/contactChannels.js");
+const precioSource = readSource("../../src/utils/precio.js");
 
 test("offers an explicit home destination and makes the brand return home", () => {
   assert.match(navbarSource, /title:\s*"Inicio",\s*path:\s*"\/"/);
@@ -104,8 +105,31 @@ test("states one consistent online and in-person offer", () => {
 test("uses the secure management access and an honest unpublished-price state", () => {
   assert.match(homeSource, /enlace seguro/i);
   assert.doesNotMatch(homeSource, /Todo desde el portal con tu código/i);
-  // Precio honesto: el kiosco muestra un estimado SOLO si hay precio publicado
-  // (pricePerHour > 0); nunca renderiza "$0" ni un precio inventado.
-  assert.match(kioskSource, /pricePerHour > 0 && formData\.duration/);
+  /* Precio honesto: se muestra un estimado SÓLO si hay tarifa publicada; nunca "$0" ni
+     un precio inventado. La comprobación se movió de `pricePerHour > 0 && ...` en el
+     kiosco a `utils/precio.js`, que ahora es dueño de la regla y lo hace con `null` en
+     lugar de con un string vacío. La DECISIÓN es la misma, así que se afirma en su
+     ubicación nueva en lugar de borrar la protección. */
+  assert.match(precioSource, /numero > 0 \? numero : null/);
   assert.match(kioskSource, /\{priceLabel &&/);
+  // Y el bloque del paso 3 sólo existe cuando hay desglose.
+  assert.match(kioskSource, /\{precio && \(/);
+  assert.match(kioskSource, /\{!precio && \(/);
+});
+
+test("shows the price before asking for personal data", () => {
+  /* El estimado vivía SÓLO en el paso 5, o sea después de entregar nombre, teléfono,
+     email, año, curso y objetivo. El dato que más pesa para decidir llegaba último,
+     cuando la persona ya había invertido cuatro pasos.
+
+     Un costo que aparece al final no genera un reclamo: genera una pestaña cerrada, y
+     deja la sensación de que estaba escondido. Este test fija que el bloque de precio
+     aparezca ANTES del paso de datos. */
+  const posPrecio = kioskSource.indexOf('className="kiosk-precio"');
+  const posDatos = kioskSource.indexOf("kiosk-s4-title");
+  assert.ok(posPrecio > -1, "falta el bloque de precio en el kiosco");
+  assert.ok(
+    posPrecio < posDatos,
+    "el precio quedó después del paso de datos personales",
+  );
 });
