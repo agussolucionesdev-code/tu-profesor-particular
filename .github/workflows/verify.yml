@@ -36,6 +36,10 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      # Hasta ahora este job solo corría tests: el backend no tenía ESLint
+      # configurado y no había nada que lintear. Ya tiene su eslint.config.js,
+      # así que verifica igual que los otros dos.
+      - run: npm run lint
       # Buenos Aires, igual que producción. Sin esto el runner corre en UTC y
       # los tests que arman horarios de atención se corren tres horas.
       - run: npm test

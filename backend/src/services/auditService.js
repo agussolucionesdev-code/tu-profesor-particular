@@ -285,7 +285,7 @@ const runPendingBookingAuditReconciliation = async ({ limit = 100 } = {}) => {
           { $unset: { pendingAudit: "" } },
         );
         if (cleared.modifiedCount === 1) summary.committed += 1;
-      } catch (error) {
+      } catch {
         summary.failed += 1;
         console.error("[audit-recovery]", JSON.stringify({
           bookingId: String(booking._id),

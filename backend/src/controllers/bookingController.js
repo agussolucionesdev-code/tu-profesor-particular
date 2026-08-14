@@ -497,7 +497,7 @@ const buildDurableBookingNotificationIntents = ({
 const reconcileBookingNotifications = async (bookingId) => {
   try {
     await reconcileNotificationIntents({ bookingId });
-  } catch (error) {
+  } catch {
     console.error("[notification-outbox reconcile]", JSON.stringify({
       bookingId: String(bookingId),
       message: "Reconciliation deferred to worker.",
@@ -2296,7 +2296,6 @@ export const restoreBooking = async (req, res, next) => {
     const {
       error: slotError,
       schedule,
-      durationMinutes,
       endTime,
     } = await validateConfiguredSlot(startTime, storedDuration);
     if (slotError) {
@@ -2309,7 +2308,6 @@ export const restoreBooking = async (req, res, next) => {
       });
     }
 
-    const duration = durationMinutes / 60;
     const restoredBuffers = {
       bufferBeforeMinutes: trashedBooking.bufferBeforeMinutes || 0,
       bufferAfterMinutes: trashedBooking.bufferAfterMinutes || 0,
@@ -2508,7 +2506,7 @@ export const deleteAllBookings = async (req, res) => {
   });
 };
 
-export const requestManagementLink = async (req, res, next) => {
+export const requestManagementLink = async (req, res) => {
   try {
     const bookingCode = normalizeCode(req.body?.bookingCode);
     const email = normalizeEmail(req.body?.email);
@@ -2519,7 +2517,7 @@ export const requestManagementLink = async (req, res, next) => {
     if (BOOKING_CODE_PATTERN.test(bookingCode) && email) {
       await enqueueBlindManagementLinkRequest({ bookingCode, email });
     }
-  } catch (error) {
+  } catch {
     console.error("[management-link request] request could not be completed", {
       requestId: req.requestId,
     });

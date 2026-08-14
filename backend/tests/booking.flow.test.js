@@ -3463,7 +3463,8 @@ describe("booking flows", () => {
   });
 
   it("does not reconcile a pending audit while its booking mutation lease is active", async () => {
-    const token = await createAdminAndLogin();
+    // El admin hace falta para el actor del pendingAudit, no el token.
+    await createAdminAndLogin();
     const created = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload())
