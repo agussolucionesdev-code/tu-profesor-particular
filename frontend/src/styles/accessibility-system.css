@@ -193,6 +193,27 @@ main.main-content {
   display: block;
 }
 
+/* `width: 48px !important` NO alcanza para garantizar una caja de 48px, y esta regla es
+   la prueba: el botón del menú medía 14 px de ancho en producción, a 375 px de viewport.
+ *
+ * Estos botones son flex items de `.navbar-right-zone`, que a 375 px queda en 51 px
+ * mientras sus hijos piden 503. Con `flex-shrink: 1` —el default— y `min-width: 0` en la
+ * zona, el navegador los aplasta muy por debajo del `width` declarado, `!important`
+ * incluido: `width` fija la BASE del flex item, no su tamaño final. El alto sobrevivía
+ * en 48 porque el eje vertical no se encoge, y de ahí lo raro del síntoma: la misma
+ * declaración se cumplía a medias.
+ *
+ * `flex-shrink: 0` es lo que lo vuelve un tamaño de verdad. Quien absorbe el recorte es
+ * la marca, que es texto y puede achicarse sin dejar de servir (medido: 239 → 180 px, y
+ * sin desborde horizontal). Un botón no puede: por debajo de 44 px deja de ser tocable,
+ * y este es el que abre la navegación en todas las páginas. */
+.nav-utility-btn,
+.theme-toggle-btn,
+.menu-toggle-icon,
+.voice-toggle-shell {
+  flex-shrink: 0 !important;
+}
+
 .nav-utility-btn,
 .theme-toggle-btn,
 .menu-toggle-icon {
@@ -202,6 +223,15 @@ main.main-content {
 
 .voice-toggle-shell {
   position: relative;
+}
+
+/* La guía por voz estaba diseñada en 38×38 (Navbar.css:318), 6 px por debajo del mínimo
+   táctil. No es un botón secundario: es el que enciende la asistencia para quien más la
+   necesita, así que es el último que debería costar acertar. */
+.voice-toggle-shell,
+.voice-toggle-btn {
+  width: 44px !important;
+  height: 44px !important;
 }
 
 .voice-hint-bubble {

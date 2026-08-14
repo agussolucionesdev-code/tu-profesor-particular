@@ -56,8 +56,15 @@
 .ksc-month-nav {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  /* 44 y no 32: son las flechas para cambiar de mes, o sea el control que usa quien no
+     encuentra lugar en las próximas semanas. Los DÍAS del calendario ya están en 44
+     (final-polish.css), y dejar las flechas en 32 movía el problema en lugar de
+     resolverlo: de nada sirve acertar el día si no se puede llegar al mes.
+     `flex-shrink: 0` porque viven en una cabecera flex angosta y el `width` solo no
+     alcanza; el botón del menú medía 14 px por exactamente eso. */
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-base);
   background: none;
