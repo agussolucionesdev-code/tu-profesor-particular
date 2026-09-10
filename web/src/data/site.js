@@ -43,10 +43,25 @@ export const BRAND = {
   yearsTeaching: 9,
 };
 
+/* `label` es lo que se lee; `bookingParam` es lo que viaja en el enlace a
+   /reservar. SON DISTINTOS A PROPÓSITO Y NO SE PUEDEN UNIFICAR.
+ *
+ * En el título de una tarjeta se lee mejor "Matemáticas"; en el formulario de
+ * reserva la materia se llama "Matemática", como en los planes de estudio.
+ * Durante meses esta página enlazó `?materia=Matemáticas`, y el plural costaba
+ * plata: la excepción de precios está cargada en singular, así que una clase de
+ * Secundaria se cotizaba a la tarifa base —$20.000 en vez de $25.000—, en la
+ * materia más pedida y entrando desde el propio sitio.
+ *
+ * `web/tests/materiasCompartidas.test.js` verifica contra la lista real del
+ * kiosco que cada `bookingParam` exista. Si alguien agrega una materia acá y se
+ * olvida del campo, o escribe un nombre que el kiosco no conoce, CI lo frena
+ * antes del deploy. */
 export const SUBJECTS = [
   {
     slug: "matematicas",
     label: "Matemáticas",
+    bookingParam: "Matemática",
     tagline: "No sos malo en matemáticas.",
     hook: "Nunca te las explicaron bien.",
     detail:
@@ -57,6 +72,7 @@ export const SUBJECTS = [
   {
     slug: "fisica",
     label: "Física",
+    bookingParam: "Física",
     tagline: "La física tiene lógica interna.",
     hook: "Cuando la encontrás, todo encaja solo.",
     detail:
@@ -67,6 +83,7 @@ export const SUBJECTS = [
   {
     slug: "fisicoquimica",
     label: "Fisicoquímica",
+    bookingParam: "Fisicoquímica",
     tagline: "El filtro más duro de cualquier carrera.",
     hook: "Con la guía correcta, se vuelve la más lógica.",
     detail:
@@ -77,6 +94,7 @@ export const SUBJECTS = [
   {
     slug: "quimica",
     label: "Química",
+    bookingParam: "Química",
     tagline: "Basta de memorizar sin entender.",
     hook: "La química tiene reglas — y tienen sentido.",
     detail:
@@ -87,6 +105,7 @@ export const SUBJECTS = [
   {
     slug: "ingles",
     label: "Inglés",
+    bookingParam: "Inglés",
     tagline: "No es talento. Es método.",
     /* ACÁ HABÍA UNA PROMESA QUE AGUSTÍN NO CUMPLE, y estuvo publicada.
        Decía «el miedo a hablar se trabaja, no se espera» y ofrecía «práctica oral».

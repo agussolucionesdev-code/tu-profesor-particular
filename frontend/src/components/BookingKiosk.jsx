@@ -65,6 +65,7 @@ import {
   vozDelWizard,
 } from "../constants/kioskVoz";
 import { NO_PUEDO_AYUDARTE } from "../constants/voz";
+import { materiaCanonica } from "../utils/materiaCanonica";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
@@ -130,8 +131,19 @@ const BookingKiosk = () => {
     const overrides = {};
     const materia = searchParams.get("materia");
     const nivel = searchParams.get("nivel");
-    if (materia) overrides.subject = decodeURIComponent(materia);
-    if (nivel) overrides.educationLevel = decodeURIComponent(nivel);
+    /* Normalizada, no tal cual viene. Un `?materia=Matemáticas` en plural
+       —que es lo que enlazó el sitio institucional durante meses, y lo que
+       sigue habiendo en los WhatsApp ya mandados— dejaba la tarjeta sin marcar
+       y, peor, la clase cotizada a la tarifa base. El detalle completo está en
+       `utils/materiaCanonica.js`.
+       Y sin `decodeURIComponent`: `useSearchParams` YA devuelve el valor
+       decodificado, así que había un doble decode. No era cosmético — con
+       `?materia=Matem%C3%A1tica%20100%25` el segundo decode recibía
+       "Matemática 100%" y lanzaba `URIError: URI malformed`. Como esto corre
+       dentro de un `useMemo` durante el render, la excepción tumbaba la página
+       de reserva entera: pantalla en blanco, no un campo vacío. */
+    if (materia) overrides.subject = materiaCanonica(materia);
+    if (nivel) overrides.educationLevel = nivel.trim();
     return overrides;
   }, [searchParams]);
 

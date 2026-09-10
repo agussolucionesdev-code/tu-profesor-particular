@@ -23,7 +23,8 @@ const Method = () => {
             lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
           />
 
-          <MethodSteps />
+          {/* nivel 2: acá los pasos cuelgan directo del h1 de la página. */}
+          <MethodSteps nivelDeTitulo={2} />
         </div>
       </section>
 

@@ -246,7 +246,7 @@ const StudentsView = ({
       {loading && <p className="admin-view-loading" role="status">Cargando perfiles de alumnos…</p>}
       {!loading && error && (
         <div className="student-load-error" role="alert">
-          <p>{error}</p><button type="button" className="secondary-button" onClick={() => loadStudents(page, searchTerm.trim())}>Reintentar</button>
+          <p>{error}</p><button type="button" className="admin-secondary-btn" onClick={() => loadStudents(page, searchTerm.trim())}>Reintentar</button>
         </div>
       )}
 

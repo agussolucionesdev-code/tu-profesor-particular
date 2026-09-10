@@ -104,6 +104,51 @@ describe("resolver la tarifa de una combinación", () => {
   });
 });
 
+describe("el nombre de la materia se compara normalizado", () => {
+  /* ESTO EMPEZÓ COBRANDO DE MENOS, y estuvo meses en producción.
+
+     El sitio institucional enlazaba `/reservar?materia=Matemáticas` —en plural,
+     porque el título de la tarjeta allá dice "Matemáticas"— y el kiosco guardaba
+     ese texto tal cual. La excepción está cargada como "Matemática", en singular,
+     así que la comparación fallaba y la clase se cotizaba a la tarifa base:
+     20.000 en lugar de 25.000. En la materia más pedida, y entrando desde el
+     propio sitio.
+
+     La causa se corrigió en el origen y en el kiosco, pero ESTA es la capa que
+     garantiza el precio: los enlaces con el plural ya se compartieron por
+     WhatsApp y van a seguir existiendo para siempre, y el servidor es el único
+     lugar donde la tarifa se decide de verdad. */
+
+  it("el plural del sitio cotiza igual que el singular del kiosco", () => {
+    expect(resolverTarifa(matriz(), { nivel: "Secundaria", materia: "Matemáticas" }))
+      .toBe(25000);
+  });
+
+  it("tolera mayúsculas, tildes ausentes y espacios de más", () => {
+    for (const materia of ["MATEMATICA", "matematica", "  Matemática  ", "MATEMÁTICAS"]) {
+      expect(resolverTarifa(matriz(), { nivel: "Secundaria", materia })).toBe(25000);
+    }
+  });
+
+  it("NO adivina: una materia parecida no hereda la excepción", () => {
+    /* El error opuesto, y es peor: cobrarle a alguien una tarifa que no eligió.
+       "Mate" no es "Matemática" y tiene que caer en la base del nivel. */
+    expect(resolverTarifa(matriz(), { nivel: "Secundaria", materia: "Mate" })).toBe(20000);
+    expect(resolverTarifa(matriz(), { nivel: "Secundaria", materia: "Matemáticos" })).toBe(20000);
+  });
+
+  it("normalizar no rompe las materias que ya son plurales", () => {
+    /* La "s" final se saca de los DOS lados de la comparación. Si se sacara de
+       uno solo, "Ciencias Naturales" dejaría de coincidir consigo misma. */
+    const m = matriz({
+      excepciones: [
+        { nivel: "Primaria", materias: ["Ciencias Naturales"], precio: 18000 },
+      ],
+    });
+    expect(resolverTarifa(m, { nivel: "Primaria", materia: "Ciencias Naturales" })).toBe(18000);
+  });
+});
+
 describe("descuento por varias horas", () => {
   it("no aplica por debajo del mínimo", () => {
     expect(aplicarDescuento(25000, 1, matriz().descuento)).toBe(25000);

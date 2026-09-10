@@ -29,14 +29,22 @@ const Subjects = () => {
                 style={{ "--subject-color": s.color }}
                 data-reveal="up"
               >
-                <h3 className="display display--md subj-card-name">{s.label}</h3>
+                {/* h2 y no h3: el encabezado de esta sección ES el h1 de la
+                    página (SectionHead con as="h1"), así que sus hijos directos
+                    son de segundo nivel. Con h3 quedaba un salto h1→h3, que en
+                    un lector de pantalla se lee como si faltara contenido. */}
+                <h2 className="display display--md subj-card-name">{s.label}</h2>
                 <p className="subj-card-claim">
                   <b>{s.tagline}</b> {s.hook}
                 </p>
                 <p className="subj-card-detail">{s.detail}</p>
                 <a
                   className="subj-card-cta"
-                  href={`${BOOKING_RESERVE_URL}?materia=${encodeURIComponent(s.label)}`}
+                  /* `bookingParam` y NO `label`: el kiosco llama a la materia
+                     "Matemática" y acá el título dice "Matemáticas". Mandar el
+                     plural dejaba la tarjeta sin preseleccionar y —lo caro— la
+                     clase cotizada a la tarifa base. Ver `site.js`. */
+                  href={`${BOOKING_RESERVE_URL}?materia=${encodeURIComponent(s.bookingParam)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -48,7 +56,10 @@ const Subjects = () => {
           </ul>
 
           <div className="subj-extra" data-reveal="up">
-            <h3>Doy muchas más materias</h3>
+            {/* h2 por el mismo motivo que las tarjetas: sigue colgando del h1.
+                Los niveles de la sección 02, en cambio, sí van en h3, porque esa
+                sección tiene su propio h2. */}
+            <h2>Doy muchas más materias</h2>
             <p>
               Análisis Matemático, Álgebra, Biología, Historia y otras según el
               plan de estudios. Si la tuya no aparece, contame qué necesitás y

@@ -96,7 +96,16 @@ const Credentials = () => (
               {item.count ? <CountUp target={item.count} /> : item.text}
               {item.suffix}
             </p>
-            <h3 className="creds-label">{item.label}</h3>
+            {/* NO es un encabezado, y por eso no se subió a h2.
+                "años dando clases" es la etiqueta del número que está arriba, no
+                el título de una sección. Como <h3> producía dos problemas: un
+                salto h1→h3 en la portada, y —peor— cuatro entradas sin sentido
+                encabezando el índice del documento, por delante de todas las
+                secciones reales. Un lector de pantalla que navega por
+                encabezados se encontraba primero con "años dando clases".
+                La región ya está nombrada: la <section> lleva aria-label="En
+                números". */}
+            <p className="creds-label">{item.label}</p>
             <p className="creds-detail">{item.detail}</p>
           </li>
         ))}
