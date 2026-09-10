@@ -1220,7 +1220,13 @@ export const createBooking = async (req, res, next) => {
     /* El precio se resuelve en el servidor con la tarifa configurada. Antes esto
        no existía y toda reserva self-service quedaba en 0, así que el KPI de
        ingresos solo veía lo que el profesor cargaba a mano. */
-    const pricing = await buildPricingForNewBooking(duration);
+    const pricing = await buildPricingForNewBooking({
+      duracionHoras: duration,
+      /* El nivel y la materia definen la tarifa: la matriz cobra distinto Primaria que
+         Universitario, y dentro de secundaria las ciencias duras más que Lengua. */
+      nivel: payload.educationLevel,
+      materia: payload.subject,
+    });
 
     newBooking = new Booking({
       ...pricing,
@@ -2855,7 +2861,7 @@ export const rescheduleBooking = async (req, res, next) => {
        encarecerle el turno porque el profesor subió los valores en el medio.
        Devuelve null —y no se toca el precio— cuando la duración es la misma o
        cuando la reserva no tiene tarifa guardada. */
-    const repricing = repricingForReschedule({
+    const repricing = await repricingForReschedule({
       booking: slotMutationLock.booking,
       nuevaDuracion: duration,
     });

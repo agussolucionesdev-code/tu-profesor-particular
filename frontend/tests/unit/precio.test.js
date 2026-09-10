@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  aplicarDescuento,
   desglosarPrecio,
   formatearPesos,
   precioDeUnaClase,
+  resolverTarifa,
   tarifaUsable,
 } from "../../src/utils/precio.js";
 
@@ -98,4 +100,108 @@ test("expone la tarifa por hora para poder explicar de dónde sale el número", 
 
   assert.equal(d.tarifaPorHora, 10000);
   assert.match(d.tarifaTexto, /10\.000/);
+});
+
+/* La resolución por matriz.
+ *
+ * Esta lógica existe TAMBIÉN en el backend (`services/pricingMatrix.js`). Son dos
+ * proyectos sin paquete compartido, y la alternativa era pedirle al servidor una
+ * cotización por cada cambio de duración en el paso 3 — una llamada de red justo cuando
+ * la persona está decidiendo.
+ *
+ * La duplicación es segura porque la autoridad está repartida: esta copia sólo MUESTRA
+ * un estimado y el precio que se guarda lo recalcula el servidor. Pero "seguro" no es
+ * "gratis": estos tests fijan los MISMOS casos que los del backend, así que si alguien
+ * cambia una de las dos copias, la otra queda con un test que ya no la describe.
+ */
+
+const MATRIZ = {
+  porNivel: { Primaria: 16000, Secundaria: 20000 },
+  excepciones: [
+    { nivel: "Secundaria", materias: ["Matemática", "Física"], precio: 25000 },
+  ],
+  descuento: { desdeHoras: 2, porcentaje: 10 },
+};
+
+test("resuelve la base del nivel cuando la materia no tiene excepción", () => {
+  assert.equal(resolverTarifa(MATRIZ, { nivel: "Secundaria", materia: "Lengua" }), 20000);
+});
+
+test("la excepción de la materia le gana a la base del nivel", () => {
+  assert.equal(resolverTarifa(MATRIZ, { nivel: "Secundaria", materia: "Física" }), 25000);
+});
+
+test("una excepción vale sólo dentro de su nivel", () => {
+  // Matemática en secundaria son $25.000; en primaria, primaria.
+  assert.equal(resolverTarifa(MATRIZ, { nivel: "Primaria", materia: "Matemática" }), 16000);
+});
+
+test("ignora mayúsculas y espacios al comparar la materia", () => {
+  for (const escrita of ["física", "  Física  ", "FÍSICA"]) {
+    assert.equal(resolverTarifa(MATRIZ, { nivel: "Secundaria", materia: escrita }), 25000);
+  }
+});
+
+test("cae en la tarifa general cuando la matriz no cubre la combinación", () => {
+  assert.equal(
+    resolverTarifa(MATRIZ, { nivel: "Universitario", materia: "Física", tarifaGeneral: 30000 }),
+    30000,
+  );
+});
+
+test("sin nada que resolver devuelve null, nunca cero", () => {
+  assert.equal(resolverTarifa(MATRIZ, { nivel: "Universitario", materia: "Física" }), null);
+  assert.equal(resolverTarifa(null, { nivel: "Secundaria" }), null);
+});
+
+test("el descuento aplica desde el mínimo y no antes", () => {
+  assert.equal(aplicarDescuento(25000, 1, MATRIZ.descuento), 25000);
+  assert.equal(aplicarDescuento(25000, 1.5, MATRIZ.descuento), 25000);
+  assert.equal(aplicarDescuento(25000, 2, MATRIZ.descuento), 22500);
+});
+
+test("un descuento imposible se ignora en lugar de regalar la clase", () => {
+  for (const malo of [-10, 100, 150, "diez", NaN]) {
+    assert.equal(aplicarDescuento(25000, 2, { desdeHoras: 2, porcentaje: malo }), 25000);
+  }
+});
+
+test("el desglose cotiza desde la matriz y marca el descuento", () => {
+  const d = desglosarPrecio({
+    matriz: MATRIZ,
+    nivel: "Secundaria",
+    materia: "Física",
+    duracionHoras: 2,
+  });
+
+  assert.equal(d.tarifaPorHora, 25000);
+  assert.equal(d.tarifaAplicada, 22500);
+  assert.equal(d.huboDescuento, true);
+  assert.equal(d.porClase, 45000);
+});
+
+test("sin descuento, la tarifa aplicada es la base y no se marca ahorro", () => {
+  const d = desglosarPrecio({
+    matriz: MATRIZ,
+    nivel: "Secundaria",
+    materia: "Física",
+    duracionHoras: 1,
+  });
+
+  assert.equal(d.tarifaAplicada, 25000);
+  assert.equal(d.huboDescuento, false);
+});
+
+test("una tarifa explícita gana sobre la resolución", () => {
+  /* Es lo que mantiene funcionando a quien ya llamaba con `tarifaPorHora` a secas. */
+  const d = desglosarPrecio({ matriz: MATRIZ, nivel: "Secundaria", tarifaPorHora: 9000, duracionHoras: 1 });
+
+  assert.equal(d.tarifaPorHora, 9000);
+});
+
+test("sin tarifa para la combinación no hay desglose", () => {
+  assert.equal(
+    desglosarPrecio({ matriz: MATRIZ, nivel: "Universitario", duracionHoras: 2 }),
+    null,
+  );
 });

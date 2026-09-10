@@ -28,6 +28,7 @@ let Booking;
 let AppSettings;
 
 const CLAVE_PRECIO = "booking.pricePerHour";
+const CLAVE_MATRIZ = "booking.pricingMatrix";
 
 /* La API recibe una etiqueta de reloj de pared con formato "dd/MM/yyyy HH:mm" y
    la interpreta en Buenos Aires, no un objeto Date. */
@@ -49,10 +50,37 @@ const miercolesA = (hora, minuto = 0) => {
   return d;
 };
 
+/* Fija la tarifa GENERAL y vacía la matriz.
+ *
+ * Vaciarla es lo que hace que estos tests sigan hablando de lo que vinieron a probar.
+ * Desde que existe `booking.pricingMatrix`, la cadena de resolución es
+ * `excepción → nivel → tarifa general → null`, y la matriz trae valores por defecto: sin
+ * vaciarla, una reserva de secundaria cotiza $25.000 y nunca llega a mirar la tarifa
+ * general. Estos casos prueban el ÚLTIMO eslabón de esa cadena, que es justamente el que
+ * mantiene funcionando lo que existía antes de la matriz.
+ *
+ * El comportamiento de la matriz se prueba aparte, en `pricingMatrix.test.js` (unitario)
+ * y más abajo en este archivo (de punta a punta). */
 const fijarTarifa = async (valor) => {
+  await Promise.all([
+    AppSettings.findOneAndUpdate(
+      { key: CLAVE_PRECIO },
+      { key: CLAVE_PRECIO, value: valor },
+      { upsert: true },
+    ),
+    AppSettings.findOneAndUpdate(
+      { key: CLAVE_MATRIZ },
+      { key: CLAVE_MATRIZ, value: {} },
+      { upsert: true },
+    ),
+  ]);
+};
+
+/* Fija la matriz completa, para los casos que sí la prueban. */
+const fijarMatriz = async (matriz) => {
   await AppSettings.findOneAndUpdate(
-    { key: CLAVE_PRECIO },
-    { key: CLAVE_PRECIO, value: valor },
+    { key: CLAVE_MATRIZ },
+    { key: CLAVE_MATRIZ, value: matriz },
     { upsert: true },
   );
 };
@@ -155,13 +183,62 @@ describe("precio al reservar desde el sitio", () => {
     expect((await guardado(res.body.data.bookingCode)).pricePerHourAtBooking).toBe(8000);
   });
 
-  it("deja el precio en cero si el profesor no configuró tarifa", async () => {
-    // Sin tarifa no se inventa un número: cero significa "a acordar", que es lo
-    // que pasaba siempre hasta ahora.
+  it("deja el precio en cero cuando NADA cubre la combinación", async () => {
+    /* Sin tarifa no se inventa un número: cero significa "a acordar".
+       La decisión no cambió, pero sí cambió dónde está el borde. Antes bastaba con no
+       configurar `booking.pricePerHour`; ahora la matriz trae valores por defecto, así
+       que el caso "sin precio" es el de una combinación que ni la matriz ni la tarifa
+       general cubren. Se vacían las dos para llegar a ese borde. */
+    await fijarMatriz({});
+    await AppSettings.deleteOne({ key: CLAVE_PRECIO });
+
     const res = await reservar();
 
     expect(res.status).toBe(201);
     expect((await guardado(res.body.data.bookingCode)).price).toBe(0);
+  });
+
+  it("la matriz le gana a la tarifa general", async () => {
+    /* La razón de ser de la matriz: un único número no puede cotizar bien primaria y
+       universitario a la vez. */
+    await fijarTarifa(8000);
+    await fijarMatriz({ porNivel: { Secundaria: 20000 } });
+
+    const res = await reservar({ duration: 1 });
+
+    expect(res.status).toBe(201);
+    const b = await guardado(res.body.data.bookingCode);
+    expect(b.price).toBe(20000);
+    expect(b.pricePerHourAtBooking).toBe(20000);
+  });
+
+  it("una excepción por materia le gana a la base del nivel", async () => {
+    await fijarMatriz({
+      porNivel: { Secundaria: 20000 },
+      excepciones: [{ nivel: "Secundaria", materias: ["Matemática"], precio: 25000 }],
+    });
+
+    const res = await reservar({ duration: 1, subject: "Matemática" });
+
+    expect(res.status).toBe(201);
+    expect((await guardado(res.body.data.bookingCode)).price).toBe(25000);
+  });
+
+  it("aplica el descuento por varias horas y guarda la tarifa BASE", async () => {
+    /* Se guarda la base y no la ya descontada: es lo que permite recalcular bien al
+       reprogramar. Si alguien reserva 2 horas con descuento y se pasa a 1, tiene que
+       perder el descuento, y con la tarifa descontada guardada eso no se puede deshacer. */
+    await fijarMatriz({
+      porNivel: { Secundaria: 25000 },
+      descuento: { desdeHoras: 2, porcentaje: 10 },
+    });
+
+    const res = await reservar({ duration: 2 });
+
+    expect(res.status).toBe(201);
+    const b = await guardado(res.body.data.bookingCode);
+    expect(b.price).toBe(45000); // 22.500 × 2
+    expect(b.pricePerHourAtBooking).toBe(25000);
   });
 
   it("ignora una tarifa guardada que no es un número usable", async () => {

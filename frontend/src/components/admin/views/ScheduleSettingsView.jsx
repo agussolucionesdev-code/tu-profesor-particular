@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import { fetchAdminSettings, updateSetting } from "../../../api/bookingApi";
 import SubjectSettingsEditor from "./SubjectSettingsEditor";
+import PricingMatrixEditor from "./PricingMatrixEditor";
 import "./SettingsView.css";
 
 const SECTIONS = [
@@ -310,6 +311,7 @@ const ScheduleSettingsView = ({ authConfig }) => {
           </article>
         );
       })}
+      <PricingMatrixEditor authConfig={authConfig} />
       <SubjectSettingsEditor authConfig={authConfig} />
     </div>
   );

@@ -14,6 +14,8 @@ import {
   writeScheduleSettingsAggregate,
 } from "../services/availabilityService.js";
 import { SLOT_OWNING_BOOKING_FILTER } from "../utils/bookingFilters.js";
+import { DEFAULT_PRICING_MATRIX } from "../services/pricingMatrix.js";
+import { PRICING_MATRIX_KEY } from "../services/bookingPricing.js";
 import {
   acquireScheduleGridChangeLease,
   releaseScheduleGridChangeLease,
@@ -43,11 +45,13 @@ const PUBLIC_LOCATION_KEYS = ["teacher.address", "teacher.mapsUrl"];
 const PUBLIC_KEYS = [
   ...SCHEDULE_KEYS,
   "booking.pricePerHour",
+  "booking.pricingMatrix",
   "booking.subjectsByLevel",
   ...PUBLIC_LOCATION_KEYS,
 ];
 const PUBLIC_NON_SCHEDULE_KEYS = [
   "booking.pricePerHour",
+  "booking.pricingMatrix",
   "booking.subjectsByLevel",
   ...PUBLIC_LOCATION_KEYS,
 ];
@@ -65,6 +69,12 @@ const ALLOWED_KEYS = [...PUBLIC_KEYS, ...ADMIN_ONLY_KEYS];
 const DEFAULTS = {
   ...SCHEDULE_DEFAULTS,
   "booking.pricePerHour": 0,
+  /* La matriz nivel x materia. El default NO es una matriz vacía: son los valores
+     acordados con Agustín, para que estrenar esto no deje al sistema sin precios.
+     Viaja en el endpoint público porque el kiosco necesita cotizar el estimado del
+     paso 3 sin una llamada extra; el precio que se GUARDA igual se recalcula en el
+     servidor al crear la reserva. */
+  "booking.pricingMatrix": DEFAULT_PRICING_MATRIX,
   "booking.requireManualConfirmation": false,
   "booking.subjectsByLevel": null,
   "teacher.address": process.env.TEACHER_ADDRESS || "Jujuy 414, Temperley, Buenos Aires",
@@ -129,6 +139,72 @@ const settingsFromAdminScheduleDto = (schedule, actuales = {}) => ({
   ),
   [AVAILABILITY_POLICY_KEY]: schedule?.availabilityPolicy,
 });
+
+/* Valida la matriz de precios y devuelve el problema como texto, o null si está bien.
+ *
+ * Devuelve texto y no lanza porque el mensaje va tal cual a la pantalla del profesor:
+ * "El precio de Secundaria tiene que ser un número mayor a cero" se puede corregir;
+ * "validation failed" no. */
+const validarMatrizDePrecios = (valor) => {
+  if (!valor || typeof valor !== "object" || Array.isArray(valor)) {
+    return "Los precios tienen que venir como un objeto.";
+  }
+
+  const { porNivel, excepciones, descuento } = valor;
+
+  if (porNivel !== undefined) {
+    if (!porNivel || typeof porNivel !== "object" || Array.isArray(porNivel)) {
+      return "Los precios por nivel tienen que venir como un objeto.";
+    }
+    for (const [nivel, precio] of Object.entries(porNivel)) {
+      /* Vacío es válido y significa "sin precio para este nivel": el panel lo muestra
+         como campo en blanco y el kiosco dice "a acordar". Lo que NO se acepta es un
+         número que no sirve, porque eso sí es un error de carga. */
+      if (precio === "" || precio === null || precio === undefined) continue;
+      const numero = Number(precio);
+      if (!Number.isFinite(numero) || numero <= 0) {
+        return `El precio de ${nivel} tiene que ser un número mayor a cero.`;
+      }
+    }
+  }
+
+  if (excepciones !== undefined) {
+    if (!Array.isArray(excepciones)) return "Las excepciones tienen que venir como una lista.";
+    for (const [i, e] of excepciones.entries()) {
+      const cual = `La excepción ${i + 1}`;
+      if (!e || typeof e !== "object") return `${cual} está mal formada.`;
+      if (!String(e.nivel ?? "").trim()) return `${cual} necesita un nivel.`;
+      const materias = Array.isArray(e.materias) ? e.materias.filter((m) => String(m).trim()) : [];
+      if (materias.length === 0) return `${cual} necesita al menos una materia.`;
+      const numero = Number(e.precio);
+      if (!Number.isFinite(numero) || numero <= 0) {
+        return `${cual} necesita un precio mayor a cero.`;
+      }
+    }
+  }
+
+  if (descuento !== undefined && descuento !== null) {
+    if (typeof descuento !== "object" || Array.isArray(descuento)) {
+      return "El descuento tiene que venir como un objeto.";
+    }
+    const horas = Number(descuento.desdeHoras);
+    const pct = Number(descuento.porcentaje);
+    // Ambos vacíos = sin descuento, y eso es una configuración válida.
+    const sinDescuento =
+      (descuento.desdeHoras === "" || descuento.desdeHoras == null) &&
+      (descuento.porcentaje === "" || descuento.porcentaje == null);
+    if (!sinDescuento) {
+      if (!Number.isFinite(horas) || horas <= 0) {
+        return "El descuento necesita a partir de cuántas horas se aplica.";
+      }
+      if (!Number.isFinite(pct) || pct <= 0 || pct >= 100) {
+        return "El descuento tiene que ser un porcentaje entre 1 y 99.";
+      }
+    }
+  }
+
+  return null;
+};
 
 const parseIfMatchRevision = (value) => {
   if (typeof value !== "string") return null;
@@ -559,6 +635,18 @@ export const updateSetting = async (req, res, next) => {
         message: "Falta el campo 'value'.",
         requestId: req.requestId,
       });
+    }
+
+    /* La matriz se valida al ESCRIBIR aunque `normalizarMatriz` ya la sanea al leer.
+       No es redundante: sanear al leer descarta lo que no entiende EN SILENCIO, y en un
+       panel eso es lo peor que puede pasar — el profesor escribe un precio, guarda, la
+       pantalla dice "listo" y el valor no está. Acá se rechaza con un mensaje que dice
+       qué corregir. */
+    if (key === PRICING_MATRIX_KEY) {
+      const problema = validarMatrizDePrecios(value);
+      if (problema) {
+        return res.status(400).json({ success: false, message: problema, requestId: req.requestId });
+      }
     }
 
     if (SCHEDULE_KEYS.includes(key)) {
