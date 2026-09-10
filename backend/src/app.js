@@ -242,7 +242,11 @@ app.use((req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+/* Los cuatro parámetros son obligatorios aunque `_next` no se use: Express
+   reconoce a un manejador de ERRORES por la aridad de la función, no por dónde
+   está registrado. Con tres, este middleware pasaría a ser uno normal y ningún
+   error volvería a llegar acá. */
+app.use((err, req, res, _next) => {
   const statusCode = err.statusCode || 500;
   const expose = err.expose ?? statusCode < 500;
   const requestId = req.requestId || "unknown-request";

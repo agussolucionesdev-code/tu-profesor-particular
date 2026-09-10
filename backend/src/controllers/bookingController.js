@@ -498,9 +498,14 @@ const reconcileBookingNotifications = async (bookingId) => {
   try {
     await reconcileNotificationIntents({ bookingId });
   } catch (error) {
+    /* El motivo del fallo va en el log. Antes se registraba "Reconciliation
+       deferred to worker" sin decir POR QUÉ había fallado: la línea avisaba de
+       un problema y no daba nada con qué empezar a buscarlo. Lo encontró
+       ESLint, señalando que `error` estaba capturado y sin usar. */
     console.error("[notification-outbox reconcile]", JSON.stringify({
       bookingId: String(bookingId),
       message: "Reconciliation deferred to worker.",
+      reason: error?.message || String(error),
     }));
   }
 };
@@ -2299,10 +2304,15 @@ export const restoreBooking = async (req, res, next) => {
     const trashedBooking = slotMutationLock.booking;
     const startTime = new Date(trashedBooking.timeSlot);
     const storedDuration = Number(trashedBooking.duration) || 1;
+    /* Sin `durationMinutes`: restaurar no recalcula la duración —la reserva
+       vuelve a su horario original con la que ya tenía guardada—, así que
+       destructurarla dejaba una variable muerta, igual que el `duration` que
+       había debajo. La validación en sí SÍ hace falta: de ella salen
+       `slotError`, que decide si el horario original sigue siendo válido, y
+       `endTime`, con el que se reclama la franja. */
     const {
       error: slotError,
       schedule,
-      durationMinutes,
       endTime,
     } = await validateConfiguredSlot(startTime, storedDuration);
     if (slotError) {
@@ -2315,7 +2325,6 @@ export const restoreBooking = async (req, res, next) => {
       });
     }
 
-    const duration = durationMinutes / 60;
     const restoredBuffers = {
       bufferBeforeMinutes: trashedBooking.bufferBeforeMinutes || 0,
       bufferAfterMinutes: trashedBooking.bufferAfterMinutes || 0,
@@ -2514,7 +2523,10 @@ export const deleteAllBookings = async (req, res) => {
   });
 };
 
-export const requestManagementLink = async (req, res, next) => {
+/* `_next` con guion bajo: este handler nunca delega en el manejador de errores
+   —siempre responde 202— pero el parámetro tiene que existir para conservar la
+   firma que espera Express. */
+export const requestManagementLink = async (req, res, _next) => {
   try {
     const bookingCode = normalizeCode(req.body?.bookingCode);
     const email = normalizeEmail(req.body?.email);
@@ -2526,8 +2538,12 @@ export const requestManagementLink = async (req, res, next) => {
       await enqueueBlindManagementLinkRequest({ bookingCode, email });
     }
   } catch (error) {
+    /* Con la causa. Esta rama responde 202 igual —a propósito, para no delatar
+       si el email existe—, así que el log del servidor es el ÚNICO lugar donde
+       queda constancia de que algo falló. Sin el motivo no servía para nada. */
     console.error("[management-link request] request could not be completed", {
       requestId: req.requestId,
+      reason: error?.message || String(error),
     });
   }
   return res.status(202).json({

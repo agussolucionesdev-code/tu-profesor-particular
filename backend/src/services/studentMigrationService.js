@@ -238,13 +238,11 @@ export const rollbackStudentMigration = async ({ runId } = {}) => {
     ...durableLinks.map(({ _id }) => String(_id)),
   ]);
   [...linkIds].forEach((bookingId) => run.linkedBookingIds.addToSet(bookingId));
-  let rolledBackLinks = 0;
   for (const bookingId of linkIds) {
-    const result = await Booking.updateOne(
+    await Booking.updateOne(
       { _id: bookingId, "studentLink.runId": runId },
       { $unset: { studentId: "", studentLink: "" } },
     );
-    rolledBackLinks += result.modifiedCount;
   }
 
   const durableStudents = await Student.find({
@@ -259,15 +257,13 @@ export const rollbackStudentMigration = async ({ runId } = {}) => {
   // restart can then derive cumulative progress even when the prior process
   // died immediately after a successful delete/unlink.
   await run.save();
-  let rolledBackStudents = 0;
   for (const studentId of studentIds) {
     const referenced = await Booking.exists({ studentId });
     if (referenced) continue;
-    const result = await Student.deleteOne({
+    await Student.deleteOne({
       _id: studentId,
       "migrationMetadata.createdByRunId": runId,
     });
-    rolledBackStudents += result.deletedCount;
   }
 
   const [remainingLinks, remainingStudents] = await Promise.all([

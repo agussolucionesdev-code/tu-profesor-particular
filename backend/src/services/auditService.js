@@ -287,10 +287,15 @@ const runPendingBookingAuditReconciliation = async ({ limit = 100 } = {}) => {
         if (cleared.modifiedCount === 1) summary.committed += 1;
       } catch (error) {
         summary.failed += 1;
+        /* Con la causa: este contador sube en silencio y la auditoría queda
+           pendiente de reintento. Sin el motivo, un fallo permanente —una
+           reserva que nunca va a poder auditarse— se veía exactamente igual
+           que uno transitorio, y el reintento corría para siempre. */
         console.error("[audit-recovery]", JSON.stringify({
           bookingId: String(booking._id),
           operationId: descriptor.operationId,
           message: "Pending booking audit remains durable for retry.",
+          reason: error?.message || String(error),
         }));
       }
     }

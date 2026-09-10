@@ -36,6 +36,13 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      # Antes de los tests: el lint tarda segundos y la suite tres minutos, así
+      # que un error de sintaxis o una variable muerta se ven enseguida en vez
+      # de después de levantar un mongodb-memory-server.
+      # El backend era el único de los tres proyectos sin linter, justamente el
+      # que maneja las reservas y los precios. La primera corrida encontró nueve
+      # cosas, y tres eran `catch` que registraban un fallo sin decir la causa.
+      - run: npm run lint
       # Buenos Aires, igual que producción. Sin esto el runner corre en UTC y
       # los tests que arman horarios de atención se corren tres horas.
       - run: npm test
