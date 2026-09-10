@@ -523,6 +523,13 @@
   font-size: 0.95rem;
 }
 
+.kiosk-precio-ahorro {
+  margin: 0.4rem 0 0;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .kiosk-precio-nota,
 .kiosk-precio-sin-dato {
   margin: 0.45rem 0 0;

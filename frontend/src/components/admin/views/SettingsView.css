@@ -716,3 +716,61 @@ input[type="text"].settings-input { width: auto; flex: 1; min-width: 200px; }
   .subjects-level-grid { grid-template-columns: 1fr; }
   .subjects-row-actions .inline-action { flex: 1 1 auto; justify-content: center; }
 }
+
+/* ── Matriz de precios ──────────────────────────────────────────────────── */
+
+.pricing-subtitulo {
+  margin: 1.1rem 0 0.5rem;
+  color: var(--color-text-primary, #1e293b);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+/* La excepción es una fila: nivel, materias y precio se leen juntos o no se entienden.
+   El campo de materias se lleva el espacio sobrante porque es el que más texto tiene. */
+.pricing-excepcion {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(200px, 2fr) minmax(120px, 1fr) auto;
+  align-items: end;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.2));
+  border-radius: 10px;
+}
+
+@media (max-width: 720px) {
+  /* En un teléfono, cuatro columnas dejan los campos ilegibles. */
+  .pricing-excepcion { grid-template-columns: 1fr 1fr; }
+}
+
+.pricing-preview {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  list-style: none;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.2));
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.9;
+}
+
+.pricing-preview-hora {
+  /* --text-secondary y no --text-tertiary: tertiary está calibrado contra blanco puro
+     y sobre esta superficie cae por debajo del 4.5 de AA. */
+  color: var(--color-text-secondary, #475569);
+}
+
+[data-theme="dark"] .pricing-subtitulo {
+  color: var(--color-text-primary, #f1f5f9);
+}
+[data-theme="dark"] .pricing-preview-hora {
+  color: var(--color-text-secondary, #cbd5e1);
+}

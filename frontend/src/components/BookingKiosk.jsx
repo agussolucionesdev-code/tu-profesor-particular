@@ -99,6 +99,9 @@ const BookingKiosk = () => {
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
   const [step, setStep] = useState(1);
   const [pricePerHour, setPricePerHour] = useState(0);
+  // La matriz nivel x materia. Viaja en los ajustes públicos para poder cotizar el
+  // estimado del paso 3 sin una llamada de red por cada cambio de duración.
+  const [pricingMatrix, setPricingMatrix] = useState(null);
   const [subjectsByLevelOverride, setSubjectsByLevelOverride] = useState(null);
   // Arranca con el fallback y no en null: el paso 2 puede renderizarse antes de
   // que responda el endpoint, y ahí es donde va la dirección.
@@ -202,6 +205,8 @@ const BookingKiosk = () => {
         const data = res.data?.data ?? {};
         const price = Number(data["booking.pricePerHour"] ?? 0);
         if (price > 0) setPricePerHour(price);
+        const matriz = data["booking.pricingMatrix"];
+        if (matriz && typeof matriz === "object") setPricingMatrix(matriz);
         const parsed = parsePublicSubjectsByLevel(data["booking.subjectsByLevel"]);
         if (parsed) setSubjectsByLevelOverride(parsed);
         setTeacherLocation(parseTeacherLocation(data));
@@ -369,7 +374,11 @@ const BookingKiosk = () => {
      hay tarifa cargada, y eso es deliberado: nunca se muestra «$0», que se leería como
      «es gratis». */
   const precio = desglosarPrecio({
-    tarifaPorHora: pricePerHour,
+    matriz: pricingMatrix,
+    nivel: formData.educationLevel,
+    materia: formData.subject,
+    // Red de última instancia: la tarifa única que existía antes de la matriz.
+    tarifaGeneral: pricePerHour,
     duracionHoras: formData.duration,
     clases: semanas,
   });
@@ -1054,6 +1063,16 @@ const BookingKiosk = () => {
                      total más tarde. */
                   <p className="kiosk-precio-total">
                     {precio.clases} clases: <strong>{precio.totalSerieTexto}</strong> en total
+                  </p>
+                )}
+                {precio.huboDescuento && (
+                  /* El ahorro dicho como ahorro, no como un precio más bajo a secas.
+                     Es la diferencia entre "sale $22.500" y "te ahorrás $2.500 por hora
+                     por venir dos": lo segundo explica POR QUÉ conviene quedarse más
+                     tiempo, que es justamente lo que el descuento busca. */
+                  <p className="kiosk-precio-ahorro">
+                    Ya con el descuento por {formatDurationOptionLabel(precio.duracionHoras)}:
+                    de {precio.tarifaBaseTexto} baja a <strong>{precio.tarifaTexto}</strong> la hora.
                   </p>
                 )}
                 <p className="kiosk-precio-nota">

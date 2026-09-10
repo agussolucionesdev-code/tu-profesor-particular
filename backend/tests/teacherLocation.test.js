@@ -126,6 +126,13 @@ describe("lo que NO se filtró al mover las claves", () => {
     expect(claves).toEqual(
       [
         "booking.pricePerHour",
+        /* La matriz nivel × materia. Es pública a propósito y el dato no es sensible:
+           son los precios de lista, los mismos que ve cualquiera que entre a reservar.
+           Viaja acá para que el kiosco pueda cotizar el estimado del paso 3 sin una
+           llamada de red por cada cambio de duración. El precio que se GUARDA lo
+           recalcula igual el servidor, así que publicarla no le da a nadie la
+           posibilidad de fijar su propio precio. */
+        "booking.pricingMatrix",
         "booking.subjectsByLevel",
         "schedule.advanceNoticeMinutes",
         "schedule.maximumAdvanceDays",

@@ -1,4 +1,10 @@
 import AppSettings from "../models/AppSettings.js";
+import {
+  DEFAULT_PRICING_MATRIX,
+  aplicarDescuento,
+  cotizar,
+  normalizarMatriz,
+} from "./pricingMatrix.js";
 
 /* Precio de una reserva self-service.
  *
@@ -34,6 +40,20 @@ export const getPricePerHour = async () => {
   return tarifaUsable(registro?.value);
 };
 
+export const PRICING_MATRIX_KEY = "booking.pricingMatrix";
+
+/**
+ * La matriz de precios configurada, o la de fábrica si todavía no se editó.
+ *
+ * El default NO es una matriz vacía: son los valores acordados con Agustín. Una matriz
+ * vacía dejaría al sistema sin precios el día que se estrena esto, que es justo cuando
+ * nadie va a estar mirando.
+ */
+export const getPricingMatrix = async () => {
+  const registro = await AppSettings.findOne({ key: PRICING_MATRIX_KEY }).lean();
+  return normalizarMatriz(registro?.value ?? DEFAULT_PRICING_MATRIX);
+};
+
 /**
  * Precio de una reserva a partir de una tarifa y una duración en horas.
  * Devuelve 0 cuando no hay tarifa: nunca un precio inventado.
@@ -53,11 +73,26 @@ export const calcularPrecio = (tarifaPorHora, duracionHoras) => {
  * una factura guarda el importe: quien reservó a 8000 acordó 8000, y un aumento
  * posterior no puede reescribir lo que ya se acordó.
  */
-export const buildPricingForNewBooking = async (duracionHoras) => {
-  const tarifa = await getPricePerHour();
+export const buildPricingForNewBooking = async ({
+  duracionHoras,
+  nivel,
+  materia,
+} = {}) => {
+  const [matriz, tarifaGeneral] = await Promise.all([getPricingMatrix(), getPricePerHour()]);
+  const cotizacion = cotizar(matriz, { nivel, materia, duracionHoras, tarifaGeneral });
+
+  /* Sin cotización el precio queda en 0, que en este modelo significa "a acordar" y es
+     exactamente lo que pasaba antes de que existiera cualquier tarifa. Lo que NO se hace
+     es inventar un número. */
+  if (!cotizacion) return { price: 0, pricePerHourAtBooking: null };
+
   return {
-    price: calcularPrecio(tarifa, duracionHoras),
-    pricePerHourAtBooking: tarifa,
+    price: cotizacion.price,
+    /* Se guarda la tarifa BASE, no la ya descontada. Es la que permite recalcular bien al
+       reprogramar: si alguien reservó 2 horas con descuento y se pasa a 1, tiene que
+       perder el descuento, y con la tarifa ya descontada guardada eso sería imposible de
+       deshacer. */
+    pricePerHourAtBooking: cotizacion.tarifaBase,
   };
 };
 
@@ -73,9 +108,16 @@ export const buildPricingForNewBooking = async (duracionHoras) => {
  * hay forma de recalcularlo sin inventar la tarifa, y sobrescribir un precio que
  * el profesor puso a mano sería peor que no tocarlo.
  */
-export const repricingForReschedule = ({ booking, nuevaDuracion }) => {
+export const repricingForReschedule = async ({ booking, nuevaDuracion }) => {
   const tarifa = tarifaUsable(booking?.pricePerHourAtBooking);
   if (!tarifa) return null;
   if (Number(booking.duration) === Number(nuevaDuracion)) return null;
-  return { price: calcularPrecio(tarifa, nuevaDuracion) };
+
+  /* El descuento por varias horas se re-evalúa con la duración nueva: pasar de 1 a 2
+     horas tiene que ganarlo, y de 2 a 1 tiene que perderlo. La TARIFA sigue siendo la
+     original —mover un horario no puede encarecer el turno porque el profesor subió los
+     valores en el medio—; lo que se recalcula es sólo el tramo por cantidad de horas. */
+  const { descuento } = await getPricingMatrix();
+  const aplicada = aplicarDescuento(tarifa, nuevaDuracion, descuento);
+  return { price: calcularPrecio(aplicada, nuevaDuracion) };
 };
