@@ -24,6 +24,7 @@ import {
   waLink,
 } from "../data/site.js";
 import { LA_AUTONOMIA, LO_QUE_SE_ESCUCHAN } from "../data/voz.js";
+import { PRUEBA, TESTIMONIOS, hayTestimonios } from "../data/prueba.js";
 import agustin from "../assets/agustin.webp";
 import "./Home.css";
 
@@ -317,11 +318,67 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ── 05 · LA PRUEBA ───────────────────────────────────────────────────
+          Va DESPUÉS del argumento (04) y ANTES de las preguntas (06), y el orden
+          es el punto: 04 dice por qué esto funciona, 05 muestra qué de eso se
+          puede comprobar, y recién ahí 06 barre las dudas que queden. Poner la
+          prueba después de las preguntas la deja llegando cuando la persona ya
+          decidió.
+
+          NO HAY TESTIMONIOS TODAVÍA, y esta sección está armada para eso: el
+          bloque de testimonios sólo existe si hay alguno. Un `<h2>` con nada
+          abajo es peor que no tener la sección.
+
+          La nota que explica la ausencia va al final y en chico, a propósito.
+          Abrir con "no tengo testimonios" le planta la ausencia al lector antes
+          de que la note; omitirla tampoco sirve, porque en un sitio de clases
+          particulares es lo primero que se busca. Se dice, pero después de la
+          prueba, y dicha así deja de ser un agujero: es el mismo tipo que avisa
+          cuando no puede ayudarte. */}
+      <section className="section" aria-labelledby="home-prueba">
+        <div className="shell">
+          <SectionHead
+            index="05"
+            kicker={PRUEBA.kicker}
+            title={PRUEBA.title}
+            titleId="home-prueba"
+            lead={PRUEBA.lead}
+          />
+
+          <ul className="prueba-lista" data-reveal-group="80">
+            {PRUEBA.hechos.map((h) => (
+              <li key={h.dato} className="prueba-item" data-reveal="up">
+                <h3 className="prueba-dato">{h.dato}</h3>
+                <p className="prueba-detalle">{h.detalle}</p>
+              </li>
+            ))}
+          </ul>
+
+          {hayTestimonios() && (
+            <ul className="prueba-testimonios" data-reveal-group="80">
+              {TESTIMONIOS.map((t) => (
+                <li key={t.texto} className="prueba-testimonio" data-reveal="up">
+                  <blockquote className="prueba-testimonio-texto">{t.texto}</blockquote>
+                  <p className="prueba-testimonio-quien">
+                    {t.nombre ? `${t.nombre} — ${t.quien}` : t.quien}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <aside className="prueba-nota" data-reveal="up">
+            <h3 className="prueba-nota-titulo">{PRUEBA.nota.titulo}</h3>
+            <p className="prueba-nota-texto">{PRUEBA.nota.texto}</p>
+          </aside>
+        </div>
+      </section>
+
       {/* ── Preguntas ── cierra las dudas antes del CTA final. */}
       <section className="section section--soft" aria-labelledby="home-faq">
         <div className="shell">
           <SectionHead
-            index="05"
+            index="06"
             kicker="Antes de reservar"
             title="Preguntas frecuentes"
             titleId="home-faq"

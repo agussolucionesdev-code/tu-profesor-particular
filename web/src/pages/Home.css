@@ -484,3 +484,113 @@
 
 /* El enlace hereda .hp-method-mas, que está pensado para fondo claro. */
 .section--dark .hp-method-mas a { color: var(--green-on-dark); }
+
+/* ── 05 · La prueba ─────────────────────────────────────────────────────────
+   TERCER PATRÓN VISUAL a propósito. La sección anterior (04) es una grilla de
+   tarjetas y la siguiente (06) es un acordeón; si esta fuera otra grilla, tres
+   bloques seguidos se leerían como el mismo bloque repetido y el lector saltea.
+   Acá no hay caja ni borde: sólo una barra verde por ítem, dato fuerte y
+   detalle en gris. Se lee como una lista de hechos, que es lo que es.
+──────────────────────────────────────────────────────────────────────────── */
+
+.prueba-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(18px, 2.4vw, 26px);
+}
+
+@media (min-width: 900px) {
+  /* Dos columnas recién en desktop. En tablet, cuatro hechos en dos columnas
+     dejan líneas de 4 palabras: se leen peor que en una sola columna. */
+  .prueba-lista {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(32px, 4vw, 64px);
+  }
+}
+
+.prueba-item {
+  padding-left: clamp(14px, 1.6vw, 20px);
+  border-left: 3px solid var(--green-brand);
+}
+
+.prueba-dato {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.02rem, 1.7vw, 1.18rem);
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.prueba-detalle {
+  margin: 0;
+  max-width: 46ch;
+  font-size: clamp(0.9rem, 1.2vw, 0.97rem);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Los testimonios. Hoy no se renderiza ninguno —la lista está vacía y el JSX
+   pregunta antes—, pero el estilo se escribe ahora: el día que llegue el primero
+   no se publica con el diseño que salga del apuro de ese día. */
+.prueba-testimonios {
+  list-style: none;
+  margin: clamp(28px, 3.4vw, 44px) 0 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(16px, 2vw, 22px);
+}
+
+@media (min-width: 900px) {
+  .prueba-testimonios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.prueba-testimonio {
+  padding: clamp(18px, 2.2vw, 26px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--off);
+}
+
+.prueba-testimonio-texto {
+  margin: 0 0 0.7rem;
+  font-size: clamp(0.98rem, 1.4vw, 1.08rem);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.prueba-testimonio-quien {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+/* La nota que explica por qué todavía no hay testimonios.
+   Chica, en gris y sin caja de color: tiene que leerse como una aclaración
+   honesta al pie, no como otro argumento de venta. Si tuviera el peso de un
+   bloque destacado, la ausencia pasaría a ser el titular de la sección. */
+.prueba-nota {
+  margin: clamp(30px, 3.6vw, 46px) 0 0;
+  padding-top: clamp(18px, 2.2vw, 24px);
+  border-top: 1px solid var(--border);
+  max-width: 62ch;
+}
+
+.prueba-nota-titulo {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.prueba-nota-texto {
+  margin: 0;
+  font-size: clamp(0.88rem, 1.15vw, 0.95rem);
+  line-height: 1.65;
+  color: var(--muted);
+}

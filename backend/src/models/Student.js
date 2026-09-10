@@ -59,6 +59,36 @@ const studentSchema = new mongoose.Schema(
         message: "Student identity requires at least one conservative key.",
       },
     },
+    /* EL PEDIDO DE RESEÑA.
+     *
+     * El sitio institucional no tiene testimonios y no los va a tener por generación
+     * espontánea: hay que pedirlos. Este campo es la memoria de esos pedidos.
+     *
+     * Sin él, el problema no es técnico sino humano: a las tres semanas Agustín no
+     * se acuerda a quién le pidió, y termina pidiéndole dos veces a la misma persona
+     * —que es la forma más rápida de que una reseña que iba a llegar no llegue—.
+     *
+     * `"no quiere"` es el estado más importante de los cuatro y por eso es
+     * terminal: quien dijo que no desaparece de la lista de candidatos para siempre.
+     * Un "no" que hay que repetir cada mes no es un "no" respetado. */
+    reviewRequest: {
+      status: {
+        type: String,
+        enum: ["sin pedir", "pedida", "publicada", "no quiere"],
+        default: "sin pedir",
+      },
+      /* Cuándo se movió el estado por última vez. Sirve para lo único que importa
+         acá: saber si "pedida" fue hace tres días —esperá— o hace cinco meses
+         —volvé a intentar—. */
+      updatedAt: { type: Date, default: null },
+      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+      /* Notas del profesor sobre el pedido. No es el testimonio: el texto que se
+         publica se carga a mano en el repositorio, con su permiso registrado al
+         lado (ver `web/src/data/prueba.js`). Guardar acá el texto tentaría a
+         publicarlo directo desde la base, salteando esa revisión. */
+      notes: { type: String, trim: true, default: "", maxlength: 500 },
+    },
+
     active: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },

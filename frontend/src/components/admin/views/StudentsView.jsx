@@ -8,6 +8,7 @@ import {
   normalizeText,
 } from "../../../utils/bookingFormatters";
 import StudentDetailView from "./StudentDetailView";
+import PedidosDeResenaView from "./PedidosDeResenaView";
 
 const PAGE_SIZE = 12;
 
@@ -50,6 +51,12 @@ const StudentsView = ({
   onSelectBooking,
   onSendWhatsApp,
 }) => {
+  /* Dos pestañas y no una vista nueva en la navegación.
+     Pedir reseñas es algo que se hace una vez por mes; un noveno ítem en el menú
+     principal le daría el mismo peso visual que Agenda o Turnos, que se abren
+     todos los días. Y vive DENTRO de Alumnos porque es lo mismo: mirar la lista
+     de gente que ya dio clases y decidir a quién escribirle. */
+  const [vista, setVista] = useState("registro");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [students, setStudents] = useState([]);
@@ -95,11 +102,13 @@ const StudentsView = ({
   }, [authConfig]);
 
   useEffect(() => {
+    // No se piden los perfiles mientras se está mirando la otra pestaña.
+    if (vista !== "registro") return undefined;
     const timer = window.setTimeout(() => {
       loadStudents(page, searchTerm.trim());
     }, searchTerm ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [loadStudents, page, searchTerm]);
+  }, [loadStudents, page, searchTerm, vista]);
 
   useEffect(() => () => {
     detailAbortController.current?.abort();
@@ -177,7 +186,41 @@ const StudentsView = ({
     );
   }
 
+  const pestanas = (
+    /* `role="tablist"` con `aria-selected` y no dos botones sueltos: con lector de
+       pantalla, "Registro, pestaña 1 de 2, seleccionada" dice dónde estás; dos
+       botones dicen que hay dos botones. */
+    <div className="students-tabs" role="tablist" aria-label="Vistas de alumnos">
+      {[
+        { id: "registro", label: "Registro" },
+        { id: "resenas", label: "Pedir reseñas" },
+      ].map((pestana) => (
+        <button
+          key={pestana.id}
+          type="button"
+          role="tab"
+          aria-selected={vista === pestana.id}
+          className={`students-tab ${vista === pestana.id ? "is-active" : ""}`}
+          onClick={() => setVista(pestana.id)}
+        >
+          {pestana.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (vista === "resenas") {
+    return (
+      <>
+        {pestanas}
+        <PedidosDeResenaView authConfig={authConfig} />
+      </>
+    );
+  }
+
   return (
+    <>
+    {pestanas}
     <section className="admin-card" aria-busy={loading}>
       <div className="admin-card-header spread">
         <div><span className="card-kicker">Registro</span><h3>Alumnos y responsables</h3></div>
@@ -248,6 +291,7 @@ const StudentsView = ({
         </nav>
       )}
     </section>
+    </>
   );
 };
 

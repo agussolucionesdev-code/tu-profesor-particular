@@ -114,6 +114,15 @@ export const fetchStudentById = (id, authConfig, signal) =>
     signal,
   });
 
+/* Los alumnos a los que tiene sentido pedirles una reseña, y el registro de a
+   quién ya se le pidió. El servidor decide quién entra —y sobre todo quién NO,
+   como el que dijo que no— en `backend/src/services/pedidosDeResenaService.js`. */
+export const fetchCandidatosAResena = (params, authConfig, signal) =>
+  apiClient.get("/api/students/candidatos-resena", { ...authConfig, params, signal });
+
+export const updatePedidoDeResena = (id, data, authConfig) =>
+  apiClient.patch(`/api/students/${encodeURIComponent(id)}/pedido-resena`, data, authConfig);
+
 export const fetchAdminNotifications = (params, authConfig, signal) =>
   apiClient.get("/api/notifications", {
     ...authConfig,
