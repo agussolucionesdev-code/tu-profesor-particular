@@ -19,7 +19,9 @@
  * institucional.
  */
 
-import { isConfiguredSocialUrl } from "../utils/socialUrl";
+/* Con extensión: este módulo lo carga `node --test` sin pasar por Vite, y el
+   resolver de Node no completa extensiones. */
+import { isConfiguredSocialUrl } from "../utils/socialUrl.js";
 
 /* El sitio institucional. Es el otro dominio de la misma marca, y desde turnos se
    enlaza en un solo caso: cuando alguien quiere seguir leyendo a Agustín. El desarrollo

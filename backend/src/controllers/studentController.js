@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
 import Student from "../models/Student.js";
 import { normalizeIdentityText } from "../services/studentIdentityService.js";
+import {
+  ESTADOS_DE_RESENA,
+  listarCandidatosAResena,
+  registrarPedidoDeResena,
+} from "../services/pedidosDeResenaService.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -163,6 +168,84 @@ export const getStudentById = async (req, res, next) => {
           yearGrade: booking.yearGrade,
           school: booking.school,
         })),
+      },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/* ── PEDIDO DE RESEÑA ────────────────────────────────────────────────────────
+   La mitad de servidor del mecanismo de la etapa 6. La lógica vive en
+   `pedidosDeResenaService.js`, con el porqué de cada decisión; acá quedan sólo
+   la validación de entrada y la forma de la respuesta. */
+
+export const getCandidatosAResena = async (req, res, next) => {
+  try {
+    const { candidatos, minimoClases } = await listarCandidatosAResena({
+      minimoClases: req.query.minimo,
+      incluirPedidas: req.query.incluirPedidas === "true",
+      limite: req.query.limit,
+    });
+
+    /* `no-store` como el resto de este controlador: son datos de contacto de
+       alumnos y no tienen por qué quedar en ninguna caché intermedia. */
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({
+      success: true,
+      data: candidatos,
+      meta: { minimoClases, total: candidatos.length },
+      requestId: req.requestId,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const updatePedidoDeResena = async (req, res, next) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Identificador de alumno inválido.",
+        requestId: req.requestId,
+      });
+    }
+
+    const { status, notes } = req.body || {};
+    if (!ESTADOS_DE_RESENA.includes(status)) {
+      /* El mensaje enumera los estados válidos porque va a la pantalla del
+         profesor: "estado inválido" no se puede corregir, esto sí. */
+      return res.status(400).json({
+        success: false,
+        message: `Estado inválido. Tiene que ser uno de: ${ESTADOS_DE_RESENA.join(", ")}.`,
+        requestId: req.requestId,
+      });
+    }
+
+    const actualizado = await registrarPedidoDeResena({
+      studentId: req.params.id,
+      status,
+      notes,
+      userId: req.user?._id || req.user?.id || null,
+    });
+
+    if (!actualizado) {
+      return res.status(404).json({
+        success: false,
+        message: "Alumno no encontrado.",
+        requestId: req.requestId,
+      });
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: String(actualizado._id),
+        displayName: actualizado.displayName,
+        reviewRequest: actualizado.reviewRequest,
       },
       requestId: req.requestId,
     });

@@ -1474,3 +1474,225 @@
 [data-theme="dark"] .bottom-nav-drawer-btn:hover { background: rgba(148, 163, 184, 0.06); }
 [data-theme="dark"] .bottom-nav-drawer-btn.is-active { color: #86efac; background: rgba(1, 149, 60, 0.1); }
 [data-theme="dark"] .bottom-nav-drawer-btn.is-active svg { color: #86efac; }
+
+/* ══════════════════════════════════════════════════════
+   PEDIR RESEÑAS
+
+   Vive dentro de "Alumnos" como una segunda pestaña. Todo con tokens: el panel
+   tiene tema claro y oscuro y acá no puede entrar un color fijo.
+
+   TEXTO SECUNDARIO CON --color-text-muted Y NO CON --color-text-soft.
+   `soft` (#747980) da 4.09:1 sobre la superficie de las tarjetas, y AA pide 4.5
+   para texto normal — medido con la pantalla renderizada, no leído del token.
+   `muted` (#53595f) da 7.09:1 y se ve igual de secundario. `soft` sirve para
+   texto grande o decoración; para leer, no.
+════════════════════════════════════════════════════════ */
+
+.students-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.students-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  /* 44px de alto por el blanco táctil: es un control que se toca en el celular. */
+  min-height: 44px;
+  padding: 0 0.9rem;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.students-tab:hover { color: var(--color-text-main); }
+
+.students-tab.is-active {
+  color: var(--color-text-main);
+  border-bottom-color: var(--accent-primary);
+}
+
+.resenas-intro {
+  margin: 0 0 0.9rem;
+  max-width: 62ch;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.resenas-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  font-size: 0.88rem;
+  color: var(--color-text-main);
+  cursor: pointer;
+}
+
+.resenas-filtro input { width: 18px; height: 18px; accent-color: var(--brand-green); }
+
+.resenas-aviso {
+  margin: 0 0 0.8rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  background: var(--color-success-bg);
+  color: var(--color-success-deep);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.resenas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resena-item {
+  padding: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  background: var(--color-bg-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resena-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.resena-item-top strong {
+  display: block;
+  color: var(--color-text-main);
+  font-size: 1rem;
+}
+
+.resena-vinculo {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+/* El número de clases es el dato que decide a quién escribirle primero, así que
+   tiene el mismo peso visual que el contador de turnos del registro. */
+.resena-clases {
+  flex-shrink: 0;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-success-bg);
+  color: var(--color-success-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.resena-detalle,
+.resena-estado,
+.resena-sin-telefono {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.resena-notas {
+  margin: 0;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--accent-primary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--color-text-main);
+}
+
+.resena-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.15rem;
+}
+
+.resena-pedir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* flex-shrink: 0 porque este botón ya se rompió una vez en este proyecto: dentro
+     de un contenedor flex, `min-height` sobrevive y el ancho se achica hasta que el
+     texto se parte en tres líneas. */
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+/* Los dos cierres son BOTONES DE TEXTO, no botones con caja.
+   Con caja, «No quiere» tiene el mismo peso visual que «Escribirle», y la acción
+   destructiva compite con la principal en una lista donde se toca rápido.
+   No se reusa .inline-link-btn, que existe y parece lo indicado: está definida
+   con width:100% para el pie de las tarjetas de alumno, y acá apilaba los tres
+   botones uno debajo del otro. Se vio recién con la pantalla renderizada.
+
+   Mismo motivo por el que el botón de WhatsApp usa .admin-whatsapp-btn: las
+   clases .primary-button y .secondary-button que había puesto NO EXISTEN en
+   ninguna hoja del proyecto, así que se renderizaban como botones del navegador
+   sin estilo — y el que más importa parecía el menos importante. */
+.resena-cerrar {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0.4rem 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.resena-cerrar:hover { color: var(--color-text-main); text-decoration: underline; }
+.resena-cerrar:disabled { opacity: 0.5; cursor: default; }
+
+/* Apenas más oscuro que el otro cierre, no rojo de alerta: lo que se registra es
+   la decisión de una persona, no un borrado peligroso. */
+.resena-no:hover { color: var(--color-error-emphasis, #b42318); }
+
+.resenas-nota {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+  max-width: 62ch;
+}
+
+.resenas-nota h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-main);
+}
+
+.resenas-nota p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.resenas-barra-fin {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
