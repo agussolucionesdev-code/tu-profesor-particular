@@ -13,7 +13,7 @@
       "destination": "/api/preview-proxy?__proxy_path=$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!_vercel).*)",
       "destination": "/index.html"
     }
   ],

@@ -76,8 +76,43 @@ const importeUsable = (valor) => {
 /* Las materias se comparan sin tildes de más ni mayúsculas: el valor llega como texto
    libre desde el paso 1 y también se puede escribir a mano con "Otra materia", así que
    "  física  " y "Física" tienen que ser la misma clase. */
-const clave = (valor) =>
-  typeof valor === "string" ? valor.trim().toLocaleLowerCase("es-AR") : "";
+/* La clave con la que se comparan los nombres de materia.
+ *
+ * ESTO EMPEZÓ COBRANDO DE MENOS. El sitio institucional enlazaba
+ * `/reservar?materia=Matemáticas` —en plural, porque ahí el título de la tarjeta
+ * dice "Matemáticas"— y el kiosco guardaba ese texto tal cual. La excepción de
+ * precios está cargada como "Matemática", en singular, así que la comparación
+ * fallaba y una clase de Secundaria se cotizaba a la tarifa base: $20.000 en
+ * lugar de $25.000. En la materia más pedida, y entrando desde el propio sitio.
+ *
+ * La causa se corrigió en el origen (el institucional ahora manda el nombre
+ * canónico) y en el kiosco (normaliza lo que llega por la URL), pero esta capa
+ * es la que garantiza el precio: los enlaces con el plural ya se compartieron
+ * por WhatsApp y van a seguir existiendo para siempre, y el servidor es el único
+ * lugar donde la tarifa se decide de verdad.
+ *
+ * Normaliza tres cosas, y ninguna más:
+ *   - mayúsculas          "Física"   -> "fisica"
+ *   - tildes y diéresis   "Matemática" -> "matematica"
+ *   - una "s" final       "Matemáticas" -> "matematica"
+ *
+ * La "s" se saca de LOS DOS lados de la comparación, así que las materias que
+ * son plurales de nacimiento —"Ciencias Naturales", "Prácticas Docentes"— se
+ * normalizan igual y siguen coincidiendo consigo mismas.
+ *
+ * Lo que NO hace: distancia de edición ni sinónimos. "Matematica" sin tilde
+ * coincide, "Mate" no. Adivinar de más sería cobrar una tarifa que el alumno no
+ * eligió, y ese error es peor que el que esto viene a arreglar. */
+const clave = (valor) => {
+  if (typeof valor !== "string") return "";
+  const limpio = valor
+    .trim()
+    .toLocaleLowerCase("es-AR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  // Sólo la "s" del final, y sólo si queda algo antes: "s" a secas no es plural.
+  return limpio.length > 1 ? limpio.replace(/s$/, "") : limpio;
+};
 
 const textoUsable = (valor) => {
   const limpio = typeof valor === "string" ? valor.trim() : "";

@@ -117,11 +117,19 @@ const Contact = () => {
               El camino más rápido
             </p>
 
-            <h3 className="display display--lg ct-primary-title">
+            {/* h2 en toda la página, y no h3.
+                El único h1 de /contacto es "Contacto", y estos cinco títulos
+                —este, WhatsApp, Email, Clases presenciales y el formulario— son
+                hermanos que cuelgan directo de él. Con h3 quedaba un salto
+                h1→h3: un lector de pantalla lo anuncia y quien lo usa asume que
+                se perdió una sección entera.
+                El estilo no se mueve: `.ct-primary-title` y `.ct-card-title`
+                fijan tamaño y margen por clase, no por etiqueta. */}
+            <h2 className="display display--lg ct-primary-title">
               Reservá sin
               <br />
               <em>escribirle a nadie</em>
-            </h3>
+            </h2>
 
             <p className="ct-primary-lead">
               El sistema de turnos hace todo solo. No hace falta que me
@@ -171,7 +179,7 @@ const Contact = () => {
                   <FaWhatsapp />
                 </span>
                 <div>
-                  <h3 className="ct-card-title">WhatsApp</h3>
+                  <h2 className="ct-card-title">WhatsApp</h2>
                   <p className="ct-card-sub">{CONTACT.whatsappDisplay}</p>
                 </div>
               </header>
@@ -224,7 +232,7 @@ const Contact = () => {
                   <FaEnvelope />
                 </span>
                 <div>
-                  <h3 className="ct-card-title">Email</h3>
+                  <h2 className="ct-card-title">Email</h2>
                   <p className="ct-card-sub ct-mono">{CONTACT.email}</p>
                 </div>
               </header>
@@ -243,7 +251,7 @@ const Contact = () => {
                   <FaLocationDot />
                 </span>
                 <div>
-                  <h3 className="ct-card-title">Clases presenciales</h3>
+                  <h2 className="ct-card-title">Clases presenciales</h2>
                   <p className="ct-card-sub">
                     {CONTACT.addressLine}
                     <br />
@@ -288,9 +296,9 @@ const Contact = () => {
                 <FaPaperPlane />
               </span>
               <div>
-                <h3 className="ct-card-title" id="ct-form-title">
+                <h2 className="ct-card-title" id="ct-form-title">
                   O dejame tu mensaje acá
-                </h3>
+                </h2>
                 <p className="ct-card-sub">
                   Sin abrir WhatsApp y sin dejar tu teléfono si no querés
                 </p>

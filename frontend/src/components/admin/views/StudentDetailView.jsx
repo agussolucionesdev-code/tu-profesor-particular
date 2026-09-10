@@ -30,7 +30,7 @@ const StudentDetailView = ({
   useEffect(() => { backButtonRef.current?.focus(); }, []);
 
   if (loading) return <section className="student-detail"><button ref={backButtonRef} type="button" className="sd-back-btn" onClick={onBack}><FaArrowLeft aria-hidden="true" /> Volver</button><p role="status" className="admin-view-loading">Cargando perfil…</p></section>;
-  if (error) return <section className="student-detail"><button ref={backButtonRef} type="button" className="sd-back-btn" onClick={onBack}><FaArrowLeft aria-hidden="true" /> Volver</button><div role="alert" className="student-load-error"><p>{error}</p><button type="button" className="secondary-button" onClick={onRetry}>Reintentar</button></div></section>;
+  if (error) return <section className="student-detail"><button ref={backButtonRef} type="button" className="sd-back-btn" onClick={onBack}><FaArrowLeft aria-hidden="true" /> Volver</button><div role="alert" className="student-load-error"><p>{error}</p><button type="button" className="admin-secondary-btn" onClick={onRetry}>Reintentar</button></div></section>;
 
   const isLegacy = Boolean(legacyStudent);
   const student = isLegacy ? {

@@ -241,7 +241,7 @@ const NotificationsView = ({ authConfig }) => {
           <p>{error}</p>
           <button
             type="button"
-            className="secondary-button"
+            className="admin-secondary-btn"
             onClick={() => loadNotifications()}
             aria-label="Reintentar carga"
           >

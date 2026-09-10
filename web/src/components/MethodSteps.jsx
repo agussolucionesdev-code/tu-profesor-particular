@@ -18,24 +18,39 @@ import "./MethodSteps.css";
 
    `compacto` y no dos componentes: el orden, la numeración y los títulos tienen
    que ser los mismos en los dos lugares, y con dos archivos eso se desincroniza
-   en el primer cambio. */
-const MethodSteps = ({ compacto = false }) => (
-  <ol
-    className={`ms-list ${compacto ? "ms-list--compacto" : ""}`.trim()}
-    data-reveal-group="110"
-  >
-    {METHOD.map((step) => (
-      <li key={step.index} className="ms-step" data-reveal="up">
-        <span className="ms-index" aria-hidden="true">
-          {step.index}
-        </span>
-        <div className="ms-body">
-          <h3 className="display display--md ms-title">{step.title}</h3>
-          {!compacto && <p className="ms-desc">{step.desc}</p>}
-        </div>
-      </li>
-    ))}
-  </ol>
-);
+   en el primer cambio.
+
+   EL NIVEL DEL ENCABEZADO ES UN PROP, y no una decisión fija del componente.
+   Este mismo componente vive en dos profundidades distintas:
+
+     Inicio          h1 (hero) → h2 (sección "El mismo recorrido") → PASOS
+     /como-trabajo   h1 ("Un método, no improvisación")            → PASOS
+
+   Con un `<h3>` fijo, el Inicio quedaba bien y /como-trabajo saltaba de h1 a h3
+   —un lector de pantalla anuncia el salto y quien lo usa asume que se perdió una
+   sección—. Cambiarlo a h2 fijo rompía el Inicio al revés. El nivel lo decide
+   quien lo monta, que es el único que sabe dónde está parado. */
+const MethodSteps = ({ compacto = false, nivelDeTitulo = 3 }) => {
+  const Titulo = `h${nivelDeTitulo}`;
+
+  return (
+    <ol
+      className={`ms-list ${compacto ? "ms-list--compacto" : ""}`.trim()}
+      data-reveal-group="110"
+    >
+      {METHOD.map((step) => (
+        <li key={step.index} className="ms-step" data-reveal="up">
+          <span className="ms-index" aria-hidden="true">
+            {step.index}
+          </span>
+          <div className="ms-body">
+            <Titulo className="display display--md ms-title">{step.title}</Titulo>
+            {!compacto && <p className="ms-desc">{step.desc}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+};
 
 export default MethodSteps;

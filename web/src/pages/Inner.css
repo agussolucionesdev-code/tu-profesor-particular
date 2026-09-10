@@ -152,6 +152,11 @@
   color: #fff;
   border-radius: 20px;
 }
+/* h2 y h3: el marcado pasó a h2 —cuelga del h1 de la página, no de un h2— y el
+   selector se deja con los dos para que el estilo no dependa de una etiqueta.
+   Atarlo a un nivel de encabezado es lo que hace que arreglar la jerarquía
+   rompa el diseño en silencio. */
+.subj-extra h2,
 .subj-extra h3 {
   margin: 0 0 0.6rem;
   font-family: var(--font-display);
