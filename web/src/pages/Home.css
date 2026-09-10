@@ -401,3 +401,86 @@
   text-underline-offset: 3px;
 }
 .hp-method-mas a:hover { text-decoration-thickness: 2px; }
+
+/* ── La voz de Agustín en la portada ────────────────────────────────────────
+   Vive en `.section--dark` (navy-800 con tinta blanca), así que todo acá se
+   declara en claro. Los tokens --text y --muted están calibrados contra fondo
+   claro y sobre navy quedan ilegibles. */
+
+.hp-voz { max-width: 68ch; }
+
+.hp-voz-kicker {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-on-dark);
+}
+
+.hp-voz-titulo {
+  margin: 0 0 1.5rem;
+  color: #fff;
+}
+
+.hp-voz-titulo em {
+  font-style: normal;
+  color: var(--green-on-dark);
+}
+
+.hp-voz-cuerpo { display: grid; gap: 0.9rem; margin-bottom: 2rem; }
+
+.hp-voz-cita {
+  margin: 0;
+  padding-left: 1.1rem;
+  border-left: 3px solid var(--green-on-dark);
+  font-size: clamp(1.02rem, 2.2vw, 1.2rem);
+  line-height: 1.55;
+  color: #fff;
+}
+
+.hp-voz-prueba {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* La frase de los alumnos, con jerarquía propia: es una cita ajena dentro de un
+   bloque en primera persona, y esa diferencia tiene que verse antes de leerla. */
+.hp-voz-dolor {
+  padding: clamp(1.2rem, 3vw, 1.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.hp-voz-dolor-intro {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.hp-voz-dolor-frase {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.hp-voz-dolor-respuesta {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* El enlace hereda .hp-method-mas, que está pensado para fondo claro. */
+.section--dark .hp-method-mas a { color: var(--green-on-dark); }

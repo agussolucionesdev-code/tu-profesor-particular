@@ -192,3 +192,246 @@
   gap: 0.75rem;
   margin: 1.25rem 0 0;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LA VOZ DE AGUSTÍN — bloques de /sobre-mi
+
+   Regla de color de este archivo: `.section--dark` pinta `--navy-800` y tinta
+   blanca, así que TODO lo que viva ahí adentro necesita su variante clara. Los
+   tokens `--text` y `--muted` están calibrados contra fondo claro; sobre navy
+   quedan ilegibles. Por eso cada regla de acá tiene su par bajo
+   `.section--dark`, y no es repetición: es la única forma de que los dos fondos
+   funcionen sin depender de qué sección lo envuelva.
+══════════════════════════════════════════════════════════════════════════ */
+
+.voz-bloque {
+  display: grid;
+  gap: 1.1rem;
+  max-width: 62ch;
+}
+
+/* Las citas van en cuerpo grande y con una barra a la izquierda: son la persona
+   hablando, no texto de la página. La distinción tiene que verse antes de leer. */
+.voz-cita {
+  margin: 0;
+  padding-left: 1.1rem;
+  border-left: 3px solid var(--green);
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.05rem, 2.2vw, 1.28rem);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.section--dark .voz-cita {
+  border-left-color: var(--green-on-dark);
+  color: #fff;
+}
+
+.voz-firma,
+.voz-prueba {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.section--dark .voz-firma,
+.section--dark .voz-prueba {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ── El bloque del dolor ──────────────────────────────────────────────────
+   Es el momento de más peso de la página, así que se le da aire y jerarquía
+   propia. Las frases van grandes y solas: son citas de alumnos y tienen que
+   leerse como tales, no como una lista de viñetas. */
+.voz-dolor {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--off);
+}
+
+.voz-dolor-intro {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.voz-dolor-lista {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.voz-dolor-lista li {
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--navy);
+}
+
+/* Las comillas se dibujan en CSS y no se escriben en el texto: así el contenido
+   del archivo de datos queda limpio para reusar en otro lado. */
+.voz-dolor-lista li::before { content: "«"; }
+.voz-dolor-lista li::after { content: "»"; }
+
+.voz-dolor-respuesta {
+  margin: 0;
+  max-width: 58ch;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+/* ── El caso ──────────────────────────────────────────────────────────────
+   Va en tarjeta para separarlo del resto: es una historia, no un argumento. */
+.voz-caso {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--white);
+}
+
+.voz-caso h3 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.15rem, 2.6vw, 1.45rem);
+  line-height: 1.25;
+  color: var(--navy);
+}
+
+.voz-caso-entrada {
+  margin: 0 0 1.2rem;
+  max-width: 60ch;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.voz-caso-metodo {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 1.2rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cada paso del método arranca con una marca verde: son acciones concretas y
+   verificables, no promesas, y conviene que se lean como un checklist. */
+.voz-caso-metodo li {
+  position: relative;
+  padding-left: 1.6rem;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.voz-caso-metodo li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.voz-caso-cierre {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* ── Los pasos de la primera clase ────────────────────────────────────────── */
+.voz-pasos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.1rem;
+  margin: 0 0 1.6rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.voz-pasos li {
+  padding: 1.15rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.voz-paso-num {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display, inherit);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--green-deep);
+}
+
+.voz-pasos h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  line-height: 1.3;
+  color: var(--navy);
+}
+
+.voz-pasos p {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.voz-puerta {
+  max-width: 62ch;
+  margin: 0;
+  padding-left: 1.1rem;
+  border-left: 3px solid var(--green);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+/* ── Formación ────────────────────────────────────────────────────────────
+   Lista seca a propósito: respalda, no convence. Quien llegó hasta acá ya
+   decidió con lo de arriba. */
+.voz-formacion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voz-formacion li {
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--green);
+  background: var(--white);
+  border-radius: 0 12px 12px 0;
+}
+
+.voz-formacion h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--navy);
+}
+
+.voz-formacion p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--muted);
+}

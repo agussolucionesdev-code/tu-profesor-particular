@@ -83,5 +83,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npm run lint
-      # Todavía no tiene tests. El build es la única verificación disponible.
+      # Los tests de `web/` protegen sobre todo los LÍMITES de lo publicable: que no
+      # salga a la web ningún dato que identifique a una alumna menor, ni lo que
+      # Agustín pidió dejar afuera. Van ANTES del build a propósito: si algo de eso se
+      # filtró, no hay que desplegar.
+      - run: npm test
       - run: npm run build

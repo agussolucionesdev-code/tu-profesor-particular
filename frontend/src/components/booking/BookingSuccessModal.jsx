@@ -161,6 +161,20 @@ const BookingSuccessModal = ({
               ? "Agustín revisará la solicitud. Mientras tanto, guardá este comprobante y tu código de gestión."
               : "Este es tu comprobante. Guardá el código para gestionar cualquier cambio de forma segura."}
           </p>
+          {/* LA VOZ DE AGUSTÍN EN EL PICO EMOCIONAL DEL FLUJO.
+              Este es el «final» de la experiencia: la persona acaba de comprometer
+              plata y un horario, y todavía no conoce a nadie. Es el momento de mayor
+              carga y el que más se recuerda de todo el recorrido.
+
+              Es textual de sus audios, respondiendo qué le dice a una madre angustiada.
+              Va acá y no en el cuerpo del comprobante para que sea lo primero que se lee
+              después del título: el resto —código, fecha, hora— es logística, y la
+              logística no tranquiliza a nadie. */}
+          <p className="success-voz">
+            «Quedate tranquila: llegaste al lugar correcto.»
+            <span>Agustín</span>
+          </p>
+
           <div className="success-header-facts">
             <span>
               <FaCalendarAlt aria-hidden="true" /> {successData?.day}
