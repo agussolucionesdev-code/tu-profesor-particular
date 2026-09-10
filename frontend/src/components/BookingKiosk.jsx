@@ -64,6 +64,7 @@ import {
   PARA_MI,
   vozDelWizard,
 } from "../constants/kioskVoz";
+import { NO_PUEDO_AYUDARTE } from "../constants/voz";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
@@ -1140,6 +1141,31 @@ const BookingKiosk = () => {
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s4-title">
             <h1 id="kiosk-s4-title" className="kiosk-title" tabIndex={-1}>{voz.datosTitulo}</h1>
             <p className="kiosk-subtitle">Solo lo necesario para confirmar y avisarte.</p>
+
+            {/* LA VOZ DE AGUSTÍN, UNA SOLA VEZ EN TODO EL FLUJO, Y ACÁ.
+
+                Este es el paso donde más gente se cae: hasta recién elegías
+                opciones —reversible, anónimo, sin costo—; a partir de este campo
+                estás entregando el nombre de tu hijo y tu teléfono. Cambia la
+                naturaleza de lo que se pide, y es exactamente donde alguien que
+                no conoce al profesor cierra la pestaña.
+
+                Contra eso no sirve otro argumento de servicio: todos los de
+                arriba ya se leyeron. Sirve saber QUIÉN está del otro lado. Y de
+                todo el material que grabó, esta es la frase que más confianza
+                construye, porque va en contra de su propio interés comercial:
+                alguien que avisa cuándo NO puede ayudarte es alguien a quien le
+                creés cuando dice que sí.
+
+                Es textual, sale de `constants/voz.js`, y es la misma que publica
+                el sitio institucional en /sobre-mi. Un solo momento: dos serían
+                un folleto en medio de un formulario. */}
+            <figure className="kiosk-voz">
+              <blockquote className="kiosk-voz-cita">{NO_PUEDO_AYUDARTE}</blockquote>
+              <figcaption className="kiosk-voz-firma">
+                Agustín, tu profesor
+              </figcaption>
+            </figure>
 
             <div className="kiosk-form-grid">
               <label className="kiosk-field">

@@ -134,10 +134,17 @@ test("el caso publica MÉTODO verificable, no emoción", () => {
   assert.ok(EL_CASO.metodo.length >= 5);
 });
 
-test("los años de experiencia son diez, no ocho", () => {
-  /* Empezó a los 17 y tiene 27: el número se deriva de dos datos que él dio, no de
-     que alguien se acuerde. Decía 8 y subdeclaraba dos años. */
-  assert.equal(BRAND.yearsTeaching, 10);
+test("los años de experiencia son nueve, y el texto no dice otro número", () => {
+  /* Se deriva de dos datos que dio él: empezó FORMALMENTE entre los 17 y los 18, y hoy
+     tiene 27. Nueve y no diez porque el redondeo para arriba, en el dato más fácil de
+     contrastar que tiene la marca, es donde menos conviene exagerar. Venía diciendo 8,
+     que subdeclaraba. */
+  assert.equal(BRAND.yearsTeaching, 9);
+
+  /* Y el riesgo real de este cambio: que el número quede en 9 y alguna cita siga
+     diciendo «a los diecisiete» a secas, que implica diez. Las dos frases tienen que
+     poder leerse juntas sin que una desmienta a la otra. */
+  assert.match(POR_QUE_ENSENO.origen, /entre los diecisiete y los dieciocho/);
 });
 
 test("Inglés ya no promete conversación", () => {

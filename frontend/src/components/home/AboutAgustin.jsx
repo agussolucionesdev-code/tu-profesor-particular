@@ -3,14 +3,27 @@ import { Link } from "react-router-dom";
 import { FaArrowRight, FaWhatsapp } from "react-icons/fa";
 import SectionHead from "./SectionHead";
 import Magnetic from "../ui/Magnetic";
+import { ANOS_ENSENANDO } from "../../constants/voz";
 import agustinPhoto from "../../assets/images/agustin-hero.webp";
 import "./AboutAgustin.css";
 
 /* "Quién es Agustín". Contenido real: materias y niveles salen del propio sitio,
-   el enfoque es el mensaje central de la marca, y los +8 años los confirmó
-   Agustín. Sin título/credenciales inventadas (no fue parte de lo elegido). */
+   y el enfoque es el mensaje central de la marca. Sin título ni credenciales
+   inventadas (no fue parte de lo elegido).
+
+   LOS AÑOS NO SE ESCRIBEN ACÁ. Estaban a mano —«+8» en el stat y «más de 8 años»
+   en la bio— mientras el sitio institucional decía otro número. Los dos dominios
+   de la misma marca se contradecían en producción sobre el dato más fácil de
+   verificar que tiene, y nadie lo iba a notar: hay que abrir las dos pestañas al
+   lado y compararlas. Ahora salen de `constants/voz.js`, y
+   `web/tests/vozCompartida.test.js` verifica que los dos proyectos coincidan. */
 const STATS = [
-  { value: "+8", count: 8, prefix: "+", label: "años acompañando alumnos" },
+  {
+    value: `+${ANOS_ENSENANDO}`,
+    count: ANOS_ENSENANDO,
+    prefix: "+",
+    label: "años acompañando alumnos",
+  },
   { value: "5+", count: 5, suffix: "+", label: "materias principales, y más a consultar" },
   { value: "Todos", label: "los niveles, de primaria a universitario" },
 ];
@@ -99,8 +112,8 @@ const AboutAgustin = () => (
         <div className="hp-about-copy">
           <p className="hp-about-bio" data-reveal="up">
             Doy clases particulares de Matemáticas, Física, Fisicoquímica,
-            Química e Inglés, entre otras. Hace más de 8 años acompaño a
-            estudiantes de primaria, secundaria, secundaria técnica y
+            Química e Inglés, entre otras. Hace más de {ANOS_ENSENANDO} años
+            acompaño a estudiantes de primaria, secundaria, secundaria técnica y
             universitario. Mi forma de enseñar es simple: que{" "}
             <b>entiendas de verdad, no que memorices para zafar.</b> Cada clase
             tiene orden, cercanía y un plan pensado para vos.

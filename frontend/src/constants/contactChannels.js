@@ -21,6 +21,13 @@
 
 import { isConfiguredSocialUrl } from "../utils/socialUrl";
 
+/* El sitio institucional. Es el otro dominio de la misma marca, y desde turnos se
+   enlaza en un solo caso: cuando alguien quiere seguir leyendo a Agustín. El desarrollo
+   largo de su voz vive allá, en `/sobre-mi`; acá sólo entra el fragmento que ayuda a
+   decidir. Duplicar el contenido haría competir a las dos páginas por lo mismo. */
+export const SITIO_INSTITUCIONAL = "https://tuprofesorparticular.com.ar";
+export const SOBRE_MI_URL = `${SITIO_INSTITUCIONAL}/sobre-mi`;
+
 export const WHATSAPP_NUMBER = "5491133365937";
 export const WHATSAPP_DISPLAY = "+54 9 11 3336-5937";
 export const CONTACT_EMAIL = "agustinsosa.profe@gmail.com";

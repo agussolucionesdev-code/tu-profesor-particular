@@ -36,6 +36,12 @@ import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
 import FaqSection from "../components/home/FaqSection";
 import SectionHead from "../components/home/SectionHead";
 import SectionRail from "../components/home/SectionRail";
+import { SOBRE_MI_URL } from "../constants/contactChannels";
+import {
+  AUTONOMIA_CITA,
+  AUTONOMIA_PRUEBA,
+  LO_QUE_SE_ESCUCHAN,
+} from "../constants/voz";
 import { getSubjectIcon } from "../constants/subjectIcons";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
 import agustinHero from "../assets/images/agustin-hero.webp";
@@ -512,6 +518,59 @@ const HomePage = () => {
           QUIÉN ES AGUSTÍN (presentación temprana, tras mostrar lo fácil que es)
       ════════════════════════════════════════ */}
       <AboutAgustin />
+
+      {/* ════════════════════════════════════════
+          LA VOZ DE AGUSTÍN
+
+          Va inmediatamente después de "Quién es Agustín" y antes de las materias,
+          porque ahí termina la presentación y empieza el catálogo: es el último
+          momento en que quien lee todavía está pensando en la PERSONA.
+
+          Sin número de sección, igual que en el sitio institucional: no es un
+          capítulo más del recorrido, es un corte.
+
+          El texto sale de `constants/voz.js` y es byte a byte el mismo que publica
+          `tuprofesorparticular.com.ar`. `web/tests/vozCompartida.test.js` lo verifica
+          leyendo los dos proyectos: si alguien edita una copia y no la otra, CI
+          frena el deploy.
+
+          El desarrollo largo NO se duplica acá — se enlaza a /sobre-mi. Duplicarlo
+          es el error que ya hizo competir entre sí a dos páginas del institucional.
+      ════════════════════════════════════════ */}
+      <section className="hp-section hp-section--dark" aria-labelledby="hp-voz-title">
+        <div className="hp-section-inner hp-voz">
+          <p className="hp-voz-kicker">En primera persona</p>
+          <h2 id="hp-voz-title" className="hp-voz-titulo">
+            Mi meta es que <em>dejes de necesitarme</em>
+          </h2>
+
+          <div className="hp-voz-cuerpo" data-reveal="up">
+            <p className="hp-voz-cita">{AUTONOMIA_CITA}</p>
+            <p className="hp-voz-prueba">{AUTONOMIA_PRUEBA}</p>
+          </div>
+
+          {/* La frase que dicen los alumnos de sí mismos. Es el material más
+              potente de la marca: quien la lee ya se la escuchó decir a su hijo.
+              Va en caja aparte porque es una cita AJENA dentro de un bloque en
+              primera persona, y esa diferencia tiene que verse antes de leerla. */}
+          <div className="hp-voz-dolor" data-reveal="up">
+            <p className="hp-voz-dolor-intro">Lo que más escucho:</p>
+            <p className="hp-voz-dolor-frase">«{LO_QUE_SE_ESCUCHAN[0]}»</p>
+            <p className="hp-voz-dolor-respuesta">
+              Eso no describe una capacidad. Describe un tema anterior que quedó
+              flojo y a nadie se le ocurrió volver a mirar.
+            </p>
+          </div>
+
+          <p className="hp-voz-mas" data-reveal="up">
+            <a href={SOBRE_MI_URL} target="_blank" rel="noopener noreferrer">
+              Conocé más a Agustín
+              <FaArrowRight aria-hidden="true" />
+              <span className="sr-only">(se abre en una pestaña nueva)</span>
+            </a>
+          </p>
+        </div>
+      </section>
 
       {/* ════════════════════════════════════════
           MATERIAS — índice editorial
