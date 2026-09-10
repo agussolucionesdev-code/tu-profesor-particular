@@ -35,11 +35,12 @@ export const BRAND = {
   person: "Agustín Elías Sosa",
   tagline: "Juntos, despejando el camino a la meta.",
   claim: "Entendé de verdad, no de memoria",
-  /* Diez, no ocho. Empezó a los 17 y hoy tiene 27 — lo dijo él mismo, con las dos
-     edades, así que el número se puede derivar y no depende de que alguien se acuerde.
-     Decía 8 y estaba subdeclarando dos años de experiencia: una credencial no puede
-     estar mal ni para abajo. */
-  yearsTeaching: 10,
+  /* Nueve, no ocho. Y nueve y no diez, por precisión del propio Agustín: empezó a dar
+     clases FORMALMENTE entre los 17 y los 18, y hoy tiene 27. Diez sería redondear para
+     arriba, y una credencial conservadora y exacta pesa más que una inflada — sobre todo
+     ésta, que cualquiera puede contrastar con las dos edades.
+     Venía diciendo 8, que subdeclaraba un año. */
+  yearsTeaching: 9,
 };
 
 export const SUBJECTS = [

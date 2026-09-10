@@ -50,7 +50,7 @@ export const POR_QUE_ENSENO = {
   /* El origen, con los dos números para que la cuenta la pueda hacer cualquiera.
      Un dato verificable pesa más que «amplia trayectoria». */
   origen:
-    "Empecé a dar clases particulares a los diecisiete, un año antes de recibirme de técnico químico. Hoy tengo veintisiete.",
+    "Empecé a dar clases particulares entre los diecisiete y los dieciocho, más o menos cuando me estaba recibiendo de técnico químico. Hoy tengo veintisiete.",
   parrafos: [
     {
       cita: "Me fascina enseñar. Me apasiona enseñar. Me llena enseñar.",

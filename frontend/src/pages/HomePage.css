@@ -1446,3 +1446,122 @@
   .hp-web-banner    { gap: 8px; }
   .hp-ticker-item   { padding: 0 18px; font-size: 13px; }
 }
+
+/* ════════════════════════════════════════════════════
+   LA VOZ DE AGUSTÍN
+
+   Vive dentro de `.hp-section--dark` (navy-800, estable en los dos temas), así
+   que TODO acá se declara en claro y a mano. Los tokens de texto del proyecto
+   están calibrados contra fondo claro: usarlos acá da texto oscuro sobre navy.
+   Es exactamente el bug que ya apareció dos veces en este archivo.
+
+   Los nombres de clase son los mismos que en `web/src/pages/Home.css` a
+   propósito: es el mismo bloque en los dos dominios, y quien edite uno tiene
+   que reconocer el otro sin buscar.
+════════════════════════════════════════════════════ */
+
+.hp-voz { max-width: 68ch; }
+
+.hp-voz-kicker {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-on-dark);
+}
+
+.hp-voz-titulo {
+  margin: 0 0 1.5rem;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.75rem, 4.4vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+/* El <em> marca la idea, no un énfasis tipográfico: la bastardilla sobre navy
+   pierde legibilidad, y el color ya hace el trabajo. */
+.hp-voz-titulo em {
+  font-style: normal;
+  color: var(--green-on-dark);
+}
+
+.hp-voz-cuerpo { display: grid; gap: 0.9rem; margin-bottom: 2rem; }
+
+.hp-voz-cita {
+  margin: 0;
+  padding-left: 1.1rem;
+  border-left: 3px solid var(--green-on-dark);
+  font-size: clamp(1.02rem, 2.2vw, 1.2rem);
+  line-height: 1.55;
+  color: #fff;
+}
+
+.hp-voz-prueba {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hp-voz-dolor {
+  padding: clamp(1.2rem, 3vw, 1.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.hp-voz-dolor-intro {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.hp-voz-dolor-frase {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.hp-voz-dolor-respuesta {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Blanco táctil de 44px por el enlace, sin que el padding descoloque el texto
+   respecto de la columna: por eso el negativo a la izquierda. */
+.hp-voz-mas { margin: 0; }
+
+.hp-voz-mas a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem 0.55rem 0;
+  font-weight: 700;
+  color: var(--green-on-dark);
+  text-decoration: none;
+}
+
+.hp-voz-mas a:hover,
+.hp-voz-mas a:focus-visible { text-decoration: underline; }
+
+.hp-voz-mas a svg { transition: transform 0.18s ease; }
+.hp-voz-mas a:hover svg { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-voz-mas a svg { transition: none; }
+  .hp-voz-mas a:hover svg { transform: none; }
+}

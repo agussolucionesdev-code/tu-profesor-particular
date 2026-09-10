@@ -1437,3 +1437,41 @@
   .kiosk-stepper { border: 2px solid CanvasText; }
   .kiosk-choice-card.kiosk-visual-card.is-selected { outline: 3px solid Highlight; }
 }
+
+/* ── La voz de Agustín, en el paso de los datos ──────────────────────────────
+   Un solo bloque en todo el flujo. Está justificado en detalle en el JSX.
+
+   Deliberadamente CONTENIDO: es una pausa en un formulario, no una sección de
+   portada. Sin foto, sin caja de color, sin ícono. La barra verde a la izquierda
+   —el mismo recurso que usa el bloque de voz de las dos portadas— alcanza para
+   señalar "acá habla una persona" sin robarle jerarquía a los campos, que es lo
+   que hay que completar.
+
+   Todo con tokens: este panel vive dentro de `.kiosk-card`, que es la que trae
+   el fondo oscuro en tema oscuro, así que nada acá puede tener color fijo.
+──────────────────────────────────────────────────────────────────────────── */
+.kiosk-voz {
+  margin: 0 0 1.25rem;
+  padding: 0.15rem 0 0.15rem 1rem;
+  /* --accent-primary y no --brand-green: el verde de marca es fijo y en tema
+     oscuro pierde contra el fondo del panel. accent-primary sigue el tema. */
+  border-left: 3px solid var(--accent-primary);
+}
+
+.kiosk-voz-cita {
+  margin: 0 0 0.45rem;
+  max-width: 56ch;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  /* --text-primary y no secondary: es una cita, tiene que leerse como el
+     contenido más importante del bloque, no como una nota al pie. */
+  color: var(--text-primary);
+}
+
+.kiosk-voz-firma {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
