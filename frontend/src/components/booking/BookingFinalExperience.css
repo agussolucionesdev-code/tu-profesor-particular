@@ -363,6 +363,32 @@
   line-height: 1.55;
 }
 
+/* La frase de Agustín en el comprobante.
+   El encabezado del comprobante es oscuro (tinta blanca al 76%), así que esto se
+   declara en claro y con más presencia que el copy de al lado: es lo único de la
+   pantalla que dice una persona y no el sistema. */
+.success-voz {
+  max-width: 46ch;
+  margin: 0.9rem 0 0;
+  padding-left: 0.85rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.success-voz span {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
 .success-header-facts {
   display: flex;
   flex-wrap: wrap;

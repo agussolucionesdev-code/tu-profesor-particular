@@ -35,7 +35,11 @@ export const BRAND = {
   person: "Agustín Elías Sosa",
   tagline: "Juntos, despejando el camino a la meta.",
   claim: "Entendé de verdad, no de memoria",
-  yearsTeaching: 8,
+  /* Diez, no ocho. Empezó a los 17 y hoy tiene 27 — lo dijo él mismo, con las dos
+     edades, así que el número se puede derivar y no depende de que alguien se acuerde.
+     Decía 8 y estaba subdeclarando dos años de experiencia: una credencial no puede
+     estar mal ni para abajo. */
+  yearsTeaching: 10,
 };
 
 export const SUBJECTS = [
@@ -83,9 +87,18 @@ export const SUBJECTS = [
     slug: "ingles",
     label: "Inglés",
     tagline: "No es talento. Es método.",
-    hook: "Y el miedo a hablar se trabaja, no se espera.",
+    /* ACÁ HABÍA UNA PROMESA QUE AGUSTÍN NO CUMPLE, y estuvo publicada.
+       Decía «el miedo a hablar se trabaja, no se espera» y ofrecía «práctica oral».
+       Sus palabras textuales: «yo NO enseño a hablar inglés ni mucho menos… no es la
+       idea de salir hablando en inglés, porque no enseño inglés de esa forma».
+       Alguien reservaba esperando soltarse a hablar y en la primera clase se encontraba
+       con gramática: una reserva que después hay que cancelar, que es exactamente lo
+       que este archivo dice que hay que evitar.
+       Aclararlo no achica la oferta: filtra al alumno equivocado antes de que reserve,
+       y le da confianza al que sí necesita esto. */
+    hook: "Lo que se rinde es gramática y comprensión. Eso es lo que trabajamos.",
     detail:
-      "Gramática, comprensión de texto y práctica oral, al ritmo de lo que necesitás rendir o usar.",
+      "Reglas gramaticales, comprensión de lectura y dictados, de primaria a universitario. No es un curso de conversación: no vas a salir hablando, vas a entender cómo funciona el idioma y a rendir bien.",
     color: "#1e3a5f",
     ink: "#8ab6de",
   },

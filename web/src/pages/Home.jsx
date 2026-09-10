@@ -23,6 +23,7 @@ import {
   SUBJECTS,
   waLink,
 } from "../data/site.js";
+import { LA_AUTONOMIA, LO_QUE_SE_ESCUCHAN } from "../data/voz.js";
 import agustin from "../assets/agustin.webp";
 import "./Home.css";
 
@@ -220,6 +221,47 @@ const Home = () => {
           <p className="hp-method-mas" data-reveal="up">
             <Link to="/como-trabajo">
               Cómo funciona cada paso
+              <FaArrowRight aria-hidden="true" />
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* ── La voz de Agustín ─────────────────────────────────────────────────
+          Un solo momento en la portada, y va acá a propósito: recién se explicó
+          CÓMO trabaja, y este es el pivote al POR QUÉ. Es lo único de la página
+          que la competencia no puede copiar, porque son sus palabras.
+
+          Va sin número de sección: no es un capítulo más del recorrido, es un
+          corte. El desarrollo completo vive en /sobre-mi y desde acá se enlaza,
+          en lugar de duplicarlo —que es el error que ya hizo competir entre sí a
+          la portada y a /como-trabajo por el mismo contenido—. */}
+      <section className="section section--dark" aria-labelledby="home-voz">
+        <div className="shell hp-voz">
+          <p className="hp-voz-kicker">En primera persona</p>
+          <h2 id="home-voz" className="display display--md hp-voz-titulo">
+            Mi meta es que <em>dejes de necesitarme</em>
+          </h2>
+
+          <div className="hp-voz-cuerpo" data-reveal="up">
+            <p className="hp-voz-cita">{LA_AUTONOMIA.citas[0]}</p>
+            <p className="hp-voz-prueba">{LA_AUTONOMIA.prueba}</p>
+          </div>
+
+          {/* La frase que dicen los alumnos. Es el material más potente del sitio:
+              quien lo lee ya se lo escuchó decir a su hijo. */}
+          <div className="hp-voz-dolor" data-reveal="up">
+            <p className="hp-voz-dolor-intro">Lo que más escucho:</p>
+            <p className="hp-voz-dolor-frase">«{LO_QUE_SE_ESCUCHAN[0]}»</p>
+            <p className="hp-voz-dolor-respuesta">
+              Eso no describe una capacidad. Describe un tema anterior que quedó
+              flojo y a nadie se le ocurrió volver a mirar.
+            </p>
+          </div>
+
+          <p className="hp-method-mas" data-reveal="up">
+            <Link to="/sobre-mi">
+              Conocé a Agustín
               <FaArrowRight aria-hidden="true" />
             </Link>
           </p>
