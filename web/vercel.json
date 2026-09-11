@@ -2,6 +2,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.tuprofesorparticular.com.ar"
+        }
+      ],
+      "destination": "https://tuprofesorparticular.com.ar/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!_vercel).*)",
