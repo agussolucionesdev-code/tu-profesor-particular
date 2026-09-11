@@ -11,7 +11,11 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npm.cmd run dev -- --host 127.0.0.1 --port 4173",
+    /* `npm` y no `npm.cmd`: Playwright lanza el comando con shell, así que en
+       Windows resuelve igual a npm.cmd, pero `npm.cmd` literal no existe en
+       Linux. Con el nombre fijado a Windows estos specs no podían correr en el
+       CI de ubuntu, y por eso nunca corrieron en ningún lado salvo a mano. */
+    command: "npm run dev -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: true,
     timeout: 90_000,

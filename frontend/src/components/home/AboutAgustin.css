@@ -70,8 +70,13 @@
 }
 
 .hp-about-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+/* 44px de WCAG 2.5.5: con el padding actual daba 40 de alto. Es el CTA a
+   WhatsApp del bloque de Agustín, o sea un blanco táctil de verdad y no un
+   enlace suelto dentro de un párrafo: la excepción de "enlace en línea" no lo
+   cubre. Lo encontró el barrido automático, no el manual. */
 .hp-about-wp {
   display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px;
   font-size: 14.5px; font-weight: 800;
   color: var(--green);
   text-decoration: none;

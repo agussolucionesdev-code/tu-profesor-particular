@@ -108,13 +108,27 @@
   color: rgb(180, 195, 215) !important;
 }
 
-/* Día seleccionado: contraste fuerte y reconocible al instante */
+/* Día seleccionado: contraste fuerte y reconocible al instante.
+
+   Decía «contraste fuerte» y era justamente el que no llegaba. `--brand-green`
+   es #01953c y con texto blanco encima da **3.91:1**, por debajo del 4.5 que
+   pide AA para 14.4px. El número del día elegido —el dato que confirma qué
+   reservaste— era el único texto de los dos sitios que no alcanzaba el mínimo.
+
+   El valor correcto ya estaba a mano: `tokens.css` documenta desde hace tiempo
+   que #01953c da 3.91:1 y que sobre fondo sólido va la rampa numerada. De hecho
+   `KioskSlotCalendar.css` YA usa el par `--cta-solid-bg`/`--cta-solid-ink`; lo
+   que pasaba es que estos `!important` se lo pisaban desde acá.
+
+   Con el par: 6.55:1 en claro. Y como el par se invierte por tema, deja de
+   depender de un verde fijo. El borde va un escalón más oscuro que el fondo
+   para que no desaparezca ahora que el fondo bajó de luminancia. */
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: var(--brand-green, #01953c) !important;
-  color: var(--brand-white) !important;
+  background: var(--cta-solid-bg) !important;
+  color: var(--cta-solid-ink) !important;
   font-weight: 900 !important;
-  border: 2px solid var(--brand-green-deep, #006d1f) !important;
+  border: 2px solid var(--cta-solid-bg-hover, #004b04) !important;
   box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
   transform: scale(1.05) !important;
 }
