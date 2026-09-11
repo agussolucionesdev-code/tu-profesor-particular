@@ -158,6 +158,7 @@ const BookingKiosk = () => {
     handleChange,
     resetForm,
     getFieldStateClass,
+    getFieldError,
   } = useBookingWizard(showToast, prefill);
 
   /* Para quién es la clase. `null` = todavía no se preguntó, y es un estado propio a
@@ -358,12 +359,32 @@ const BookingKiosk = () => {
   const canProceedContact =
     isPersonalInfoComplete && isValidField("yearGrade") && isValidField("objective");
 
+  /* Cada intento de avanzar con datos incompletos manda el foco al primer campo
+     que falla. Corre en un efecto porque los `aria-invalid` recién existen
+     después del commit del re-render que dispara el intento. */
+  const [intentosFallidos, setIntentosFallidos] = useState(0);
+  useEffect(() => {
+    if (!intentosFallidos) return;
+    cardRef.current?.querySelector('[aria-invalid="true"]')?.focus();
+  }, [intentosFallidos]);
+
   const submitContact = () => {
     if (!canProceedContact) {
       setHasAttemptedNext(true);
-      showToast("Revisá los campos resaltados para continuar.", "error", {
+      /* Antes decía «revisá los campos resaltados». "Resaltado" sólo existe en el
+         color: quien no lo ve escuchaba el aviso sin manera de saber cuáles eran.
+         Ahora cada campo dice su motivo al lado, y el mensaje manda a leerlos. */
+      showToast("Cada campo que falta dice abajo qué necesita.", "error", {
         title: "Faltan datos",
       });
+      /* Y además el foco va al primero que falla: sin eso hay que recorrer el
+         formulario entero a ciegas para encontrarlo. Va por un contador y no
+         acá mismo porque los `aria-invalid` los pinta el re-render que este
+         `setHasAttemptedNext` acaba de encolar —buscarlos ahora, o dentro de un
+         requestAnimationFrame, los busca antes de que existan—. El contador
+         sube en cada intento fallido, no un booleano, para que el segundo
+         intento seguido también mueva el foco. */
+      setIntentosFallidos((n) => n + 1);
       return;
     }
     setHasAttemptedNext(false);
@@ -606,6 +627,38 @@ const BookingKiosk = () => {
     error: { icon: <FaTimesCircle />, title: "Revisá esto" },
     info: { icon: <FaInfoCircle />, title: "Info" },
   }[toast.type || "info"];
+
+  /* El error de cada campo, en texto, o null si todavía no corresponde mostrarlo.
+
+     El toast dice «revisá los campos resaltados», y "resaltado" es una propiedad
+     que sólo existe en el color: quien no lo ve no tiene manera de saber cuáles
+     son. Estas tres piezas —el texto al lado del campo, `aria-invalid` y
+     `aria-describedby`— hacen que el motivo llegue leyendo, no mirando. */
+  const erroresDeCampo = {
+    studentName: getFieldError("studentName"),
+    phone: getFieldError("phone"),
+    email: getFieldError("email", true),
+    yearGrade: getFieldError("yearGrade"),
+    responsibleName: getFieldError("responsibleName"),
+    responsibleRelationship: getFieldError("responsibleRelationship"),
+    responsibleRelationshipOther: getFieldError("responsibleRelationshipOther"),
+    objective: getFieldError("objective"),
+  };
+
+  const propsDeError = (campo) =>
+    erroresDeCampo[campo]
+      ? { "aria-invalid": true, "aria-describedby": `kiosk-err-${campo}` }
+      : {};
+
+  /* Función y no componente: declarar un componente dentro del render le cambia
+     la identidad en cada pasada y React remonta el nodo, que en un `role="alert"`
+     significa que el lector de pantalla vuelve a anunciarlo mientras se tipea. */
+  const mensajeDeError = (campo) =>
+    erroresDeCampo[campo] ? (
+      <span id={`kiosk-err-${campo}`} className="kiosk-field-error" role="alert">
+        {erroresDeCampo[campo]}
+      </span>
+    ) : null;
 
   return (
     <div className="kiosk-wrapper">
@@ -1190,7 +1243,10 @@ const BookingKiosk = () => {
                   onChange={handleChange}
                   placeholder="Nombre y apellido"
                   autoComplete={voz.autoCompleteAlumno}
+                  required
+                  {...propsDeError("studentName")}
                 />
+                {mensajeDeError("studentName")}
               </label>
 
               <label className="kiosk-field">
@@ -1203,7 +1259,10 @@ const BookingKiosk = () => {
                   onChange={handleChange}
                   placeholder="+54 9 11 1234 5678"
                   autoComplete="tel"
+                  required
+                  {...propsDeError("phone")}
                 />
+                {mensajeDeError("phone")}
               </label>
 
               <label className="kiosk-field">
@@ -1216,7 +1275,9 @@ const BookingKiosk = () => {
                   onChange={handleChange}
                   placeholder="tucorreo@email.com"
                   autoComplete="email"
+                  {...propsDeError("email")}
                 />
+                {mensajeDeError("email")}
               </label>
 
               <label className="kiosk-field">
@@ -1226,12 +1287,15 @@ const BookingKiosk = () => {
                   className={`kiosk-input ${getFieldStateClass("yearGrade")}`}
                   value={formData.yearGrade}
                   onChange={handleChange}
+                  required
+                  {...propsDeError("yearGrade")}
                 >
                   <option value="">Elegí una opción</option>
                   {getKioskYearGradeOptions(formData.educationLevel).map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
+                {mensajeDeError("yearGrade")}
               </label>
             </div>
 
@@ -1270,7 +1334,10 @@ const BookingKiosk = () => {
                     onChange={handleChange}
                     placeholder="Nombre y apellido"
                     autoComplete={voz.autoCompleteResponsable}
+                    required
+                    {...propsDeError("responsibleName")}
                   />
+                  {mensajeDeError("responsibleName")}
                 </label>
                 <label className="kiosk-field">
                   <span className="kiosk-field-label">Vínculo *</span>
@@ -1279,12 +1346,15 @@ const BookingKiosk = () => {
                     className={`kiosk-input ${getFieldStateClass("responsibleRelationship")}`}
                     value={formData.responsibleRelationship}
                     onChange={handleChange}
+                    required
+                    {...propsDeError("responsibleRelationship")}
                   >
                     <option value="">Elegí una opción</option>
                     {RELATIONSHIP_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
+                  {mensajeDeError("responsibleRelationship")}
                 </label>
                 {formData.responsibleRelationship === RESPONSIBLE_RELATIONSHIP_OTHER_VALUE && (
                   <label className="kiosk-field">
@@ -1296,7 +1366,10 @@ const BookingKiosk = () => {
                       value={formData.responsibleRelationshipOther}
                       onChange={handleChange}
                       placeholder="Indicá el vínculo"
+                      required
+                      {...propsDeError("responsibleRelationshipOther")}
                     />
+                    {mensajeDeError("responsibleRelationshipOther")}
                   </label>
                 )}
               </div>
@@ -1312,7 +1385,10 @@ const BookingKiosk = () => {
                 rows={3}
                 placeholder="Ej: preparar el examen de la semana que viene, entender ecuaciones…"
                 maxLength={300}
+                required
+                {...propsDeError("objective")}
               />
+              {mensajeDeError("objective")}
             </label>
 
             <div className="kiosk-nav">

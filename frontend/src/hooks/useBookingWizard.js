@@ -176,6 +176,61 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
     [isValidField, formData, hasAttemptedNext],
   );
 
+  /* El motivo por el que un campo está mal, en texto.
+
+     Hasta ahora el único aviso era el borde rojo más un toast que decía
+     «revisá los campos resaltados». "Resaltado" es una propiedad que sólo
+     existe en el color: quien no lo ve escucha el toast y no tiene manera de
+     saber cuáles son. Devolver el motivo por campo permite escribirlo al lado
+     del campo y colgarlo de `aria-describedby`, que es lo que un lector de
+     pantalla lee cuando el foco llega ahí.
+
+     Devuelve null cuando el campo no debe mostrar error todavía —misma
+     condición que `getFieldStateClass`, para que el texto y el borde rojo
+     aparezcan y desaparezcan juntos y nunca se contradigan. */
+  const getFieldError = useCallback(
+    (field, isOptional = false) => {
+      if (getFieldStateClass(field, isOptional) !== "error") return null;
+      const value = String(formData[field] ?? "").trim();
+      const vacio = value.length === 0;
+      switch (field) {
+        case "studentName":
+          return vacio
+            ? "Escribí el nombre y el apellido del alumno."
+            : "Usá solo letras, espacios, apóstrofes y guiones.";
+        case "responsibleName":
+          return vacio
+            ? "Escribí tu nombre y apellido como responsable."
+            : "Usá solo letras, espacios, apóstrofes y guiones.";
+        case "responsibleRelationship":
+          return "Elegí qué sos del alumno.";
+        case "responsibleRelationshipOther":
+          return "Contanos cuál es el vínculo.";
+        case "email":
+          return "Revisá el email: parece que le falta el @ o el dominio.";
+        case "phone":
+          return vacio
+            ? "Falta el teléfono para poder avisarte."
+            : "El número está incompleto. Necesitamos el código de área y los 8 dígitos.";
+        case "educationLevel":
+          return "Volvé al paso 1 y elegí el nivel.";
+        case "yearGrade":
+          return "Elegí el año o el grado que está cursando.";
+        case "subject":
+          return "Volvé al paso 1 y elegí la materia.";
+        case "objective":
+          return value.length > 300
+            ? "Es un poco largo: contalo en 300 caracteres o menos."
+            : "Contanos en una línea qué necesita lograr.";
+        case "school":
+          return "Si ponés la escuela, escribí al menos dos letras.";
+        default:
+          return "Revisá este dato.";
+      }
+    },
+    [getFieldStateClass, formData],
+  );
+
   const requiredChecks = useMemo(
     () => [
       isValidField("studentName"),
@@ -213,6 +268,7 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
     toggleAdultMode,
     resetForm,
     getFieldStateClass,
+    getFieldError,
     completionPercent,
     requiredChecks,
     WIZARD_STEPS,
