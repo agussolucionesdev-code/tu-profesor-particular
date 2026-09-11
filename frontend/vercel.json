@@ -3,6 +3,19 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.turnos.tuprofesorparticular.com.ar"
+        }
+      ],
+      "destination": "https://turnos.tuprofesorparticular.com.ar/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/health",
