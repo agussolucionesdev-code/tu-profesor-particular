@@ -480,6 +480,19 @@
 .kiosk-input.error { border-color: var(--error-color); }
 .kiosk-textarea { resize: vertical; min-height: 76px; }
 
+/* El motivo del error, en texto, debajo del campo.
+   El borde rojo solo no alcanza: es información que existe únicamente en el
+   color, y quien no lo distingue —o no ve la pantalla— se queda sin saber qué
+   corregir. No baja de 0.85rem: un mensaje de error ilegible no es un mensaje. */
+.kiosk-field-error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  font-weight: 500;
+  color: var(--error-color);
+}
+
 /* Acá vivían `.kiosk-adult-toggle` y `.kiosk-check`, del checkbox «Soy el alumno y soy
    mayor de edad» que estaba en el paso 4. La pregunta se movió al principio del paso 1
    —decide el trato de los pasos 1 al 3, así que preguntarla en el 4 llegaba tarde— y en
