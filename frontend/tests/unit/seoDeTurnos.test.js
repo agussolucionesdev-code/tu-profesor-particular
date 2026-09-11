@@ -12,6 +12,8 @@ const serverError = leer("../../src/components/errors/ServerErrorPage.jsx");
 const maintenance = leer("../../src/components/errors/MaintenancePage.jsx");
 const jsonLd = leer("../../src/components/seo/JsonLd.jsx");
 
+const vercel = JSON.parse(leer("../../vercel.json"));
+
 const HOST = "https://turnos.tuprofesorparticular.com.ar";
 
 test("el robots.txt de turnos apunta a SU sitemap, no al del institucional", () => {
@@ -94,6 +96,37 @@ test("el JSON-LD que lee Google está bien escrito", () => {
     assert.doesNotMatch(jsonLd, falta, `el JSON-LD tiene: ${falta}`);
   }
   assert.match(jsonLd, /Agustín Elías Sosa/);
+});
+
+test("www.turnos redirige al host real, y ningún redirect toca al host principal", () => {
+  /* `www.turnos.tuprofesorparticular.com.ar` no existía en el DNS —NXDOMAIN—, así
+     que ni siquiera llegaba a fallar el TLS como le pasaba a `www.` del apex:
+     directamente no resolvía. Se agregó el CNAME a cname.vercel-dns.com en
+     DonWeb y el dominio al proyecto en Vercel; esto es la última pieza.
+
+     Nadie tipea un `www.` delante de un subdominio, así que esto no arregla un
+     problema frecuente: cierra una puerta que estaba abierta y no llevaba a
+     ningún lado. */
+  const redirect = (vercel.redirects ?? []).find((r) =>
+    (r.has ?? []).some(
+      (c) =>
+        c.type === "host" &&
+        c.value === "www.turnos.tuprofesorparticular.com.ar",
+    ),
+  );
+  assert.ok(redirect, "falta el redirect de www.turnos");
+  assert.equal(redirect.destination, `${HOST}/$1`);
+  assert.equal(redirect.permanent, true, "tiene que ser 308, no 307");
+
+  /* LA PARTE QUE IMPORTA. Un redirect sin condición de host se aplicaría también
+     a turnos.tuprofesorparticular.com.ar y lo dejaría redirigiéndose a sí mismo:
+     la app de reservas entera en un bucle. */
+  for (const r of vercel.redirects ?? []) {
+    assert.ok(
+      (r.has ?? []).length > 0,
+      `el redirect ${r.source} no tiene condición de host: tumbaría el sitio`,
+    );
+  }
 });
 
 test("el título y la descripción por defecto están bien escritos", () => {
