@@ -103,7 +103,10 @@ nav.navbar-elite.scrolled .navbar-container {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  min-height: 0;
+  /* 44px es el mínimo de WCAG 2.5.5 para un blanco táctil. Medido a 375px, esto
+     daba 40px de alto: es el enlace al inicio y el control más grande de la
+     barra, así que no había motivo para que fuera el único por debajo. */
+  min-height: 44px;
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   border-radius: 14px;
   text-decoration: none;

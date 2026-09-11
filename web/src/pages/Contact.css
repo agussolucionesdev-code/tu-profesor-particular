@@ -320,10 +320,15 @@
   border-top: 1px solid var(--border);
 }
 
+/* WCAG 2.5.5: 44px mínimo. Medían 23 de alto —la mitad— y son las acciones de
+   las tarjetas de contacto, no enlaces sueltos dentro de un párrafo: la
+   excepción de "enlace en línea dentro de un bloque de texto" no los cubre.
+   Son, además, el camino más corto para que alguien escriba o llegue al lugar. */
 .ct-link {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-height: 44px;
   font-size: 0.88rem;
   font-weight: 800;
   color: var(--green);
@@ -337,6 +342,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  /* 36px con el padding actual; el mínimo táctil son 44. */
+  min-height: 44px;
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 999px;
