@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-const BASE_TITLE = "Tu Profesor Particular | Agustin Elias Sosa";
+const BASE_TITLE = "Tu Profesor Particular | Agustín Elías Sosa";
 const BASE_DESCRIPTION =
-  "Clases particulares personalizadas de matematica, fisica, quimica y mas. Reserva online con confirmacion inmediata. Buenos Aires.";
+  "Clases particulares personalizadas de matemática, física, química y más. Reservá online con confirmación inmediata. Buenos Aires.";
 
 function setMetaDescription(description) {
   let tag = document.querySelector('meta[name="description"]');
@@ -27,12 +27,45 @@ export function useDocumentTitle(title) {
   }, [title]);
 }
 
+/* El catch-all de `vercel.json` manda cualquier ruta desconocida al index.html,
+   así que una URL que no existe responde 200 y no 404. Para un buscador eso es
+   un "soft 404": una página de error que se presenta como una página válida, y
+   es candidata a terminar indexada.
+
+   El arreglo de fondo sería enumerar las rutas en los rewrites para que el resto
+   caiga en el 404 nativo de Vercel. No se hace acá a propósito: ese catch-all ya
+   costó un bug caro —se comía `/_vercel/insights/script.js` y dejó la analítica
+   muerta durante meses— y, como explica `vercelPreviewProxy.test.js`, no hay
+   forma de verificar un cambio de routing antes de que llegue a producción,
+   porque los deployments de preview están detrás del login de Vercel.
+
+   `noindex` resuelve lo que importa —que la página no se indexe— sin tocar el
+   routing. */
+function setRobots(noindex) {
+  let tag = document.querySelector('meta[name="robots"]');
+  if (!noindex) {
+    tag?.remove();
+    return;
+  }
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute("name", "robots");
+    document.head.appendChild(tag);
+  }
+  /* `follow` y no `nofollow`: la página no se indexa, pero los enlaces que
+     ofrece —volver a reservar, ver mis turnos— sí se siguen. */
+  tag.setAttribute("content", "noindex, follow");
+}
+
 /**
  * Sets both document title and meta description for the current route.
  * @param {string} [title] - Page-specific title.
  * @param {string} [description] - Page-specific meta description.
+ * @param {{noindex?: boolean}} [options] - `noindex: true` para páginas que no
+ *   son contenido, como el 404.
  */
-export function usePageMeta(title, description) {
+export function usePageMeta(title, description, options = {}) {
+  const { noindex = false } = options;
   useDocumentTitle(title);
   useEffect(() => {
     setMetaDescription(description);
@@ -40,4 +73,10 @@ export function usePageMeta(title, description) {
       setMetaDescription(BASE_DESCRIPTION);
     };
   }, [description]);
+  useEffect(() => {
+    setRobots(noindex);
+    return () => {
+      setRobots(false);
+    };
+  }, [noindex]);
 }

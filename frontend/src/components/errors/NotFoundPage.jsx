@@ -1,4 +1,4 @@
-import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { usePageMeta } from "../../hooks/useDocumentTitle";
 import ErrorPageLayout from "./ErrorPageLayout";
 
 const LostBookIllustration = () => (
@@ -36,12 +36,20 @@ const LostBookIllustration = () => (
 );
 
 const NotFoundPage = () => {
-  useDocumentTitle("Pagina no encontrada");
+  /* `noindex` porque el catch-all de Vercel responde 200 en cualquier ruta
+     desconocida: sin esto, un buscador puede indexar una URL rota como si fuera
+     una página del sitio. El detalle de por qué se resuelve acá y no en el
+     routing está en `hooks/useDocumentTitle.js`. */
+  usePageMeta(
+    "Página no encontrada",
+    "La página que buscás no existe. Volvé a reservar tu clase o consultá tus turnos.",
+    { noindex: true },
+  );
   return (
     <ErrorPageLayout
       illustration={<LostBookIllustration />}
-      title="Esta pagina no existe"
-      description="El enlace puede estar roto o la pagina fue movida. Pero no te preocupes, tu clase te sigue esperando."
+      title="Esta página no existe"
+      description="El enlace puede estar roto o la página fue movida. Pero no te preocupes, tu clase te sigue esperando."
       actions={[
         { label: "Volver a reservar", to: "/reservar" },
         { label: "Mis turnos", to: "/portal", variant: "secondary" },

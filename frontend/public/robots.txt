@@ -1,4 +1,19 @@
+# Tu Profesor Particular — app de turnos (turnos.tuprofesorparticular.com.ar)
+#
+# El sitemap tiene que ser el de ESTE host. Apuntaba al del sitio institucional,
+# así que un buscador que entraba por acá se llevaba la lista de URLs del otro
+# dominio y nunca veía la de turnos.
+
 User-agent: *
 Allow: /
 
-Sitemap: https://tuprofesorparticular.com.ar/sitemap.xml
+# El panel del profesor no es contenido público: pide login y no tiene nada que
+# ofrecerle a alguien que llega de una búsqueda.
+Disallow: /admin
+
+# /m lleva el token de gestión de una reserva en el fragmento de la URL. El
+# fragmento no viaja al servidor y por lo tanto tampoco a un buscador, pero la
+# ruta en sí no tiene contenido propio que indexar.
+Disallow: /m
+
+Sitemap: https://turnos.tuprofesorparticular.com.ar/sitemap.xml

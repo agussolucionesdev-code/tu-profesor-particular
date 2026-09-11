@@ -67,10 +67,10 @@ const ServerErrorPage = ({ isBoundary = false }) => {
   return (
     <ErrorPageLayout
       illustration={<BrokenBoardIllustration />}
-      title="Algo salio mal"
-      description="Estamos trabajando para solucionarlo. Intenta de nuevo en unos minutos."
+      title="Algo salió mal"
+      description="Estamos trabajando para solucionarlo. Intentá de nuevo en unos minutos."
       actions={[
-        { label: "Recargar pagina", onClick: () => window.location.reload() },
+        { label: "Recargar página", onClick: () => window.location.reload() },
         { label: "Volver al inicio", to: "/", variant: "secondary" },
       ]}
       isBoundary={isBoundary}

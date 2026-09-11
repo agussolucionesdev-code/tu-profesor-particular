@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Las tres rutas públicas con contenido propio. /admin y /m quedan afuera a
+  propósito, y también están en Disallow: el panel pide login y /m no tiene
+  contenido sin el token que viaja en el fragmento de la URL.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://turnos.tuprofesorparticular.com.ar/</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-09-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://turnos.tuprofesorparticular.com.ar/reservar</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-09-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://turnos.tuprofesorparticular.com.ar/portal</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-09-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
