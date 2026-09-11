@@ -49,7 +49,7 @@ const MaintenancePage = () => {
     <ErrorPageLayout
       illustration={<GearIllustration />}
       title="En mantenimiento"
-      description="Estamos mejorando la experiencia. Volve en unos minutos."
+      description="Estamos mejorando la experiencia. Volvé en unos minutos."
       actions={[
         { label: "Reintentar", onClick: () => window.location.reload() },
       ]}

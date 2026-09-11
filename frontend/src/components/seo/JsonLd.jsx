@@ -7,11 +7,11 @@ const STRUCTURED_DATA = {
       "@type": "EducationalOrganization",
       "@id": "https://tuprofesorparticular.com.ar/#organization",
       name: "Tu Profesor Particular",
-      alternateName: "Agustin Elias Sosa - Clases particulares",
+      alternateName: "Agustín Elías Sosa - Clases particulares",
       url: "https://tuprofesorparticular.com.ar",
       logo: "https://tuprofesorparticular.com.ar/logo-full.png",
       description:
-        "Clases particulares personalizadas de matematica, fisica, quimica y mas. Reserva online con confirmacion inmediata.",
+        "Clases particulares personalizadas de matemática, física, química y más. Reservá online con confirmación inmediata.",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Buenos Aires",
@@ -34,7 +34,7 @@ const STRUCTURED_DATA = {
       },
       serviceType: "Tutoring",
       description:
-        "Clases individuales de apoyo escolar y universitario. Matematica, fisica, quimica y mas materias.",
+        "Clases individuales de apoyo escolar y universitario. Matemática, física, química y más materias.",
       areaServed: {
         "@type": "City",
         name: "Buenos Aires",
