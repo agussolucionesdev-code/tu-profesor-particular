@@ -302,12 +302,85 @@ nav.navbar-elite.scrolled .navbar-container {
   transform: translateX(3px);
 }
 
-/* ── Utilidades (voz / tema): compactas, solo ícono ─────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   LOS TRES CONTROLES DE LA BARRA SON UNA FAMILIA.
+
+   Medidos antes de esto, a 375 px, uno al lado del otro:
+
+     guía por voz    44x44   radio 999px   borde 1px      fondo transparente
+     modo oscuro     48x48   radio  11px   sin borde      fondo transparente
+     hamburguesa     48x48   radio  12px   borde 1px      fondo BLANCO
+
+   Tres tamaños, tres radios, dos con borde y uno sin, uno con fondo y dos sin.
+   Más un anillo de 1px con radio 0 envolviendo a los dos primeros, que
+   dibujaba un rectángulo filoso. Eso es lo que se veía «super feo»: no era un
+   control, era que no parecían del mismo sistema.
+
+   Ahora los tres comparten forma: 48x48 (el tamaño lo fija
+   accessibility-system.css, que es dueño de los blancos táctiles), círculo,
+   sin borde en reposo, y una superficie que sólo aparece al apuntarlos. El
+   círculo distingue el cromo de la interfaz de las tarjetas de contenido, que
+   son rectángulos redondeados.
+   ══════════════════════════════════════════════════════════════════════════ */
 .navbar-elite .navbar-utility-cluster {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  /* Sin caja: el grupo no necesita contorno para leerse como grupo, le alcanza
+     la proximidad. El anillo que había vivía en theme-polish.css y se quitó. */
   border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+
+.navbar-elite .voice-toggle-btn,
+.navbar-elite .nav-utility-btn,
+.navbar-elite .theme-toggle-btn,
+.navbar-elite .menu-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-strong, #363b41);
+  cursor: pointer;
+  /* Sólo el fondo y el color transicionan. Animar la forma o el tamaño de un
+     control de la barra lo hace saltar mientras la página se acomoda. */
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.navbar-elite .voice-toggle-btn:hover,
+.navbar-elite .nav-utility-btn:hover,
+.navbar-elite .theme-toggle-btn:hover,
+.navbar-elite .menu-toggle-icon:hover {
+  background: rgba(0, 33, 76, 0.07);
+  color: var(--brand-navy, #00214c);
+}
+
+[data-theme="dark"] .navbar-elite .voice-toggle-btn:hover,
+[data-theme="dark"] .navbar-elite .nav-utility-btn:hover,
+[data-theme="dark"] .navbar-elite .theme-toggle-btn:hover,
+[data-theme="dark"] .navbar-elite .menu-toggle-icon:hover {
+  background: rgba(204, 217, 235, 0.12);
+  color: var(--brand-white, #ffffff);
+}
+
+/* El foco visible es un anillo, no un borde: así no cambia la caja del botón y
+   nada se corre cuando alguien navega con el teclado. */
+.navbar-elite .voice-toggle-btn:focus-visible,
+.navbar-elite .nav-utility-btn:focus-visible,
+.navbar-elite .theme-toggle-btn:focus-visible,
+.navbar-elite .menu-toggle-icon:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.34);
+}
+
+/* El menú abierto se marca con superficie, no con borde, por lo mismo. */
+.navbar-elite .menu-toggle-icon[aria-expanded="true"] {
+  background: rgba(0, 33, 76, 0.1);
+  color: var(--brand-navy, #00214c);
 }
 
 .navbar-elite .voice-toggle-shell {
@@ -324,12 +397,11 @@ nav.navbar-elite.scrolled .navbar-container {
   width: 38px;
   height: 38px;
   padding: 0;
-  border-radius: 11px;
-  border: none;
-  background: none;
   color: var(--brand-navy-600, #3d5980);
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease;
+  /* La forma la define el bloque de familia de arriba: 48x48, círculo, sin borde.
+     Se quitaron de acá: border-radius: 11px; border: none; background: none; */
 }
 
 [data-theme="dark"] .navbar-elite .nav-utility-btn {
@@ -368,9 +440,6 @@ nav.navbar-elite.scrolled .navbar-container {
   gap: 0.45rem;
   height: 38px;
   padding: 0 0.85rem;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 33, 76, 0.14);
-  background: none;
   color: var(--brand-navy-600, #3d5980);
   font-size: 0.82rem;
   font-weight: 700;
@@ -378,6 +447,8 @@ nav.navbar-elite.scrolled .navbar-container {
   white-space: nowrap;
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+  /* La forma la define el bloque de familia de arriba: 48x48, círculo, sin borde.
+     Se quitaron de acá: border-radius: 999px; border: 1px solid rgba(0, 33, 76, 0.14); background: none; */
 }
 
 [data-theme="dark"] .navbar-elite .voice-toggle-btn {
@@ -594,13 +665,12 @@ nav.navbar-elite.scrolled .navbar-container {
   justify-content: center;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 33, 76, 0.14);
-  background: #ffffff;
   color: var(--brand-navy, #00214c);
   font-size: 1.05rem;
   cursor: pointer;
   transition: border-color 160ms ease;
+  /* La forma la define la familia de controles de arriba: 48x48, círculo, sin
+     borde. Acá había border-radius: 12px; border: 1px solid rgba(0, 33, 76, 0.14); background: #ffffff; que la contradecían. */
 }
 
 [data-theme="dark"] .navbar-elite .menu-toggle-icon {

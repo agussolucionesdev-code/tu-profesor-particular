@@ -214,6 +214,68 @@ main.main-content {
   flex-shrink: 0 !important;
 }
 
+/* ── El arreglo de arriba estaba a medias, y este es el segundo acto ──────────
+ *
+ * `flex-shrink: 0` evitó que los botones se aplastaran a 14 px, pero movió el
+ * problema en vez de resolverlo. Medido de nuevo a 375 px, en septiembre de
+ * 2026:
+ *
+ *   .navbar-brand        239 px, min-width: auto   ← no cede
+ *   .navbar-right-zone    83 px conteniendo 140 px de botones
+ *   .navbar-container     overflow: hidden
+ *   "Abrir menú"          x: 381 en un viewport de 375  → FUERA DE PANTALLA
+ *
+ * El comentario de arriba dice que «la marca absorbe el recorte, medido
+ * 239 → 180». Eso no podía pasar: `min-width: auto` es el default de un flex
+ * item y le prohíbe bajar del ancho de su contenido. La marca nunca cedió, así
+ * que el recorte lo comió la zona de controles; los botones, ya con
+ * `flex-shrink: 0`, se desbordaron de ella, y el `overflow: hidden` del
+ * contenedor borró el tercero de la pantalla.
+ *
+ * O sea: en cualquier teléfono de menos de 400 px NO SE PODÍA ABRIR EL MENÚ.
+ * Y sin scroll horizontal que lo delatara.
+ *
+ * Las dos mitades que faltaban:
+ *   1. la marca tiene que poder encogerse de verdad (`min-width: 0`), y su
+ *      texto recortarse con puntos suspensivos en vez de empujar;
+ *   2. la zona de controles no tiene que encogerse nunca: son blancos táctiles
+ *      de tamaño fijo, y es lo único de la barra que no admite negociación.
+ * ──────────────────────────────────────────────────────────────────────────── */
+.navbar-elite .navbar-right-zone {
+  flex-shrink: 0 !important;
+}
+
+.navbar-elite .navbar-brand {
+  /* Sin esto el `min-width: auto` implícito le prohíbe bajar de 239 px. */
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
+}
+
+.navbar-elite .brand-copy,
+.navbar-elite .brand-title {
+  min-width: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 430 px no es un número elegido a ojo: es el umbral medido en el navegador.
+ *
+ *   zona de controles   156 px   (44 + 48 + 48 más sus gaps)
+ *   monograma            44 px
+ *   nombre              185 px
+ *   gap + padding        39 px
+ *                      ───────
+ *   necesario           424 px
+ *
+ * Por debajo de eso el nombre no entra, y lo que se pierde si insiste es el
+ * menú. Se queda el monograma, que es la marca igual y se reconoce solo. Vale
+ * para 320, 360, 375 y 414 — que es casi todo el parque de teléfonos. */
+@media (max-width: 430px) {
+  .navbar-elite .brand-copy {
+    display: none !important;
+  }
+}
+
 .nav-utility-btn,
 .theme-toggle-btn,
 .menu-toggle-icon {
@@ -227,11 +289,16 @@ main.main-content {
 
 /* La guía por voz estaba diseñada en 38×38 (Navbar.css:318), 6 px por debajo del mínimo
    táctil. No es un botón secundario: es el que enciende la asistencia para quien más la
-   necesita, así que es el último que debería costar acertar. */
+   necesita, así que es el último que debería costar acertar.
+ *
+ * Pasa de 44 a 48 para igualar a sus dos hermanos. Estaban en 44, 48 y 48: tres
+ * controles pegados con dos tamaños distintos se leen como un accidente, y 48
+ * es además el blanco más cómodo. A 320 px entran los tres de sobra: 144 px de
+ * controles más 44 del monograma sobre 320 de pantalla. */
 .voice-toggle-shell,
 .voice-toggle-btn {
-  width: 44px !important;
-  height: 44px !important;
+  width: 48px !important;
+  height: 48px !important;
 }
 
 .voice-hint-bubble {
