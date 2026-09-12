@@ -1,0 +1,137 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   LA MÁQUINA DE LA PANTALLA DE MANTENIMIENTO.
+
+   POR QUÉ ESTO NO RALENTIZA NADA
+
+   Lo único que se anima acá es `transform` y `opacity`. Son las dos
+   propiedades que el navegador resuelve en el compositor: no recalculan
+   posiciones ni vuelven a pintar píxeles, se aplican a una capa ya dibujada.
+   Animar `top`, `width`, `box-shadow` o un `filter` sí obligaría a rehacer ese
+   trabajo en cada cuadro, y eso es lo que hace que una página se sienta
+   pesada. Acá no pasa: son dos rotaciones y tres opacidades sobre cinco
+   figuras, y la página no está haciendo nada más mientras se muestra.
+
+   `will-change` va solo en las dos ruedas, que son las que giran sin parar.
+   Le dice al navegador que les dé su propia capa de antemano en vez de
+   descubrirlo en el primer cuadro. Puesto de más —en muchos elementos, o en
+   cosas que no se animan— hace justo lo contrario: reserva memoria de GPU al
+   vacío. Dos capas chicas no se sienten.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* El monograma llega en PNG sin canal alfa —colortype 2, RGB puro— así que
+   trae su fondo opaco pegado. Sobre el blanco del navbar no se nota; sobre el
+   gris de esta pantalla se leía como una calcomanía con un rectángulo blanco
+   alrededor. Redondearlo y apoyarlo con una sombra suave convierte ese fondo
+   en una placa que parece querida, que es lo mejor que se puede hacer sin
+   tocar el archivo original. */
+.error-page--mantenimiento .error-page-brand img {
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(0, 33, 76, 0.08),
+    0 8px 20px rgba(0, 33, 76, 0.1);
+}
+
+/* La ilustración es la protagonista de esta pantalla, así que va a opacidad
+   plena y no al 85% del resto de las páginas de error. */
+.error-page--mantenimiento .error-page-illustration {
+  width: 260px;
+  height: 260px;
+  opacity: 1;
+}
+
+.mant-diente {
+  /* El relleno tenue le da cuerpo. Con solo el contorno, a este tamaño la
+     rueda se ve como un alambre. */
+  fill: var(--brand-green-soft, #eafdec);
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+}
+
+.mant-eje {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.75;
+}
+
+.mant-rueda {
+  /* `fill-box` hace que el origen sea el centro de la propia figura y no el
+     del lienzo: sin esto, las dos ruedas girarían alrededor de (0,0) y se
+     irían de paseo por la pantalla. */
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* Quince dientes contra siete: la chica da 15/7 de vuelta por cada vuelta de
+   la grande, y al revés. 24 × 7/15 = 11.2. Si estas dos cifras dejan de ser
+   proporcionales a los dientes, las ruedas se ven patinando. */
+.mant-rueda--grande {
+  animation: mant-girar 24s linear infinite;
+}
+
+.mant-rueda--chica {
+  animation: mant-girar 11.2s linear infinite reverse;
+}
+
+@keyframes mant-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mant-puntos circle {
+  fill: var(--brand-green, #01953c);
+  animation: mant-latir 1.5s ease-in-out infinite;
+}
+
+/* El desfase es lo que los hace leer como una secuencia —«está trabajando»—
+   en vez de como tres luces que parpadean juntas. */
+.mant-puntos circle:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.mant-puntos circle:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes mant-latir {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  45% {
+    opacity: 1;
+  }
+}
+
+/* ── Oscuro ── */
+/* En claro el relleno es el verde casi blanco de la marca. En oscuro ese verde
+   sería una mancha clara, así que el relleno pasa a ser el mismo verde pero
+   translúcido, que se apoya en el fondo en vez de taparlo. */
+[data-theme="dark"] .mant-diente {
+  fill: rgba(1, 149, 60, 0.16);
+}
+
+/* ── Movimiento reducido ── */
+/* Quien pidió menos movimiento en su sistema operativo recibe la misma
+   ilustración, quieta. Los puntos quedan a media luz para que se lean como
+   parte del dibujo y no como tres círculos apagados. */
+@media (prefers-reduced-motion: reduce) {
+  .mant-rueda,
+  .mant-puntos circle {
+    animation: none;
+  }
+
+  .mant-puntos circle {
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 479px) {
+  .error-page--mantenimiento .error-page-illustration {
+    width: 190px;
+    height: 190px;
+  }
+}
