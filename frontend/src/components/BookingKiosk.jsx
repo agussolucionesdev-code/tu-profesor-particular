@@ -678,20 +678,14 @@ const BookingKiosk = () => {
       </div>
 
       <div className={`kiosk-card kiosk-card--step-${step}`} ref={cardRef}>
+        {/* Sin logo ni nombre acá.
+            La barra de arriba es fija y ya lleva el monograma y «Tu Profesor
+            Particular». Repetirlos dentro de la tarjeta gastaba unos 60 px de
+            alto en un teléfono —donde el primer paso ya no entra en pantalla—
+            para decir dos veces lo mismo. «Reserva inteligente» tampoco
+            aportaba: nadie viene a evaluar si la reserva es inteligente, viene
+            a conseguir un turno. Queda sólo la acción. */}
         <div className="kiosk-card-head">
-          <div className="kiosk-brand-lockup" aria-label="Tu Profesor Particular">
-            <ThemeLogo
-              variant="monogram"
-              className="kiosk-brand-logo"
-              imgClassName="kiosk-brand-logo-image"
-              alt=""
-              loading="eager"
-            />
-            <span className="kiosk-brand-copy">
-              <strong>Tu Profesor Particular</strong>
-              <span>Reserva inteligente</span>
-            </span>
-          </div>
           <Link to="/portal" className="kiosk-portal-link">
             <FaTicketAlt aria-hidden="true" /> Ver mis turnos
           </Link>

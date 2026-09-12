@@ -95,9 +95,19 @@ body {
   box-shadow: inset 0 0 0 1px rgba(136, 206, 147, 0.28);
 }
 
-.navbar-utility-cluster {
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
-}
+/* El anillo del grupo se quitó a propósito.
+ *
+ * Dibujaba `0 0 0 1px` alrededor del cluster de voz y tema, asumiendo las
+ * esquinas redondeadas que `brand-identity-refresh.css` le daba (16px). Pero
+ * `Navbar.css` tiene una regla más específica con `border-radius: 0`, y gana.
+ * Resultado medido: un rectángulo de esquinas filosas alrededor de dos botones
+ * —uno circular y otro redondeado—, que es justo lo que el cliente describió
+ * como «cuadrado como una caja».
+ *
+ * Ninguno de los tres archivos estaba mal solo; el problema era que nadie era
+ * dueño del componente. Ahora la familia de controles vive entera en
+ * Navbar.css y el grupo no necesita caja: los tres botones se ven hermanos
+ * por su propia forma. */
 
 .booking-page-wrapper {
   background-color: var(--color-bg-light);

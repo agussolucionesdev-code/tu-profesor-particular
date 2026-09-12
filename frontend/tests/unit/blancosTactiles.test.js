@@ -68,11 +68,25 @@ test("el botón del menú declara 48px", () => {
 
 test("la guía por voz llega al mínimo táctil", () => {
   /* Estaba en 38×38. No es un control secundario: enciende la asistencia para quien más
-     la necesita, así que es el último que debería costar acertar. */
+     la necesita, así que es el último que debería costar acertar.
+   *
+   * Este test pedía 44px EXACTOS y falló cuando el control pasó a 48 para igualar a sus
+   * dos hermanos de la barra. Fallaba por un cambio que lo mejoraba, que es la peor clase
+   * de test: el requisito es un MÍNIMO —WCAG 2.5.5— así que ahora se verifica como
+   * mínimo. Si alguien lo baja de 44 vuelve a fallar, que es lo único que importa. */
   const cuerpo = bloqueDe(accesibilidad, ".voice-toggle-btn");
   assert.ok(cuerpo, "no encontré regla para .voice-toggle-btn");
-  assert.match(cuerpo, /width:\s*44px/);
-  assert.match(cuerpo, /height:\s*44px/);
+
+  const medida = (prop) => {
+    const m = cuerpo.match(new RegExp(`${prop}:\\s*(\\d+)px`)  /* barras dobles: en un template literal JS se come una */);
+    assert.ok(m, `la guía por voz no declara ${prop}`);
+    return Number(m[1]);
+  };
+
+  for (const prop of ["width", "height"]) {
+    const px = medida(prop);
+    assert.ok(px >= 44, `la guía por voz declara ${prop}: ${px}px y el mínimo táctil es 44`);
+  }
 });
 
 test("las flechas de mes del calendario llegan a 44 y no se encogen", () => {

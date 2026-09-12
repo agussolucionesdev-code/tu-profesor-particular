@@ -908,11 +908,21 @@
 
 .kiosk-card-head {
   align-items: center;
-  justify-content: space-between;
+  /* `space-between` separaba el lockup de marca del enlace al portal. El
+     lockup se quitó —la barra de arriba ya lleva logo y nombre—, y con un
+     solo hijo `space-between` lo empuja a la izquierda. `flex-end` lo deja
+     donde estaba, arriba a la derecha, que es donde la gente ya lo busca. */
+  justify-content: flex-end;
   gap: 1rem;
   margin-bottom: 1.15rem;
 }
 
+/* ── Muerto desde que se quitó el lockup del encabezado ──────────────────────
+ * El markup que usaba estas clases ya no existe (BookingKiosk.jsx). Se dejan
+ * comentadas y no borradas por una razón: si mañana se decide volver a poner
+ * una marca dentro de la tarjeta, este era el diseño acordado y sirve de
+ * punto de partida. Si en la próxima pasada sigue sin usarse, va afuera.
+ * ─────────────────────────────────────────────────────────────────────────── */
 .kiosk-brand-lockup {
   display: inline-flex;
   align-items: center;
