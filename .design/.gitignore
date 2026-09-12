@@ -1,0 +1,18 @@
+# ── Nada de esto va al repositorio ──────────────────────────────────────────
+#
+# drive/  es una copia de trabajo del Google Drive de Agustín: sus logos
+# originales, los PDF del diseño curricular, su CV. Son documentos personales
+# y de marca, no código. Viven en su Drive, que es donde corresponde.
+drive/
+
+# Los PNG originales de 1254px bajados de ChatGPT y todo lo intermedio: unos
+# 28 MB. El repo guarda los .webp finales, que son parte del build, y los
+# scripts que los generan. Los originales quedan en el Drive.
+tpp/portadas/src/
+tpp/portadas/produccion/
+tpp/portadas/web/
+tpp/*.jpg
+tpp/_*.png
+tpp/_*.html
+tpp/tu-profesor-particular-diseno.html
+tpp/support.js

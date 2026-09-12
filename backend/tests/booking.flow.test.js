@@ -66,9 +66,35 @@ const formatForApi = (date) => {
 // must resolve it through the same explicit business-time parser.
 const apiInstant = (date) => parseDateTimeInput(formatForApi(date));
 
+/* El próximo día RESERVABLE a la hora pedida, no "mañana" a secas.
+ *
+ * POR QUÉ NO ES MAÑANA
+ *
+ * El horario por defecto es `schedule.n = [1,2,3,4,5,6]`: lunes a sábado
+ * abierto, domingo cerrado. Cuando el CI corría un sábado, "mañana" caía en
+ * domingo y la API rechazaba todo con 400 y 409 en lugar de crear la reserva.
+ * Este archivo tiene 56 llamadas a este helper, así que el sábado el job del
+ * backend fallaba entero y bloqueaba cualquier deploy de fin de semana.
+ *
+ * Los 56 usos no quieren decir "mañana" literalmente: quieren decir "un turno
+ * cercano y válido". Por eso el helper salta los días cerrados en vez de que
+ * cada llamada tenga que preocuparse por el calendario.
+ *
+ * Si algún test necesita comprobar que un domingo se rechaza, tiene que
+ * construir ese domingo explícitamente con `nextWeekdayAt(0, ...)`. Esa es la
+ * forma correcta de probarlo, y no depender de qué día corre el CI. */
+const OPEN_WEEKDAYS = [1, 2, 3, 4, 5, 6]; // igual que SCHEDULE_DEFAULTS["schedule.n"]
+
 const tomorrowAt = (hour, minute = 0) => {
   const date = new Date();
   date.setDate(date.getDate() + 1);
+  // Como sólo el domingo está cerrado, un salto alcanza; el bucle deja el
+  // helper correcto si mañana se cierra otro día.
+  let guard = 0;
+  while (!OPEN_WEEKDAYS.includes(date.getDay()) && guard < 7) {
+    date.setDate(date.getDate() + 1);
+    guard += 1;
+  }
   date.setHours(hour, minute, 0, 0);
   return date;
 };

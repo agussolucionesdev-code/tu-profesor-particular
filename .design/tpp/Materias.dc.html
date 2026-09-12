@@ -1,0 +1,306 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    body{margin:0;font-family:'Inter',system-ui,sans-serif;background:#e9ebee;color:#00214c}
+    .lbl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+    .hd{font-size:15px;font-weight:800;letter-spacing:-.01em}
+    .hdd{font-size:12.5px;line-height:1.55;color:#575d64}
+
+ h1{font-family:Fraunces,serif;font-size:28px;margin:0 0 6px;letter-spacing:-.022em;
+    font-variation-settings:'opsz' 144,'wght' 600}
+ p.sub{font-size:13px;color:#575d64;margin:0 0 6px;max-width:770px;line-height:1.55}
+ h2{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:#575d64;margin:38px 0 3px;font-weight:800}
+ .h2d{font-size:12.5px;color:#575d64;margin:0 0 16px;max-width:770px;line-height:1.5}
+ .fila{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+ .pie{font-size:10.5px;color:#7c8794;margin-top:8px;text-align:center;line-height:1.4}
+ .pie b{color:#00214c;display:block;font-size:11px;margin-bottom:1px}
+ table{border-collapse:collapse;font-size:12px}
+ th{color:#575d64;font-weight:800;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    text-align:left;padding:0 16px 7px 0}
+ td{padding:4px 16px 4px 0}
+ .ok{color:#006d1f;font-weight:700}.mal{color:#b3261e;font-weight:700}
+
+ .af{position:relative;overflow:hidden;border-radius:13px;width:150px;height:150px;
+     box-shadow:0 3px 10px rgba(0,33,76,.20)}
+ .af.g{width:300px;height:300px;border-radius:18px}
+ .campo{position:absolute;inset:0;width:100%;height:100%}
+ .nomA{font-family:Fraunces,serif;font-variation-settings:'opsz' 144,'wght' 700;
+       letter-spacing:-.03em;line-height:.9}
+
+ /* D1 · geométrico */
+ .d1{background:#0b2f6b}
+ .d1 .tipo{position:absolute;left:0;right:0;bottom:0;padding:0 11px 11px;z-index:3}
+ .d1 .niv{font-size:7px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
+          color:#7fe3a0;margin-bottom:4px}
+ .d1 .nom{font-size:25px;color:#fff}
+ .d1.g .tipo{padding:0 24px 24px}
+ .d1.g .niv{font-size:11px;letter-spacing:.2em;margin-bottom:8px}
+ .d1.g .nom{font-size:53px}
+
+ /* D2 · textura vintage */
+ .d2{background:#f2e6cf}
+ .d2 .tipo{position:absolute;left:0;right:0;bottom:0;padding:0 11px 10px;text-align:center;z-index:3}
+ .d2 .niv{font-size:6.5px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#8a3d13}
+ .d2 .nom{font-size:23px;color:#12351f;font-variation-settings:'opsz' 144,'wght' 900}
+ .d2 .rule{height:2px;background:#c8621f;margin:0 14px 6px}
+ .d2.g .tipo{padding:0 26px 24px}
+ .d2.g .niv{font-size:12px}
+ .d2.g .nom{font-size:49px}
+ .d2.g .rule{height:4px;margin:0 40px 13px}
+
+ /* D3 · tapa de revista */
+ .d3{background:#0f1c33}
+ .d3 .cabeza{position:absolute;top:0;left:0;right:0;padding:9px 11px 0;z-index:3}
+ .d3::before{content:'';position:absolute;top:0;left:0;right:0;height:46%;z-index:2;
+   background:linear-gradient(#0f1c33 0%,rgba(15,28,51,.92) 40%,rgba(15,28,51,0) 100%)}
+ .d3::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30%;z-index:2;
+   background:linear-gradient(rgba(15,28,51,0),rgba(15,28,51,.88))}
+ .d3 .nom{font-size:26px;color:#fff;letter-spacing:-.035em}
+ .d3 .linea{position:absolute;left:11px;right:11px;bottom:10px;z-index:3;
+            display:flex;align-items:center;gap:5px}
+ .d3 .tag{background:#006d1f;color:#fff;font-size:6.5px;font-weight:900;letter-spacing:.13em;
+          text-transform:uppercase;padding:2.5px 6px;border-radius:2px}
+ .d3 .co{font-size:7px;font-weight:700;color:#cfe0f5}
+ .d3.g .cabeza{padding:20px 24px 0}
+ .d3.g .nom{font-size:56px}
+ .d3.g .linea{left:24px;right:24px;bottom:22px;gap:10px}
+ .d3.g .tag{font-size:12px;padding:5px 12px;border-radius:4px}
+ .d3.g .co{font-size:14px}
+
+ /* D4 · cartel de teatro */
+ .d4{background:#12100e}
+ .d4 .tipo{position:absolute;left:0;right:0;bottom:0;padding:0 11px 11px;z-index:3}
+ .d4 .niv{font-size:6.5px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;
+          color:#e8b53d;margin-bottom:5px}
+ .d4 .nom{font-size:22px;color:#f7f3ec;line-height:.86;
+          font-variation-settings:'opsz' 144,'wght' 900}
+ .d4.g .tipo{padding:0 24px 24px}
+ .d4.g .niv{font-size:12px;margin-bottom:11px}
+ .d4.g .nom{font-size:47px}
+
+  </style>
+</helmet>
+
+<div style="padding:42px 46px 48px;">
+
+  <div style="display:flex;flex-direction:column;gap:7px;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <span style="width:30px;height:2px;background:#006d1f;display:block;"></span>
+      <span class="lbl" style="color:#006d1f;">Portadas de materia · tercera vuelta</span>
+    </div>
+    <h1 style="margin:0;font-size:40px;line-height:1.07;letter-spacing:-.024em;
+               font-family:Fraunces,serif;font-variation-settings:'opsz' 144,'wght' 600;">
+      Afiches. Diseñados, no generados.</h1>
+    <p class="hdd" style="max-width:800px;margin:6px 0 0;">
+      Me había ido al extremo equivocado. Agus pidió que no parezca IA y le traje fotografía
+      documental: honesta, sí, pero aburrida — un cuaderno con un lápiz al lado no es una portada.
+      La palabra que lo destrabó la dijo él: <b style="color:#00214c;">afiche de teatro, folleto,
+      tapa de revista</b>. Eso no es fotografía ni fantasía: es <b style="color:#00214c;">diseño
+      gráfico</b>. Y se hace en código, que es justamente por lo que no puede parecer hecho con IA.
+      Cada afiche pesa unos 3 KB, se ve nítido a cualquier tamaño y se cambia al instante.
+    </p>
+  </div>
+
+  <div style="margin-top:32px;">
+    <div class="hd">Cuatro direcciones · tamaño real, 150px</div>
+    <div class="hdd" style="margin:2px 0 14px;">
+      Cada una es una idea distinta de qué significa “portada”. El motivo vive arriba,
+      la tipografía abajo, y no se tocan nunca.</div>
+    <div class="fila" id="chicas"></div>
+  </div>
+
+  <div style="margin-top:34px;">
+    <div class="hd">Grandes · para ver el diseño</div>
+    <div class="hdd" style="margin:2px 0 14px;">
+      Es el mismo código a 300px: sólo cambian los cuerpos tipográficos. No hay dos archivos,
+      hay uno que se adapta.</div>
+    <div class="fila" id="grandes"></div>
+  </div>
+
+  <div style="margin-top:34px;">
+    <div class="hd">El mismo sistema, otras materias</div>
+    <div class="hdd" style="margin:2px 0 14px;">
+      Para probar que no es un truco que funciona sólo con Matemática. El matraz de Química y
+      el péndulo de Física están dibujados con las mismas reglas.</div>
+    <div class="fila" id="otras"></div>
+  </div>
+
+  <div style="margin-top:34px;">
+    <div class="hd">Una paleta por materia</div>
+    <div class="hdd" style="margin:2px 0 14px;max-width:800px;">
+      Mismo afiche D1, cambia sólo el color. En la grilla se distinguen antes de leer el nombre —
+      y el nombre sigue estando, así que nadie depende del color para entender (eso es WCAG 1.4.1,
+      y es la razón por la que el color nunca puede ser la única señal).
+      <b style="color:#00214c;">Biología e Inglés todavía usan el motivo de Matemática</b>: les falta
+      dibujar el suyo.</div>
+    <div class="fila" id="tintes"></div>
+  </div>
+
+  <div style="margin-top:34px;">
+    <div class="hd">Contraste, medido</div>
+    <div class="hdd" style="margin:2px 0 12px;">
+      Los colores los elegí yo, así que los verifico yo. La etiqueta de D3 arrancó en 3,96:1 con el
+      verde de marca y no llegaba al mínimo: se cambió al verde accesible <code>#006d1f</code>.</div>
+    <div id="contraste"></div>
+  </div>
+
+</div>
+
+<script>
+/* ════════ MOTIVOS ════════
+   Cada motivo se dibuja en su propio espacio 0..100 y después se encaja
+   en la ZONA DEL DIBUJO. Así nunca invade la zona de la tipografía:
+   ese fue el defecto de la primera versión — el matraz tapaba "SECUNDARIA". */
+const ZONA = {x:16, y:3, escala:0.66};      // dibujo: x 16..82, y 3..69
+const K = 1/ZONA.escala;                    // compensa el grosor de trazo al escalar
+
+const trama = (c,vert) => {
+  const l=[];
+  for(let i=1;i<10;i++){
+    l.push(vert ? `<line x1="${i*10}" y1="0" x2="${i*10}" y2="100"/>`
+                : `<line x1="0" y1="${i*10}" x2="100" y2="${i*10}"/>`);
+  }
+  return `<g opacity=".12" stroke="${c.trama}" stroke-width=".5">${l.join('')}</g>`;
+};
+
+const MOTIVOS = {
+  matematica: (c) => `
+    <circle cx="72" cy="26" r="26" fill="none" stroke="${c.acento}" stroke-width="${1.1*K}" opacity=".5"/>
+    <circle cx="72" cy="26" r="15" fill="none" stroke="${c.acento}" stroke-width="${1.1*K}" opacity=".3"/>
+    <g stroke="${c.eje}" stroke-width="${0.9*K}" opacity=".65">
+      <line x1="4" y1="66" x2="96" y2="66"/><line x1="34" y1="6" x2="34" y2="96"/></g>
+    <path d="M 6 14 Q 34 118 62 14" fill="none" stroke="${c.linea}" stroke-width="${3.6*K}"
+          stroke-linecap="round"/>
+    <circle cx="34" cy="66" r="${3*K*0.66}" fill="${c.acento}"/>`,
+
+  quimica: (c) => `
+    <circle cx="70" cy="24" r="24" fill="none" stroke="${c.acento}" stroke-width="${1.1*K}" opacity=".45"/>
+    <path d="M 41 8 L 41 32 L 18 76 Q 13 88 25 88 L 75 88 Q 87 88 82 76 L 59 32 L 59 8 Z"
+          fill="none" stroke="${c.linea}" stroke-width="${3.2*K}" stroke-linejoin="round"/>
+    <path d="M 24 70 Q 50 63 76 70 L 82 76 Q 87 88 75 88 L 25 88 Q 13 88 18 76 Z"
+          fill="${c.acento}" opacity=".9"/>
+    <g fill="${c.linea}" opacity=".85">
+      <circle cx="44" cy="54" r="${2.6*K*0.66}"/><circle cx="57" cy="44" r="${1.9*K*0.66}"/>
+      <circle cx="49" cy="32" r="${1.4*K*0.66}"/></g>
+    <line x1="35" y1="8" x2="65" y2="8" stroke="${c.linea}" stroke-width="${3.2*K}" stroke-linecap="round"/>`,
+
+  fisica: (c) => `
+    <circle cx="28" cy="62" r="23" fill="none" stroke="${c.acento}" stroke-width="${1.1*K}" opacity=".45"/>
+    <path d="M 10 14 A 42 42 0 0 0 90 14" fill="none" stroke="${c.eje}" stroke-width="${0.9*K}"
+          opacity=".55" stroke-dasharray="${4*K} ${4*K}"/>
+    <line x1="38" y1="8" x2="62" y2="8" stroke="${c.linea}" stroke-width="${3.2*K}" stroke-linecap="round"/>
+    <line x1="50" y1="8" x2="24" y2="54" stroke="${c.linea}" stroke-width="${2.6*K}" stroke-linecap="round"/>
+    <circle cx="23" cy="57" r="${7.5*K*0.66}" fill="${c.acento}"/>
+    <line x1="50" y1="8" x2="76" y2="54" stroke="${c.linea}" stroke-width="${2.6*K}"
+          stroke-linecap="round" opacity=".3"/>
+    <circle cx="77" cy="57" r="${7.5*K*0.66}" fill="none" stroke="${c.linea}"
+            stroke-width="${2.2*K}" opacity=".42"/>
+    <path d="M 4 86 Q 16 72 28 86 T 52 86 T 76 86 T 98 86" fill="none" stroke="${c.linea}"
+          stroke-width="${2.4*K}" stroke-linecap="round" opacity=".8"/>`,
+};
+
+const PAL = {
+  d1:{fondo:'#0b2f6b', trama:'#ffffff', eje:'#8fb6ee', linea:'#ffffff', acento:'#2fd07a', vert:true},
+  d2:{fondo:'#f2e6cf', trama:'#12351f', eje:'#8a7a5c', linea:'#12351f', acento:'#c8621f', vert:false},
+  d3:{fondo:'#0f1c33', trama:'#ffffff', eje:'#6f8fc4', linea:'#ffffff', acento:'#01953c', vert:true},
+  d4:{fondo:'#12100e', trama:'#e8b53d', eje:'#6e5f42', linea:'#e8b53d', acento:'#c2410c', vert:false},
+};
+
+const TINTES = {
+  matematica:{fondo:'#0b2f6b', eje:'#8fb6ee', acento:'#2fd07a'},   // cobalto
+  quimica:   {fondo:'#0a3b34', eje:'#6fc9b4', acento:'#f0a03c'},   // verde botella
+  fisica:    {fondo:'#221a4d', eje:'#9d93e0', acento:'#4cc9f0'},   // índigo
+  biologia:  {fondo:'#14401c', eje:'#86c98f', acento:'#e8c33d'},   // verde hoja
+  ingles:    {fondo:'#5c1220', eje:'#e9a0a8', acento:'#f2d06b'},   // bordó
+};
+const DIRS = [
+  {k:'d1', t:'D1 · Afiche geométrico', d:'bloque de color, motivo grande, tipografía abajo'},
+  {k:'d2', t:'D2 · Afiche con textura', d:'papel crema, aire vintage de folleto'},
+  {k:'d3', t:'D3 · Tapa de revista',   d:'cabecera arriba, etiqueta y bajada al pie'},
+  {k:'d4', t:'D4 · Cartel de teatro',  d:'fondo casi negro, dorado, el nombre manda'},
+];
+
+function campo(dir, materia, tinte){
+  let c = PAL[dir];
+  if(tinte) c = {...c, ...(TINTES[tinte===true?materia:tinte]||{})};
+  return `<svg class="campo" viewBox="0 0 100 100">
+    ${trama(c, c.vert)}
+    <g transform="translate(${ZONA.x},${ZONA.y}) scale(${ZONA.escala})">${MOTIVOS[materia](c)}</g>
+  </svg>`;
+}
+
+function afiche({dir, materia, nombre, nivel, grande, tinte}){
+  const g = grande ? ' g' : '';
+  const cp = campo(dir, materia, tinte);
+  const kt = tinte===true?materia:tinte;
+  const fondo = tinte && TINTES[kt] ? ` style="background:${TINTES[kt].fondo}"` : '';
+  if(dir==='d1') return `<div class="af d1${g}"${fondo}>${cp}
+     <div class="tipo"><div class="niv">${nivel}</div><div class="nom nomA">${nombre}</div></div></div>`;
+  if(dir==='d2') return `<div class="af d2${g}"${fondo}>${cp}
+     <div class="tipo"><div class="rule"></div><div class="niv">${nivel}</div>
+     <div class="nom nomA">${nombre}</div></div></div>`;
+  if(dir==='d3') return `<div class="af d3${g}">${cp}
+     <div class="cabeza"><div class="nom nomA">${nombre}</div></div>
+     <div class="linea"><span class="tag">${nivel}</span><span class="co">clases particulares</span></div></div>`;
+  return `<div class="af d4${g}"${fondo}>${cp}
+     <div class="tipo"><div class="niv">${nivel}</div><div class="nom nomA">${nombre}</div></div></div>`;
+}
+
+const $=(id)=>document.getElementById(id);
+for(const d of DIRS){
+  $('chicas').insertAdjacentHTML('beforeend',
+    `<div>${afiche({dir:d.k,materia:'matematica',nombre:'Matemática',nivel:'Secundaria',grande:false})}
+     <div class="pie" style="width:150px"><b>${d.t}</b>${d.d}</div></div>`);
+  $('grandes').insertAdjacentHTML('beforeend',
+    `<div>${afiche({dir:d.k,materia:'matematica',nombre:'Matemática',nivel:'Secundaria',grande:true})}
+     <div class="pie" style="width:320px"><b>${d.t}</b></div></div>`);
+}
+for(const [mat,nom] of [['quimica','Química'],['fisica','Física']]){
+  for(const dir of ['d1','d2','d3','d4']){
+    $('otras').insertAdjacentHTML('beforeend',
+      `<div>${afiche({dir,materia:mat,nombre:nom,nivel:'Secundaria',grande:false})}
+       <div class="pie" style="width:150px"><b>${nom}</b>${dir.toUpperCase()}</div></div>`);
+  }
+}
+
+for(const [mat,nom] of [['matematica','Matemática'],['quimica','Química'],['fisica','Física'],
+                        ['biologia','Biología'],['ingles','Inglés']]){
+  const motivo = MOTIVOS[mat] ? mat : 'matematica';
+  $('tintes').insertAdjacentHTML('beforeend',
+    `<div>${afiche({dir:'d1',materia:motivo,nombre:nom,nivel:'Secundaria',grande:false,tinte:mat})
+       .replace(/(<svg class="campo")/, '$1')}
+     <div class="pie" style="width:150px"><b>${nom}</b>${TINTES[mat].fondo}</div></div>`);
+}
+
+/* ════════ contraste ════════ */
+function lum(h){const v=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255)
+  .map(x=>x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4));
+  return .2126*v[0]+.7152*v[1]+.0722*v[2];}
+function ratio(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+
+const PRUEBAS=[
+ ['D1','nombre','#ffffff','#0b2f6b',3],['D1','nivel','#7fe3a0','#0b2f6b',4.5],
+ ['D2','nombre','#12351f','#f2e6cf',3],['D2','nivel','#8a3d13','#f2e6cf',4.5],
+ ['D3','nombre','#ffffff','#0f1c33',3],['D3','etiqueta','#ffffff','#006d1f',4.5],
+ ['D3','bajada','#cfe0f5','#0f1c33',4.5],
+ ['D4','nombre','#f7f3ec','#12100e',3],['D4','nivel','#e8b53d','#12100e',4.5],
+];
+$('contraste').innerHTML='<table><tr><th>Afiche</th><th>Elemento</th><th>Medido</th><th>Mínimo</th><th></th></tr>'
+ + PRUEBAS.map(([d,e,t,f,m])=>{const r=ratio(t,f);
+     return `<tr><td><b>${d}</b></td><td>${e}</td><td><b>${r.toFixed(2)}:1</b></td><td>${m}:1</td>
+       <td class="${r>=m?'ok':'mal'}">${r>=m?'pasa':'FALLA'}</td></tr>`;}).join('')
+ + '</table>';
+window.__contraste = PRUEBAS.map(([d,e,t,f,m])=>({d,e,r:+ratio(t,f).toFixed(2),min:m,ok:ratio(t,f)>=m}));
+window.__listo=true;
+</script>
+</x-dc>
+</body>
+</html>

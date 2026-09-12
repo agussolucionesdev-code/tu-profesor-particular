@@ -1124,6 +1124,63 @@
 
 .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 158px); }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   LAS PORTADAS DE MATERIA SON ARTE A SANGRE, NO OBJETOS FLOTANDO.
+
+   Las tarjetas de NIVEL siguen usando renders 3D con fondo transparente, y
+   para eso el tratamiento de arriba es correcto: halo verde detrás,
+   `object-fit: contain`, `drop-shadow` que sigue la silueta del objeto, y un
+   `scale(0.96)` que lo hace respirar.
+
+   Las portadas de MATERIA son otra cosa: ilustraciones cuadradas con su
+   propio fondo cuadriculado. Con el tratamiento anterior se veían mal y por
+   tres motivos concretos:
+
+     · el halo quedaba tapado al 100%, invisible y al costo de pintarlo;
+     · el `drop-shadow` seguía la silueta de la imagen, que ahora es un
+       rectángulo, así que dibujaba una sombra rectangular dura;
+     · el cuadrado quedaba con esquinas filosas dentro de una tarjeta
+       redondeada, y el `scale` dejaba un hueco alrededor.
+
+   Por eso acá se revierten esas cuatro decisiones, sólo para materias.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.kiosk-choice-subject .kiosk-visual-media {
+  /* Sin padding: la ilustración llega al borde y la tarjeta la recorta. */
+  padding: 0;
+}
+
+/* El halo era para que un objeto suelto no flotara en el vacío. Debajo de una
+   imagen opaca no se ve, así que se apaga en vez de pintarse de gusto. */
+.kiosk-choice-subject .kiosk-visual-halo {
+  display: none;
+}
+
+.kiosk-choice-subject .kiosk-visual-media img {
+  width: 100%;
+  max-width: none;
+  /* `cover` y no `contain`: la imagen ya es cuadrada, así que no recorta nada,
+     pero garantiza que llene el cuadro si alguna llegara con otra proporción. */
+  object-fit: cover;
+  /* La sombra pasa a ser del contenedor, no de la silueta. */
+  filter: none;
+  transform: none;
+  /* Redondeo sólo arriba: abajo sigue la banda con el nombre. */
+  border-radius: 13px 13px 0 0;
+}
+
+/* El movimiento al pasar el mouse se mantiene, pero sobre la tarjeta entera en
+   vez de sobre la imagen: con arte a sangre, escalar la imagen adentro de un
+   contenedor con overflow oculto sólo recorta, no da sensación de relieve. */
+.kiosk-choice-subject:hover .kiosk-visual-media img,
+.kiosk-choice-subject:focus-visible .kiosk-visual-media img {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-choice-subject .kiosk-visual-media img { transition: none; }
+}
+
 .kiosk-visual-copy {
   position: relative;
   z-index: 1;

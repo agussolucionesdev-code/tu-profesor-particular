@@ -1,0 +1,61 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "Barra superior · tu logo haciendo el trabajo",
+      "x": 0,
+      "y": 0,
+      "w": 1240,
+      "h": 800
+    },
+    {
+      "file": "Materias.dc.html",
+      "title": "Portadas · cuatro afiches hechos en código",
+      "x": 1350,
+      "y": 0,
+      "w": 1240,
+      "h": 1720
+    },
+    {
+      "file": "Aplicacion.dc.html",
+      "title": "Aplicado en los dos sitios",
+      "x": 0,
+      "y": 1880,
+      "w": 1420,
+      "h": 820
+    }
+  ],
+  "annotations": [
+    {
+      "id": "nota-giro",
+      "x": 2700,
+      "y": 0,
+      "w": 410,
+      "text": "El péndulo, y dónde estaba el error.\n\nPrimero hice fantasía: espirales doradas flotando, brillo mágico. Agus: «se nota hecho con IA».\n\nEntonces me fui al otro extremo: fotografía documental, un cuaderno con un lápiz al lado, luz de ventana. Agus: «así boludo».\n\nTenía razón las dos veces, y las dos veces erré el diagnóstico. El problema no era fantasía-contra-realismo. Era que ninguna de las dos cosas es una PORTADA.\n\nLa palabra la puso él: afiche de teatro, folleto, tapa de revista. Eso es diseño gráfico — composición, bloque de color, un motivo fuerte y una tipografía que es parte del dibujo."
+    },
+    {
+      "id": "nota-codigo",
+      "x": 2700,
+      "y": 530,
+      "w": 410,
+      "text": "Por qué en código y no generado.\n\nUn afiche generado siempre puede oler a IA. Uno dibujado en código, no: porque no lo está.\n\nY además gana en todo lo demás:\n\n· pesa ~3 KB contra 130 KB de una foto\n· nítido a cualquier tamaño, sin versiones\n· lo cambio en segundos, sin lotería de generación\n· las ocho materias salen del mismo molde, así que son consistentes por construcción\n· la parábola es una parábola de verdad, no una curva que se le parece"
+    },
+    {
+      "id": "nota-color",
+      "x": 2700,
+      "y": 1010,
+      "w": 410,
+      "text": "La paleta por materia no es decoración.\n\nEn la grilla de ocho tarjetas, si todas son del mismo azul, hay que LEER para encontrar la que se busca. Con un color propio cada una, se encuentra antes de leer.\n\nPero el color nunca es la única señal: el nombre está siempre, grande y completo. Eso es WCAG 1.4.1, y también es sentido común — el 8% de los varones tiene alguna deficiencia de color.\n\nNueve pruebas de contraste, cero fallas. La etiqueta de D3 arrancó fallando en 3,96:1 con el verde de marca; se cambió al verde accesible #006d1f."
+    },
+    {
+      "id": "nota-falta",
+      "x": 2700,
+      "y": 1540,
+      "w": 410,
+      "text": "Lo que falta, dicho claro.\n\nEstán dibujados tres motivos: la parábola con arcos de compás, el matraz con burbujas y el péndulo con la onda.\n\nFaltan cinco: Biología, Inglés, Lengua y Literatura, Ciencias Naturales y Ciencias Sociales. En la fila de paletas, Biología e Inglés todavía muestran el motivo de Matemática — es un marcador de lugar, no un descuido.\n\nElegí una dirección (D1 a D4) y las dibujo todas, más las variantes de primaria."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}
