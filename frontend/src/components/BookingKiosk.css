@@ -272,11 +272,9 @@
   font-size: 1rem;
 }
 .kiosk-other-input::placeholder { color: var(--text-tertiary); }
-.kiosk-other-input:focus-visible {
-  outline: none;
-  border-color: var(--brand-green);
-  box-shadow: var(--shadow-focus);
-}
+/* El foco de este campo —y de todos los campos de texto— lo define
+   final-polish.css. Las reglas de foco que había acá perdían contra dos
+   `!important` globales y sólo sumaban una capa más al anillo. */
 
 .kiosk-other-go {
   flex-shrink: 0;
@@ -475,7 +473,6 @@
   color: var(--text-primary);
   font-family: inherit;
 }
-.kiosk-input:focus-visible { outline: none; border-color: var(--brand-green); box-shadow: var(--shadow-focus); }
 .kiosk-input.is-valid { border-color: var(--brand-green); }
 .kiosk-input.error { border-color: var(--error-color); }
 .kiosk-textarea { resize: vertical; min-height: 76px; }
@@ -1328,16 +1325,16 @@
   box-shadow: 0 10px 20px rgba(0, 33, 76, 0.12), inset 0 1px 0 #fff;
 }
 
+/* Sin sombra propia y sin transición propia: las dos las maneja la regla de
+   campos de texto de final-polish.css. Acá había dos cosas que empeoraban el
+   foco. La sombra en reposo era `inset` y la de foco no, y una sombra
+   interior no se puede interpolar con una exterior: el navegador salta de
+   una a otra sin animar. Y el foco movía el campo 1 px hacia arriba, así que
+   el cursor de texto pegaba un salto justo cuando la persona empezaba a
+   escribir. */
 .kiosk-input {
   min-height: 48px;
   border-radius: 12px;
-  box-shadow: inset 0 1px 2px rgba(0, 33, 76, 0.05), 0 6px 14px rgba(0, 33, 76, 0.04);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.kiosk-input:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-focus), 0 10px 20px rgba(0, 33, 76, 0.08);
 }
 
 .kiosk-summary { border-radius: 18px; }
