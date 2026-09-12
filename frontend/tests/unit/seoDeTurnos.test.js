@@ -81,12 +81,21 @@ test("las páginas de error están escritas en castellano y de vos", () => {
     /\bsalio\b/i,
     /\bVolve\b/,
     /\bIntenta de nuevo\b/,
+    /\bEscr[ií]beme\b/,
   ]) {
     assert.doesNotMatch(copy, falta, `falta de ortografía o tuteo: ${falta}`);
   }
-  // Y que el voseo esté puesto, no sólo ausente el tuteo.
+  /* Y que el voseo esté puesto, no sólo ausente el tuteo.
+
+     Mantenimiento se probaba con «Volvé en unos minutos». Esa frase se fue
+     cuando la pantalla cambió de acción principal: «Reintentar» devolvía a la
+     persona al mismo lugar, y si el sistema está caído eso es un bucle, así
+     que ahora la salida es escribirle a Agustín. Lo que este test protege es
+     el voseo, no una frase en particular, así que se prueba con la marca que
+     hay ahora: «escribime», donde el tuteo diría «escríbeme» —que para eso
+     quedó sumado arriba, entre las faltas—. */
   assert.match(serverError, /Intentá de nuevo/);
-  assert.match(maintenance, /Volvé en unos minutos/);
+  assert.match(maintenance, /[Ee]scribime por WhatsApp/);
 });
 
 test("el JSON-LD que lee Google está bien escrito", () => {
