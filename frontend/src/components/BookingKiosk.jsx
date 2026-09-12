@@ -29,11 +29,11 @@ import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
 import { usaBuscador } from "../constants/materiasSuperior";
 import BuscadorDeMateria from "./booking/BuscadorDeMateria";
+import NivelIcono from "./booking/NivelIcono";
 import {
-  getLevelVisual,
   getSubjectVisual,
   OTHER_SUBJECT_VISUAL,
-} from "../constants/bookingVisuals";
+} from "../constants/bookingVisuals";;
 import {
   KIOSK_STEPS,
   LEVEL_OPTIONS,
@@ -773,36 +773,39 @@ const BookingKiosk = () => {
                   </button>
                 </div>
                 <div className="kiosk-grid kiosk-grid-levels">
-                  {LEVEL_OPTIONS.map((lvl, index) => {
-                    const visual = getLevelVisual(lvl.value);
-                    return (
+                  {/* Sin imagen acá, a propósito.
+                      Este paso y el de la materia son consecutivos, y las
+                      portadas de materia son las que venden. Si los dos están
+                      llenos de ilustración compiten y ninguno lidera. Elegir
+                      el nivel es administrativo y dura dos segundos: necesita
+                      ser instantáneo, no lindo. Ver el comentario largo en
+                      booking/NivelIcono.jsx. */}
+                  {LEVEL_OPTIONS.map((lvl) => (
                       <button
                         key={lvl.value}
                         type="button"
-                        className="kiosk-choice-card kiosk-visual-card kiosk-level-card"
+                        className="kiosk-choice-card kiosk-level-card"
                         onClick={() => chooseLevel(lvl.value)}
                         aria-label={`${lvl.label}. ${lvl.hint}`}
                       >
-                        <span className="kiosk-visual-media" aria-hidden="true">
-                          <span className="kiosk-visual-halo" />
-                          <img
-                            src={visual.src}
-                            width={visual.width}
-                            height={visual.height}
-                            alt=""
-                            loading={index < 3 ? "eager" : "lazy"}
-                            decoding="async"
-                          />
+                        <span className="kiosk-level-icon" aria-hidden="true">
+                          <NivelIcono nivel={lvl.value} />
                         </span>
+                        {/* Sin el rótulo «Nivel educativo»: el título de arriba
+                            ya pregunta qué nivel está cursando, así que repetirlo
+                            en cada una de las seis tarjetas sólo le robaba ancho
+                            al nombre. Medido: el nombre se cortaba en
+                            «Secundari» y «Universitari». */}
                         <span className="kiosk-visual-copy">
-                          <span className="kiosk-choice-kicker">Nivel educativo</span>
                           <span className="kiosk-choice-label">{lvl.label}</span>
                           <span className="kiosk-choice-hint">{lvl.hint}</span>
                         </span>
-                        <span className="kiosk-card-arrow" aria-hidden="true"><FaArrowRight /></span>
+                        {/* Sin flecha: la tarjeta entera es el botón. Una flecha dentro de
+                            algo que ya se toca completo no agrega información y
+                            acá se comía 40 px del ancho del nombre. El relleno del
+                            ícono al apuntarla es la señal de que es clickeable. */}
                       </button>
-                    );
-                  })}
+                  ))}
                 </div>
               </>
             ) : (
