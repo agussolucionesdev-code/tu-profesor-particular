@@ -158,6 +158,8 @@ const BookingKiosk = () => {
     isValidField,
     isPersonalInfoComplete,
     handleChange,
+
+    handleBlur,
     resetForm,
     getFieldStateClass,
     getFieldError,
@@ -928,7 +930,10 @@ const BookingKiosk = () => {
                       {voz.otraMateriaTitulo}
                     </label>
                     <p className="kiosk-other-hint">
-                      {voz.otraMateriaAyuda}
+                      {/* El `{" "}` hace falta: JSX descarta el espacio en
+                          blanco que incluye un salto de línea, así que sin él
+                          se leía «Por ejemplo:Análisis», todo pegado. */}
+                      {voz.otraMateriaAyuda}{" "}
                       Análisis Matemático II, Álgebra Lineal, Fisicoquímica.
                     </p>
                     <div className="kiosk-other-row">
@@ -1254,6 +1259,8 @@ const BookingKiosk = () => {
                   className={`kiosk-input ${getFieldStateClass("studentName")}`}
                   value={formData.studentName}
                   onChange={handleChange}
+
+                  onBlur={handleBlur}
                   placeholder="Nombre y apellido"
                   autoComplete={voz.autoCompleteAlumno}
                   required
@@ -1270,6 +1277,8 @@ const BookingKiosk = () => {
                   className={`kiosk-input ${getFieldStateClass("phone")}`}
                   value={formData.phone}
                   onChange={handleChange}
+
+                  onBlur={handleBlur}
                   placeholder="+54 9 11 1234 5678"
                   autoComplete="tel"
                   required
@@ -1286,6 +1295,8 @@ const BookingKiosk = () => {
                   className={`kiosk-input ${getFieldStateClass("email", true)}`}
                   value={formData.email}
                   onChange={handleChange}
+
+                  onBlur={handleBlur}
                   placeholder="tucorreo@email.com"
                   autoComplete="email"
                   {...propsDeError("email")}
@@ -1300,6 +1311,8 @@ const BookingKiosk = () => {
                   className={`kiosk-input ${getFieldStateClass("yearGrade")}`}
                   value={formData.yearGrade}
                   onChange={handleChange}
+
+                  onBlur={handleBlur}
                   required
                   {...propsDeError("yearGrade")}
                 >
@@ -1345,6 +1358,8 @@ const BookingKiosk = () => {
                     className={`kiosk-input ${getFieldStateClass("responsibleName")}`}
                     value={formData.responsibleName}
                     onChange={handleChange}
+
+                    onBlur={handleBlur}
                     placeholder="Nombre y apellido"
                     autoComplete={voz.autoCompleteResponsable}
                     required
@@ -1359,6 +1374,8 @@ const BookingKiosk = () => {
                     className={`kiosk-input ${getFieldStateClass("responsibleRelationship")}`}
                     value={formData.responsibleRelationship}
                     onChange={handleChange}
+
+                    onBlur={handleBlur}
                     required
                     {...propsDeError("responsibleRelationship")}
                   >
@@ -1378,6 +1395,8 @@ const BookingKiosk = () => {
                       className={`kiosk-input ${getFieldStateClass("responsibleRelationshipOther")}`}
                       value={formData.responsibleRelationshipOther}
                       onChange={handleChange}
+
+                      onBlur={handleBlur}
                       placeholder="Indicá el vínculo"
                       required
                       {...propsDeError("responsibleRelationshipOther")}
@@ -1395,6 +1414,8 @@ const BookingKiosk = () => {
                 className={`kiosk-input kiosk-textarea ${getFieldStateClass("objective")}`}
                 value={formData.objective}
                 onChange={handleChange}
+
+                onBlur={handleBlur}
                 rows={3}
                 placeholder="Ej: preparar el examen de la semana que viene, entender ecuaciones…"
                 maxLength={300}

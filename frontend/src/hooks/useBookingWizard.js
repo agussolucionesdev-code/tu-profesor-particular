@@ -22,6 +22,9 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
   }));
   const [isAdult, setIsAdult] = useState(false);
   const [hasAttemptedNext, setHasAttemptedNext] = useState(false);
+  /* Los campos que la persona ya dejó al menos una vez. Es lo que habilita el
+     rojo: ver `getFieldStateClass`. */
+  const [camposDejados, setCamposDejados] = useState({});
 
   const isValidField = useCallback(
     (field) => {
@@ -160,20 +163,48 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
     setFormData(BOOKING_INITIAL_FORM_DATA);
     setIsAdult(false);
     setHasAttemptedNext(false);
+    setCamposDejados({});
   }, []);
 
+  /* Se cuelga del `onBlur` de cada campo. Sólo anota el `name`: no valida
+     nada, la decisión de mostrar el rojo sigue siendo de
+     `getFieldStateClass`. El `prev[name]` evita un re-render cada vez que la
+     persona entra y sale de un campo que ya estaba anotado. */
+  const handleBlur = useCallback((e) => {
+    const { name } = e.target;
+    if (!name) return;
+    setCamposDejados((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
+  }, []);
+
+  /* PREMIAR TEMPRANO, RETAR TARDE.
+
+     El verde aparece apenas el dato está bien, mientras se escribe. El rojo,
+     en cambio, espera a una de dos cosas: que la persona haya dejado el campo
+     con algo escrito, o que haya intentado avanzar.
+
+     Antes el rojo salía con la primera letra —con el cuarto dígito en el
+     teléfono—. Medido en un teléfono: escribiendo «lucia.f», con el foco
+     todavía en el campo, ya decía «parece que le falta el @», antes de que la
+     persona llegara a escribirlo. Un formulario que reta mientras se escribe
+     se siente hostil, y además es más lento: hace frenar a leer un error que
+     todavía no es un error.
+
+     Dejar un campo VACÍO no lo pone en rojo. Quien recorre el formulario con
+     Tab, o tocando campos para ver qué hay, no tiene que dejar una estela roja
+     detrás; lo que falta se reclama cuando intenta seguir.
+
+     Una vez que el rojo apareció, se queda mientras la persona corrige —el
+     campo ya está anotado como dejado— y se va en cuanto el dato queda bien,
+     porque `isValidField` se evalúa primero. */
   const getFieldStateClass = useCallback(
     (field, isOptional = false) => {
       if (isValidField(field)) return "is-valid";
       if (isOptional && formData[field]?.trim() === "") return "";
       const value = String(formData[field] ?? "").trim();
-      const hasStartedTyping =
-        field === "phone"
-          ? formData.phone.replace(/\D/g, "").length >= 4
-          : value.length > 0;
-      return hasAttemptedNext || hasStartedTyping ? "error" : "";
+      const dejadoConAlgoEscrito = Boolean(camposDejados[field]) && value.length > 0;
+      return hasAttemptedNext || dejadoConAlgoEscrito ? "error" : "";
     },
-    [isValidField, formData, hasAttemptedNext],
+    [isValidField, formData, hasAttemptedNext, camposDejados],
   );
 
   /* El motivo por el que un campo está mal, en texto.
@@ -265,6 +296,7 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
     isAcademicInfoComplete,
     canProceedToStep2,
     handleChange,
+    handleBlur,
     toggleAdultMode,
     resetForm,
     getFieldStateClass,
