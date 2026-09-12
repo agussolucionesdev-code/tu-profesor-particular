@@ -1065,7 +1065,14 @@
 }
 
 .kiosk-grid { gap: clamp(0.7rem, 1.3vw, 1rem); }
-.kiosk-grid-levels { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* Tres columnas, no cinco: son seis niveles y con cinco columnas la sexta
+   tarjeta quedaba sola en una segunda fila. Tres da dos filas parejas.
+   `grid-auto-rows: 1fr` iguala el alto de las dos filas, así una descripción
+   de dos líneas no hace que su fila sea más alta que la otra. */
+.kiosk-grid-levels {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+}
 .kiosk-grid-subjects { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
 
 .kiosk-choice-card.kiosk-visual-card {
@@ -1087,11 +1094,6 @@
     border-color 0.24s ease,
     box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
     background 0.24s ease;
-}
-
-.kiosk-level-card {
-  grid-template-rows: minmax(164px, 1fr) auto;
-  min-height: 326px;
 }
 
 .kiosk-choice-card.kiosk-choice-subject {
@@ -1442,18 +1444,12 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 980px) {
-  .kiosk-grid-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .kiosk-level-card { min-height: 300px; }
-}
-
 @media (max-width: 680px) {
   .kiosk-card { border-radius: 22px; padding: 1rem; }
   .kiosk-card-head { align-items: center; }
   .kiosk-brand-logo { width: 42px; height: 42px; flex-basis: 42px; }
   .kiosk-grid-levels,
   .kiosk-grid-subjects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .kiosk-level-card { min-height: 258px; grid-template-rows: minmax(132px, 1fr) auto; }
   .kiosk-choice-card.kiosk-choice-subject { min-height: 218px; grid-template-rows: minmax(126px, 1fr) auto; }
   .kiosk-visual-media img { width: min(100%, 168px); }
   .kiosk-choice-subject .kiosk-visual-media img { width: min(100%, 136px); }
@@ -1554,4 +1550,150 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TARJETA DE NIVEL · tipográfica, con un ícono chico
+
+   Antes cargaba un render 3D de 640px sobre un halo verde. Se cambió por una
+   silueta dibujada en código, y la razón es de jerarquía, no de peso: el paso
+   siguiente son las portadas de materia, que son las que venden. Dos pasos
+   consecutivos llenos de ilustración compiten y ninguno gana. Ver el
+   comentario largo en booking/NivelIcono.jsx.
+
+   El ahorro de peso vino de arriba: 254 KB y cinco requests menos.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.kiosk-level-card {
+  display: flex;
+  /* Las tres declaraciones de abajo se escriben explícitas porque la tarjeta
+     ya no lleva la clase `kiosk-visual-card`, que era la que las traía. Al
+     quitarla pasaron tres cosas a la vez, todas medidas: la tarjeta siguió en
+     `column` heredado, conservó un `min-height: 300px` dimensionado para el
+     render 3D —de ahí el hueco vacío abajo— y la flecha, posicionada en
+     absoluto, perdió su contenedor y se fue a flotar sobre el encabezado. */
+  flex-direction: row;
+  align-items: center;
+  min-height: 0;
+  position: relative;
+  gap: 0.95rem;
+  /* El texto manda: la fila es horizontal y el ícono acompaña. Con el render
+     la tarjeta era vertical y el nombre quedaba abajo, chico. */
+  text-align: left;
+  padding: 1.05rem 1.15rem;
+}
+
+/* `balance` reparte las líneas en vez de llenar la primera y dejar una palabra
+   sola abajo: «Secundaria Técnica» cae en dos líneas parejas en lugar de
+   «Secundaria / Técnica» con la segunda casi vacía. Sin soporte, el navegador
+   lo ignora y envuelve como siempre. */
+.kiosk-level-card .kiosk-choice-label,
+.kiosk-level-card .kiosk-choice-hint {
+  text-wrap: balance;
+}
+
+/* La flecha entra en la fila en vez de posicionarse en absoluto: en una fila
+   horizontal, una flecha clavada arriba a la derecha no apunta a nada. */
+.kiosk-level-card .kiosk-card-arrow {
+  position: static;
+  inset: auto;
+  margin-left: auto;
+  flex: none;
+}
+
+.kiosk-level-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--brand-green-soft, #eafdec);
+  color: var(--brand-green-deep, #006d1f);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+[data-theme="dark"] .kiosk-level-icon {
+  background: rgba(136, 206, 147, 0.14);
+  color: var(--brand-green-soft, #eafdec);
+}
+
+/* Al apuntarla, el ícono se llena: es la única señal de movimiento y basta.
+   Escalar la tarjeta entera en una grilla de seis hace saltar a las vecinas. */
+.kiosk-level-card:hover .kiosk-level-icon,
+.kiosk-level-card:focus-visible .kiosk-level-icon {
+  background: var(--brand-green-deep, #006d1f);
+  color: var(--brand-white, #ffffff);
+}
+
+.kiosk-level-card .kiosk-visual-copy {
+  display: grid;
+  /* La pista va en `minmax(0, 1fr)` y no en `auto`. Este contenedor ya tenía
+     `min-width: 0` y no alcanzaba: en un grid, una pista `auto` nunca baja de
+     su ancho de contenido mínimo, así que el `min-width` del contenedor no
+     llega a los hijos. Medido a 375 px: «Secundaria» pide 105 px a 1.12rem en
+     negrita, la tarjeta mide 156 px y le quedaban 60 px de columna de texto —el
+     nombre salía de la tarjeta y se leía «Secundari» contra el borde. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.12rem;
+  min-width: 0;
+  /* Las tres de abajo desarman lo que este contenedor traía de cuando el texto
+     era una banda al pie de la portada: un padding propio, un degradado blanco
+     para despegar las letras de la imagen, y el contenido pegado abajo. Ya no
+     hay imagen debajo. El padding solo eran 25 px de aire —la tarjeta medía
+     98 px de alto para un contenido de 73— y el degradado pintaba blanco sobre
+     blanco. */
+  align-content: center;
+  padding: 0;
+  background: none;
+}
+
+.kiosk-level-card .kiosk-choice-label {
+  font-size: 1.12rem;
+  line-height: 1.15;
+}
+
+.kiosk-level-card .kiosk-choice-hint {
+  /* --color-text-soft da 4,20:1 sobre blanco y el mínimo es 4,5. */
+  color: var(--color-text-secondary, #53595f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-level-icon { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .kiosk-level-card {
+    gap: 0.8rem;
+    padding: 0.9rem 1rem;
+  }
+  .kiosk-level-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+  .kiosk-level-card .kiosk-choice-label { font-size: 1.05rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EN TELÉFONO, LOS NIVELES VAN EN UNA SOLA COLUMNA.
+
+   La regla general de 680 px pone dos columnas para niveles y materias, y para
+   las materias está bien: sus portadas son cuadradas y la grilla las luce. Los
+   niveles son otra cosa. En dos columnas a 375 px cada tarjeta mide 156 px y,
+   descontando el ícono y los márgenes, al nombre le quedan 60 px: «Secundaria»
+   y «Universitario» no entran a ningún tamaño razonable y terminan envueltos
+   en tres líneas o cortados.
+
+   En una columna cada tarjeta toma los 335 px del ancho, el nombre y su
+   descripción entran en una línea cada uno, y la tarjeta baja a unos 76 px de
+   alto. Las seis ocupan cerca de 500 px: entran juntas en la pantalla de un
+   teléfono sin cortar nada. Y una lista vertical es el gesto natural del
+   pulgar, que es lo que importa cuando la idea es reservar en tres minutos.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 560px) {
+  .kiosk-grid-levels { grid-template-columns: minmax(0, 1fr); }
+  .kiosk-level-card { padding: 0.85rem 0.95rem; }
 }

@@ -21,7 +21,7 @@ export const LEVEL_OPTIONS = [
      programa— y el plan es de tres años, acortables por equivalencias según
      el diseño de la modalidad de adultos. */
   { value: "CENS", label: "CENS", hint: "Secundaria de adultos, 3 años" },
-  { value: "Terciario", label: "Terciario", hint: "Formación docente y superior" },
+  { value: "Terciario", label: "Terciario", hint: "Profesorados y terciarios" },
   { value: "Universitario", label: "Universitario", hint: "Carreras de grado" },
 ];
 
