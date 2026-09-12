@@ -15,6 +15,12 @@ export const LEVEL_OPTIONS = [
   { value: "Primaria", label: "Primaria", hint: "1° a 6° grado" },
   { value: "Secundaria", label: "Secundaria", hint: "1° a 6° año" },
   { value: "Secundaria Tecnica", label: "Secundaria Técnica", hint: "1° a 7° año" },
+  /* CENS: la secundaria de adultos. Estaba en el mapa de materias pero no
+     tenía tarjeta, así que el nivel era inalcanzable desde el kiosco. Dicta
+     las mismas materias que Secundaria —lo que cambia es quién cursa, no el
+     programa— y el plan es de tres años, acortables por equivalencias según
+     el diseño de la modalidad de adultos. */
+  { value: "CENS", label: "CENS", hint: "Secundaria de adultos, 3 años" },
   { value: "Terciario", label: "Terciario", hint: "Formación docente y superior" },
   { value: "Universitario", label: "Universitario", hint: "Carreras de grado" },
 ];
@@ -61,6 +67,13 @@ export const getKioskYearGradeOptions = (level) => {
       "6to año",
       level === "Secundaria Tecnica" ? "7mo año" : null,
     ].filter(Boolean);
+  }
+  /* Tres años, y además "materias adeudadas": el caso más común de quien
+     retoma de grande no es cursar un año completo, es rendir las previas que
+     le quedaron colgadas hace años. Si no está esa opción, esa persona tiene
+     que elegir un año que no le corresponde. */
+  if (level === "CENS") {
+    return ["1er año", "2do año", "3er año", "Materias adeudadas"];
   }
   if (level === "Terciario" || level === "Universitario") {
     return ["1er año", "2do año", "3er año", "4to año", "5to año", "6to año", "Avanzado"];

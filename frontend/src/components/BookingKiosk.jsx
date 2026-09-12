@@ -27,6 +27,8 @@ import {
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
 import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
+import { usaBuscador } from "../constants/materiasSuperior";
+import BuscadorDeMateria from "./booking/BuscadorDeMateria";
 import {
   getLevelVisual,
   getSubjectVisual,
@@ -827,9 +829,22 @@ const BookingKiosk = () => {
                     <FaPencilAlt aria-hidden="true" /> Cambiar nivel
                   </button>
                 </div>
+                {/* Terciario y Universitario no llevan grilla: la misma materia se
+                    llama distinto en cada facultad y ninguna lista fija alcanza.
+                    Ver el comentario largo en constants/materiasSuperior.js. */}
+                {usaBuscador(formData.educationLevel) ? (
+                  <BuscadorDeMateria
+                    nivel={formData.educationLevel}
+                    valor={formData.subject}
+                    onElegir={chooseSubject}
+                    autoFocus
+                  />
+                ) : (
                 <div className="kiosk-grid kiosk-grid-subjects">
                   {subjectsForLevel.map((subject, index) => {
-                    const visual = getSubjectVisual(subject);
+                    /* El nivel decide la familia de portada: Primaria usa las
+                       multicolor, el resto la de marca. Ver constants/bookingVisuals.js */
+                    const visual = getSubjectVisual(subject, formData.educationLevel);
                     return (
                       <button
                         key={subject}
@@ -895,6 +910,7 @@ const BookingKiosk = () => {
                     <span className="kiosk-card-arrow" aria-hidden="true"><FaPencilAlt /></span>
                   </button>
                 </div>
+                )}
 
                 {formData.subject && !otherOpen && (
                   <div className="kiosk-selection-dock" role="status" aria-live="polite">

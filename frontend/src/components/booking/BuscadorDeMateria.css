@@ -1,0 +1,419 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   EL BUSCADOR DE MATERIAS DE NIVEL SUPERIOR.
+
+   Todo sale de los tokens de `styles/tokens.css`, que ya traen su par claro y
+   oscuro: por eso acá no hay ni un bloque `[data-theme="dark"]`. Si un color
+   estuviera escrito a mano, el modo oscuro lo dejaría ilegible.
+
+   Una nota de contraste: NO se usa `--color-text-soft` para texto chico.
+   Sobre blanco da 4,20:1 y el mínimo de WCAG para texto normal es 4,5. Va
+   `--color-text-secondary`, que da 6,96:1.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.bmat {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── el campo ─────────────────────────────────────────────────────────────── */
+
+.bmat-label {
+  font-family: var(--ui-font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.015em;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.bmat-ayuda {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: -6px 0 2px;
+  max-width: 62ch;
+}
+
+.bmat-ayuda em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--brand-green-deep);
+}
+
+.bmat-campo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0 18px;
+  background: var(--surface-card);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.bmat-campo:focus-within {
+  border-color: var(--brand-green);
+  box-shadow: var(--shadow-focus);
+}
+
+/* La lista cuelga del campo: mientras está abierta, se unen visualmente. */
+.bmat-campo.is-abierto {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.bmat-lupa {
+  flex: none;
+  font-size: 1.05rem;
+  color: var(--brand-green-deep);
+}
+
+.bmat-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* 56px de alto: bien por encima del mínimo de 44 de WCAG 2.5.5, y cómodo
+     para un pulgar en el teléfono. */
+  height: 56px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-primary);
+  font-size: 1.05rem;
+  color: var(--color-text-main);
+}
+
+.bmat-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1; /* Firefox lo baja a .54 y deja de cumplir contraste */
+}
+
+.bmat-input:focus {
+  outline: none; /* el anillo lo pinta el contenedor con :focus-within */
+}
+
+/* ── resultados ───────────────────────────────────────────────────────────── */
+
+.bmat-lista {
+  display: none;
+  list-style: none;
+  margin: -14px 0 0;
+  padding: 6px;
+  width: 100%;
+  background: var(--surface-card);
+  border: 2px solid var(--brand-green);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.bmat-lista.is-visible {
+  display: block;
+}
+
+.bmat-op {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 110ms ease;
+}
+
+.bmat-op.is-activa {
+  background: var(--brand-green-soft);
+}
+
+.bmat-op-nombre {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+/* El pedazo que la persona escribió. `mark` por defecto viene amarillo
+   chillón: se reescribe para que sea el verde de la marca y se lea POR QUÉ
+   apareció ese resultado. */
+.bmat-op-nombre mark {
+  background: transparent;
+  color: var(--brand-green-deep);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.bmat-op-familia {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ── sin resultados ───────────────────────────────────────────────────────── */
+
+.bmat-vacio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.bmat-vacio p {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--color-text-strong);
+}
+
+.bmat-btn-libre,
+.bmat-otra {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 12px 20px;
+  background: transparent;
+  border: 2px solid var(--brand-green-deep);
+  border-radius: var(--radius-full);
+  font-family: var(--font-primary);
+  font-size: 0.97rem;
+  font-weight: 700;
+  color: var(--brand-green-deep);
+  cursor: pointer;
+  transition: background-color 130ms ease, color 130ms ease;
+}
+
+.bmat-btn-libre:hover,
+.bmat-otra:hover {
+  background: var(--brand-green-deep);
+  color: var(--brand-white);
+}
+
+.bmat-otra {
+  align-self: flex-start;
+}
+
+/* ── el CBC, destacado ────────────────────────────────────────────────────── */
+
+.bmat-cbc {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  /* El único degradado de la pieza, y es de marca: el CBC es un producto
+     aparte y tiene que verse aparte. */
+  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-soft) 100%);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevated);
+}
+
+.bmat-cbc-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bmat-cbc-sello {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: var(--brand-green);
+  color: var(--brand-white);
+  font-family: var(--ui-font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.bmat-cbc-titulo {
+  margin: 0;
+  font-family: var(--ui-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-variation-settings: "opsz" 120;
+  letter-spacing: -0.015em;
+  color: var(--brand-white);
+}
+
+.bmat-cbc-bajada {
+  margin: 3px 0 0;
+  font-size: 0.93rem;
+  line-height: 1.45;
+  /* Sobre el navy este celeste da 11,4:1. Blanco puro acá cansaría. */
+  color: #ccd9eb;
+}
+
+.bmat-cbc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bmat-chip {
+  min-height: 44px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-full);
+  font-family: var(--font-primary);
+  font-size: 0.97rem;
+  font-weight: 700;
+  color: var(--brand-white);
+  cursor: pointer;
+  transition: background-color 130ms ease, border-color 130ms ease;
+}
+
+.bmat-chip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.bmat-chip.is-elegida {
+  background: var(--brand-white);
+  border-color: var(--brand-white);
+  color: var(--brand-navy);
+}
+
+/* ── escribir otra ────────────────────────────────────────────────────────── */
+
+.bmat-libre {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+}
+
+.bmat-libre-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.bmat-input-libre {
+  flex: 1 1 16rem;
+  min-width: 0;
+  padding: 0 18px;
+  background: var(--surface-card);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.bmat-input-libre:focus {
+  outline: none;
+  border-color: var(--brand-green);
+  box-shadow: var(--shadow-focus);
+}
+
+.bmat-confirmar {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 56px;
+  padding: 12px 26px;
+  /* El verde profundo, no el de marca: sobre él el blanco da 6,55:1, mientras
+     que sobre #01953c daría 3,91 y no pasaría AA. Es el mismo arreglo que se
+     hizo en el calendario. */
+  background: var(--brand-green-deep);
+  border: 2px solid var(--brand-green-strong);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brand-white);
+  cursor: pointer;
+  transition: background-color 130ms ease;
+}
+
+.bmat-confirmar:hover:not(:disabled) {
+  background: var(--brand-green-strong);
+}
+
+.bmat-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bmat-nota {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+/* ── lo elegido ───────────────────────────────────────────────────────────── */
+
+.bmat-elegida {
+  margin: 0;
+  padding: 14px 18px;
+  background: var(--brand-green-soft);
+  border-left: 4px solid var(--brand-green-deep);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  color: var(--color-text-main);
+}
+
+/* ── teléfono ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .bmat-label {
+    font-size: 1.2rem;
+  }
+
+  .bmat-cbc,
+  .bmat-libre {
+    padding: 16px 16px;
+  }
+
+  .bmat-cbc-chips {
+    gap: 8px;
+  }
+
+  .bmat-chip {
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  /* En el teléfono los resultados no flotan: empujan. Una capa flotante sobre
+     un paso corto tapa el botón de continuar y deja a la persona sin saber
+     cómo seguir. */
+  .bmat-lista {
+    max-height: none;
+  }
+
+  .bmat-confirmar {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+/* Quien pidió menos movimiento no tiene por qué recibir transiciones. */
+@media (prefers-reduced-motion: reduce) {
+  .bmat-campo,
+  .bmat-op,
+  .bmat-chip,
+  .bmat-otra,
+  .bmat-btn-libre,
+  .bmat-confirmar {
+    transition: none;
+  }
+}

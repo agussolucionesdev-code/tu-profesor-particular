@@ -87,6 +87,19 @@ export const BOOKING_SUPPORT_PILLS = [
 
    Quien no encuentre su materia acá tiene la opción "Otra materia" en el paso 1,
    que permite escribirla (el backend acepta texto libre de 2 a 120 caracteres). */
+/* Las materias que Agustín dicta en secundaria. Viven en una constante propia
+   porque Secundaria, Secundaria Técnica y CENS comparten exactamente la misma
+   lista, y repetirla tres veces garantizaba que alguna quedara vieja. */
+const SECUNDARIA = [
+  "Biología",
+  "Física",
+  "Fisicoquímica",
+  "Inglés",
+  "Lengua y Literatura",
+  "Matemática",
+  "Química",
+];
+
 export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
   Primaria: [
     "Ciencias Naturales",
@@ -95,69 +108,39 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     "Lengua y Literatura",
     "Matemática",
   ],
-  Secundaria: [
-    "Biología",
-    "Física",
-    // Fisicoquímica es una de las materias principales que se dictan y se cursa
-    // en secundaria, pero nunca había estado en esta lista: quien la buscaba
-    // desde el Inicio no la encontraba al llegar al formulario.
-    "Fisicoquímica",
-    "Inglés",
-    "Lengua y Literatura",
-    "Matemática",
-    "Química",
-  ],
-  "Secundaria Tecnica": [
-    "Biología",
-    "Dibujo Técnico",
-    "Educación Física",
-    "Electricidad",
-    "Electromecánica",
-    "Electrónica",
-    "Física",
-    "Geometría",
-    "Historia",
-    "Informática",
-    "Inglés",
-    "Instalaciones",
-    "Lengua y Literatura",
-    "Matemática",
-    "Máquinas",
-    "Mecánica",
-    "Química",
-    "Sistemas Automáticos",
-    "Tecnología",
-  ],
-  Terciario: [
-    "Administración General",
-    "Antropología Social",
-    "Didáctica y Currículo",
-    "Filosofía de la Educación",
-    "Gestión Educativa",
-    "Historia de la Educación",
-    "Historia Social Argentina",
-    "Informática Educativa",
-    "Inglés",
-    "Lengua Extranjera",
-    "Metodología de la Investigación Educativa",
-    "Pedagogía",
-    "Política y Legislación Educativa Argentina",
-    "Prácticas Docentes",
-    "Psicología de la Educación",
-    "Sociología",
-    "Sociología de la Educación",
-    "Tecnología Educativa",
-  ],
-  // Corte a las 5 materias principales que se declaran en el sitio. Quien curse
-  // Análisis Matemático, Álgebra u otra, la escribe con "Otra materia".
-  Universitario: [
-    "Fisicoquímica",
-    "Física",
-    "Inglés",
-    "Matemática",
-    "Química",
-  ],
+  Secundaria: SECUNDARIA,
+  /* Secundaria Técnica dicta lo mismo que Secundaria, a efectos de las clases
+     particulares de Agustín.
 
+     Acá había 19 materias: Electricidad, Electromecánica, Electrónica,
+     Instalaciones, Máquinas, Mecánica, Sistemas Automáticos, Dibujo Técnico,
+     Informática, Tecnología, Educación Física... Ninguna se dicta. Estaban
+     porque la lista se armó copiando el plan de estudios de una técnica, no
+     preguntando qué enseña Agustín, y cada una de esas tarjetas era un turno
+     que después había que cancelar.
+
+     Comparte la referencia con Secundaria a propósito: si mañana se agrega una
+     materia allá, aparece acá sola y no hay dos listas que se desincronizan. */
+  "Secundaria Tecnica": SECUNDARIA,
+  /* CENS, la secundaria de adultos. Mismo contenido que Secundaria: lo que
+     cambia es la edad de quien cursa, no el programa. */
+  CENS: SECUNDARIA,
+  /* Terciario y Universitario NO llevan grilla de tarjetas: llevan buscador.
+
+     Antes había 18 materias cargadas en Terciario (Pedagogía, Antropología
+     Social, Didáctica y Currículo, Política y Legislación Educativa...) y 5 en
+     Universitario. Dos problemas a la vez: la mayoría no se dicta, y las que
+     sí cambian de nombre en cada facultad —"Matemática" en el CBC es "Análisis
+     Matemático I" en Exactas y "Álgebra y Geometría Analítica" en la UTN—, así
+     que ninguna lista fija iba a alcanzar.
+
+     La respuesta es `components/booking/BuscadorDeMateria.jsx`, que filtra
+     sobre `constants/materiasSuperior.js` mientras la persona escribe, sin
+     tildes y sin importar mayúsculas, y siempre deja escribir la materia a
+     mano. Las listas vacías de acá son deliberadas: son la señal de que ese
+     nivel usa buscador. */
+  Terciario: [],
+  Universitario: [],
 };
 
 /* Las materias que más se piden, primero.
