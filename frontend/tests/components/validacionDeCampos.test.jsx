@@ -98,3 +98,75 @@ describe("validación de campos: premiar temprano, retar tarde", () => {
     expect(hook.result.current.getFieldStateClass("email", true)).toBe("");
   });
 });
+
+/* LO QUE DICEN LOS ERRORES.
+
+   Cada error nombra el dato y dice qué hacer, y le habla a quien lee: reservando
+   para uno mismo, «tu nombre»; para otra persona, «el nombre del alumno». Agustín
+   habla en singular —«contame», no «contanos»—, porque del otro lado hay una
+   persona y no una institución. */
+
+const conIntento = (paraMi) => {
+  const hook = montar();
+  act(() => hook.result.current.setIsAdult(paraMi));
+  act(() => hook.result.current.setHasAttemptedNext(true));
+  return hook;
+};
+
+describe("los errores le hablan a quien reserva", () => {
+  it("reservando para uno mismo, tutea", () => {
+    const hook = conIntento(true);
+    const error = hook.result.current.getFieldError;
+
+    expect(error("studentName")).toBe("Escribí tu nombre completo.");
+    expect(error("yearGrade")).toBe("Elegí tu año o grado.");
+    expect(error("objective")).toBe("Contame qué querés lograr en la clase.");
+  });
+
+  it("reservando para otra persona, habla del alumno en tercera", () => {
+    const hook = conIntento(false);
+    const error = hook.result.current.getFieldError;
+
+    expect(error("studentName")).toBe("Escribí el nombre completo del alumno.");
+    expect(error("yearGrade")).toBe("Elegí el año o grado del alumno.");
+    expect(error("objective")).toBe("Contame qué necesita lograr en la clase.");
+    // El responsable es quien lee: a él se le habla de «tu».
+    expect(error("responsibleName")).toBe("Escribí tu nombre completo.");
+    expect(error("responsibleRelationship")).toBe("Elegí tu vínculo con el alumno.");
+  });
+
+  it("el teléfono incompleto no promete una cantidad fija de dígitos", () => {
+    /* Decía «el código de área y los 8 dígitos». En Argentina el número nacional
+       tiene diez dígitos entre código de área y abonado, pero el código de área es
+       de dos, tres o cuatro, así que el abonado no siempre tiene ocho. */
+    const hook = montar();
+    escribir(hook, "phone", "11333");
+    salir(hook, "phone");
+
+    const mensaje = hook.result.current.getFieldError("phone");
+    expect(mensaje).not.toMatch(/8 dígitos/);
+    expect(mensaje).toBe("Ingresá el número completo, con el código de área.");
+  });
+
+  it("el email mal escrito muestra el formato en vez de adivinar qué falta", () => {
+    const hook = montar();
+    escribir(hook, "email", "lucia.f");
+    salir(hook, "email");
+
+    expect(hook.result.current.getFieldError("email", true)).toBe(
+      "Escribí el email con este formato: nombre@correo.com",
+    );
+  });
+});
+
+describe("los nombres se escriben como son", () => {
+  it("un nombre con guion conserva el guion y es válido", () => {
+    /* El campo borraba los guiones mientras se escribía: «María-José» quedaba
+       «MaríaJosé» sin aviso, y el mensaje de error prometía que los guiones valían. */
+    const hook = montar();
+    escribir(hook, "studentName", "María-José Pérez");
+
+    expect(hook.result.current.formData.studentName).toBe("María-José Pérez");
+    expect(hook.result.current.getFieldStateClass("studentName")).toBe("is-valid");
+  });
+});

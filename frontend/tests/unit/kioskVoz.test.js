@@ -150,3 +150,34 @@ test("documenta la regla que ordena el archivo", () => {
      donde se edita. */
   assert.match(fuente, /Quien LEE es siempre quien reserva/);
 });
+
+test("las etiquetas del paso 4 le hablan a quien lee", () => {
+  /* Quien lee es siempre quien reserva. Reservando para otra persona, el nombre del
+     alumno se nombra en tercera persona y el del responsable —que es quien lee— va con
+     «tu». Reservando para uno mismo, el alumno ES quien lee.
+
+     Antes el formulario decía «Nombre del alumno» y «Nombre del responsable» en los
+     dos casos: a quien reservaba para sí le pedía el nombre «del alumno» como si
+     fuera un tercero. */
+  const mi = vozDelWizard(PARA_MI);
+  const otro = vozDelWizard(PARA_OTRO);
+
+  assert.equal(mi.nombreAlumnoLabel, "Tu nombre completo *");
+  assert.equal(otro.nombreAlumnoLabel, "Nombre completo del alumno *");
+  assert.equal(mi.anioLabel, "Tu año o grado *");
+  assert.equal(otro.anioLabel, "Año o grado del alumno *");
+
+  assert.match(mi.objetivoAyuda, /qué necesitás trabajar y para cuándo/);
+  assert.match(otro.objetivoAyuda, /qué necesita trabajar y para cuándo/);
+});
+
+test("ninguna etiqueta del paso 4 pasa de 28 caracteres", () => {
+  /* Es el ancho de una línea en un teléfono de 375 px con la letra de 14,4 px de las
+     etiquetas. Una etiqueta que envuelve en dos líneas empuja el campo y desalinea la
+     grilla del formulario. */
+  for (const voz of [vozDelWizard(PARA_MI), vozDelWizard(PARA_OTRO)]) {
+    for (const clave of ["nombreAlumnoLabel", "anioLabel", "objetivoLabel"]) {
+      assert.ok(voz[clave].length <= 28, `${clave} mide ${voz[clave].length}: «${voz[clave]}»`);
+    }
+  }
+});

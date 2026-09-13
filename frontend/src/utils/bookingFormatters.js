@@ -146,9 +146,12 @@ export const formatPhoneMaskAr = (value) => {
   return result;
 };
 
+/* El guion entra: «María-José» es un nombre, no un error de tipeo. Antes se borraba
+   mientras se escribía —quedaba «MaríaJosé», sin aviso— y encima el mensaje de error
+   del campo prometía que los guiones valían. */
 export const sanitizePersonNameAr = (value) =>
   String(value ?? "")
-    .replace(/[^a-zA-ZÀ-ÿñÑ\s']/g, "")
+    .replace(/[^a-zA-ZÀ-ÿñÑ\s'-]/g, "")
     .replace(/\s{2,}/g, " ")
     .trimStart();
 

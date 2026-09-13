@@ -65,10 +65,17 @@ const VOCES = Object.freeze({
     materiaEyebrow: "Elegí la materia",
     materiaTitulo: "¿Con qué necesita ayuda?",
     otraMateriaTitulo: "¿Cuál es la materia?",
-    otraMateriaAyuda: "Escribila como figura en su plan de estudios. Por ejemplo:",
+    /* Sin ejemplos acá: el ejemplo pasó al placeholder del campo, que es donde se
+       mira cuando se va a escribir. */
+    otraMateriaAyuda: "Escribila como figura en su plan de estudios.",
     turnoSubtitulo: "Elegí la duración y después el horario que mejor les venga.",
     datosTitulo: "Tus datos y los del alumno",
-    objetivoLabel: "¿Qué necesita lograr en la clase? *",
+    /* El alumno va en tercera persona. El responsable es quien lee, así que sus
+       campos —fuera de este objeto porque no cambian— van con «tu». */
+    nombreAlumnoLabel: "Nombre completo del alumno *",
+    anioLabel: "Año o grado del alumno *",
+    objetivoLabel: "¿Qué necesita lograr? *",
+    objetivoAyuda: "Con una frase alcanza: qué necesita trabajar y para cuándo.",
     /* El nombre del alumno NO es el de quien está usando el teléfono, así que
        ofrecerle su propio nombre ahí es ofrecerle el dato equivocado. El
        autocompletado del navegador se reserva para el campo del responsable, que sí
@@ -84,10 +91,17 @@ const VOCES = Object.freeze({
     materiaEyebrow: "Elegí tu materia",
     materiaTitulo: "¿Qué querés aprender?",
     otraMateriaTitulo: "¿Cuál es tu materia?",
-    otraMateriaAyuda: "Escribila como figura en tu plan de estudios. Por ejemplo:",
+    otraMateriaAyuda: "Escribila como figura en tu plan de estudios.",
     turnoSubtitulo: "Elegí la duración y después el horario que más te sirva.",
     datosTitulo: "Tus datos",
-    objetivoLabel: "¿Qué querés lograr en la clase? *",
+    // Acá el alumno es quien lee.
+    nombreAlumnoLabel: "Tu nombre completo *",
+    anioLabel: "Tu año o grado *",
+    objetivoLabel: "¿Qué querés lograr? *",
+    /* Dos datos y nada más: qué trabajar y para cuándo. Es lo que Agustín necesita
+       para llegar preparado, y «con una frase alcanza» le saca a la pregunta el peso
+       de un formulario que hay que llenar bien. */
+    objetivoAyuda: "Con una frase alcanza: qué necesitás trabajar y para cuándo.",
     // Acá el alumno SÍ es quien tiene el teléfono en la mano.
     autoCompleteAlumno: "name",
     autoCompleteResponsable: "off",

@@ -1821,3 +1821,23 @@
 .kiosk-card .kiosk-other-input {
   padding-right: 0.9rem;
 }
+
+/* La ayuda del campo va entre la etiqueta y el campo, más cerca de la etiqueta
+   que del campo: son una sola idea —qué dato va y por qué— y el campo es lo que
+   viene después. El gap de la columna es 0.45rem; el margen negativo lo achica
+   entre esas dos piezas. */
+.kiosk-card .kiosk-field-ayuda {
+  display: block;
+  margin-top: -0.2rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Una sola vez, arriba del formulario, en vez de explicar el asterisco en cada
+   campo. Chica y sin peso: es una clave de lectura, no una instrucción. */
+.kiosk-card .kiosk-form-leyenda {
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

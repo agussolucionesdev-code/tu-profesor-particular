@@ -12,7 +12,8 @@ import {
   formatPhoneMaskAr,
 } from "../utils/bookingFormatters";
 
-const regexName = /^[A-Za-zÀ-ÿ\u00f1\u00d1\s']{3,60}$/;
+// Con guion: «María-José». Ver `sanitizePersonNameAr`.
+const regexName = /^[A-Za-zÀ-ÿ\u00f1\u00d1\s'-]{3,60}$/;
 const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const useBookingWizard = (showToast, initialOverrides = {}) => {
@@ -224,42 +225,55 @@ export const useBookingWizard = (showToast, initialOverrides = {}) => {
       if (getFieldStateClass(field, isOptional) !== "error") return null;
       const value = String(formData[field] ?? "").trim();
       const vacio = value.length === 0;
+      /* Quien lee es siempre quien reserva. `isAdult` es «para mí»: ahí el alumno
+         es quien lee y se le habla de «tu». Reservando para otra persona, el
+         alumno va en tercera y el responsable —que es quien lee— va con «tu».
+         Agustín habla en singular: «contame», no «contanos». */
+      const paraMi = isAdult;
       switch (field) {
         case "studentName":
-          return vacio
-            ? "Escribí el nombre y el apellido del alumno."
-            : "Usá solo letras, espacios, apóstrofes y guiones.";
+          if (!vacio) return "Usá letras, espacios, apóstrofes o guiones.";
+          return paraMi
+            ? "Escribí tu nombre completo."
+            : "Escribí el nombre completo del alumno.";
         case "responsibleName":
           return vacio
-            ? "Escribí tu nombre y apellido como responsable."
-            : "Usá solo letras, espacios, apóstrofes y guiones.";
+            ? "Escribí tu nombre completo."
+            : "Usá letras, espacios, apóstrofes o guiones.";
         case "responsibleRelationship":
-          return "Elegí qué sos del alumno.";
+          return "Elegí tu vínculo con el alumno.";
         case "responsibleRelationshipOther":
-          return "Contanos cuál es el vínculo.";
+          return "Escribí qué vínculo tenés con el alumno.";
         case "email":
-          return "Revisá el email: parece que le falta el @ o el dominio.";
+          /* Muestra el formato en vez de adivinar qué falta: «le falta el @» es
+             falso cuando lo que falta es el dominio, y al revés. */
+          return "Escribí el email con este formato: nombre@correo.com";
         case "phone":
+          /* No promete una cantidad de dígitos. Decía «los 8 dígitos», pero el
+             número nacional tiene diez entre código de área y abonado, y como el
+             código de área es de dos, tres o cuatro, el abonado no siempre tiene
+             ocho. */
           return vacio
-            ? "Falta el teléfono para poder avisarte."
-            : "El número está incompleto. Necesitamos el código de área y los 8 dígitos.";
+            ? "Escribí tu número de WhatsApp."
+            : "Ingresá el número completo, con el código de área.";
         case "educationLevel":
           return "Volvé al paso 1 y elegí el nivel.";
         case "yearGrade":
-          return "Elegí el año o el grado que está cursando.";
+          return paraMi ? "Elegí tu año o grado." : "Elegí el año o grado del alumno.";
         case "subject":
           return "Volvé al paso 1 y elegí la materia.";
         case "objective":
-          return value.length > 300
-            ? "Es un poco largo: contalo en 300 caracteres o menos."
-            : "Contanos en una línea qué necesita lograr.";
+          if (value.length > 300) return "Es un poco largo: contalo en 300 caracteres o menos.";
+          return paraMi
+            ? "Contame qué querés lograr en la clase."
+            : "Contame qué necesita lograr en la clase.";
         case "school":
           return "Si ponés la escuela, escribí al menos dos letras.";
         default:
           return "Revisá este dato.";
       }
     },
-    [getFieldStateClass, formData],
+    [getFieldStateClass, formData, isAdult],
   );
 
   const requiredChecks = useMemo(

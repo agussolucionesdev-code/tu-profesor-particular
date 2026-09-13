@@ -39,7 +39,9 @@ test("cada campo obligatorio del paso 4 dice su error en texto, no sólo en rojo
   for (const campo of camposObligatorios) {
     assert.match(
       kioskSource,
-      new RegExp(`propsDeError\\("${campo}"\\)`),
+      /* Admite un segundo argumento: el id de la ayuda del campo, que también se
+         cuelga de aria-describedby. */
+      new RegExp(`propsDeError\\("${campo}"[,)]`),
       `${campo} tiene que recibir aria-invalid y aria-describedby vía propsDeError`,
     );
     assert.match(
@@ -53,8 +55,12 @@ test("cada campo obligatorio del paso 4 dice su error en texto, no sólo en rojo
 test("el motivo sale del hook y llega marcado como alerta", () => {
   assert.match(wizardHook, /const getFieldError = useCallback\(/);
   assert.match(wizardHook, /getFieldError,/, "el hook tiene que exportarlo");
-  // El texto se cuelga de aria-describedby y se anuncia al aparecer.
-  assert.match(kioskSource, /"aria-invalid": true, "aria-describedby": `kiosk-err-\$\{campo\}`/);
+  /* El texto se cuelga de aria-describedby y se anuncia al aparecer. Comparte el
+     atributo con la ayuda del campo, si la tiene: primero la ayuda y después el
+     error, que es el orden en que se leen en pantalla. */
+  assert.match(kioskSource, /const errorId = erroresDeCampo\[campo\] \? `kiosk-err-\$\{campo\}` : null;/);
+  assert.match(kioskSource, /\[ayudaId, errorId\]\.filter\(Boolean\)\.join\(" "\)/);
+  assert.match(kioskSource, /"aria-invalid": true/);
   assert.match(kioskSource, /id=\{`kiosk-err-\$\{campo\}`\}[\s\S]{0,80}role="alert"/);
 });
 
