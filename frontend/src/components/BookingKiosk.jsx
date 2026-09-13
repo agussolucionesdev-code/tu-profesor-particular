@@ -158,6 +158,8 @@ const BookingKiosk = () => {
     isValidField,
     isPersonalInfoComplete,
     handleChange,
+
+    handleBlur,
     resetForm,
     getFieldStateClass,
     getFieldError,
@@ -647,10 +649,17 @@ const BookingKiosk = () => {
     objective: getFieldError("objective"),
   };
 
-  const propsDeError = (campo) =>
-    erroresDeCampo[campo]
-      ? { "aria-invalid": true, "aria-describedby": `kiosk-err-${campo}` }
-      : {};
+  /* La ayuda del campo —si la tiene— y el error comparten aria-describedby: primero la
+     ayuda y después el error, que es el orden en que se leen en pantalla. Pasar uno
+     solo pisaría al otro. */
+  const propsDeError = (campo, ayudaId) => {
+    const errorId = erroresDeCampo[campo] ? `kiosk-err-${campo}` : null;
+    const describedBy = [ayudaId, errorId].filter(Boolean).join(" ");
+    return {
+      ...(errorId ? { "aria-invalid": true } : {}),
+      ...(describedBy ? { "aria-describedby": describedBy } : {}),
+    };
+  };
 
   /* Función y no componente: declarar un componente dentro del render le cambia
      la identidad en cada pasada y React remonta el nodo, que en un `role="alert"`
@@ -927,9 +936,8 @@ const BookingKiosk = () => {
                     <label className="kiosk-other-label" htmlFor="kiosk-other-input">
                       {voz.otraMateriaTitulo}
                     </label>
-                    <p className="kiosk-other-hint">
+                    <p id="kiosk-other-hint" className="kiosk-other-hint">
                       {voz.otraMateriaAyuda}
-                      Análisis Matemático II, Álgebra Lineal, Fisicoquímica.
                     </p>
                     <div className="kiosk-other-row">
                       <input
@@ -939,7 +947,7 @@ const BookingKiosk = () => {
                         value={otherSubject}
                         maxLength={120}
                         autoComplete="off"
-                        placeholder="Nombre de la materia"
+                        placeholder="Ej.: Análisis Matemático II"
                         onChange={(e) => {
                           setOtherSubject(e.target.value);
                           if (otherSubjectError) setOtherSubjectError("");
@@ -952,7 +960,9 @@ const BookingKiosk = () => {
                         }}
                         aria-invalid={otherSubjectError ? "true" : undefined}
                         aria-describedby={
-                          otherSubjectError ? "kiosk-other-error" : undefined
+                          otherSubjectError
+                            ? "kiosk-other-hint kiosk-other-error"
+                            : "kiosk-other-hint"
                         }
                       />
                       <button
@@ -1218,7 +1228,7 @@ const BookingKiosk = () => {
         {step === 4 && (
           <section className="kiosk-step-panel" aria-labelledby="kiosk-s4-title">
             <h1 id="kiosk-s4-title" className="kiosk-title" tabIndex={-1}>{voz.datosTitulo}</h1>
-            <p className="kiosk-subtitle">Solo lo necesario para confirmar y avisarte.</p>
+            <p className="kiosk-subtitle">Solo lo necesario para confirmar tu reserva y preparar la clase.</p>
 
             {/* LA VOZ DE AGUSTÍN, UNA SOLA VEZ EN TODO EL FLUJO, Y ACÁ.
 
@@ -1241,65 +1251,104 @@ const BookingKiosk = () => {
             <figure className="kiosk-voz">
               <blockquote className="kiosk-voz-cita">{NO_PUEDO_AYUDARTE}</blockquote>
               <figcaption className="kiosk-voz-firma">
-                Agustín, tu profesor
+                Agustín Sosa, tu profesor
               </figcaption>
             </figure>
 
+            {/* ETIQUETA, AYUDA, CAMPO, ERROR.
+                Cada campo va en un <div> con su <label htmlFor> y no dentro de un
+                <label> que lo envuelve todo. Envuelto, el mensaje de error pasaba a
+                formar parte del NOMBRE del campo: un lector de pantalla anunciaba
+                «Email (opcional) Revisá el email…» como si ese fuera el nombre, y
+                después lo repetía por aria-describedby. La ayuda va arriba del campo
+                porque se lee antes de escribir; el placeholder sólo muestra un ejemplo
+                y ninguna instrucción depende de él, porque desaparece al tipear. */}
+            <p className="kiosk-form-leyenda">Los campos con * son obligatorios.</p>
+
             <div className="kiosk-form-grid">
-              <label className="kiosk-field">
-                <span className="kiosk-field-label">Nombre del alumno *</span>
+              <div className="kiosk-field">
+                <label className="kiosk-field-label" htmlFor="kiosk-studentName">
+                  {voz.nombreAlumnoLabel}
+                </label>
                 <input
+                  id="kiosk-studentName"
                   type="text"
                   name="studentName"
                   className={`kiosk-input ${getFieldStateClass("studentName")}`}
                   value={formData.studentName}
                   onChange={handleChange}
-                  placeholder="Nombre y apellido"
+                  onBlur={handleBlur}
                   autoComplete={voz.autoCompleteAlumno}
                   required
                   {...propsDeError("studentName")}
                 />
                 {mensajeDeError("studentName")}
-              </label>
+              </div>
 
-              <label className="kiosk-field">
-                <span className="kiosk-field-label">Teléfono / WhatsApp *</span>
+              <div className="kiosk-field">
+                {/* Quien lee es quien reserva, y el número es el suyo: «tu» en las dos
+                    voces. */}
+                <label className="kiosk-field-label" htmlFor="kiosk-phone">
+                  Tu número de WhatsApp *
+                </label>
+                <span id="kiosk-ayuda-phone" className="kiosk-field-ayuda">
+                  Te escribo para confirmar la reserva.
+                </span>
                 <input
+                  id="kiosk-phone"
                   type="tel"
+                  inputMode="tel"
                   name="phone"
                   className={`kiosk-input ${getFieldStateClass("phone")}`}
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="+54 9 11 1234 5678"
+                  onBlur={handleBlur}
+                  /* El ejemplo es lo que la gente tipea, no el resultado: la máscara
+                     agrega sola el +54 9 y descarta el 0 inicial. */
+                  placeholder="Ej.: 11 2345-6789"
                   autoComplete="tel"
                   required
-                  {...propsDeError("phone")}
+                  {...propsDeError("phone", "kiosk-ayuda-phone")}
                 />
                 {mensajeDeError("phone")}
-              </label>
+              </div>
 
-              <label className="kiosk-field">
-                <span className="kiosk-field-label">Email (opcional)</span>
+              <div className="kiosk-field">
+                <label className="kiosk-field-label" htmlFor="kiosk-email">
+                  Email (opcional)
+                </label>
+                {/* Lo que dice es lo que hace el sistema de avisos: al email del
+                    cliente le manda la confirmación y el recordatorio del turno. */}
+                <span id="kiosk-ayuda-email" className="kiosk-field-ayuda">
+                  Te llegan la confirmación y el recordatorio del turno.
+                </span>
                 <input
+                  id="kiosk-email"
                   type="email"
+                  inputMode="email"
                   name="email"
                   className={`kiosk-input ${getFieldStateClass("email", true)}`}
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="tucorreo@email.com"
+                  onBlur={handleBlur}
+                  placeholder="Ej.: nombre@correo.com"
                   autoComplete="email"
-                  {...propsDeError("email")}
+                  {...propsDeError("email", "kiosk-ayuda-email")}
                 />
                 {mensajeDeError("email")}
-              </label>
+              </div>
 
-              <label className="kiosk-field">
-                <span className="kiosk-field-label">Año / grado *</span>
+              <div className="kiosk-field">
+                <label className="kiosk-field-label" htmlFor="kiosk-yearGrade">
+                  {voz.anioLabel}
+                </label>
                 <select
+                  id="kiosk-yearGrade"
                   name="yearGrade"
                   className={`kiosk-input ${getFieldStateClass("yearGrade")}`}
                   value={formData.yearGrade}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   {...propsDeError("yearGrade")}
                 >
@@ -1309,7 +1358,7 @@ const BookingKiosk = () => {
                   ))}
                 </select>
                 {mensajeDeError("yearGrade")}
-              </label>
+              </div>
             </div>
 
             {/* Antes acá había un checkbox: «Soy el alumno y soy mayor de edad».
@@ -1321,11 +1370,14 @@ const BookingKiosk = () => {
               <p>
                 {isAdult
                   ? "Reservás para vos, como mayor de edad."
-                  : "Reservás para otra persona, así que abajo van también tus datos como responsable."}
+                  : "Reservás para otra persona. Ahora completá tus datos como responsable."}
               </p>
               <button
                 type="button"
                 className="kiosk-inline-btn"
+                /* «Cambiar» a secas no dice qué cambia fuera de contexto, que es como
+                   lo oye quien recorre la lista de controles con un lector. */
+                aria-label="Cambiar para quién es la clase"
                 onClick={() => {
                   elegirParaQuien(null);
                   setStep(1);
@@ -1337,28 +1389,38 @@ const BookingKiosk = () => {
 
             {!isAdult && (
               <div className="kiosk-form-grid">
-                <label className="kiosk-field">
-                  <span className="kiosk-field-label">Nombre del responsable *</span>
+                <div className="kiosk-field">
+                  <label className="kiosk-field-label" htmlFor="kiosk-responsibleName">
+                    Tu nombre completo *
+                  </label>
                   <input
+                    id="kiosk-responsibleName"
                     type="text"
                     name="responsibleName"
                     className={`kiosk-input ${getFieldStateClass("responsibleName")}`}
                     value={formData.responsibleName}
                     onChange={handleChange}
-                    placeholder="Nombre y apellido"
+                    onBlur={handleBlur}
                     autoComplete={voz.autoCompleteResponsable}
                     required
                     {...propsDeError("responsibleName")}
                   />
                   {mensajeDeError("responsibleName")}
-                </label>
-                <label className="kiosk-field">
-                  <span className="kiosk-field-label">Vínculo *</span>
+                </div>
+                <div className="kiosk-field">
+                  <label
+                    className="kiosk-field-label"
+                    htmlFor="kiosk-responsibleRelationship"
+                  >
+                    Tu vínculo con el alumno *
+                  </label>
                   <select
+                    id="kiosk-responsibleRelationship"
                     name="responsibleRelationship"
                     className={`kiosk-input ${getFieldStateClass("responsibleRelationship")}`}
                     value={formData.responsibleRelationship}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                     {...propsDeError("responsibleRelationship")}
                   >
@@ -1368,41 +1430,59 @@ const BookingKiosk = () => {
                     ))}
                   </select>
                   {mensajeDeError("responsibleRelationship")}
-                </label>
+                </div>
                 {formData.responsibleRelationship === RESPONSIBLE_RELATIONSHIP_OTHER_VALUE && (
-                  <label className="kiosk-field">
-                    <span className="kiosk-field-label">¿Cuál? *</span>
+                  <div className="kiosk-field">
+                    {/* «¿Cuál?» perdía el sentido fuera del bloque: la etiqueta tiene
+                        que entenderse sola. */}
+                    <label
+                      className="kiosk-field-label"
+                      htmlFor="kiosk-responsibleRelationshipOther"
+                    >
+                      ¿Qué vínculo tenés? *
+                    </label>
                     <input
+                      id="kiosk-responsibleRelationshipOther"
                       type="text"
                       name="responsibleRelationshipOther"
                       className={`kiosk-input ${getFieldStateClass("responsibleRelationshipOther")}`}
                       value={formData.responsibleRelationshipOther}
                       onChange={handleChange}
-                      placeholder="Indicá el vínculo"
+                      onBlur={handleBlur}
+                      placeholder="Ej.: tutor legal"
                       required
                       {...propsDeError("responsibleRelationshipOther")}
                     />
                     {mensajeDeError("responsibleRelationshipOther")}
-                  </label>
+                  </div>
                 )}
               </div>
             )}
 
-            <label className="kiosk-field">
-              <span className="kiosk-field-label">{voz.objetivoLabel}</span>
+            <div className="kiosk-field">
+              <label className="kiosk-field-label" htmlFor="kiosk-objective">
+                {voz.objetivoLabel}
+              </label>
+              <span id="kiosk-ayuda-objective" className="kiosk-field-ayuda">
+                {voz.objetivoAyuda}
+              </span>
               <textarea
+                id="kiosk-objective"
                 name="objective"
                 className={`kiosk-input kiosk-textarea ${getFieldStateClass("objective")}`}
                 value={formData.objective}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 rows={3}
-                placeholder="Ej: preparar el examen de la semana que viene, entender ecuaciones…"
+                /* Sin materia en el ejemplo: la materia ya se eligió, y un ejemplo de
+                   Física en una reserva de Química confunde más de lo que ayuda. */
+                placeholder="Ej.: examen del viernes"
                 maxLength={300}
                 required
-                {...propsDeError("objective")}
+                {...propsDeError("objective", "kiosk-ayuda-objective")}
               />
               {mensajeDeError("objective")}
-            </label>
+            </div>
 
             <div className="kiosk-nav">
               <button type="button" className="kiosk-back" onClick={goPrev}>

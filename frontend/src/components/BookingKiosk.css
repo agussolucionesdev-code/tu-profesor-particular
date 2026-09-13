@@ -272,11 +272,9 @@
   font-size: 1rem;
 }
 .kiosk-other-input::placeholder { color: var(--text-tertiary); }
-.kiosk-other-input:focus-visible {
-  outline: none;
-  border-color: var(--brand-green);
-  box-shadow: var(--shadow-focus);
-}
+/* El foco de este campo —y de todos los campos de texto— lo define
+   final-polish.css. Las reglas de foco que había acá perdían contra dos
+   `!important` globales y sólo sumaban una capa más al anillo. */
 
 .kiosk-other-go {
   flex-shrink: 0;
@@ -475,7 +473,6 @@
   color: var(--text-primary);
   font-family: inherit;
 }
-.kiosk-input:focus-visible { outline: none; border-color: var(--brand-green); box-shadow: var(--shadow-focus); }
 .kiosk-input.is-valid { border-color: var(--brand-green); }
 .kiosk-input.error { border-color: var(--error-color); }
 .kiosk-textarea { resize: vertical; min-height: 76px; }
@@ -1328,16 +1325,16 @@
   box-shadow: 0 10px 20px rgba(0, 33, 76, 0.12), inset 0 1px 0 #fff;
 }
 
+/* Sin sombra propia y sin transición propia: las dos las maneja la regla de
+   campos de texto de final-polish.css. Acá había dos cosas que empeoraban el
+   foco. La sombra en reposo era `inset` y la de foco no, y una sombra
+   interior no se puede interpolar con una exterior: el navegador salta de
+   una a otra sin animar. Y el foco movía el campo 1 px hacia arriba, así que
+   el cursor de texto pegaba un salto justo cuando la persona empezaba a
+   escribir. */
 .kiosk-input {
   min-height: 48px;
   border-radius: 12px;
-  box-shadow: inset 0 1px 2px rgba(0, 33, 76, 0.05), 0 6px 14px rgba(0, 33, 76, 0.04);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-}
-
-.kiosk-input:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-focus), 0 10px 20px rgba(0, 33, 76, 0.08);
 }
 
 .kiosk-summary { border-radius: 18px; }
@@ -1696,4 +1693,151 @@
 @media (max-width: 560px) {
   .kiosk-grid-levels { grid-template-columns: minmax(0, 1fr); }
   .kiosk-level-card { padding: 0.85rem 0.95rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LOS CAMPOS DEL FORMULARIO.
+
+   El foco y los estados de error viven en final-polish.css, que es el dueño de
+   esa parte para todo el sitio. Esto es el campo en sí: cómo se ve antes de
+   tocarlo, que es la mayor parte del tiempo que la persona lo mira.
+
+   LO QUE HABÍA, MEDIDO
+
+   - El borde en reposo daba 1,27:1 sobre blanco. El campo casi no existía hasta
+     tocarlo, y un contorno por debajo de 3:1 incumple WCAG 1.4.11.
+   - El placeholder daba 4,37:1; es texto y 1.4.3 pide 4,5.
+   - Las etiquetas iban en mayúsculas, a 12,8 px, con peso 800 y espaciado. Las
+     mayúsculas se leen más lento —se pierde la forma de la palabra— y en un
+     formulario todas las etiquetas gritando juntas se leen como un trámite.
+   - Un campo completo pintaba todo su borde de verde. Con cuatro campos bien
+     llenados el formulario era una columna de cajas verdes.
+   - El desplegable usaba la flecha del sistema, distinta en cada navegador.
+
+   LO QUE QUEDA
+
+   - Borde de 1 px a 3,31:1: se ve dónde escribir sin que el campo pese.
+   - 52 px de alto y 16 px de letra. El alto da un blanco táctil cómodo; los
+     16 px no son estéticos: por debajo, Safari en iPhone hace zoom al enfocar
+     y la persona queda con la página agrandada a mitad del formulario.
+   - Etiqueta en minúscula normal, 14,4 px, peso 600, en el color del texto.
+   - Dato válido: un tilde a la derecha y el borde neutro. Dice «esto está bien»
+     sin convertir el formulario en un semáforo.
+   - El espacio del tilde está reservado desde el principio, así el texto no se
+     corre de lugar en el momento en que el dato pasa a ser válido.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.kiosk-card .kiosk-field {
+  gap: 0.45rem;
+}
+
+.kiosk-card .kiosk-field > .kiosk-field-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-primary);
+}
+
+.kiosk-card .kiosk-input,
+.kiosk-card .kiosk-other-input {
+  min-height: 52px;
+  padding: 0 2.6rem 0 0.9rem;
+  border: 1px solid var(--field-border);
+  border-radius: 10px;
+  background-color: var(--input-bg);
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 18px 18px;
+  box-shadow: none;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.kiosk-card .kiosk-input::placeholder,
+.kiosk-card .kiosk-other-input::placeholder {
+  color: var(--field-placeholder);
+  opacity: 1;
+}
+
+/* El texto libre no lleva el espacio del tilde a la derecha en todo su alto:
+   el tilde va arriba, y el padding vertical es el de un párrafo, no el de una
+   línea centrada. */
+.kiosk-card .kiosk-textarea {
+  min-height: 116px;
+  padding: 0.8rem 2.6rem 0.8rem 0.9rem;
+  line-height: 1.5;
+  background-position: right 0.85rem top 0.95rem;
+  resize: vertical;
+}
+
+/* El desplegable dibuja su propia flecha. `appearance: none` saca la del
+   sistema, que cambia de forma y de tamaño en cada navegador. */
+.kiosk-card select.kiosk-input {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300214c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Mientras el desplegable no tiene nada elegido, «Elegí una opción» se ve como
+   placeholder y no como un dato cargado. */
+.kiosk-card select.kiosk-input:has(option[value=""]:checked) {
+  color: var(--field-placeholder);
+}
+
+.kiosk-card select.kiosk-input option {
+  color: var(--text-primary);
+}
+
+/* Dato válido: tilde, borde neutro. La regla vieja de `.is-valid` pintaba el
+   borde verde; se neutraliza acá en vez de borrarla para que el porqué quede
+   junto a lo que la reemplaza. */
+.kiosk-card .kiosk-input.is-valid {
+  border-color: var(--field-border);
+}
+
+.kiosk-card input.kiosk-input.is-valid,
+.kiosk-card textarea.kiosk-input.is-valid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2301953c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+
+/* ── Oscuro ── */
+/* Los SVG en data: no leen variables CSS, así que los colores del tema oscuro
+   van escritos en su propia versión del ícono. */
+[data-theme="dark"] .kiosk-card select.kiosk-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9d6e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .kiosk-card input.kiosk-input.is-valid,
+[data-theme="dark"] .kiosk-card textarea.kiosk-input.is-valid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2388ce93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+
+/* «Otra materia» no tiene estado válido —se confirma con su botón—, así que no
+   reserva el lugar del tilde. */
+.kiosk-card .kiosk-other-input {
+  padding-right: 0.9rem;
+}
+
+/* La ayuda del campo va entre la etiqueta y el campo, más cerca de la etiqueta
+   que del campo: son una sola idea —qué dato va y por qué— y el campo es lo que
+   viene después. El gap de la columna es 0.45rem; el margen negativo lo achica
+   entre esas dos piezas. */
+.kiosk-card .kiosk-field-ayuda {
+  display: block;
+  margin-top: -0.2rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Una sola vez, arriba del formulario, en vez de explicar el asterisco en cada
+   campo. Chica y sin peso: es una clave de lectura, no una instrucción. */
+.kiosk-card .kiosk-form-leyenda {
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }

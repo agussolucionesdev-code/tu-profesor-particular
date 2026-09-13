@@ -389,6 +389,27 @@
   --success-bg:         rgba(1, 149, 60, 0.12);
   --shadow-focus:       0 0 0 4px rgba(1, 149, 60, 0.22);
 
+  /* ── Campos de texto: el foco ────────────────────────────────────────────
+     Un solo juego de valores para todos los campos del sitio. El dueño de la
+     regla es final-polish.css; el porqué de cada decisión está ahí.
+     El borde de foco sobre blanco da 6,55:1 y contra el borde en reposo 5,2:1:
+     el cambio de estado se ve aunque no se distinga el color del halo, que es
+     un acompañamiento y no el indicador. */
+  /* El borde en reposo tiene su propio token y no usa --border-color, que es el
+     de las tarjetas y a propósito es casi invisible. Medido: ese borde sobre
+     blanco daba 1,27:1, y un campo cuyo contorno no llega a 3:1 incumple WCAG
+     1.4.11: quien ve poco no encuentra dónde escribir hasta tocarlo. #848e9d es
+     el valor más liviano que pasa con margen: 3,31:1 sobre blanco y 3,09:1
+     sobre el gris de la página. */
+  --field-border:        #848e9d;
+  --field-border-hover:  #5f6b7b;
+  --field-border-focus:  #006d1f;
+  /* 4,66:1. El que había daba 4,37:1 y el placeholder es texto: 1.4.3 pide 4,5. */
+  --field-placeholder:   #6b7585;
+  --field-check:         #01953c;
+  --field-halo:          rgba(1, 149, 60, 0.16);
+  --field-halo-error:    rgba(180, 35, 31, 0.14);
+
   /* ── Brand extras used in minimalist-design layer ───────────────────── */
   --brand-blue:           #00214c;
   --brand-blue-strong:    #001636;
@@ -601,6 +622,17 @@
   --success-color:    #b5e6bb;
   --success-bg:       rgba(1, 149, 60, 0.18);
   --shadow-focus:     0 0 0 4px rgba(136, 206, 147, 0.35);
+
+  /* Campos de texto en oscuro: el verde profundo desaparece sobre el azul
+     noche, así que el borde de foco pasa al verde claro de la marca. */
+  /* 3,39:1 sobre el fondo del campo y 3,06:1 sobre la tarjeta oscura. */
+  --field-border:       #5b6f90;
+  --field-border-hover: #8193b0;
+  --field-border-focus: #88ce93;
+  --field-placeholder:  #8a9ab3;
+  --field-check:        #88ce93;
+  --field-halo:         rgba(136, 206, 147, 0.22);
+  --field-halo-error:   rgba(252, 165, 165, 0.2);
 }
 
 /* ==========================================================================

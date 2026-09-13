@@ -140,6 +140,20 @@ html[data-motion="reduced"] *::after {
   transform: translateY(0);
 }
 
+/* El anillo de foco del sitio: outline con offset y halo. Vale para enlaces,
+   botones y todo lo que se opera con un clic.
+
+   LOS CAMPOS DE TEXTO SON LA EXCEPCIÓN, y la excepción vive en
+   final-polish.css. En un campo donde se escribe, este outline a 4 px de
+   distancia dibujaba una segunda caja separada del campo —medido: casi 7 px
+   de grosor entre borde, anillo y outline—, que es el «recuadro verde bruto»
+   que había que sacar. Ahí el indicador es el borde, que pasa a verde
+   profundo con 6,55:1 de contraste, y el cursor que parpadea.
+
+   No hace falta sacar `input` de esta lista: el `:where()` deja esta regla
+   en especificidad (0,1,0) y la de final-polish, con `outline: none
+   !important`, entra con (0,5,1). Checkbox, radio, range y file quedan
+   fuera de esa excepción, así que siguen recibiendo este anillo. */
 :where(
     a,
     button,

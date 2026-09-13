@@ -301,16 +301,105 @@
 }
 
 /* =====================================================================
-   INPUTS — estados consistentes
+   INPUTS — el foco de los campos de texto, en un solo lugar
+
+   Esta regla es LA dueña del foco de cualquier campo donde se escribe.
+   Antes el mismo campo recibía foco de cinco reglas en cuatro archivos, y
+   así se veía, medido sobre «Otra materia»:
+
+     accessibility-system.css  outline de 3 px a 4 px de distancia del campo
+                               + halo de 6 px, todo con !important
+     final-polish.css          borde verde + anillo de 3 px al 45%, !important
+     motion-system.css         :focus-visible reemplazaba la transición del
+                               campo por una que sólo anima el color del outline
+     BookingKiosk.css          su propio anillo y un salto de 1 px hacia arriba
+     (el outline heredaba currentColor, así que salía navy)
+
+   El resultado era una segunda caja flotando a 4 px del campo, de casi 7 px
+   de grosor entre las dos, que además aparecía de golpe: a los 20 ms del
+   foco el anillo ya estaba entero, porque la transición que lo animaba había
+   sido reemplazada. Es lo que Agustín describió como «un recuadro verde,
+   superfeo, bruto», y la descripción era exacta.
+
+   LO QUE QUEDA
+
+   Un borde que cambia de gris a verde profundo y un halo suave de 3 px que
+   crece desde cero. El indicador de foco es el borde —6,55:1 sobre blanco y
+   5,2:1 contra el borde en reposo, así que se ve aunque el halo no se
+   distinga—; el halo sólo acompaña. Sin outline: en un campo de texto el
+   cursor parpadeando y el borde ya dicen dónde está el foco, y el outline
+   con offset es justamente lo que dibujaba la caja de más.
+
+   Los `!important` se quedan porque la regla global de accesibilidad los
+   usa, y hay que ganarle en su propio terreno. La excepción de los campos de
+   texto en esa regla está explicada allá.
    ===================================================================== */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+textarea,
+select {
+  /* La transición vive en el estado de reposo Y en el de foco: si sólo
+     estuviera acá, el `:focus-visible` de motion-system.css la reemplazaría
+     justo al entrar en foco, que es el momento en que tiene que actuar.
+     La curva desacelera: arranca rápido y se asienta, que es como se siente
+     algo que responde al dedo y no algo que se anima por su cuenta. */
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 200ms ease;
+}
+
+/* El borde se entona al pasar el puntero, sólo donde hay puntero: en un
+   teléfono un :hover queda pegado después del toque y el campo parecería
+   seleccionado sin estarlo. */
+@media (hover: hover) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):hover:not(:focus):not([aria-invalid="true"]),
+  textarea:hover:not(:focus):not([aria-invalid="true"]),
+  select:hover:not(:focus):not([aria-invalid="true"]) {
+    border-color: var(--field-border-hover);
+  }
+}
+
 .admin-input:focus,
 .search-input:focus,
-input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: none;
-  border-color: var(--brand-green) !important;
-  box-shadow: 0 0 0 3px var(--focus-ring-color, rgba(1, 149, 60, 0.4)) !important;
+  outline: none !important;
+  border-color: var(--field-border-focus) !important;
+  box-shadow: 0 0 0 3px var(--field-halo) !important;
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 200ms ease !important;
+}
+
+/* Un campo con error sigue diciendo que tiene error mientras se lo corrige.
+   Antes el foco pisaba el borde rojo con verde y !important: la persona
+   hacía clic justo en el campo que tenía que arreglar y el aviso
+   desaparecía en ese instante, antes de haber escrito nada.
+
+   El selector del input repite los cuatro `:not()` a propósito. Las dos
+   reglas llevan !important, y entre dos !important gana la más específica:
+   la de foco suma (0,5,1) por esos `:not()`, así que un
+   `input[aria-invalid="true"]:focus-visible` a secas, con (0,2,1), perdía
+   igual y el verde seguía pisando el rojo. Con los `:not()` repetidos queda
+   en (0,6,1). */
+/* Y en reposo también. Medido sobre «Otra materia»: con `aria-invalid="true"`
+   y el foco en otro lado, el borde volvía al gris de siempre y el único aviso
+   que quedaba era el texto de abajo. El texto es lo que hace que el error no
+   dependa del color; el borde es lo que deja encontrar el campo de un
+   vistazo cuando hay varios. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--error-color);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"]:focus-visible,
+textarea[aria-invalid="true"]:focus-visible,
+select[aria-invalid="true"]:focus-visible {
+  border-color: var(--error-color) !important;
+  box-shadow: 0 0 0 3px var(--field-halo-error) !important;
 }
 
 /* =====================================================================

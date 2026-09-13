@@ -180,10 +180,11 @@ describe("el autocompletado apunta a la persona correcta", () => {
     await tocar(/Marcar turno de prueba/i);
     await tocar(/Confirmar turno de prueba/i);
 
-    const alumno = screen.getByLabelText(/Nombre del alumno/i);
+    const alumno = screen.getByLabelText(/Nombre completo del alumno/i);
     expect(alumno.getAttribute("autocomplete")).toBe("off");
 
-    const responsable = screen.getByLabelText(/Nombre del responsable/i);
+    // Reservando para otro, quien lee es el responsable: su campo va con «Tu».
+    const responsable = screen.getByLabelText(/Tu nombre completo/i);
     expect(responsable.getAttribute("autocomplete")).toBe("name");
   });
 });
