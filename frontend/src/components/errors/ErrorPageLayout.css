@@ -29,9 +29,9 @@
 .error-page-brand img {
   width: 56px;
   height: 56px;
-  /* El monograma llega en 1254 px de lado y acá se muestra a 56: sin el
-     `object-fit`, los atributos `width`/`height` del propio `img` lo dejarían
-     en tamaño real. */
+  /* El monograma llega en 168 o 336 px de lado, según la densidad de la
+     pantalla, y acá se muestra a 56: sin fijar las dos medidas, los atributos
+     `width`/`height` del propio `img` lo dejarían en 168. */
   object-fit: contain;
 }
 

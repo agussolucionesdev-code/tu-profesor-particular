@@ -75,8 +75,10 @@ const Footer = () => {
                 clases, no con una clase en la imagen: `.theme-logo__image` declara
                 `width: auto` y le gana a una clase sola. Es la misma trampa que
                 documenta BrandLoader.css, y acá dejaba el monograma de 1254px
-                ocupando 267px de ancho. */}
-            <ThemeLogo variant="monogram" alt="Tu Profesor Particular" />
+                ocupando 267px de ancho.
+                `surface="dark"`: el pie es navy en los dos temas, y el monograma ya
+                no trae placa propia. Siguiendo al tema claro sería navy sobre navy. */}
+            <ThemeLogo variant="monogram" surface="dark" alt="Tu Profesor Particular" />
             <p className="tpp-footer-person">
               <strong>Agustín Elías Sosa</strong>
               <span>Clases particulares · Temperley, Buenos Aires</span>

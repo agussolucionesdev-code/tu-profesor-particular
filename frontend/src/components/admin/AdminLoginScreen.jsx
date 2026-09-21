@@ -14,8 +14,11 @@ const AdminLoginScreen = ({
     <div className="admin-login-shell admin-login-shell--minimal">
       <div className="admin-login-card admin-login-card--centered">
         <div className="admin-login-brand">
+          {/* Es el monograma más grande de la app (hasta 112 px): con el
+              `sizes` por defecto, un teléfono DPR 3 recibiría el de 168. */}
           <ThemeLogo
             variant="monogram"
+            sizes="112px"
             className="admin-login-brand-mark"
             imgClassName="admin-login-logo"
             alt="Tu Profesor Particular"
