@@ -840,11 +840,20 @@ const HomePage = () => {
         <div className="hp-cta-inner" data-reveal-group="110">
           {/* Marca de agua de fondo: NO lleva data-reveal — el sistema de reveal
               lo llevaría a opacity 1 (mayor especificidad) y taparía el titular.
-              `surface="dark"` porque este bloque es navy en los dos temas. */}
+              `surface="dark"` porque este bloque es navy en los dos temas.
+              La clase va en `className` (el <span> envoltorio) y no en el img:
+              el CSS excluye a la marca de agua por ser hijo directo de
+              `.hp-cta-inner`, y el hijo directo es el span. Con la clase en el
+              img, el span quedaba de contenedor y medía 0 px.
+              `sizes="560px"` es el máximo al que se dibuja: el navegador toma el
+              de 336, el más grande que hay. `lazy` porque está al final de la
+              página y no tiene por qué competir con el hero. */}
           <ThemeLogo
             variant="monogram"
             surface="dark"
-            imgClassName="hp-cta-monogram"
+            className="hp-cta-monogram"
+            sizes="560px"
+            loading="lazy"
             alt=""
             aria-hidden="true"
           />

@@ -146,6 +146,25 @@ test("the admin login announces its larger monogram so DPR 3 gets the 336 px fil
   assert.match(blockWith("../../src/components/admin/AdminLoginScreen.jsx", "admin-login-logo"), /sizes="112px"/);
 });
 
+/* La marca de agua del cierre de la home midió 0 px desde julio sin que nadie lo
+   notara. La regla `.hp-cta-inner > *:not(.hp-cta-monogram)` sube a todo el
+   contenido por encima de la marca, pero el hijo directo es el <span> de
+   ThemeLogo, y la clase estaba en el <img> de adentro. El span recibía
+   `position: relative`, quedaba de contenedor del img absoluto y, sin contenido
+   en flujo, medía 0; el `max-width: 100%` del img resolvía contra ese 0. Por
+   eso la clase va en el envoltorio y el img lo llena. */
+test("the home watermark class sits on the direct child the CSS excludes", () => {
+  const watermark = blockWith("../../src/pages/HomePage.jsx", "hp-cta-monogram");
+  assert.match(watermark, /\bclassName="hp-cta-monogram"/);
+  assert.doesNotMatch(watermark, /imgClassName="hp-cta-monogram"/);
+  assert.match(watermark, /sizes="560px"/);
+  assert.match(watermark, /loading="lazy"/);
+
+  const homeCss = readFileSync(new URL("../../src/pages/HomePage.css", import.meta.url), "utf8");
+  assert.match(homeCss, /\.hp-cta-inner > \*:not\(\.hp-cta-monogram\)/);
+  assert.match(homeCss, /\.hp-cta-monogram \.theme-logo__image\s*\{[^}]*width:\s*100%/s);
+});
+
 test("the maintenance brand no longer disguises an opaque background", () => {
   const maintenanceCss = readFileSync(
     new URL("../../src/components/errors/MaintenancePage.css", import.meta.url),
