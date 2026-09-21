@@ -1167,18 +1167,25 @@
 }
 
 /* El monograma pasa de sello chico a marca de agua gigante detrás del titular:
-   presencia de marca sin robarle protagonismo al mensaje. */
+   presencia de marca sin robarle protagonismo al mensaje.
+   `.hp-cta-monogram` es el <span> de ThemeLogo, no el img. Si fuera el img, el
+   span quedaría sin ancho (su único hijo es absoluto) y lo arrastraría a 0 px:
+   eso pasó desde julio hasta que se midió. */
 .hp-cta-monogram {
   position: absolute;
   z-index: 0;
   top: 50%; left: 50%;
   translate: -50% -58%;
   width: clamp(300px, 42vw, 560px);
-  height: auto;
-  object-fit: contain;
   opacity: .075;
   pointer-events: none;
   animation: float-up 9s ease-in-out infinite;
+}
+/* Dos clases a propósito: `.theme-logo__image` declara `width: auto` en
+   tokens.css, y una clase sola empata y desempata el orden de los archivos. */
+.hp-cta-monogram .theme-logo__image {
+  width: 100%;
+  height: auto;
 }
 /* Todo el contenido queda por encima de la marca de agua. */
 .hp-cta-inner > *:not(.hp-cta-monogram) { position: relative; z-index: 1; }

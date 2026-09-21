@@ -9,8 +9,12 @@ import monogramLight336 from "../../assets/images/brand-logo-monogram-light-336.
    dos tamaños. 168 cubre hasta 56 px a DPR 3, que es todo el cromo de la app
    (navbar, footer, loader, portal); 336 cubre el login del admin, a 112. Con
    `srcSet` + `sizes` el navegador elige según la densidad de la pantalla, y el
-   que dibuja el logo más grande lo avisa con `sizes`. Un uso por encima de
-   112 px necesita un tamaño más en el script, no estirar el de 336.
+   que dibuja el logo más grande lo avisa con `sizes`. Un uso nítido por encima
+   de 112 px necesita un tamaño más en el script, no estirar el de 336.
+   La excepción medida es la marca de agua de la home: se dibuja a hasta 560 px
+   pero al 7,5% de opacidad, y comparada píxel a píxel contra un archivo de 672
+   la diferencia media es de 0,1 niveles, invisible. Un tamaño más costaría
+   12-16 KB por visita para nada.
 
    `light` es el trazo navy, para superficies claras; `dark` es el blanco, para
    superficies oscuras. */
