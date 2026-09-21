@@ -64,10 +64,10 @@
 }
 
 /* CONTENER EL MONOGRAMA, pase lo que pase con la cascada global.
-   `tokens.css` declara `.theme-logo__image { width: auto }`, y el monograma mide
-   1254×1254: sin contenerlo se dibujaba a 267px de ancho, se comía la fila y aplastaba
-   el nombre a 56px, que envolvía en cuatro líneas. Por eso el brand medía 267px de alto
-   en lugar de 40.
+   `tokens.css` declara `.theme-logo__image { width: auto }`, y cuando el monograma
+   medía 1254×1254 se dibujaba a 267px de ancho, se comía la fila y aplastaba el nombre
+   a 56px, que envolvía en cuatro líneas. Hoy el archivo es de 168 y sin esto quedaría a
+   56px (lo que dice su `sizes`), no a 40: la regla sigue haciendo falta.
    Van dos clases y no una porque una clase sola empata con `.theme-logo__image` y
    desempata el orden de los archivos. Mismo arreglo que `.brand-loader-mark`. */
 .tpp-footer-brand .theme-logo {

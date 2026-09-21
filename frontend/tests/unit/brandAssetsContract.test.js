@@ -42,10 +42,117 @@ const officialAssets = [
 ];
 
 test("ThemeLogo references only the official new TU identity", () => {
-  assert.match(source, /brand-logo-monogram-light\.png/);
-  assert.match(source, /brand-logo-monogram-dark\.png/);
+  assert.match(source, /brand-logo-monogram-light-168\.png/);
+  assert.match(source, /brand-logo-monogram-dark-168\.png/);
   assert.match(source, /brand-logo-main-tagline\.png/);
   assert.doesNotMatch(source, /logo-(?:icon|full)-sin-fondo\.png/);
+});
+
+/* Los originales de 1254 px quedan en el repo porque son la fuente de los
+   derivados (y los fija el test de abajo), pero la app no los importa: el
+   monograma se dibuja entre 32 y 112 px, y servir 1254 era bajar 850 KB para
+   pintar 38. */
+test("ThemeLogo never ships the 1254 px monogram originals", () => {
+  assert.doesNotMatch(source, /brand-logo-monogram-(?:light|dark)\.png/);
+});
+
+const derivedMonograms = ["light", "dark"].flatMap((tone) =>
+  [
+    { side: 168, maxBytes: 8 * 1024 },
+    { side: 336, maxBytes: 24 * 1024 },
+  ].map(({ side, maxBytes }) => ({
+    tone,
+    side,
+    maxBytes,
+    url: new URL(`../../src/assets/images/brand-logo-monogram-${tone}-${side}.png`, import.meta.url),
+  })),
+);
+
+test("derived monograms are square palette PNGs sized for DPR 3 within budget", async () => {
+  for (const asset of derivedMonograms) {
+    const bytes = readFileSync(fileURLToPath(asset.url));
+    const metadata = await sharp(bytes).metadata();
+    const label = `${asset.tone}-${asset.side}`;
+
+    assert.equal(metadata.format, "png", label);
+    assert.equal(metadata.width, asset.side, label);
+    assert.equal(metadata.height, asset.side, label);
+    assert.ok(metadata.isPalette, `${label} debería ser PNG de paleta`);
+    assert.ok(bytes.length <= asset.maxBytes, `${label} pesa ${bytes.length} bytes`);
+  }
+});
+
+test("derived monograms have real transparency instead of a baked background", async () => {
+  for (const asset of derivedMonograms) {
+    const { data, info } = await sharp(fileURLToPath(asset.url))
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const label = `${asset.tone}-${asset.side}`;
+    const alphaAt = (x, y) => data[(y * info.width + x) * 4 + 3];
+    const last = asset.side - 1;
+
+    for (const [x, y] of [[0, 0], [last, 0], [0, last], [last, last]]) {
+      assert.equal(alphaAt(x, y), 0, `${label} esquina ${x},${y}`);
+    }
+
+    let transparent = 0;
+    let opaque = 0;
+    let opaqueLuma = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) transparent++;
+      if (data[i + 3] === 255) {
+        opaque++;
+        opaqueLuma += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      }
+    }
+    const pixels = info.width * info.height;
+    assert.ok(transparent / pixels > 0.75, `${label}: ${transparent} transparentes de ${pixels}`);
+    assert.ok(opaque / pixels > 0.05, `${label}: ${opaque} opacos de ${pixels}`);
+
+    /* La variante clara lleva el trazo navy (para fondos claros) y la oscura el
+       blanco (para fondos oscuros). Si se cruzan, el logo desaparece. */
+    const meanLuma = opaqueLuma / opaque;
+    if (asset.tone === "light") assert.ok(meanLuma < 110, `${label} luma ${meanLuma}`);
+    else assert.ok(meanLuma > 170, `${label} luma ${meanLuma}`);
+  }
+});
+
+const themeLogoBlocks = (file) =>
+  readFileSync(new URL(file, import.meta.url), "utf8").match(/<ThemeLogo\b[\s\S]*?\/>/g) ?? [];
+
+const blockWith = (file, marker) => {
+  const block = themeLogoBlocks(file).find((candidate) => candidate.includes(marker));
+  assert.ok(block, `${file} debería tener un ThemeLogo con ${marker}`);
+  return block;
+};
+
+/* Con alfa, el tema de la app ya no alcanza para elegir variante: el footer, el
+   CTA de la home y el encabezado del éxito de reserva son navy en los dos
+   temas, y la caja del loader es clara en los dos. Quien dibuja el logo sobre
+   una superficie que no sigue el tema tiene que declararla. */
+test("logos on surfaces that ignore the theme declare their surface", () => {
+  assert.match(themeLogoBlocks("../../src/layouts/Footer.jsx")[0] ?? "", /surface="dark"/);
+  assert.match(blockWith("../../src/pages/HomePage.jsx", "hp-cta-monogram"), /surface="dark"/);
+  assert.match(blockWith("../../src/pages/HomePage.jsx", "hp-web-logo"), /surface="dark"/);
+  assert.match(
+    blockWith("../../src/components/booking/BookingSuccessModal.jsx", "success-brand-mark"),
+    /surface="dark"/,
+  );
+  assert.match(blockWith("../../src/components/ui/BrandLoader.jsx", "brand-loader-logo"), /surface="light"/);
+});
+
+test("the admin login announces its larger monogram so DPR 3 gets the 336 px file", () => {
+  assert.match(blockWith("../../src/components/admin/AdminLoginScreen.jsx", "admin-login-logo"), /sizes="112px"/);
+});
+
+test("the maintenance brand no longer disguises an opaque background", () => {
+  const maintenanceCss = readFileSync(
+    new URL("../../src/components/errors/MaintenancePage.css", import.meta.url),
+    "utf8",
+  );
+  const brandRule = maintenanceCss.match(/\.error-page--mantenimiento \.error-page-brand img\s*\{[^}]*\}/);
+  assert.equal(brandRule, null);
 });
 
 test("official assets are byte-identical to the supplied ZIP and keep their native ratio", async () => {
@@ -87,5 +194,5 @@ test("admin login constrains the monogram wrapper independently from global logo
 });
 
 test("full and tagline variants keep the stable supplied lockup in both themes", () => {
-  assert.match(source, /variant === "monogram" \? MONOGRAM\[theme\] : MAIN_LOGO/);
+  assert.match(source, /variant === "monogram" \? MONOGRAM\[tone\] : MAIN_LOGO/);
 });

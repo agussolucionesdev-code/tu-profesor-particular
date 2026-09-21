@@ -839,9 +839,11 @@ const HomePage = () => {
 
         <div className="hp-cta-inner" data-reveal-group="110">
           {/* Marca de agua de fondo: NO lleva data-reveal — el sistema de reveal
-              lo llevaría a opacity 1 (mayor especificidad) y taparía el titular. */}
+              lo llevaría a opacity 1 (mayor especificidad) y taparía el titular.
+              `surface="dark"` porque este bloque es navy en los dos temas. */}
           <ThemeLogo
             variant="monogram"
+            surface="dark"
             imgClassName="hp-cta-monogram"
             alt=""
             aria-hidden="true"
@@ -887,7 +889,7 @@ const HomePage = () => {
           aria-label="Visitá la web completa de Tu Profesor Particular"
         >
           <div className="hp-web-section-inner">
-            <ThemeLogo variant="monogram" imgClassName="hp-web-logo" alt="" aria-hidden="true" />
+            <ThemeLogo variant="monogram" surface="dark" imgClassName="hp-web-logo" alt="" aria-hidden="true" />
             <div className="hp-web-copy">
               <strong>¿Querés saber más antes de reservar?</strong>
               <span>Visitá mi web completa con toda la información, materias, metodología y más.</span>

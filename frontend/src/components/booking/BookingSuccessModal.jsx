@@ -141,8 +141,11 @@ const BookingSuccessModal = ({
         {/* Header */}
         <div className="success-header">
           <div className="success-header-top">
+            {/* El encabezado es navy en claro y casi negro en oscuro: la
+                superficie es oscura en los dos temas, no la del tema. */}
             <ThemeLogo
               variant="monogram"
+              surface="dark"
               imgClassName="success-brand-mark"
               alt="Tu Profesor Particular"
             />

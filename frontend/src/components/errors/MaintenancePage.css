@@ -18,18 +18,12 @@
    vacío. Dos capas chicas no se sienten.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* El monograma llega en PNG sin canal alfa —colortype 2, RGB puro— así que
-   trae su fondo opaco pegado. Sobre el blanco del navbar no se nota; sobre el
-   gris de esta pantalla se leía como una calcomanía con un rectángulo blanco
-   alrededor. Redondearlo y apoyarlo con una sombra suave convierte ese fondo
-   en una placa que parece querida, que es lo mejor que se puede hacer sin
-   tocar el archivo original. */
-.error-page--mantenimiento .error-page-brand img {
-  border-radius: 16px;
-  box-shadow:
-    0 1px 2px rgba(0, 33, 76, 0.08),
-    0 8px 20px rgba(0, 33, 76, 0.1);
-}
+/* La marca no lleva `border-radius` ni sombra, y es a propósito. Hubo un
+   parche acá: el monograma venía en PNG sin canal alfa, con su fondo blanco
+   pegado, y sobre el gris de esta pantalla se leía como una calcomanía; la
+   sombra lo disimulaba como una placa. Desde que los monogramas se generan con
+   fondo transparente (`scripts/generar-monogramas.mjs`), no hay rectángulo que
+   disimular: una sombra ahora dibujaría una caja alrededor de la nada. */
 
 /* La ilustración es la protagonista de esta pantalla, así que va a opacidad
    plena y no al 85% del resto de las páginas de error. */
