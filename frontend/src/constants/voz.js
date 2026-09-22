@@ -55,8 +55,12 @@ export const AUTONOMIA_PRUEBA =
 export const METODO_CITA =
   "Un tema lo explico de mil maneras distintas. Nunca lo explico de la misma forma, porque si de alguna manera no llegó, hay que buscar de otra.";
 
+/* Textual del tercer audio, con la única edición marcada según APA 7: «la puedo» →
+   «[puedo]», porque el «la» era la madre con la que hablaba. La versión anterior
+   había quitado palabras sin marcarlas. El porqué completo está en
+   web/tests/vozCompartida.test.js. */
 export const NO_PUEDO_AYUDARTE =
-  "Yo veo el caso y sé si realmente puedo ayudar. Y si no, lo digo con la mano en el corazón.";
+  "Yo veo realmente el caso y yo sé si realmente [puedo] ayudar. Y si no, lo digo con la mano en el corazón, transparentemente.";
 
 export const LUGAR_CORRECTO =
   "Una mamá angustiada necesita escuchar que su hijo realmente puede. Que se quede tranquila, que llegó al lugar correcto.";

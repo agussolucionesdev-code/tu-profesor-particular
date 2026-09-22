@@ -113,7 +113,7 @@ describe("la voz de Agustín en el paso de los datos", () => {
     await llegarAlPaso4();
 
     const cita = screen.getByText(NO_PUEDO_AYUDARTE);
-    const primerCampo = screen.getByLabelText(/Nombre del alumno/i);
+    const primerCampo = screen.getByLabelText(/Nombre completo del alumno/i);
 
     expect(
       cita.compareDocumentPosition(primerCampo) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -122,10 +122,12 @@ describe("la voz de Agustín en el paso de los datos", () => {
 
   test("está firmada, para que se sepa quién habla", async () => {
     /* Sin firma es una frase suelta en un formulario. Con firma es una persona. Y la
-       firma dice «tu profesor» y no un cargo: es lo que va a ser de quien lee. */
+       firma dice «tu profesor» y no un cargo: es lo que va a ser de quien lee.
+       Lleva el apellido porque es una cita: el nombre de pila solo no identifica a
+       quien habla, y así lo pidió Agustín —«Agustín Sosa, tu profesor»—. */
     await llegarAlPaso4();
 
-    expect(screen.getByText(/Agustín, tu profesor/i)).toBeTruthy();
+    expect(screen.getByText(/Agustín Sosa, tu profesor/i)).toBeTruthy();
   });
 
   test("no aparece antes del paso 4", async () => {
