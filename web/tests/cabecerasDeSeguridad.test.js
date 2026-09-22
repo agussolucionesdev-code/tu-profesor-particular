@@ -5,7 +5,9 @@ import test from "node:test";
 const leer = (ruta) => readFileSync(new URL(ruta, import.meta.url), "utf8");
 
 const vercel = JSON.parse(leer("../vercel.json"));
-const contactForm = leer("../src/components/ContactForm.jsx");
+/* La URL del backend vive en data/api.js desde que la usan dos pantallas: el
+   formulario de contacto y la tabla de precios de /materias. */
+const apiBase = leer("../src/data/api.js");
 
 const cabecerasGlobales = () => {
   const bloque = vercel.headers.find((h) => h.source === "/(.*)");
@@ -33,18 +35,18 @@ test("el institucional sirve las mismas cabeceras de seguridad que turnos", () =
   assert.ok(h["Content-Security-Policy"], "falta el Content-Security-Policy");
 });
 
-test("el CSP deja pasar el POST del formulario de contacto", () => {
+test("el CSP deja pasar al backend: el formulario de contacto y los precios", () => {
   const csp = cabecerasGlobales()["Content-Security-Policy"];
   const connectSrc = csp.match(/connect-src ([^;]+)/)?.[1] ?? "";
 
   /* El backend al que postea el formulario, leído de su propio código: si algún
      día se muda, este test falla antes de que el formulario deje de andar en
      producción sin que nadie se entere. */
-  const backend = contactForm.match(/"(https:\/\/[a-z0-9.-]+\.onrender\.com)"/)?.[1];
-  assert.ok(backend, "no pude leer el backend desde ContactForm.jsx");
+  const backend = apiBase.match(/"(https:\/\/[a-z0-9.-]+\.onrender\.com)"/)?.[1];
+  assert.ok(backend, "no pude leer el backend desde data/api.js");
   assert.ok(
     connectSrc.includes(backend),
-    `connect-src no permite ${backend}: el formulario de contacto va a fallar`,
+    `connect-src no permite ${backend}: el formulario de contacto y los precios van a fallar`,
   );
 });
 
