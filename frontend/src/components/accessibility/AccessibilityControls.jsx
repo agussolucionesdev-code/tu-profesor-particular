@@ -33,13 +33,20 @@ const accentOptions = [
   { value: "green", label: "Verde calma" },
 ];
 
-const bookingPrimaryActionSelector = [
-  ".form-slide-panel.active-panel:not([aria-hidden='true']) .field-flow-btn.field-flow-next",
-  ".form-slide-panel.active-panel:not([aria-hidden='true']) .btn-date-next.is-ready",
-  ".form-slide-panel.active-panel:not([aria-hidden='true']) .btn-time-next.is-ready",
-  ".form-slide-panel.active-panel:not([aria-hidden='true']) .step-actions .btn-neuro-primary",
-  ".form-slide-panel.active-panel:not([aria-hidden='true']) .step-actions .btn-neuro-success",
-].join(", ");
+/* Las filas de acción del kiosco: la de «Volver / Continuar» al pie de cada paso, y
+   el muelle pegajoso que aparece al elegir una materia. Las dos terminan en la
+   franja de abajo, que es donde viven los botones flotantes.
+
+   Esta lista apuntaba al formulario viejo —`.form-slide-panel`, `.field-flow-btn`,
+   `.btn-neuro-primary`—, que hoy es código muerto sin importadores. Como el selector
+   no encontraba nada, el levante quedaba siempre en cero y los flotantes tapaban los
+   botones: medido en 375 × 812, accesibilidad se comía 39 px de «Volver» y el botón
+   de volver arriba, 39 px de «Continuar», justo los de la flecha. */
+const bookingPrimaryActionSelector = [".kiosk-nav", ".kiosk-selection-dock"].join(", ");
+
+/* La medida se publica en <html> y no sólo en este componente: el botón de «volver
+   al inicio» vive en el pie, no sabe nada del wizard, y necesita apartarse igual. */
+const VARIABLE_LEVANTE = "--acciones-lift";
 
 const countActivePreferences = (preferences) =>
   [
@@ -67,7 +74,6 @@ const AccessibilityControls = ({
   const panelRef = useFocusTrap(isOpen);
   const activePreferences = countActivePreferences(preferences);
   const [footerLift, setFooterLift] = useState(0);
-  const [bookingActionLift, setBookingActionLift] = useState(0);
 
   useEffect(() => {
     const updateFloatingControlOffsets = () => {
@@ -84,23 +90,31 @@ const AccessibilityControls = ({
 
       setFooterLift(nextLift);
 
+      const publicarLevante = (px) => {
+        const raiz = window.document.documentElement;
+        if (px > 0) raiz.style.setProperty(VARIABLE_LEVANTE, `${px}px`);
+        else raiz.style.removeProperty(VARIABLE_LEVANTE);
+      };
+
       if (!isBookingRoute || window.innerWidth > 720) {
-        setBookingActionLift(0);
+        publicarLevante(0);
         return;
       }
 
-      const bookingAction = window.document.querySelector(
-        bookingPrimaryActionSelector,
-      );
-      const actionRect = bookingAction?.getBoundingClientRect();
-      const actionIsNearViewportBottom =
-        actionRect &&
-        actionRect.top >= window.innerHeight - 220 &&
-        actionRect.top < window.innerHeight;
+      /* La fila que esté MÁS ABAJO de las visibles: en el paso de materias conviven
+         el muelle pegajoso y la fila del pie, y apartarse de la primera que aparece
+         en el DOM dejaría la otra tapada. */
+      const filas = [...window.document.querySelectorAll(bookingPrimaryActionSelector)]
+        .map((fila) => fila.getBoundingClientRect())
+        .filter((r) => r.height > 0 && r.top < window.innerHeight && r.bottom > 0);
+      const masBaja = filas.sort((a, b) => b.bottom - a.bottom)[0];
 
-      setBookingActionLift(
-        actionIsNearViewportBottom
-          ? Math.min(window.innerHeight - actionRect.top + 16, maxLift)
+      /* Sólo cuando la fila cae en la franja de los flotantes. Más arriba no se
+         pisan, y mover los botones sin motivo es peor que dejarlos quietos. */
+      const franja = window.innerHeight - 160;
+      publicarLevante(
+        masBaja && masBaja.bottom > franja
+          ? Math.min(window.innerHeight - masBaja.top + 16, maxLift)
           : 0,
       );
     };
@@ -126,6 +140,10 @@ const AccessibilityControls = ({
       layoutObserver?.disconnect();
       window.removeEventListener("scroll", updateFloatingControlOffsets);
       window.removeEventListener("resize", updateFloatingControlOffsets);
+      /* La variable vive en <html> y sobrevive al cambio de página: sin esto, el
+         botón de volver arriba se quedaría flotando a media pantalla en el resto
+         del sitio. */
+      window.document.documentElement.style.removeProperty(VARIABLE_LEVANTE);
     };
   }, [isBookingRoute]);
 
@@ -159,7 +177,6 @@ const AccessibilityControls = ({
       ref={shellRef}
       style={{
         "--a11y-footer-lift": `${footerLift}px`,
-        "--a11y-booking-action-lift": `${bookingActionLift}px`,
       }}
     >
       {isOpen && (

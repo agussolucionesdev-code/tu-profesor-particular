@@ -296,9 +296,12 @@
   .a11y-shell {
     left: 0.85rem;
     right: auto;
+    /* `--acciones-lift` lo escribe este mismo componente en <html> para que el
+       botón de volver arriba —que vive en el pie— se aparte lo mismo. Se lee de
+       ahí y no de la variable local para que las dos esquinas suban juntas. */
     bottom: calc(
       max(1rem, var(--safe-area-bottom)) + var(--a11y-footer-lift, 0px) +
-        var(--a11y-booking-action-lift, 0px)
+        var(--acciones-lift, 0px)
     );
     align-items: flex-start;
   }
