@@ -29,7 +29,10 @@ export const MODALITY_OPTIONS = [
   {
     value: "online",
     label: "Online",
-    hint: "Videollamada. Recibís el enlace por email.",
+    /* Decía «Recibís el enlace por email». El servidor hoy no puede mandar
+       correos —faltan EMAIL_USER y EMAIL_PASS, ver tests/unit/promesasDeEmail—,
+       así que esto promete el enlace sin comprometer el canal. */
+    hint: "Videollamada. Te paso el enlace antes de la clase.",
   },
   {
     value: "presencial",

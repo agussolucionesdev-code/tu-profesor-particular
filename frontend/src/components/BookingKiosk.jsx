@@ -1053,7 +1053,7 @@ const BookingKiosk = () => {
                     </a>
                   ) : (
                     <span className="kiosk-confirmar-detalle">
-                      Te mandamos el enlace de la videollamada por email.
+                      Te paso el enlace de la videollamada antes de la clase.
                     </span>
                   )}
                 </div>
@@ -1317,10 +1317,15 @@ const BookingKiosk = () => {
                 <label className="kiosk-field-label" htmlFor="kiosk-email">
                   Email (opcional)
                 </label>
-                {/* Lo que dice es lo que hace el sistema de avisos: al email del
-                    cliente le manda la confirmación y el recordatorio del turno. */}
+                {/* Decía «Te llegan la confirmación y el recordatorio del turno».
+                    El sistema de avisos existe y eso es lo que haría, pero el
+                    servidor de producción no tiene configurado el correo —medido
+                    en /ready: `email.configured: false`—, así que hoy esa frase
+                    prometía algo que no pasa. Dice para qué se guarda el dato,
+                    que es verdad y sigue dándole sentido al campo. Ver
+                    tests/unit/promesasDeEmail para revertirlo. */}
                 <span id="kiosk-ayuda-email" className="kiosk-field-ayuda">
-                  Te llegan la confirmación y el recordatorio del turno.
+                  Queda como segundo contacto, además del WhatsApp.
                 </span>
                 <input
                   id="kiosk-email"
