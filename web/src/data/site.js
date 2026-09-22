@@ -7,8 +7,10 @@
    diagnóstico, gestión con enlace seguro). Los años de experiencia los
    confirmó Agustín.
 
-   No hay testimonios ni precios porque no se cuenta con datos reales: cuando
-   existan, se agregan acá y las secciones los toman solas.
+   No hay testimonios porque no se cuenta con datos reales: cuando existan, se
+   agregan acá y las secciones los toman solas. Los precios tampoco están acá,
+   pero por otro motivo: se leen en vivo del sistema de turnos (data/precios.js),
+   para que el panel sea el único lugar donde se cambian.
 ══════════════════════════════════════════════════════ */
 
 export const BOOKING_URL = "https://turnos.tuprofesorparticular.com.ar";
@@ -204,6 +206,13 @@ export const FAQS = [
   {
     q: "¿Qué materias y niveles das?",
     a: "Matemáticas, Física, Fisicoquímica, Química e Inglés como principales, y muchas otras a consultar. Desde primaria hasta universitario, incluida secundaria técnica.",
+  },
+  {
+    /* Sin números a propósito: esta respuesta también va al JSON-LD que lee
+       Google, y un precio escrito acá quedaría viejo el día que cambie la tarifa
+       en el panel. Los números viven en /materias, leídos en vivo. */
+    q: "¿Cuánto sale una clase?",
+    a: "Depende del nivel y de la materia, y es lo mismo online o presencial. Están todos publicados en la página de Materias, y el precio exacto de tu clase lo ves al reservar, antes de dejar tus datos.",
   },
   {
     q: "¿Tengo que pagar por adelantado?",

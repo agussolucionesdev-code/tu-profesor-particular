@@ -48,12 +48,21 @@ export const DEFAULT_PRICING_MATRIX = Object.freeze({
     Secundaria: 20000,
     // Sin tilde: es la clave que usa LEVEL_OPTIONS en el frontend.
     "Secundaria Tecnica": 25000,
+    /* CENS se sumó al kiosco sin tarifa, y una reserva sin tarifa se guarda en $0
+       («a acordar»). Es secundaria para adultos, con las mismas materias: cobra lo
+       mismo que Secundaria, incluida la excepción de ciencias de abajo. */
+    CENS: 20000,
     Terciario: 30000,
     Universitario: 30000,
   }),
   excepciones: Object.freeze([
     Object.freeze({
       nivel: "Secundaria",
+      materias: Object.freeze(["Matemática", "Física", "Química", "Fisicoquímica"]),
+      precio: 25000,
+    }),
+    Object.freeze({
+      nivel: "CENS",
       materias: Object.freeze(["Matemática", "Física", "Química", "Fisicoquímica"]),
       precio: 25000,
     }),

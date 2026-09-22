@@ -1,12 +1,16 @@
+import { Fragment } from "react";
 import { FaArrowUpRightFromSquare, FaWhatsapp } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
+import usePrecios from "../hooks/usePrecios.js";
 import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
+import { formatearPesos } from "../data/precios.js";
 import "./Inner.css";
 
 const Subjects = () => {
   usePageMeta("/materias");
+  const precios = usePrecios();
 
   return (
     <>
@@ -100,9 +104,112 @@ const Subjects = () => {
         </div>
       </section>
 
+      {/* ── 03 · PRECIOS ──────────────────────────────────────────────────────
+          Después de materias y niveles, porque el precio depende de los dos: la
+          persona llega a esta tabla sabiendo ya en qué fila está.
+
+          Los números no están escritos acá: vienen en vivo del sistema de turnos
+          (ver data/precios.js). Mientras cargan, o si el servidor no responde,
+          la tabla no se muestra y el texto manda al kiosco, que calcula el mismo
+          precio. Nunca un número inventado. */}
+      <section className="section" aria-labelledby="subj-precios" id="precios">
+        <div className="shell">
+          <SectionHead
+            index="03"
+            kicker="Precios"
+            title="Cuánto sale una clase"
+            titleId="subj-precios"
+            lead="Por hora, según el nivel. Mismo precio online y presencial, y sin recargo por urgencia ni por fin de semana."
+          />
+
+          <div className="precios" data-reveal="up" aria-live="polite" aria-busy={precios.fase === "cargando"}>
+            {precios.fase === "listo" ? (
+              <>
+                <table className="precios-tabla">
+                  <caption className="sr-only">
+                    Precio de una clase por nivel, de una hora y de dos horas
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Nivel</th>
+                      <th scope="col">1 hora</th>
+                      <th scope="col">
+                        2 horas
+                        {precios.descuento && (
+                          <span className="precios-nota-col">
+                            {precios.descuento.porcentaje}% menos por hora
+                          </span>
+                        )}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {precios.filas.map((f) => (
+                      <Fragment key={f.nivel}>
+                        <tr>
+                          <th scope="row">
+                            {f.etiqueta}
+                            {/* Con una fila de ciencias debajo, esta sola parecería
+                                aplicar a todo el nivel: se aclara a qué aplica. */}
+                            <span className="precios-detalle">
+                              {f.ciencias ? `${f.detalle} · resto de las materias` : f.detalle}
+                            </span>
+                          </th>
+                          <td>{formatearPesos(f.hora)}</td>
+                          <td>{formatearPesos(f.dosHoras)}</td>
+                        </tr>
+                        {/* Las ciencias van como una fila propia debajo de su nivel,
+                            y no como nota al pie: es la diferencia de precio que más
+                            gente va a buscar, y en una nota nadie la encuentra. */}
+                        {f.ciencias && (
+                          <tr className="precios-fila-ciencias">
+                            {/* Título corto y la lista abajo, chica: con la lista
+                                entera como título, en un teléfono la celda se partía
+                                en cinco renglones. El nivel se dice para el lector de
+                                pantalla, que recorre la tabla fila por fila. */}
+                            <th scope="row">
+                              <span className="sr-only">{f.etiqueta}, </span>
+                              Matemática y ciencias
+                              <span className="precios-detalle">
+                                {listarMaterias(f.ciencias.materias)}
+                              </span>
+                            </th>
+                            <td>{formatearPesos(f.ciencias.hora)}</td>
+                            <td>{formatearPesos(f.ciencias.dosHoras)}</td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="precios-pie">
+                  No se paga nada por adelantado. El precio exacto de tu clase lo
+                  ves al reservar, antes de dejar tus datos.
+                </p>
+              </>
+            ) : (
+              <p className="precios-respaldo">
+                {precios.fase === "cargando"
+                  ? "Cargando los precios…"
+                  : "El precio de tu clase lo ves al reservar, antes de dejar tus datos."}{" "}
+                <a href={BOOKING_RESERVE_URL} target="_blank" rel="noopener noreferrer">
+                  Ver precio y horarios
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <CtaBlock />
     </>
   );
 };
+
+/* «Matemática, Física, Química y Fisicoquímica»: con «y» antes de la última. */
+const listarMaterias = (materias) =>
+  materias.length < 2
+    ? materias.join("")
+    : `${materias.slice(0, -1).join(", ")} y ${materias[materias.length - 1]}`;
 
 export default Subjects;

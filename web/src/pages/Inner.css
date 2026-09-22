@@ -440,3 +440,90 @@
   line-height: 1.55;
   color: var(--muted);
 }
+
+/* ── Precios (Materias, sección 03) ──────────────────────
+   Una tabla de verdad y no tarjetas: son tres columnas que se comparan entre
+   filas, y una tabla es lo que un lector de pantalla puede recorrer celda por
+   celda anunciando el nivel y la duración de cada precio. Los importes se
+   alinean a la derecha con cifras tabulares, así los miles quedan uno debajo
+   del otro y la comparación se hace de un vistazo. */
+.precios {
+  max-width: 820px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: clamp(8px, 1.6vw, 14px) clamp(14px, 2.6vw, 28px) clamp(18px, 2.6vw, 26px);
+}
+.precios-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.precios-tabla th,
+.precios-tabla td {
+  padding: 0.95rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.precios-tabla thead th {
+  padding-top: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.precios-tabla td,
+.precios-tabla thead th:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+.precios-tabla tbody th {
+  font-weight: 800;
+  color: var(--text);
+}
+.precios-tabla td {
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--text);
+}
+.precios-detalle,
+.precios-nota-col {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.precios-nota-col { color: var(--green); font-weight: 600; }
+/* La fila de ciencias depende de la de arriba: sin línea entre las dos y con
+   sangría, se lee como parte del mismo nivel. */
+.precios-tabla tr:has(+ .precios-fila-ciencias) > * { border-bottom-color: transparent; }
+.precios-fila-ciencias th {
+  padding-left: 1.1rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.precios-pie,
+.precios-respaldo {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.precios-respaldo a { color: var(--green); font-weight: 700; }
+
+/* La nota de la columna puede partirse en dos renglones; los importes no. */
+.precios-nota-col { white-space: normal; }
+
+/* En un teléfono de 375 px la caja deja 305 px para la tabla, y con los
+   márgenes de escritorio pedía 325: la columna de dos horas se salía por la
+   derecha. Menos aire en la caja y en las celdas, y el nivel se lleva el ancho
+   que sobra. */
+@media (max-width: 520px) {
+  .precios { padding: 4px 12px 16px; }
+  .precios-tabla th,
+  .precios-tabla td { padding: 0.75rem 0.2rem; }
+  .precios-tabla thead th { font-size: 0.72rem; }
+  .precios-tabla td { font-size: 0.92rem; }
+  .precios-fila-ciencias th { padding-left: 0.55rem; }
+}
