@@ -125,6 +125,14 @@ jobs:
       - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js --project=desktop
         env:
           TZ: America/Argentina/Buenos_Aires
+      # El menú de celular va aparte y en el proyecto `mobile`: su bug sólo
+      # existe en esa vista. El panel quedaba recortado dentro de la barra
+      # —`backdrop-filter` + `overflow: hidden`— y abrir el menú no mostraba
+      # nada. Ningún test sin layout podía verlo: el DOM decía que estaba
+      # abierto y visible.
+      - run: npx playwright test tests/e2e/menu-mobile.spec.js --project=mobile
+        env:
+          TZ: America/Argentina/Buenos_Aires
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

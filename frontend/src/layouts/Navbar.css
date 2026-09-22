@@ -715,6 +715,25 @@ nav.navbar-elite.scrolled .navbar-container {
 
   .navbar-elite .menu-toggle-icon { display: inline-flex; }
 
+  /* EL RECORTE QUE HACÍA INVISIBLE AL MENÚ.
+   *
+   * `.navbar-container` tiene `backdrop-filter` —el vidrio esmerilado— y, para
+   * que nada se salga de sus esquinas redondeadas, `overflow: hidden`. Las dos
+   * cosas juntas rompen el menú: un elemento con `backdrop-filter` pasa a ser
+   * el contenedor de sus descendientes `position: fixed`, así que el panel
+   * dejaba de medirse contra la ventana y quedaba recortado a los 66 px de alto
+   * de la barra. Medido en 375 × 812: el panel existía, decía estar visible y
+   * sus ítems medían 54 px, pero `elementFromPoint` sobre cada uno devolvía el
+   * contenido de la página. En un teléfono, abrir el menú no mostraba nada.
+   *
+   * Sólo se levanta el recorte en esta vista, que es donde el panel es `fixed`.
+   * En escritorio el menú va en línea dentro de la barra y el recorte sigue
+   * cuidando las esquinas. Verificado: nada más se sale de la barra —se midió
+   * cada hijo— y no aparece scroll horizontal. */
+  .navbar-elite .navbar-container {
+    overflow: visible;
+  }
+
   .navbar-elite .nav-sheet-backdrop.active {
     display: block;
     opacity: 1;

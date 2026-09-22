@@ -15,6 +15,7 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import {
@@ -72,6 +73,7 @@ const writeInviteState = (state) => {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const sheetRef = useFocusTrap(isOpen);
   const [scrolled, setScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [voiceMuted, setVoiceMutedState] = useState(() => isVoiceMuted());
@@ -306,8 +308,16 @@ const Navbar = () => {
             onClick={() => setIsOpen(false)}
           />
 
+          {/* El foco entra al panel al abrirlo y vuelve al botón al cerrarlo, y
+              mientras está abierto el Tab no se escapa a la página de atrás. Es
+              el mismo hook que usa el panel de accesibilidad.
+
+              En escritorio esta misma lista es el menú en línea de la barra y
+              `isOpen` nunca se enciende —el botón de hamburguesa no existe—, así
+              que el hook no hace nada ahí. */}
           <ul
             id="nav-menu-sheet"
+            ref={sheetRef}
             className={`nav-menu-list ${isOpen ? "active" : ""}`}
           >
             {navLinks.map((link) => {
