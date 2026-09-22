@@ -1136,6 +1136,77 @@
 }
 .kiosk-grid-subjects { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   LAS PORTADAS SE REPARTEN COMO CARTAS.
+
+   Elegís el nivel y aparecían ocho tarjetas de una sola vez, todas juntas, sin
+   que nada dijera por dónde empezar a mirar. Es el momento MÁS visual del
+   recorrido —son ilustraciones, no una lista— y se resolvía como un cambio de
+   contenido cualquiera.
+
+   Ahora entran una detrás de otra, en el orden en que se leen, desde un poco
+   más abajo y con grado y medio de giro que se endereza: el gesto de una carta
+   que se acomoda sobre la mesa. El escalonado es lo que convierte «apareció un
+   bloque» en «se están repartiendo opciones», y le da al ojo un recorrido en
+   lugar de una pared.
+
+   POR QUÉ NO GIRAN SOBRE SÍ MISMAS. La otra lectura de «tipo carta» es el
+   volteo en 3D, y acá estaría mal por dos motivos. Uno de forma: girar una
+   carta significa «hay algo del otro lado», y del otro lado no hay nada —la
+   portada ES la información—. Otro de costo: `rotateY` con perspectiva sobre
+   ocho tarjetas con ilustración obliga al navegador a promover ocho capas y
+   redibujarlas en cada cuadro, que es exactamente lo que hace tildar a un
+   teléfono modesto. Esto anima `transform` y `opacity`, que se resuelven en el
+   compositor.
+
+   SÓLO CUANDO LAS PORTADAS SON NUEVAS. Repartir quiere decir «acá están tus
+   opciones, recién llegadas», y eso pasa al elegir el nivel. Al VOLVER al paso
+   ya las viste y elegiste una: repartirlas otra vez miente sobre lo que pasó,
+   y encima se suma al panel que entra y al dock de la elección que sube —tres
+   gestos a la vez justo cuando alguien vuelve porque quiere corregir algo—.
+   De ahí la clase `.se-reparte`, que el paso enciende al elegir nivel y apaga
+   con cualquier cambio de paso.
+
+   EL TECHO DEL ESCALONADO NO ES UN DETALLE. Multiplicar el retardo por el
+   índice sin límite es el error clásico: con ocho tarjetas a 40 ms la última
+   llega a los 280, pero el panel de administración puede cargar dieciocho
+   materias y ahí serían 680 ms de espera. A partir de la novena el retardo no
+   crece más: la última entra siempre antes del medio segundo, que es el techo
+   de lo que se percibe como respuesta y no como demora.
+   ══════════════════════════════════════════════════════════════════════════ */
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject {
+  animation: kioskCartaEntra 0.34s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(1) { animation-delay: 0ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(2) { animation-delay: 40ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(3) { animation-delay: 80ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(4) { animation-delay: 120ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(5) { animation-delay: 160ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(6) { animation-delay: 200ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(7) { animation-delay: 240ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(8) { animation-delay: 280ms; }
+.kiosk-grid-subjects.se-reparte .kiosk-choice-subject:nth-child(n + 9) { animation-delay: 320ms; }
+
+/* Termina en `translateZ(0)` y no en `none` porque es el transform que la
+   tarjeta tiene declarado: cerrar en `none` se lo saca al terminar y el
+   navegador baja la capa que acababa de promover, justo en el cuadro en que la
+   tarjeta queda quieta. */
+@keyframes kioskCartaEntra {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.965) rotate(-1.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-grid-subjects.se-reparte .kiosk-choice-subject { animation: none; }
+}
+
 .kiosk-choice-card.kiosk-visual-card {
   position: relative;
   display: grid;
