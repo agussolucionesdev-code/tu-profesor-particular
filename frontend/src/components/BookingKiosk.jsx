@@ -274,6 +274,16 @@ const BookingKiosk = () => {
 
   const setField = (name, value) => handleChange({ target: { name, value } });
 
+  /* Para qué lado se movió el wizard, para que el panel entre desde ese lado.
+     Se calcula en el render y no con un estado: si fuera estado, el panel se
+     montaría con la dirección vieja y la animación arrancaría para el lado
+     equivocado antes de corregirse. El ref se actualiza después de pintar. */
+  const pasoAnterior = useRef(step);
+  const direccion = step >= pasoAnterior.current ? "adelante" : "atras";
+  useEffect(() => {
+    pasoAnterior.current = step;
+  }, [step]);
+
   // ── Navegación ──────────────────────────────────────────────────────────
   const goPrev = () => setStep((s) => Math.max(s - 1, 1));
   const goToStep = (target) => {
@@ -686,7 +696,11 @@ const BookingKiosk = () => {
         </div>
       </div>
 
-      <div className={`kiosk-card kiosk-card--step-${step}`} ref={cardRef}>
+      <div
+        className={`kiosk-card kiosk-card--step-${step}`}
+        data-direccion={direccion}
+        ref={cardRef}
+      >
         {/* Sin logo ni nombre acá.
             La barra de arriba es fija y ya lleva el monograma y «Tu Profesor
             Particular». Repetirlos dentro de la tarjeta gastaba unos 60 px de
@@ -718,6 +732,14 @@ const BookingKiosk = () => {
                 onClick={() => goToStep(s.id)}
                 disabled={s.id >= step}
                 aria-current={step === s.id ? "step" : undefined}
+                /* Un paso terminado se puede tocar para volver a cambiarlo, pero
+                   llamándose «Materia» a secas eso no se oye ni se lee en
+                   ningún lado. El nombre lo dice sólo en los que sirven: en los
+                   que faltan sería ofrecer algo que está deshabilitado. */
+                aria-label={
+                  state === "done" ? `Volver al paso ${s.id}: ${s.label}` : undefined
+                }
+                title={state === "done" ? `Volver a ${s.label}` : undefined}
               >
                 <span className="kiosk-step-dot" aria-hidden="true">
                   {step > s.id ? <FaCheckCircle /> : s.id}
@@ -727,6 +749,14 @@ const BookingKiosk = () => {
             );
           })}
         </nav>
+
+        {/* Recién desde el paso 2: antes no hay a dónde volver, y un aviso que
+            no aplica es ruido en la pantalla más angosta del recorrido. */}
+        {step > 1 && (
+          <p className="kiosk-stepper-ayuda">
+            Tocá un paso terminado para volver y cambiarlo.
+          </p>
+        )}
 
         {/* ─── PASO 1: MATERIA ─── */}
         {step === 1 && (
