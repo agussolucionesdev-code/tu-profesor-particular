@@ -284,6 +284,20 @@ const BookingKiosk = () => {
     pasoAnterior.current = step;
   }, [step]);
 
+  /* Si las portadas de materia se reparten o ya están puestas.
+     Repartir quiere decir «acá están tus opciones, recién llegadas», y eso vale
+     cuando se elige el nivel: son otras materias, y son nuevas. Al VOLVER al
+     paso ya las viste y elegiste una, así que repartirlas otra vez miente sobre
+     lo que pasó —y se suma al panel que entra y al dock de la elección que
+     sube, tres gestos en el momento en que alguien vuelve porque quiere
+     corregir algo—.
+     Se apaga con cualquier cambio de paso, no sólo al volver: así no hay una
+     lista de lugares donde acordarse de apagarlo. */
+  const [reparteMaterias, setReparteMaterias] = useState(false);
+  useEffect(() => {
+    setReparteMaterias(false);
+  }, [step]);
+
   // ── Navegación ──────────────────────────────────────────────────────────
   const goPrev = () => setStep((s) => Math.max(s - 1, 1));
   const goToStep = (target) => {
@@ -296,6 +310,7 @@ const BookingKiosk = () => {
     setOtherOpen(false);
     setOtherSubject("");
     setOtherSubjectError("");
+    setReparteMaterias(true);
     funnelRef.current.stageChange(1, 1);
   };
   const chooseSubject = (subject) => {
@@ -876,14 +891,20 @@ const BookingKiosk = () => {
                     autoFocus
                   />
                 ) : (
-                <div className="kiosk-grid kiosk-grid-subjects">
+                <div className={`kiosk-grid kiosk-grid-subjects ${reparteMaterias ? "se-reparte" : ""}`}>
                   {subjectsForLevel.map((subject, index) => {
                     /* El nivel decide la familia de portada: Primaria usa las
                        multicolor, el resto la de marca. Ver constants/bookingVisuals.js */
                     const visual = getSubjectVisual(subject, formData.educationLevel);
                     return (
                       <button
-                        key={subject}
+                        /* La key lleva el nivel adelante porque Inglés, Lengua y
+                           Literatura y Matemática están en Primaria Y en
+                           Secundaria. Con `key={subject}` React reutiliza esas
+                           tres al cambiar de nivel y sólo remonta las nuevas:
+                           el reparto salía a medias, unas entrando y otras ya
+                           puestas, que se ve peor que no animar nada. */
+                        key={`${formData.educationLevel}-${subject}`}
                         type="button"
                         className={`kiosk-choice-card kiosk-visual-card kiosk-choice-subject ${formData.subject === subject ? "is-selected" : ""}`}
                         onClick={() => chooseSubject(subject)}
