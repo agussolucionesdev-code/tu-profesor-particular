@@ -1541,6 +1541,22 @@
   color: var(--text-primary);
 }
 
+/* Comillas dobles tipográficas, como pide APA 7 para una cita breve. Van por CSS
+   y no en el texto: escritas en el texto, la cita dejaría de coincidir con la
+   constante de voz.js, y esa coincidencia exacta es lo que prueba que nadie la
+   reescribió a mano en el JSX. */
+.kiosk-voz-cita::before {
+  content: "“";
+}
+
+.kiosk-voz-cita::after {
+  content: "”";
+}
+
+.kiosk-voz-firma::before {
+  content: "— ";
+}
+
 .kiosk-voz-firma {
   margin: 0;
   font-size: 0.8rem;

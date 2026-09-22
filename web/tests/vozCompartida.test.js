@@ -83,3 +83,23 @@ test("ninguna copia se pulió a lenguaje de folleto", () => {
   assert.match(METODO_CITA, /de mil maneras distintas/);
   assert.match(NO_PUEDO_AYUDARTE, /con la mano en el corazón/);
 });
+
+test("la frase de cuándo NO puede ayudar es textual y marca lo que se editó", () => {
+  /* Decía «Yo veo el caso y sé si realmente puedo ayudar. Y si no, lo digo con la
+     mano en el corazón.», presentada como cita pero con palabras del audio quitadas
+     sin marcar: faltaban «realmente» y los dos «yo», y se había cortado
+     «transparentemente». Del tercer audio, textual:
+
+       «Yo veo realmente el caso y yo sé si realmente la puedo ayudar. Y si no lo
+       digo con la mano en el corazón, transparentemente […]»
+
+     Normas APA, 7.ª edición: lo que se cambia dentro de una cita va entre corchetes.
+     El único cambio es «la puedo» por «[puedo]» —el «la» se refería a la madre con la
+     que estaba hablando, y en un formulario le habla a cualquiera—; el resto queda
+     como lo dijo. Agustín eligió esta versión, que conserva su expresión, frente a
+     otra que la quitaba. */
+  assert.equal(
+    NO_PUEDO_AYUDARTE,
+    "Yo veo realmente el caso y yo sé si realmente [puedo] ayudar. Y si no, lo digo con la mano en el corazón, transparentemente.",
+  );
+});

@@ -163,7 +163,8 @@ export const A_UNA_MADRE = {
   title: "Qué le contesto a una madre angustiada",
   citas: [
     "Una mamá angustiada necesita escuchar que su hijo realmente puede. Que se quede tranquila, que llegó al lugar correcto.",
-    "Yo veo el caso y sé si realmente puedo ayudar. Y si no, lo digo con la mano en el corazón.",
+    // Textual, con la edición marcada: ver web/tests/vozCompartida.test.js.
+    "Yo veo realmente el caso y yo sé si realmente [puedo] ayudar. Y si no, lo digo con la mano en el corazón, transparentemente.",
     "No soy un profesor más que brinda contenido, lo explica y ya está.",
   ],
 };

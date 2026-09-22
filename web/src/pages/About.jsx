@@ -250,7 +250,7 @@ const About = () => {
       {/* ── 08 · SI ESTÁS PREOCUPADA ─────────────────────────────────────────
           Última sección antes del CTA, y es deliberado: le habla a la persona
           que más probablemente esté leyendo esto a las once de la noche.
-          La segunda cita —«si no puedo, lo digo con la mano en el corazón»— es
+          La segunda cita —«Y si no, lo digo con la mano en el corazón»— es
           lo último que conviene leer antes de decidir: alguien que avisa cuándo
           NO puede ayudarte es alguien a quien le podés creer cuando dice que sí. */}
       <section className="section section--dark" aria-labelledby="about-madre">
