@@ -3,6 +3,8 @@
    All classes are prefixed with `cancel-` to avoid collisions.
    ============================================================ */
 
+@import "./modalMotion.css";
+
 /* Overlay */
 .cancel-overlay {
   position: fixed;

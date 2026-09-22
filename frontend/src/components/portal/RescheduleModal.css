@@ -3,6 +3,8 @@
    All classes are prefixed with `reschedule-` to avoid collisions.
    ============================================================ */
 
+@import "./modalMotion.css";
+
 /* ── Overlay ── */
 .reschedule-overlay {
   position: fixed;
@@ -74,12 +76,18 @@
   color: var(--text-secondary, #5a6a7e);
 }
 
+/* 44 px de LADO, no sólo de alto.
+   La hoja global le daba `min-height: 44px` a todo `button` y nadie miró el
+   ancho: éste medía 32 × 44 y las flechas de mes 28 × 44. Un blanco táctil es
+   un ÁREA, no una altura —el dedo es redondo—, así que una tira angosta y alta
+   se falla por los costados. El ícono sigue midiendo lo mismo; lo que crece es
+   la zona que responde. */
 .reschedule-close-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -170,10 +178,27 @@
   width: 100%;
 }
 
+/* EL MES SE REPARTE EL ANCHO; NO LO SUMA.
+   react-datepicker le da a cada día un ancho fijo más su margen lateral y los
+   apila sin preguntar cuánto espacio hay. Medido a 393 px: siete por cincuenta
+   son 350 dentro de una caja de 323, así que la grilla terminaba 15 px afuera
+   del diálogo y la columna de los DOMINGOS quedaba cortada por el borde
+   redondeado —un día de cada semana, todas las semanas—.
+
+   Con `space-between` y sin margen lateral, las siete columnas se acomodan al
+   ancho que haya. Es lo mismo que ya hacía el calendario del wizard de reserva:
+   son dos pantallas del mismo producto y ésta no se había enterado. */
+.reschedule-datepicker .react-datepicker__day-names,
+.reschedule-datepicker .react-datepicker__week {
+  display: flex;
+  justify-content: space-between;
+}
+
 .reschedule-datepicker .react-datepicker__day,
 .reschedule-datepicker .react-datepicker__day-name {
   width: 2rem;
   line-height: 2rem;
+  margin: 3px 0;
   border-radius: 6px;
   font-size: 0.8125rem;
 }
@@ -225,14 +250,17 @@
   text-transform: capitalize;
 }
 
+/* Mismo caso que el botón de cerrar, y acá duele más: las dos flechas están
+   una al lado de la otra, así que errarle por 8 px no es no pasar nada —es
+   cambiar de mes para el lado contrario—. */
 .reschedule-month-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 44px;
+  height: 44px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-secondary, #5a6a7e);
   cursor: pointer;
