@@ -1021,11 +1021,75 @@
   box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.1), 0 6px 14px rgba(1, 149, 60, 0.16);
 }
 
+/* EL PANEL ENTRA DESDE EL LADO AL QUE SE FUE.
+   Antes entraba siempre igual —desde abajo— fuera para adelante o para atrás.
+   Un movimiento que no distingue dirección no informa nada: en un recorrido de
+   cinco pasos, la persona no sabe si avanzó o volvió. Ahora avanzar entra desde
+   la derecha y volver desde la izquierda, que es el sentido en que se lee.
+
+   Se anima `transform` y `opacity`, que el navegador resuelve en el compositor
+   sin recalcular la página: 18 px de recorrido no cuestan nada. */
 .kiosk-step-panel { animation: kioskPanelIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.kiosk-card[data-direccion="adelante"] .kiosk-step-panel {
+  animation-name: kioskPanelAdelante;
+}
+
+.kiosk-card[data-direccion="atras"] .kiosk-step-panel {
+  animation-name: kioskPanelAtras;
+}
 
 @keyframes kioskPanelIn {
   from { opacity: 0; transform: translateY(12px) scale(0.992); }
   to { opacity: 1; transform: none; }
+}
+
+@keyframes kioskPanelAdelante {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes kioskPanelAtras {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Quien pidió menos movimiento ve el cambio de paso sin desplazamiento: el
+   panel aparece y ya. La aparición se conserva porque sin ella no hay ninguna
+   señal de que la pantalla cambió. */
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-card[data-direccion] .kiosk-step-panel {
+    animation-name: kioskPanelSinMovimiento;
+    animation-duration: 0.2s;
+  }
+
+  @keyframes kioskPanelSinMovimiento {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* El aviso de que se puede volver. Chico y sin peso: es una ayuda, no una
+   instrucción; quien ya lo sabe no tiene que leerlo dos veces. */
+.kiosk-stepper-ayuda {
+  margin: -1.15rem 0 1.3rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+/* Y que se note al tocarlo: el paso terminado se levanta apenas y su punto
+   toma el verde lleno. En un teléfono no hay hover, así que el estado activo
+   es la única confirmación táctil de que el toque llegó. */
+.kiosk-step.is-done:hover .kiosk-step-label,
+.kiosk-step.is-done:focus-visible .kiosk-step-label {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kiosk-step.is-done:active .kiosk-step-dot {
+  transform: scale(0.94);
 }
 
 .kiosk-eyebrow {
