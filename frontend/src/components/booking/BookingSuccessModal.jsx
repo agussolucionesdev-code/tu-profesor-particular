@@ -39,7 +39,10 @@ const getDeliveryAlert = (successData) => {
     return {
       type: "warning",
       icon: <FaExclamationCircle aria-hidden="true" />,
-      text: "Guardá el código — si el correo tarda, buscá tu turno desde Mis Turnos.",
+      /* Antes decía «si el correo tarda», que da por hecho que el correo sale.
+         Hoy el servidor no puede mandarlo: ver tests/unit/promesasDeEmail. El
+         código sigue siendo la referencia real, que es lo que importa acá. */
+      text: "Guardá el código: con él entrás a Mis Turnos cuando quieras.",
     };
   }
 

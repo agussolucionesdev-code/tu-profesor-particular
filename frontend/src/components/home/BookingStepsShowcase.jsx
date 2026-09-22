@@ -78,7 +78,7 @@ const STEPS = [
   {
     n: 2,
     title: "Online o presencial",
-    desc: "Elegís cómo querés la clase. Si es presencial, te mostramos la dirección; si es online, te llega el enlace por email.",
+    desc: "Elegís cómo querés la clase. Si es presencial, te mostramos la dirección; si es online, te paso el enlace antes de la clase.",
     notes: ["Videollamada o en Temperley", "Vos elegís según te quede cómodo"],
     callout: "Dos opciones claras, un toque",
     render: () => (
