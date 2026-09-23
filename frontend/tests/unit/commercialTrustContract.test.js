@@ -126,7 +126,12 @@ test("keeps one source of truth for the WhatsApp number", () => {
 });
 
 test("states one consistent online and in-person offer", () => {
-  assert.match(homeSource, /Clases online y presenciales/i);
+  /* Lo que se protege es que la portada declare las DOS modalidades, no una
+     frase exacta. La frase «Clases online y presenciales» vivía sólo en el
+     título de la página, que pasó a ser «Reservá tu clase» cuando se separaron
+     las intenciones de los dos sitios; la oferta sigue declarada en la
+     descripción: «online o presencial en Temperley». */
+  assert.match(homeSource, /online (y|o) presencial/i);
   // La oferta online/presencial ahora es un paso del kiosco, con la ubicación
   // presencial explícita.
   assert.match(kioskConstants, /value: "online"/);
