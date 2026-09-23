@@ -36,18 +36,19 @@ const sinComentarios = (fuente) => fuente
  * explica qué se rompió.
  */
 
-test("los números de la portada no son encabezados", () => {
+test("las etiquetas de la franja de la portada no son encabezados", () => {
   /* "años dando clases" es la etiqueta del número que tiene arriba, no el título
      de una sección. Como <h3> hacía dos cosas mal a la vez: el salto h1→h3, y
      —peor— metía cuatro entradas sin sentido al principio del índice del
      documento, por delante de todas las secciones reales. Un lector de pantalla
      que navega por encabezados se encontraba primero con "años dando clases".
-     La región ya tiene nombre: la <section> lleva aria-label="En números". */
+     La región ya tiene nombre propio en su <section>. (Era «En números»; desde
+     que la franja dejó de ser de números es «En pocas palabras».) */
   const fuente = sinComentarios(leer("../src/components/Credentials.jsx"));
   assert.doesNotMatch(fuente, /<h[1-6]/, "Credentials volvió a usar encabezados para los stats");
   assert.match(
     leer("../src/components/Credentials.jsx"),
-    /aria-label="En números"/,
+    /<section[^>]*aria-label="[^"]+"/,
     "la región tiene que seguir nombrada",
   );
 });

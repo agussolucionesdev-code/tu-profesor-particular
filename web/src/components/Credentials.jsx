@@ -1,115 +1,48 @@
-import { useEffect, useRef, useState } from "react";
 import { BRAND } from "../data/site.js";
 import "./Credentials.css";
 
-/* Banda de autoridad, justo después del hero. Los datos que la sostienen ya
-   existían pero vivían escondidos en /sobre-mi: acá pasan al frente, en
-   tipografía display grande, porque son lo que dice "hay un profesional
-   detrás" antes de que el visitante lea una sola línea de venta.
+/* Franja de datos, justo después del hero. Contesta las cuatro preguntas que
+   una familia se hace antes de seguir leyendo: qué materias, para qué nivel,
+   dónde y con cuánta experiencia.
 
-   Todo es información real y verificada. Nada de métricas infladas. */
+   Antes eran cuatro números que contaban desde cero al aparecer («5+
+   materias», «2 modalidades»). Se leían como indicadores de éxito sin serlo,
+   y dos estaban mal: el «+» de las materias sobraba y los niveles dejaban
+   afuera CENS. Lo cuida tests/franjaQueInforma.test.js. */
 const ITEMS = [
   {
-    count: BRAND.yearsTeaching,
-    prefix: "+",
-    label: "años dando clases",
-    detail: "Acompañando alumnos de primaria a universitario",
+    label: "Materias",
+    value: "Matemáticas, Física, Fisicoquímica, Química e Inglés",
   },
   {
-    count: 5,
-    suffix: "+",
-    label: "materias principales",
-    detail: "Matemáticas, Física, Fisicoquímica, Química e Inglés",
+    label: "Niveles",
+    value: "Primaria, secundaria, técnica, CENS, terciario y universitario",
   },
   {
-    text: "5",
-    label: "niveles educativos",
-    detail: "Primaria, secundaria, técnica, terciario y universitario",
+    label: "Modalidad",
+    value: "Online para toda Argentina o presencial en Temperley",
   },
   {
-    text: "2",
-    label: "modalidades",
-    detail: "Online para toda Argentina y presencial en Temperley",
+    label: "Experiencia",
+    value: `${BRAND.yearsTeaching} años dando clases particulares`,
   },
 ];
 
-const skipAnimation = () =>
-  typeof window === "undefined" ||
-  typeof IntersectionObserver === "undefined" ||
-  Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
-
-/**
- * Número que cuenta hasta su valor al entrar en pantalla.
- * Estado inicial perezoso: con reduced-motion arranca ya en el valor final, sin
- * llamar a setState dentro del efecto.
- */
-const CountUp = ({ target, duration = 1200 }) => {
-  const ref = useRef(null);
-  const [shown, setShown] = useState(() => (skipAnimation() ? target : 0));
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || skipAnimation()) return undefined;
-
-    let raf = 0;
-    let start = 0;
-    const step = (ts) => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / duration, 1);
-      // Ease-out cúbico: arranca rápido y frena, se lee mejor que lineal.
-      setShown(Math.round(target * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          io.disconnect();
-          raf = requestAnimationFrame(step);
-        }
-      },
-      { threshold: 0.4 },
-    );
-    io.observe(el);
-
-    // Red de seguridad: el número nunca puede quedarse en cero.
-    const fallback = window.setTimeout(() => setShown(target), 2600);
-
-    return () => {
-      io.disconnect();
-      window.clearTimeout(fallback);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [target, duration]);
-
-  return <span ref={ref}>{shown}</span>;
-};
-
 const Credentials = () => (
-  <section className="creds" aria-label="En números">
+  <section className="creds" aria-label="En pocas palabras">
     <div className="shell">
-      <ul className="creds-grid" data-reveal-group="90">
+      {/* <dl>: cada ítem es un par nombre-valor, que es exactamente lo que un
+          lector de pantalla anuncia con una lista de definiciones. La etiqueta
+          NO es un encabezado: cuatro <h3> encabezarían el índice del documento
+          por delante de las secciones reales. */}
+      <dl className="creds-grid" data-reveal-group="90">
         {ITEMS.map((item) => (
-          <li key={item.label} data-reveal="up">
-            <p className="creds-num display">
-              {item.prefix}
-              {item.count ? <CountUp target={item.count} /> : item.text}
-              {item.suffix}
-            </p>
-            {/* NO es un encabezado, y por eso no se subió a h2.
-                "años dando clases" es la etiqueta del número que está arriba, no
-                el título de una sección. Como <h3> producía dos problemas: un
-                salto h1→h3 en la portada, y —peor— cuatro entradas sin sentido
-                encabezando el índice del documento, por delante de todas las
-                secciones reales. Un lector de pantalla que navega por
-                encabezados se encontraba primero con "años dando clases".
-                La región ya está nombrada: la <section> lleva aria-label="En
-                números". */}
-            <p className="creds-label">{item.label}</p>
-            <p className="creds-detail">{item.detail}</p>
-          </li>
+          <div key={item.label} data-reveal="up">
+            <dt className="creds-label">{item.label}</dt>
+            <dd className="creds-value">{item.value}</dd>
+          </div>
         ))}
-      </ul>
+      </dl>
     </div>
   </section>
 );
