@@ -40,6 +40,8 @@ const subjectAssets = [
   "cbc.webp",
   "fisica.webp",
   "fisicoquimica.webp",
+  "geografia.webp",
+  "historia.webp",
   "ingles.webp",
   "lengua-literatura.webp",
   "matematica.webp",
@@ -184,6 +186,13 @@ test("la portada cambia según el nivel, y el CBC tiene la suya", () => {
     /getSubjectVisual\(subject, formData\.educationLevel\)/,
     "el kiosco debe pasarle el nivel",
   );
+});
+
+test("Historia y Geografía tienen portada propia, no la de «otra materia»", () => {
+  /* Las pidió Agustín para Secundaria y CENS. Sin su rama en el resolvedor
+     caían en la portada genérica de «otra materia». */
+  assert.match(visualMapSource, /includes\("histori"\)\) return SUBJECT_VISUALS\.historia/);
+  assert.match(visualMapSource, /includes\("geograf"\)\) return SUBJECT_VISUALS\.geografia/);
 });
 
 test("la tarjeta de materia está adaptada al arte a sangre", () => {

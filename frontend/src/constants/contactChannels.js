@@ -103,3 +103,15 @@ export const SOCIAL_PROFILES = Object.freeze(
     Object.freeze(perfil),
   ),
 );
+
+/* Las redes anunciadas que todavía no existen. Se muestran en el pie con su logo
+   y «Próximamente», SIN enlace: una URL inventada puede terminar en la página de
+   otra persona si ese nombre de usuario ya lo tiene alguien.
+
+   Facebook: la página se va a llamar «Tu Profesor Particular». Cuando exista, se
+   carga su URL en PERFILES (arriba) y sale de esta lista sola. */
+const PROXIMOS = [{ id: "facebook", label: "Facebook", detalle: "Tu Profesor Particular" }];
+
+export const SOCIAL_PROFILES_PROXIMOS = Object.freeze(
+  PROXIMOS.filter((p) => !SOCIAL_PROFILES.some((s) => s.id === p.id)).map((p) => Object.freeze(p)),
+);
