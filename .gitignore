@@ -16,6 +16,9 @@ pnpm-debug.log*
 
 .DS_Store
 Thumbs.db
+# Volcados de crash de Git Bash en Windows (msys-2.0.dll): no son código y se
+# reescriben solos cada vez que bash se cuelga, en la raíz o en frontend/.
+*.stackdump
 .idea/
 .vscode/
 *.swp
