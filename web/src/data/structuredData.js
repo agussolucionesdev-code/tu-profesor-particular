@@ -40,7 +40,9 @@ export const construirGrafo = () => {
     url: SITIO,
     email: CONTACT.email,
     telephone: CONTACT.whatsappDisplay,
-    slogan: BRAND.claim,
+    /* El eslogan de la marca es el del logo. Acá decía «Entendé de verdad,
+       no de memoria», que era el titular de la portada. */
+    slogan: BRAND.tagline,
     founder: { "@id": idPersona },
     employee: { "@id": idPersona },
     address: {

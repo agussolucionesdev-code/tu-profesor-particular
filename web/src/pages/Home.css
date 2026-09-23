@@ -80,7 +80,11 @@
   .hero-pain-word { min-width: 0; }
 }
 
-.hero-title { color: #fff; }
+/* El titular del hero es una pregunta de 41 caracteres, no una frase de
+   cuatro palabras. Con la escala de `display--xl` llegaba a 90 px a 1024 de
+   ancho: cuatro líneas y 327 px de alto, y los botones caían debajo del
+   pliegue. Medido en el navegador, no estimado. */
+.hero-title { color: #fff; font-size: clamp(2.4rem, 5.6vw, 4.8rem); line-height: 0.98; }
 .hero-title em { color: var(--green-on-dark); }
 
 .hero-tagline {
@@ -106,6 +110,30 @@
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-bottom: clamp(22px, 3vw, 30px);
+}
+
+/* El acceso del otro público: estudiantes de secundaria, adultos en CENS,
+   terciario y facultad. Es un enlace y se ve como enlace —subrayado—, porque
+   un tercer botón le competiría a los dos de arriba. 44 px de alto para que
+   entre en el dedo aunque el texto mida 20. */
+.hero-otro-publico {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  margin: calc(-1 * clamp(10px, 1.5vw, 16px)) 0 clamp(14px, 2vw, 20px);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-on-dark);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+.hero-otro-publico:hover { color: var(--white); }
+.hero-otro-publico svg { font-size: 0.8em; transition: transform 0.2s var(--ease); }
+.hero-otro-publico:hover svg { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-otro-publico svg { transition: none; }
 }
 
 .hero-trust {
@@ -168,6 +196,13 @@
 }
 .hero-photo strong { font-size: 15px; font-weight: 800; }
 .hero-photo figcaption span { font-size: 12px; font-weight: 700; color: var(--green-on-dark); }
+
+/* En el teléfono los dos botones se apilan: a lo ancho y del mismo tamaño.
+   Con su ancho natural quedaban de 231 y 277 px uno arriba del otro, y el
+   pulgar tenía que ir a buscar cada uno. */
+@media (max-width: 620px) {
+  .hero-actions .btn { flex: 1 1 100%; justify-content: center; }
+}
 
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: minmax(0, 1fr); }
