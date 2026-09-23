@@ -6,6 +6,7 @@ import usePageMeta from "../hooks/usePageMeta.js";
 import usePrecios from "../hooks/usePrecios.js";
 import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
 import { formatearPesos } from "../data/precios.js";
+import { PORTADA_POR_SLUG, PORTADA_SIZE } from "../data/portadas.js";
 import "./Inner.css";
 
 const Subjects = () => {
@@ -26,13 +27,36 @@ const Subjects = () => {
           />
 
           <ul className="subj-cards" data-reveal-group="80">
-            {SUBJECTS.map((s) => (
+            {SUBJECTS.map((s, i) => (
               <li
                 key={s.slug}
                 className="subj-card"
                 style={{ "--subject-color": s.color }}
                 data-reveal="up"
               >
+                {/* La franja recorta la PARTE DE ARRIBA de la ilustración, donde
+                    están los objetos. Cada portada tiene el nombre de la materia
+                    escrito en el medio, y la tarjeta ya lo dice en su encabezado:
+                    mostrarlo entero pondría "MATEMÁTICA" arriba de "Matemáticas".
+
+                    `alt=""` por lo mismo, en el otro canal: el nombre ya viaja en
+                    el encabezado, y una portada con texto alternativo haría que un
+                    lector de pantalla diga la materia dos veces seguidas. La
+                    imagen no aporta nada que el texto no dé. */}
+                <span className="subj-card-media" aria-hidden="true">
+                  <img
+                    src={PORTADA_POR_SLUG[s.slug]}
+                    alt=""
+                    width={PORTADA_SIZE.width}
+                    height={PORTADA_SIZE.height}
+                    /* Sólo la primera entra en pantalla; las otras cuatro caen
+                       debajo del pliegue y cargarlas de entrada retrasa lo único
+                       que la persona está mirando. */
+                    loading={i === 0 ? "eager" : "lazy"}
+                    fetchPriority={i === 0 ? "high" : "auto"}
+                    decoding="async"
+                  />
+                </span>
                 {/* h2 y no h3: el encabezado de esta sección ES el h1 de la
                     página (SectionHead con as="h1"), así que sus hijos directos
                     son de segundo nivel. Con h3 quedaba un salto h1→h3, que en

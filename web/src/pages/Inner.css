@@ -104,12 +104,61 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: clamp(26px, 3vw, 34px);
+  /* El padding pasa a ser una variable porque la franja de la portada tiene que
+     anularlo para llegar a los bordes de la tarjeta. Repetir el `clamp()` en un
+     margen negativo es la forma de que un día dejen de coincidir. */
+  --subj-pad: clamp(26px, 3vw, 34px);
+  padding: var(--subj-pad);
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 20px;
   overflow: hidden;
   transition: transform 0.42s var(--ease), box-shadow 0.42s var(--ease);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LA FRANJA DE PORTADA.
+
+   Las ilustraciones ya existían y vivían SÓLO en el kiosco de reserva: quien
+   llegaba por el sitio veía cinco tarjetas de texto y se encontraba con la
+   imagen recién después de hacer clic. Ahora las dos pantallas se reconocen.
+
+   POR QUÉ UNA FRANJA Y NO LA PORTADA ENTERA. Cada ilustración tiene el nombre
+   de la materia escrito en el medio, y la tarjeta ya lo dice en su encabezado:
+   la portada completa pondría "MATEMÁTICA" arriba de "Matemáticas" —singular
+   contra plural, encima—. El recorte va ARRIBA, donde están los objetos: la
+   calculadora y el compás en Matemática, el globo y el pizarrón en Inglés.
+
+   Los 150 px no son un número de diseño: el título de las ilustraciones empieza
+   cerca del 38 % de su altura, así que por encima de ~180 px empieza a asomar.
+   Hay un test que lo fija.
+   ══════════════════════════════════════════════════════════════════════════ */
+.subj-card-media {
+  display: block;
+  /* Sale del padding para tocar los tres bordes; abajo no, ahí arranca el
+     texto. El `overflow: hidden` de la tarjeta le recorta las esquinas. */
+  margin: calc(var(--subj-pad) * -1) calc(var(--subj-pad) * -1) var(--subj-pad);
+  height: 150px;
+  /* Un fondo por si la imagen tarda o falla: sin esto queda un hueco blanco que
+     parece un error de maquetado. Se tiñe con el color de la materia, que la
+     tarjeta ya conoce. */
+  background: color-mix(in srgb, var(--subject-color, var(--green-brand)) 12%, var(--white));
+  overflow: hidden;
+}
+
+.subj-card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* La línea de color de 4px va ENCIMA de la portada. Es el único elemento de la
+   tarjeta que identifica a la materia sin depender de la imagen, así que no
+   puede quedar tapado por ella. */
+.subj-card::before {
+  z-index: 1;
 }
 .subj-card::before {
   content: "";
