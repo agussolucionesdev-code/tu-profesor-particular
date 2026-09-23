@@ -19,7 +19,11 @@
     radial-gradient(58% 42% at 16% 0%, rgba(1, 149, 60, 0.08), transparent 70%),
     radial-gradient(52% 44% at 88% 10%, rgba(0, 33, 76, 0.07), transparent 72%),
     var(--color-bg-light, #eef3f9);
-  color: var(--color-text-primary, #00214c);
+  background:
+    radial-gradient(58% 42% at 16% 0%, color-mix(in srgb, var(--tint-accent) 8%, transparent), transparent 70%),
+    radial-gradient(52% 44% at 88% 10%, color-mix(in srgb, var(--tint) 7%, transparent), transparent 72%),
+    var(--color-bg-light, var(--sf-muted));
+  color: var(--ink);
 }
 
 .error-page-brand {
@@ -39,7 +43,7 @@
   width: 220px;
   height: 220px;
   margin-bottom: 1.75rem;
-  color: var(--brand-navy, #00214c);
+  color: var(--brand-navy, var(--ink));
   opacity: 0.85;
 }
 
@@ -52,7 +56,7 @@
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--brand-navy, #00214c);
+  color: var(--brand-navy, var(--ink));
   line-height: 1.2;
 }
 
@@ -106,18 +110,20 @@
 .error-page-btn--primary:hover {
   background: #183350;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 .error-page-btn--secondary {
   border: 1.5px solid var(--border-soft, #e2e8f0);
+  border: 1.5px solid var(--border-soft, color-mix(in srgb, var(--tint) 16%, transparent));
   background: transparent;
   color: var(--color-text-secondary, #4a627d);
 }
 
 .error-page-btn--secondary:hover {
-  background: var(--color-surface-2, #f1f5f9);
+  background: var(--color-surface-2, var(--sf-muted));
   border-color: var(--brand-navy, #00214c);
-  color: var(--brand-navy, #00214c);
+  color: var(--brand-navy, var(--ink));
 }
 
 .error-page-code {
@@ -125,7 +131,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: var(--color-text-tertiary, #7791ac);
+  color: var(--ink-3);
   opacity: 0.7;
 }
 
@@ -133,43 +139,10 @@
 [data-theme="dark"] .error-page {
   /* Los mismos dos halos, más intensos: sobre un fondo oscuro un 8% de verde
      no se ve. */
-  background:
-    radial-gradient(58% 42% at 16% 0%, rgba(1, 149, 60, 0.15), transparent 70%),
-    radial-gradient(52% 44% at 88% 10%, rgba(64, 122, 191, 0.12), transparent 72%),
-    var(--color-bg-light, #0b1424);
-  color: var(--color-text-primary, #f1f5f9);
 }
 
 [data-theme="dark"] .error-page-illustration {
-  color: var(--brand-green, #01953c);
   opacity: 0.75;
-}
-
-[data-theme="dark"] .error-page-title {
-  color: var(--color-text-primary, #f1f5f9);
-}
-
-[data-theme="dark"] .error-page-description {
-  color: var(--color-text-secondary, #b5c2d2);
-}
-
-[data-theme="dark"] .error-page-btn--primary {
-  background: var(--brand-green, #01953c);
-}
-
-[data-theme="dark"] .error-page-btn--primary:hover {
-  background: #006d1f;
-}
-
-[data-theme="dark"] .error-page-btn--secondary {
-  border-color: var(--border-soft, #334155);
-  color: var(--color-text-secondary, #b5c2d2);
-}
-
-[data-theme="dark"] .error-page-btn--secondary:hover {
-  background: var(--color-surface-2, #1e293b);
-  border-color: var(--brand-green, #01953c);
-  color: var(--brand-green, #01953c);
 }
 
 /* ── Mobile ── */

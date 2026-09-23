@@ -7,14 +7,6 @@ body {
   background-color: var(--color-bg-light);
 }
 
-[data-theme="dark"] body {
-  background: #0b1424;
-}
-
-.nav-link-btn,
-.nav-utility-btn,
-.theme-toggle-btn,
-.menu-toggle-icon,
 .btn-search,
 .btn-action,
 .btn-neuro-primary,
@@ -43,10 +35,6 @@ body {
   line-height: 1.2;
 }
 
-.nav-link-btn:focus-visible,
-.nav-utility-btn:focus-visible,
-.theme-toggle-btn:focus-visible,
-.menu-toggle-icon:focus-visible,
 .btn-search:focus-visible,
 .btn-action:focus-visible,
 .btn-neuro-primary:focus-visible,
@@ -73,28 +61,6 @@ body {
   outline-offset: 3px;
 }
 
-.navbar-elite {
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
-}
-
-[data-theme="dark"] .navbar-elite {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.nav-link-btn {
-  min-height: 46px;
-  border: 1px solid transparent;
-  white-space: nowrap;
-}
-
-.nav-link-btn.active {
-  box-shadow: inset 0 0 0 1px rgba(1, 149, 60, 0.24);
-}
-
-[data-theme="dark"] .nav-link-btn.active {
-  box-shadow: inset 0 0 0 1px rgba(136, 206, 147, 0.28);
-}
-
 /* El anillo del grupo se quitó a propósito.
  *
  * Dibujaba `0 0 0 1px` alrededor del cluster de voz y tema, asumiendo las
@@ -113,19 +79,10 @@ body {
   background-color: var(--color-bg-light);
 }
 
-[data-theme="dark"] .booking-page-wrapper {
-  background-color: var(--color-bg-light);
-}
-
 .form-card-elevation {
   border-color: var(--border-soft);
   background: var(--color-surface-1);
   box-shadow: var(--shadow-card);
-}
-
-[data-theme="dark"] .form-card-elevation {
-  border-color: var(--border-soft);
-  background: var(--color-surface-1);
 }
 
 .premium-input,
@@ -149,72 +106,6 @@ body {
   box-shadow: var(--shadow-card);
 }
 
-[data-theme="dark"] .premium-input,
-[data-theme="dark"] .adult-mode-copy,
-[data-theme="dark"] .adult-state-card,
-[data-theme="dark"] .selection-insight-card,
-[data-theme="dark"] .slot-stage-shell .slot-section,
-[data-theme="dark"] .time-slots-card .slot-section,
-[data-theme="dark"] .calendar-selection-banner,
-[data-theme="dark"] .calendar-glass-box,
-[data-theme="dark"] .calendar-zoom-dialog,
-[data-theme="dark"] .calendar-zoom-header,
-[data-theme="dark"] .calendar-zoom-picker-shell,
-[data-theme="dark"] .duration-selector-premium,
-[data-theme="dark"] .duration-summary-card,
-[data-theme="dark"] .booking-summary-card-expanded,
-[data-theme="dark"] .summary-detail-card,
-[data-theme="dark"] .summary-management-mini-card {
-  background: var(--color-surface-1);
-  border-color: var(--border-soft);
-  box-shadow: var(--shadow-card);
-}
-
-[data-theme="dark"] .adult-mode-copy {
-  background: var(--color-surface-1);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .neuro-toggle-wrapper {
-  background: var(--color-surface-1);
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-
-[data-theme="dark"] .neuro-toggle-wrapper.active-box {
-  background: var(--color-surface-2);
-  border-color: rgba(136, 206, 147, 0.26);
-}
-
-[data-theme="dark"] .toggle-pill {
-  background: rgba(204, 217, 235, 0.12);
-  color: #c5d4e2;
-}
-
-[data-theme="dark"] .toggle-pill.active {
-  background: rgba(136, 206, 147, 0.18);
-  color: #d8f0dc;
-}
-
-[data-theme="dark"] .toggle-state-label,
-[data-theme="dark"] .adult-mode-helper,
-[data-theme="dark"] .toggle-subtitle,
-[data-theme="dark"] .select-chevron {
-  color: #a9bccd;
-}
-
-[data-theme="dark"] .toggle-state-label.active {
-  color: #d8f0dc;
-}
-
-[data-theme="dark"] .toggle-control-shell {
-  border-top-color: rgba(204, 217, 235, 0.12);
-}
-
-[data-theme="dark"] .select-input-wrapper::after {
-  background: rgba(204, 217, 235, 0.18);
-}
-
 .stepper-nav-hint,
 .step-card,
 .step-status-pill {
@@ -231,73 +122,13 @@ body {
   background: var(--color-surface-soft);
 }
 
-[data-theme="dark"] .stepper-nav-hint,
-[data-theme="dark"] .stepper-current-pill,
-[data-theme="dark"] .step-status-pill {
-  background: var(--color-surface-1);
-  border-color: var(--border-soft);
-}
-
 .step-action-hint {
   min-height: 2.55em;
 }
 
 .stepper-item.is-locked {
   background: rgba(248, 250, 252, 0.96);
-}
-
-[data-theme="dark"] .stepper-nav-hint,
-[data-theme="dark"] .stepper-current-pill,
-[data-theme="dark"] .step-status-pill {
-  background: var(--color-surface-2);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .stepper-head-copy p,
-[data-theme="dark"] .stepper-nav-hint,
-[data-theme="dark"] .step-action-hint,
-[data-theme="dark"] .step-caption {
-  color: #9fb2c4;
-}
-
-[data-theme="dark"] .step-label {
-  color: #bbccda;
-}
-
-[data-theme="dark"] .stepper-item.is-current {
-  background: var(--color-surface-2);
-  border-color: var(--border-md);
-}
-
-[data-theme="dark"] .stepper-item.is-completed {
-  background: var(--color-surface-1);
-  border-color: rgba(136, 206, 147, 0.24);
-}
-
-[data-theme="dark"] .stepper-item.is-upcoming {
-  background: var(--color-surface-0);
-}
-
-[data-theme="dark"] .stepper-item.is-locked {
-  background: var(--color-surface-0);
-  border-color: rgba(142, 160, 178, 0.16);
-}
-
-[data-theme="dark"] .stepper-item.is-current .step-label,
-[data-theme="dark"] .stepper-item.is-completed .step-label,
-[data-theme="dark"] .stepper-item.is-current .step-caption,
-[data-theme="dark"] .stepper-item.is-clickable .step-caption {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .step-status-pill.is-current {
-  background: rgba(204, 217, 235, 0.16);
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .step-status-pill.is-locked {
-  background: rgba(142, 160, 178, 0.1);
-  color: #9fb2c4;
+  background: color-mix(in srgb, var(--sf-muted) 96%, transparent);
 }
 
 .booking-month-nav,
@@ -309,61 +140,6 @@ body {
 .duration-chip {
   border-color: var(--border-soft);
   background: var(--color-surface-1);
-}
-
-[data-theme="dark"] .booking-month-nav,
-[data-theme="dark"] .calendar-secondary-action,
-[data-theme="dark"] .calendar-zoom-close,
-[data-theme="dark"] .btn-chip-clear,
-[data-theme="dark"] .btn-neuro-secondary,
-[data-theme="dark"] .btn-stage-next.is-locked,
-[data-theme="dark"] .duration-chip {
-  border-color: var(--border-soft);
-  background: var(--color-surface-1);
-  color: var(--color-text-main);
-}
-
-[data-theme="dark"] .btn-stage-next.is-locked,
-[data-theme="dark"] .btn-disabled {
-  color: #8ea0b2;
-  box-shadow: none;
-}
-
-[data-theme="dark"] .calendar-selection-banner,
-[data-theme="dark"] .calendar-zoom-picker-shell,
-[data-theme="dark"] .slot-stage-shell .slot-section,
-[data-theme="dark"] .time-slots-card .slot-section {
-  background: var(--color-surface-1);
-}
-
-[data-theme="dark"] .calendar-selection-banner strong,
-[data-theme="dark"] .booking-month-copy strong,
-[data-theme="dark"] .calendar-zoom-header h3,
-[data-theme="dark"] .selection-insight-card strong,
-[data-theme="dark"] .duration-summary-card strong {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .calendar-selection-banner p,
-[data-theme="dark"] .calendar-toolbar-helper,
-[data-theme="dark"] .stage-next-helper,
-[data-theme="dark"] .booking-month-kicker,
-[data-theme="dark"] .selection-insight-card small {
-  color: #a9bccd;
-}
-
-[data-theme="dark"] .duration-chip.selected,
-[data-theme="dark"] .btn-portal-primary,
-[data-theme="dark"] .btn-copy-code.prominent {
-  background: var(--color-accent);
-  color: #ffffff;
-  border-color: transparent;
-}
-
-[data-theme="dark"] .btn-ws-secondary {
-  background: rgba(17, 32, 50, 0.94);
-  color: #edf4fb;
-  border-color: rgba(136, 206, 147, 0.22);
 }
 
 .client-portal-wrapper {
@@ -415,7 +191,7 @@ body {
 }
 
 .client-portal-wrapper .search-helper {
-  color: var(--cp-text-main);
+  color: var(--ink);
 }
 
 .client-portal-wrapper .ticket-header,
@@ -424,7 +200,7 @@ body {
 }
 
 .client-portal-wrapper .value-tertiary {
-  border-left: 4px solid var(--cp-accent);
+  border-left: 4px solid var(--accent-ink);
 }
 
 .client-portal-wrapper .contact-signature {
@@ -438,7 +214,7 @@ body {
 }
 
 .client-portal-wrapper .teacher-contact-email {
-  color: var(--cp-primary);
+  color: var(--ink);
 }
 
 .client-portal-wrapper .teacher-contact-whatsapp {
@@ -458,11 +234,13 @@ body {
 
 .client-portal-wrapper .btn-cancel {
   background: rgba(255, 246, 246, 0.98);
+  background: color-mix(in srgb, var(--sf-danger) 98%, transparent);
   border-color: rgba(248, 113, 113, 0.22);
 }
 
 .client-portal-wrapper .btn-delete-forever {
-  background: #1d344d;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
 }
 
 .client-portal-wrapper .portal-results-summary {
@@ -470,9 +248,10 @@ body {
 }
 
 .client-portal-wrapper .arrow-box {
-  background: #00214c;
-  color: #ffffff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 .client-portal-wrapper .empty-state-icon {
@@ -480,98 +259,6 @@ body {
   margin: 0 auto 1rem;
   font-size: 3rem;
   color: #94a3b8;
-}
-
-[data-theme="dark"] .client-portal-wrapper .guidance-card,
-[data-theme="dark"] .client-portal-wrapper .search-container,
-[data-theme="dark"] .client-portal-wrapper .portal-management-alert,
-[data-theme="dark"] .client-portal-wrapper .ticket-card,
-[data-theme="dark"] .client-portal-wrapper .ticket-header,
-[data-theme="dark"] .client-portal-wrapper .ticket-footer,
-[data-theme="dark"] .client-portal-wrapper .contact-signature,
-[data-theme="dark"] .client-portal-wrapper .portal-toast {
-  background: var(--color-surface-1);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-code,
-[data-theme="dark"] .client-portal-wrapper .value-tertiary,
-[data-theme="dark"] .client-portal-wrapper .search-input,
-[data-theme="dark"] .client-portal-wrapper .btn-reschedule {
-  background: var(--color-surface-2);
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .ticket-code,
-[data-theme="dark"] .client-portal-wrapper .search-input {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-results-summary {
-  background: rgba(136, 206, 147, 0.14);
-  border-color: rgba(136, 206, 147, 0.22);
-  color: #c8f0cf;
-}
-
-[data-theme="dark"] .client-portal-wrapper .search-helper,
-[data-theme="dark"] .client-portal-wrapper .portal-management-copy p,
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy span,
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy small,
-[data-theme="dark"] .client-portal-wrapper .reschedule-footer-note,
-[data-theme="dark"] .client-portal-wrapper .duration-preview,
-[data-theme="dark"] .client-portal-wrapper .change-preview span,
-[data-theme="dark"] .client-portal-wrapper .date-box small {
-  color: #b7c7d5;
-}
-
-[data-theme="dark"] .client-portal-wrapper .portal-management-copy strong,
-[data-theme="dark"] .client-portal-wrapper .ticket-code,
-[data-theme="dark"] .client-portal-wrapper .value-tertiary,
-[data-theme="dark"] .client-portal-wrapper .date-box strong,
-[data-theme="dark"] .client-portal-wrapper .portal-toast-copy strong {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .btn-reschedule {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .btn-cancel {
-  background: rgba(127, 29, 29, 0.25);
-  border-color: rgba(248, 113, 113, 0.24);
-  color: #fecaca;
-}
-
-[data-theme="dark"] .client-portal-wrapper .btn-delete-forever {
-  background: var(--color-surface-2);
-  border-color: var(--border-soft);
-  color: #b7c7d5;
-}
-
-[data-theme="dark"] .client-portal-wrapper .btn-search {
-  background: var(--brand-navy) !important;
-  border-color: rgba(136, 206, 147, 0.22) !important;
-  color: #edf4fb !important;
-  box-shadow: inset 0 0 0 1px rgba(136, 206, 147, 0.12);
-}
-
-[data-theme="dark"] .client-portal-wrapper .date-box.new {
-  background: rgba(20, 42, 30, 0.7);
-  border-color: rgba(136, 206, 147, 0.22);
-}
-
-[data-theme="dark"] .client-portal-wrapper .arrow-box {
-  background: var(--color-surface-2);
-  color: var(--color-accent);
-  border-color: rgba(136, 206, 147, 0.2);
-}
-
-[data-theme="dark"] .client-portal-wrapper .teacher-contact-email {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .client-portal-wrapper .empty-state-icon {
-  color: #7f93a8;
 }
 
 .admin-login-card,
@@ -610,35 +297,6 @@ body {
   background: var(--color-surface-1);
 }
 
-[data-theme="dark"] .admin-input,
-[data-theme="dark"] .admin-search-box,
-[data-theme="dark"] .status-filter-chip,
-[data-theme="dark"] .inline-link-btn,
-[data-theme="dark"] .admin-secondary-btn,
-[data-theme="dark"] .code-mono {
-  border-color: var(--border-soft);
-  background: var(--color-surface-1);
-}
-
-[data-theme="dark"] .admin-nav-btn:not(.is-active),
-[data-theme="dark"] .admin-logout-btn {
-  background: rgba(13, 26, 41, 0.72);
-}
-
-[data-theme="dark"] .admin-nav-btn:hover:not(.is-active),
-[data-theme="dark"] .admin-logout-btn:hover,
-[data-theme="dark"] .status-filter-chip:hover:not(.is-active),
-[data-theme="dark"] .admin-secondary-btn:hover,
-[data-theme="dark"] .inline-link-btn:hover {
-  background: rgba(17, 32, 50, 0.92);
-}
-
-@media (max-width: 960px) {
-  .nav-link-btn {
-    white-space: normal;
-  }
-}
-
 @media (max-width: 720px) {
   .step-card {
     min-height: 0;
@@ -660,88 +318,6 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html.theme-transitioning :where(
-    body,
-    .navbar-elite,
-    .navbar-utility-cluster,
-    .navbar-brand-logo,
-    .nav-link-btn,
-    .nav-utility-btn,
-    .theme-toggle-btn,
-    .booking-page-wrapper,
-    .form-card-elevation,
-    .premium-input,
-    .adult-mode-copy,
-    .adult-state-card,
-    .selection-insight-card,
-    .slot-stage-shell .slot-section,
-    .time-slots-card .slot-section,
-    .calendar-selection-banner,
-    .calendar-glass-box,
-    .calendar-zoom-dialog,
-    .calendar-zoom-header,
-    .calendar-zoom-picker-shell,
-    .duration-selector-premium,
-    .duration-summary-card,
-    .booking-summary-card-expanded,
-    .summary-detail-card,
-    .summary-management-mini-card,
-    .journey-compass,
-    .journey-meter,
-    .neuro-stepper,
-    .step-card,
-    .step-status-pill,
-    .step-circle,
-    .stepper-progress-track,
-    .stepper-progress-fill,
-    .stepper-nav-hint,
-    .guidance-card,
-    .search-container,
-    .portal-management-alert,
-    .ticket-card,
-    .ticket-header,
-    .ticket-footer,
-    .contact-signature,
-    .portal-toast,
-    .admin-login-shell,
-    .admin-login-card,
-    .admin-nav-btn,
-    .admin-primary-btn,
-    .admin-secondary-btn,
-    .admin-danger-btn,
-    .admin-logout-btn,
-    .status-filter-chip,
-    .inline-link-btn,
-    /* El pie ya no cambia de color entre temas —su fondo es de la rampa numerada, que
-       es estable— así que no necesita transición de tema. Sólo el botón flotante, que
-       sí usa tokens que siguen al tema. */
-    .btn-up-floating
-  ),
-  html.theme-transitioning :where(
-    .navbar-elite,
-    .navbar-brand-logo,
-    .journey-meter,
-    .form-card-elevation,
-    .ticket-card,
-    .admin-login-card
-  )::before,
-  html.theme-transitioning :where(
-    .navbar-elite,
-    .navbar-brand-logo,
-    .journey-meter,
-    .form-card-elevation,
-    .ticket-card,
-    .admin-login-card
-  )::after {
-    transition:
-      background-color 260ms ease,
-      background-image 340ms ease,
-      color 220ms ease,
-      border-color 260ms ease,
-      box-shadow 320ms ease,
-      filter 260ms ease,
-      opacity 220ms ease;
-  }
 
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -764,73 +340,30 @@ body {
 .journey-meter,
 .stepper-nav-hint {
   background: rgba(255, 255, 255, 0.86);
+  background: color-mix(in srgb, var(--tint-glass) 86%, transparent);
 }
 
 .stepper-progress-fill {
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 .step-circle.current {
   box-shadow: 0 0 0 10px rgba(1, 149, 60, 0.12);
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--tint-accent) 12%, transparent);
 }
 
 .stepper-item.is-locked .step-circle,
 .stepper-item.is-upcoming .step-circle {
   background: rgba(255, 255, 255, 0.98);
-}
-
-[data-theme="dark"] .journey-compass,
-[data-theme="dark"] .neuro-stepper {
-  background: var(--color-surface-0);
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .journey-meter,
-[data-theme="dark"] .stepper-nav-hint {
-  background: var(--color-surface-1);
-}
-
-[data-theme="dark"] .stepper-progress-fill {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
-}
-
-[data-theme="dark"] .stepper-item.is-locked .step-circle,
-[data-theme="dark"] .stepper-item.is-upcoming .step-circle {
-  background: var(--color-surface-2);
-  color: #9fb2c4;
-}
-
-[data-theme="dark"] .stepper-item.is-locked {
-  background: var(--color-surface-0);
-}
-
-[data-theme="dark"] .navbar-brand-logo {
-  position: relative;
-  padding: 0.34rem 0.95rem !important;
-  border-radius: 26px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: var(--color-surface-2) !important;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
-}
-
-[data-theme="dark"] .navbar-brand-logo::before {
-  content: none;
-}
-
-[data-theme="dark"] .logo-img-horizontal {
-  position: relative;
-  z-index: 1;
-  filter: brightness(1.1) saturate(1.05);
+  background: color-mix(in srgb, var(--tint-glass) 98%, transparent);
 }
 
 .admin-login-shell {
   background:
     rgba(247, 250, 252, 0.96);
-}
-
-[data-theme="dark"] .admin-login-shell {
-  background: var(--color-surface-0);
+  background:
+    color-mix(in srgb, var(--sf-muted) 96%, transparent);
 }
 
 .admin-login-card {
@@ -867,27 +400,8 @@ body {
    Ahora el fondo del pie se declara una sola vez, en `Footer.css`, sobre `.tpp-footer`.
    Si algo del pie necesita un ajuste de tema, va ahí y no acá. */
 
-.btn-up-floating {
-  transition:
-    transform 0.28s ease,
-    box-shadow 0.28s ease,
-    background 0.28s ease,
-    color 0.28s ease,
-    border-color 0.28s ease;
-}
-
-.btn-up-floating {
-  background: #1c3b64;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-}
-
-.btn-up-floating:hover {
-  transform: translateY(-4px);
-}
-
 .journey-meter {
-  background: #1d344d !important;
+  background: var(--sf-brand) !important;
   color: #eef4fb;
 }
 
@@ -903,11 +417,6 @@ body {
 
 .journey-meter-track {
   background: rgba(237, 244, 251, 0.16);
-}
-
-[data-theme="dark"] .journey-meter {
-  background: var(--color-surface-1) !important;
-  color: #edf4fb;
 }
 
 /* ========================================================================== */
@@ -1086,21 +595,18 @@ body,
 .btn-submit,
 .btn-search,
 .btn-copy-code.prominent,
-.nav-link-btn.active,
 .admin-whatsapp-btn,
 .inline-action.success,
 .icon-action.success {
-  background: var(--brand-green-action);
-  color: #ffffff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   border-color: var(--brand-green-action);
 }
 
 .admin-secondary-btn,
 .manage-booking-link,
 .btn-secondary,
-.inline-link-btn,
-.nav-utility-btn,
-.menu-toggle-icon {
+.inline-link-btn {
   background: var(--brand-surface);
   color: var(--brand-blue);
   border: 1px solid var(--brand-border);
@@ -1124,8 +630,6 @@ textarea,
 }
 
 button,
-.nav-link-btn,
-.nav-utility-btn,
 .admin-primary-btn,
 .admin-secondary-btn,
 .admin-danger-btn,

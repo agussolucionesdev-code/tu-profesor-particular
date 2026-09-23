@@ -75,7 +75,7 @@
 /* Sobre fondo navy */
 .sh--light .sh-rule,
 .sh--light .sh-dash { background: rgba(255, 255, 255, .16); }
-.sh--light .sh-title { color: var(--white); }
+.sh--light .sh-title { color: #ffffff; }
 .sh--light .sh-lead  { color: rgba(255, 255, 255, .62); }
 .sh--light .sh-kicker { color: rgba(255, 255, 255, .55); }
 .sh--light .sh-index { color: var(--green-on-dark); }

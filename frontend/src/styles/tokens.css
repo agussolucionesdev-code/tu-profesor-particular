@@ -242,7 +242,7 @@
   --scrollbar-shadow:      none;
 
   /* ── Navbar ─────────────────────────────────────────────────────────── */
-  --nav-height:         92px;
+  --nav-height:         64px;
   --nav-height-scrolled: 76px;
   --nav-radius-outer:   22px;
   --nav-radius-inner:   14px;
@@ -433,206 +433,301 @@
   --grad-brand:       #01953c;
   --grad-navy:        #00214c;
   --grad-accent-line: rgba(0, 33, 76, 0.12);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SEMÁNTICA — la capa que usan los componentes.
+
+     Todo lo de arriba son primitivas (rampas, escalas) y NO cambian con el
+     tema: --brand-navy-50 es #f2f7fe en claro y en oscuro. Un componente que
+     pinta un fondo con una primitiva clara queda claro en los dos temas, y eso
+     era exactamente el recuadro menta ilegible del paso 1 del kiosco
+     (--brand-green-soft con texto blanco encima: 1,01:1).
+
+     Regla: fondos, textos y líneas de los componentes salen de ESTA capa. El
+     bloque de oscuro redefine sólo esta capa; lo demás la sigue solo.
+
+     Los valores claros son los que ya se usaban: el modo claro no cambia.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* Superficies, de la más baja a la más alta */
+  --sf-page:      #f6f7f8;   /* fondo de la página */
+  --sf-card:      #ffffff;   /* tarjetas y paneles */
+  --sf-raised:    #ffffff;   /* lo que va sobre una tarjeta: campos, menús */
+  --sf-muted:     #f6f7f8;   /* bloques secundarios dentro de una tarjeta */
+  --sf-strong:    #e9ebed;   /* rellenos de énfasis, pistas, separadores anchos */
+  --sf-selected:  #f2f7fe;   /* opción elegida */
+  --sf-accent:    #eafdec;   /* panel verde suave: confirmaciones, "elegiste…" */
+  --sf-info:      #f2f7fe;   /* panel navy suave: avisos informativos */
+  --sf-danger:    #fdecec;   /* panel rojo suave: errores, acciones destructivas */
+  --sf-brand:     #00214c;   /* franja navy de marca: siempre lleva texto claro */
+
+  /* Tintas de texto */
+  --ink:          #00214c;   /* 15,89:1 sobre blanco */
+  --ink-2:        #3d5980;   /*  7,15:1 */
+  --ink-3:        #5a7498;   /*  4,79:1 */
+  --ink-muted:    #53595f;   /*  7,09:1, gris del logo */
+  --ink-soft:     #747980;   /*  4,38:1, sólo texto grande */
+
+  /* Bases de los tintes translúcidos. Un literal como rgba(0,33,76,.12) se
+     escribe color-mix(in srgb, var(--tint) 12%, transparent): en claro da
+     exactamente el mismo color, y en oscuro la línea navy, que sobre el fondo
+     oscuro no se ve, pasa a ser una línea clara. */
+  --tint:         #00214c;   /* líneas, bordes, anillos */
+  --tint-accent:  #01953c;   /* velos y bordes verdes */
+  --tint-glass:   #ffffff;   /* paneles de vidrio (blanco translúcido) */
+  --tint-shadow:  #00214c;   /* sombras con desenfoque */
+  --tint-gray:    #53595f;   /* velos grises (deshabilitado) */
 }
 
 /* ==========================================================================
-   Dark theme overrides
+   TEMA OSCURO, reescrito desde cero
+
+   Una sola paleta, la del navy del logo (#00214C, tono 256°), escalonada en
+   luminosidad. Es la misma que usa el sitio institucional en oscuro: las dos
+   webs son la misma marca, y el fondo de página es el mismo #001633.
+
+   El tema anterior usaba un azul pizarra genérico (#16243a), ajeno al logo, y
+   se sostenía con 433 reglas [data-theme="dark"] repartidas en 25 archivos:
+   cada componente nuevo necesitaba su parche, y el que se olvidaba quedaba
+   claro. Ahora el tema oscuro vive entero en este bloque.
+
+   Contrastes medidos (WCAG 2.1):
+
+     texto        página  tarjeta  elevada  hover  elegida
+     --ink         16,53   14,68    12,76   10,88    9,52
+     --ink-2       12,07   10,72     9,32    7,95    6,95
+     --ink-3        8,50    7,54     6,56    5,59    4,89
+     verde texto    9,72    8,63     7,50    6,40    5,60
+
+     borde de campo #7486a6: 4,91 / 4,36 / 3,79 / 3,23 (mín. 3:1, 1.4.11)
+     botón principal #88ce93 con tinta #001633: 9,72 (hover #b5e6bb: 12,90)
    ========================================================================== */
+
 [data-theme="dark"] {
-  /* ── Brand palette (dark) ──────────────────────────────────────────────
-     En dark el navy invierte su rol: deja de ser fondo y pasa a ser texto,
-     así que toma los peldaños claros de su propia rampa en vez de un azul
-     grisáceo inventado. Mismo tono del logo, distinta luminosidad.
-     ──────────────────────────────────────────────────────────────────────── */
-  --brand-navy:       #aabcd5;   /* navy-300 */
-  --brand-navy-deep:  #ccd9eb;   /* navy-200 */
-  --brand-green:      #88ce93;   /* green-300 */
-  --brand-green-deep: #b5e6bb;   /* green-200 */
+  /* ── Semántica ──────────────────────────────────────────────────────── */
+  --sf-page:      #001633;
+  --sf-card:      #03204a;
+  --sf-raised:    #0a2b5a;
+  --sf-muted:     #0a2b5a;
+  --sf-strong:    #12366b;
+  --sf-selected:  #173f78;
+  --sf-accent:    #0d3b2e;
+  --sf-info:      #0b2f5c;
+  --sf-danger:    #3f1518;
+  --sf-brand:     #00275a;
 
-  /* ── Semantic surface tokens (dark) ──────────────────────────────────── */
-  --color-surface-0:    #16243a;
-  --color-surface-1:    #16243a;
-  --color-surface-2:    #0f1b2e;
-  --color-surface-3:    #0b1424;
-  --color-on-surface:   #f1f5f9;
-  --color-border:       rgba(248, 250, 252, 0.12);
+  --ink:          #f2f5fa;
+  --ink-2:        #c9d4e5;
+  --ink-3:        #a3b3cc;
+  --ink-muted:    #c9d4e5;
+  --ink-soft:     #a3b3cc;
 
-  --surface-1:          #16243a;
-  --surface-2:          #0f1b2e;
-  --surface-3:          #0b1424;
-  --surface-overlay:    rgba(2, 6, 16, 0.7);
+  --tint:         #a9b8cf;
+  --tint-accent:  #88ce93;
+  --tint-glass:   #03204a;
+  --tint-shadow:  #000510;
+  --tint-gray:    #a9b8cf;
 
-  --text-primary:       #f2f7fb;
-  --text-secondary:     #ccd9eb;   /* navy-200 */
-  --text-tertiary:      #aabcd5;   /* navy-300 */
-  --text-on-accent:     #001600;
+  /* ── Marca: el navy y el verde cambian de rol ─────────────────────────
+     En oscuro el navy deja de ser fondo y pasa a ser texto: toma los peldaños
+     claros de su propia rampa. Las rampas numeradas NO se tocan. */
+  --brand-navy:         #aabcd5;
+  --brand-navy-deep:    #ccd9eb;
+  --brand-navy-soft:    #aabcd5;
+  --brand-navy-ink:     #f2f5fa;
+  --brand-green:        #88ce93;
+  --brand-green-deep:   #b5e6bb;
+  --brand-green-strong: #d5f5d9;
+  --brand-green-soft:   var(--sf-accent);
+  --brand-green-action: #88ce93;
+  --brand-white:        var(--sf-card);
+  --brand-blue:         #f2f5fa;
+  --brand-blue-strong:  #ccd9eb;
+  --brand-danger:       #ffb4ab;
 
-  --border-subtle:      rgba(204, 217, 235, 0.08);
-  --border-soft:        rgba(204, 217, 235, 0.10);
-  --border-strong:      rgba(204, 217, 235, 0.20);
+  /* ── Superficies (nombres heredados → semántica) ─────────────────────── */
+  --color-surface-0:    var(--sf-card);
+  --color-surface-1:    var(--sf-card);
+  --color-surface-2:    var(--sf-muted);
+  --color-surface-3:    var(--sf-page);
+  --color-on-surface:   var(--ink);
+  --color-border:       color-mix(in srgb, var(--tint) 18%, transparent);
 
-  --focus-ring-color:   rgba(136, 206, 147, 0.55);
+  --surface-1:          var(--sf-card);
+  --surface-2:          var(--sf-muted);
+  --surface-3:          var(--sf-page);
+  --surface-overlay:    rgba(0, 6, 20, 0.72);
 
-  /* ── Legacy overrides ────────────────────────────────────────────────── */
-  --color-primary:        #ccd9eb;
-  --color-primary-dark:   #e3ecf8;
+  --text-primary:       var(--ink);
+  --text-secondary:     var(--ink-2);
+  --text-tertiary:      var(--ink-3);
+  --text-on-accent:     #001633;
+
+  --border-subtle:      color-mix(in srgb, var(--tint) 10%, transparent);
+  --border-soft:        color-mix(in srgb, var(--tint) 14%, transparent);
+  --border-strong:      color-mix(in srgb, var(--tint) 26%, transparent);
+
+  --focus-ring:         0 0 0 3px rgba(136, 206, 147, 0.55);
+  --focus-ring-color:   rgba(136, 206, 147, 0.6);
+
+  --color-primary:        var(--ink-2);
+  --color-primary-dark:   var(--ink);
   --color-accent:         #88ce93;
   --color-accent-hover:   #b5e6bb;
-  --color-bg-light:       #0b1424;
-  --color-surface-soft:   #16243a;
-  --color-surface-muted:  #0f1b2e;
-  --color-text-main:      #f2f7fb;
-  --color-text-muted:     #ccd9eb;
-  --color-text-soft:      #aabcd5;
-  --color-white:          #16243a;
+  --color-bg-light:       var(--sf-page);
+  --color-surface-soft:   var(--sf-strong);
+  --color-surface-muted:  var(--sf-card);
+  --color-text-main:      var(--ink);
+  --color-text-muted:     var(--ink-2);
+  --color-text-soft:      var(--ink-3);
+  --color-white:          var(--sf-card);
+  --color-text-secondary: var(--ink-3);
+  --color-text-strong:    var(--ink);
 
-  /* ── Status color overrides (dark) ───────────────────────────────────── */
+  /* ── Estados ─────────────────────────────────────────────────────────
+     Superficies sólidas oscuras con tinta clara, no velos translúcidos: un
+     velo depende de lo que tenga detrás y su contraste no se puede fijar. */
   --color-success:          #88ce93;
   --color-success-hover:    #b5e6bb;
   --color-success-emphasis: #b5e6bb;
   --color-success-deep:     #d5f5d9;
-  --color-success-bg:       rgba(1, 149, 60, 0.2);
-  --color-on-success:       #001600;
-  --color-warning-emphasis: #fbbf24;
-  --color-warning-deep:     #fcd34d;
-  --color-warning-bg:       rgba(245, 158, 11, 0.2);
-  --color-error-emphasis:   #f87171;
-  --color-error-deep:       #fca5a5;
-  --color-error-bg:         rgba(127, 29, 29, 0.22);
-  --color-info-emphasis:    #60a5fa;
-  --color-info-deep:        #93c5fd;
-  --color-info-bg:          rgba(59, 130, 246, 0.18);
+  --color-success-bg:       #0d3b2e;   /* tinta #b5e6bb: 8,92 */
+  --color-on-success:       #001633;
+  --color-warning-emphasis: #fcd34d;
+  --color-warning-deep:     #fde68a;
+  --color-warning-bg:       #3d2c06;   /* tinta #fcd34d: 9,33 */
+  --color-error-emphasis:   #ffb4ab;
+  --color-error-deep:       #ffd2cc;
+  --color-error-bg:         #3f1518;   /* tinta #ffb4ab: 9,29 */
+  --color-info-emphasis:    #a8c8f5;
+  --color-info-deep:        #cfe0fa;
+  --color-info-bg:          #0b2f5c;   /* tinta #a8c8f5: 7,77 */
   --color-teal:             #5eead4;
-  --color-text-secondary:   #aabcd5;
-  --color-text-strong:      #e3ecf8;
 
-  /* ── Scrollbar (dark) ────────────────────────────────────────────────── */
-  --scrollbar-track:       #0b1424;
+  --error-color:        #ffb4ab;
+  --error-bg:           #3f1518;
+  --warning-color:      #fcd34d;
+  --warning-bg:         #3d2c06;
+  --success-color:      #b5e6bb;
+  --success-bg:         #0d3b2e;
+
+  /* ── Elevación: en oscuro las sombras no se ven; el anillo sí ────────── */
+  --shadow-xs:       0 0 0 1px color-mix(in srgb, var(--tint) 10%, transparent);
+  --shadow-sm:       0 0 0 1px color-mix(in srgb, var(--tint) 14%, transparent);
+  --shadow-md:       0 0 0 1px color-mix(in srgb, var(--tint) 18%, transparent);
+  --shadow-lg:       0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
+  --shadow-xl:       0 0 0 1px color-mix(in srgb, var(--tint) 28%, transparent);
+  --shadow-card:     0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
+  --shadow-elevated: 0 0 0 1px color-mix(in srgb, var(--tint) 24%, transparent);
+  --shadow-brand:    0 0 0 1px rgba(136, 206, 147, 0.4);
+
+  /* ── Barra de desplazamiento ─────────────────────────────────────────── */
+  --scrollbar-track:       var(--sf-page);
   --scrollbar-thumb:       #3d5980;
   --scrollbar-thumb-hover: #617b9e;
 
-  /* ── Elevation overrides (dark) ──────────────────────────────────────── */
-  --shadow-card:     0 0 0 1px rgba(204, 217, 235, 0.14);
-  --shadow-elevated: 0 0 0 1px rgba(204, 217, 235, 0.20);
-  --shadow-brand:    0 0 0 1px rgba(136, 206, 147, 0.35);
-
-  /* ── Navbar (dark) ───────────────────────────────────────────────────── */
-  --nav-bg-outer:       #0b1424;
-  --nav-glass:          rgba(22, 36, 58, 0.78);
-  --nav-glass-strong:   #16243a;
-  --nav-border:         rgba(204, 217, 235, 0.16);
-  --nav-border-soft:    rgba(204, 217, 235, 0.09);
-  --nav-text:           #f2f7fb;
+  /* ── Barra de navegación ─────────────────────────────────────────────── */
+  --nav-bg-outer:       var(--sf-page);
+  --nav-glass:          rgba(3, 32, 74, 0.86);
+  --nav-glass-strong:   var(--sf-card);
+  --nav-border:         color-mix(in srgb, var(--tint) 20%, transparent);
+  --nav-border-soft:    color-mix(in srgb, var(--tint) 12%, transparent);
+  --nav-text:           var(--ink);
   --nav-text-strong:    #ffffff;
-  --nav-muted:          #aabcd5;
-  --nav-icon-bg:        rgba(136, 206, 147, 0.18);
+  --nav-muted:          var(--ink-3);
+  --nav-icon-bg:        rgba(136, 206, 147, 0.16);
   --nav-icon-color:     #b5e6bb;
-  --nav-shadow-rest:    0 0 0 1px rgba(204, 217, 235, 0.12);
-  --nav-shadow-lift:    0 0 0 1px rgba(204, 217, 235, 0.22);
-  --nav-inner-light:    none;
+  --nav-shadow-rest:    0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
+  --nav-shadow-lift:    0 0 0 1px color-mix(in srgb, var(--tint) 26%, transparent);
   --grad-brand:         #88ce93;
-  --grad-navy:          #1c3b64;
-  --grad-accent-line:   rgba(204, 217, 235, 0.16);
+  --grad-navy:          var(--sf-brand);
+  --grad-accent-line:   color-mix(in srgb, var(--tint) 18%, transparent);
 
-  /* ── Booking-interactions (dark) ────────────────────────────────────── */
-  --bi-slot-avail-bg:     rgba(136, 206, 147, 0.09);
-  --bi-slot-avail-border: rgba(136, 206, 147, 0.22);
+  /* ── Horarios del calendario ─────────────────────────────────────────── */
+  --bi-slot-avail-bg:     rgba(136, 206, 147, 0.1);
+  --bi-slot-avail-border: rgba(136, 206, 147, 0.28);
   --bi-slot-avail-color:  #b5e6bb;
   --bi-slot-hover-bg:     rgba(136, 206, 147, 0.2);
   --bi-slot-hover-border: #88ce93;
-  /* sel/cta llevan `color: #ffffff` fijo en el call site -> el fondo NO puede
-     aclararse. navy-600 da 7.15:1 con blanco; navy-300 daría 1.8:1. */
+  /* El elegido lleva texto blanco fijo en su regla: su fondo tiene que seguir
+     siendo oscuro. #3d5980 con blanco da 7,15:1. */
   --bi-slot-sel-from:     #3d5980;
   --bi-slot-sel-to:       #3d5980;
-  --bi-slot-dis-bg:       rgba(255, 255, 255, 0.03);
-  --bi-slot-dis-border:   rgba(170, 188, 213, 0.14);
-  --bi-slot-dis-color:    rgba(170, 188, 213, 0.4);
+  --bi-slot-dis-bg:       rgba(169, 184, 207, 0.05);
+  --bi-slot-dis-border:   rgba(169, 184, 207, 0.16);
+  --bi-slot-dis-color:    rgba(169, 184, 207, 0.55);
   --bi-cta-from:          #3d5980;
   --bi-cta-to:            #3d5980;
-  --bi-check-bg:          rgba(136, 206, 147, 0.9);
+  --bi-cta-hover:         #1c3b64;
+  --bi-check-bg:          rgba(136, 206, 147, 0.92);
 
-  /* ── Polish tokens (dark) ────────────────────────────────────────────── */
-  --polish-surface-0:     rgba(10, 20, 33, 0.98);
-  --polish-surface-1:     rgba(13, 26, 41, 0.96);
-  --polish-surface-2:     rgba(17, 32, 50, 0.94);
-  --polish-border-soft:   rgba(204, 217, 235, 0.14);
-  --polish-border-strong: rgba(204, 217, 235, 0.22);
-  --polish-shadow-soft:   0 0 0 1px rgba(204, 217, 235, 0.12);
-  --polish-shadow-card:   0 0 0 1px rgba(204, 217, 235, 0.16);
-  --polish-accent-ring:   rgba(136, 206, 147, 0.18);
-  --polish-info-wash:     rgba(170, 188, 213, 0.08);
+  /* ── Capa "polish" (nombres heredados) ───────────────────────────────── */
+  --polish-surface-0:     var(--sf-card);
+  --polish-surface-1:     var(--sf-card);
+  --polish-surface-2:     var(--sf-raised);
+  --polish-border-soft:   color-mix(in srgb, var(--tint) 16%, transparent);
+  --polish-border-strong: color-mix(in srgb, var(--tint) 26%, transparent);
+  --polish-shadow-soft:   0 0 0 1px color-mix(in srgb, var(--tint) 14%, transparent);
+  --polish-shadow-card:   0 0 0 1px color-mix(in srgb, var(--tint) 18%, transparent);
+  --polish-accent-ring:   rgba(136, 206, 147, 0.2);
+  --polish-info-wash:     color-mix(in srgb, var(--tint) 8%, transparent);
 
-  /* ── Brand extras (dark) ─────────────────────────────────────────────── */
-  --brand-page:         #0b1424;
-  --brand-surface:      #16243a;
-  --brand-surface-soft: #0f1b2e;
-  --brand-border:       rgba(204, 217, 235, 0.18);
-  --brand-text:         #f2f7fb;
-  --brand-muted:        #aabcd5;
-  --shadow-soft-brand:  0 0 0 1px rgba(204, 217, 235, 0.12);
+  --brand-page:         var(--sf-page);
+  --brand-surface:      var(--sf-card);
+  --brand-surface-soft: var(--sf-muted);
+  --brand-border:       color-mix(in srgb, var(--tint) 20%, transparent);
+  --brand-text:         var(--ink);
+  --brand-muted:        var(--ink-3);
+  --shadow-soft-brand:  0 0 0 1px color-mix(in srgb, var(--tint) 14%, transparent);
 
-  /* ── Estados interactivos (dark) ─────────────────────────────────────
-     Velos translúcidos sobre la superficie oscura en lugar de peldaños claros:
-     el texto sigue siendo el mismo y mantiene su contraste (medido: hover
-     7.4:1, seleccionado 6.9:1 contra --text-primary #f2f7fb). */
-  --state-hover-bg:      rgba(136, 206, 147, 0.14);
-  --state-selected-bg:   rgba(136, 206, 147, 0.2);
-  --state-selected-brd:  var(--brand-green-300);
-  /* Se mantiene oscuro (más profundo que la superficie, para que se despegue)
-     porque siempre lleva texto blanco encima. */
-  --accent-strong:       #0d1a29;
+  /* ── Accesibilidad (panel y cuerpo) ──────────────────────────────────── */
+  --ui-focus-color:         #88ce93;
+  --ui-focus-ring:          rgba(136, 206, 147, 0.3);
+  --ui-bg-light:            var(--sf-page);
+  --ui-bg-soft:             var(--sf-muted);
+  --ui-body-glow:           rgba(136, 206, 147, 0.05);
+  --ui-body-glow-secondary: rgba(169, 184, 207, 0.04);
 
-  /* En oscuro el botón se invierte, que es como se hace bien: verde claro con
-     tinta oscura. Un verde oscuro sobre una superficie oscura tendría contraste
-     pero se vería apagado, y el CTA principal no puede verse apagado. */
-  --cta-solid-bg:        var(--brand-green-300);   /* #88ce93 */
-  --cta-solid-bg-hover:  var(--brand-green-200);   /* #b5e6bb */
-  --cta-solid-ink:       var(--brand-green-900);   /* #001600 */
+  /* ── Pares sólidos: fondo y tinta cambian juntos ────────────────────── */
+  --state-hover-bg:      color-mix(in srgb, #88ce93 14%, var(--sf-card));
+  --state-selected-bg:   var(--sf-selected);
+  --state-selected-brd:  #88ce93;
+  --accent-strong:       #0a2b5a;
 
-  /* Igual que el verde: en oscuro la píldora se aclara y la tinta se oscurece.
-     Es lo que ya hacía a mano el link activo del navbar; ahora es el sistema. */
-  --navy-solid-bg:       var(--brand-navy-200);    /* #ccd9eb */
-  --navy-solid-ink:      var(--brand-navy-900);    /* #000b2b */
+  --cta-solid-bg:        #88ce93;
+  --cta-solid-bg-hover:  #b5e6bb;
+  --cta-solid-ink:       #001633;
 
-  /* Verde de texto, aclarado para leerse sobre las superficies oscuras. */
-  --accent-ink:          var(--brand-green-300);   /* #88ce93 */
+  --navy-solid-bg:       #ccd9eb;
+  --navy-solid-ink:      #001633;
 
-  /* El destructivo se invierte como los otros: rojo claro con tinta oscura.
-     El hover se ACLARA en vez de oscurecerse, para que se note el cambio sin
-     perder el contraste con la tinta. */
-  --danger-solid-bg:       #fca5a5;
-  --danger-solid-bg-hover: #fecaca;   /* 10.6:1 con la tinta */
-  --danger-solid-ink:      #450a0a;   /* 8.51:1 */
+  --accent-ink:          #88ce93;
 
-  /* ── Booking form local tokens (dark) ────────────────────────────────── */
-  --bg-page:          #08111d;
-  --surface-card:     #16243a;
+  --danger-solid-bg:       #ffb4ab;
+  --danger-solid-bg-hover: #ffd2cc;
+  --danger-solid-ink:      #3f1518;
+
+  /* ── Formulario de reserva (nombres locales) ─────────────────────────── */
+  --bg-page:          var(--sf-page);
+  --surface-card:     var(--sf-card);
   --accent-primary:   #88ce93;
   --accent-hover:     #b5e6bb;
   --accent-deep:      #50b064;
-  --accent-light:     rgba(1, 149, 60, 0.18);
+  --accent-light:     var(--sf-accent);
   --accent-glow:      rgba(136, 206, 147, 0.3);
   --brand-today:      #f5c268;
-  --border-color:     rgba(204, 217, 235, 0.18);
-  --input-bg:         #0f1b2e;
-  --error-color:      #fca5a5;
-  --error-bg:         rgba(180, 35, 24, 0.2);
-  --warning-color:    #fcd34d;
-  --warning-bg:       rgba(245, 158, 11, 0.16);
-  --success-color:    #b5e6bb;
-  --success-bg:       rgba(1, 149, 60, 0.18);
+  --border-color:     color-mix(in srgb, var(--tint) 20%, transparent);
+  --input-bg:         var(--sf-raised);
   --shadow-focus:     0 0 0 4px rgba(136, 206, 147, 0.35);
 
-  /* Campos de texto en oscuro: el verde profundo desaparece sobre el azul
-     noche, así que el borde de foco pasa al verde claro de la marca. */
-  /* 3,39:1 sobre el fondo del campo y 3,06:1 sobre la tarjeta oscura. */
-  --field-border:       #5b6f90;
-  --field-border-hover: #8193b0;
+  /* ── Campos ──────────────────────────────────────────────────────────── */
+  --field-border:       #7486a6;   /* 3,79:1 sobre el campo */
+  --field-border-hover: #95a5c0;
   --field-border-focus: #88ce93;
-  --field-placeholder:  #8a9ab3;
+  --field-placeholder:  #97a7c0;
   --field-check:        #88ce93;
-  --field-halo:         rgba(136, 206, 147, 0.22);
-  --field-halo-error:   rgba(252, 165, 165, 0.2);
+  --field-halo:         rgba(136, 206, 147, 0.24);
+  --field-halo-error:   rgba(255, 180, 171, 0.22);
 }
 
 /* ==========================================================================

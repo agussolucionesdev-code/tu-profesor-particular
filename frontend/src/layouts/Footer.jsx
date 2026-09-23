@@ -4,13 +4,12 @@ import {
   FaArrowUp,
   FaCalendarAlt,
   FaEnvelope,
-  FaInstagram,
-  FaLinkedinIn,
+  FaExternalLinkAlt,
   FaMapMarkerAlt,
-  FaUserCog,
   FaUserLock,
   FaWhatsapp,
 } from "react-icons/fa";
+import { SiFacebook, SiInstagram, SiLinkedin } from "react-icons/si";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import { FALLBACK_TEACHER_LOCATION } from "../constants/teacherLocation";
 import {
@@ -24,35 +23,34 @@ import {
 } from "../constants/contactChannels";
 import "./Footer.css";
 
-/* El pie de página de una HERRAMIENTA, no de un sitio de marketing.
+/* EL PIE DE PÁGINA, REESCRITO.
  *
- * La versión anterior medía 1434px de alto en un teléfono de 375px. El contenido de
- * /portal mide 961px y el de /reservar 1252px: el pie era más grande que la página en
- * las dos rutas que la gente realmente usa. Traía una cinta con el eslogan, un CTA
- * para reservar, un párrafo de filosofía, tres etiquetas de valor, tres columnas y un
- * panel inferior — todo repitiendo lo que la página de arriba ya dijo mejor.
+ * Es el pie de una herramienta de reservas: se lee cuando alguien busca algo
+ * puntual (cómo contactar, adónde volver, si hay alguien real detrás). Cuatro
+ * bloques y nada más: la marca, los turnos, el contacto y las redes.
  *
- * Y arrastraba dos problemas concretos: tres tarjetas de contacto que se salían 8px
- * del viewport (WhatsApp, email y ubicación quedaban cortadas a la derecha), y 554
- * líneas de CSS para hacer lo que `web/src/components/SiteFooter.css` hace en 99.
+ * Lo que se sacó a propósito: el enlace al panel del profesor. El panel es
+ * privado; anunciarlo en cada página no le sirve a ningún alumno y le muestra a
+ * cualquiera dónde está la puerta de entrada. Sigue existiendo en /admin, sin
+ * enlaces que lleven ahí.
  *
- * Un footer se lee cuando alguien busca ALGO PUNTUAL: cómo contactarte, adónde
- * volver, si sos real. Eso es lo que quedó. Nada más.
+ * Las redes usan los logos OFICIALES de cada marca (Simple Icons, que reproduce
+ * las marcas registradas tal cual) sobre su color oficial: el cuadrado con el
+ * degradado de Instagram, el círculo azul de Facebook y el cuadrado azul de
+ * LinkedIn. Un ícono genérico de otra librería no es el logo de la marca.
  *
- * Se quitó también el envoltorio `Reveal`: animar la aparición del pie no aporta nada
- * —nadie llega ahí buscando un efecto— y depende de un IntersectionObserver que, si
- * no dispara, deja todo en `opacity: 0`.
- */
+ * El pie es navy en los dos temas, por eso el monograma declara su superficie
+ * (brandAssetsContract.test.js). */
 
 const RUTAS = [
   { to: "/reservar", label: "Reservar un turno", icon: FaCalendarAlt },
   { to: "/portal", label: "Ver mis turnos", icon: FaUserLock },
-  { to: "/admin", label: "Panel del profesor", icon: FaUserCog },
 ];
 
-const ICONO_SOCIAL = {
-  instagram: FaInstagram,
-  linkedin: FaLinkedinIn,
+const LOGO_SOCIAL = {
+  instagram: SiInstagram,
+  facebook: SiFacebook,
+  linkedin: SiLinkedin,
 };
 
 const Footer = () => {
@@ -71,32 +69,37 @@ const Footer = () => {
       <footer className="tpp-footer">
         <div className="tpp-footer-inner">
           <div className="tpp-footer-brand">
-            {/* El tamaño se contiene desde el CSS del pie con especificidad de dos
-                clases, no con una clase en la imagen: `.theme-logo__image` declara
-                `width: auto` y le gana a una clase sola. Es la misma trampa que
-                documenta BrandLoader.css, y acá dejaba el monograma de 1254px
-                ocupando 267px de ancho.
-                `surface="dark"`: el pie es navy en los dos temas, y el monograma ya
-                no trae placa propia. Siguiendo al tema claro sería navy sobre navy. */}
-            <ThemeLogo variant="monogram" surface="dark" alt="Tu Profesor Particular" />
-            <p className="tpp-footer-person">
-              <strong>Agustín Elías Sosa</strong>
-              <span>Clases particulares · Temperley, Buenos Aires</span>
+            <div className="tpp-footer-lockup">
+              <ThemeLogo variant="monogram" surface="dark" alt="Tu Profesor Particular" />
+              <p className="tpp-footer-name">
+                Tu Profesor <em>Particular</em>
+              </p>
+            </div>
+            <p className="tpp-footer-about">
+              Clases particulares con Agustín Elías Sosa. Online para toda Argentina y
+              presencial en Temperley.
             </p>
+            <a
+              className="tpp-footer-site"
+              href="https://tuprofesorparticular.com.ar"
+              target="_blank"
+              rel="noreferrer"
+            >
+              tuprofesorparticular.com.ar
+              <FaExternalLinkAlt aria-hidden="true" />
+            </a>
           </div>
 
-          <nav className="tpp-footer-col" aria-label="Secciones del sistema de turnos">
-            <h2 className="tpp-footer-title">Tus turnos</h2>
+          <nav className="tpp-footer-col" aria-label="Turnos">
+            <h2 className="tpp-footer-title">Turnos</h2>
             <ul>
               {RUTAS.map((ruta) => {
-                /* El icono se saca a una const en mayúscula en lugar de
-                   desestructurarlo en los parámetros: ESLint no reconoce el uso de un
-                   componente en JSX cuando llega como argumento, y lo reportaba como
-                   variable sin usar. */
+                /* El ícono se saca a una const en mayúscula: ESLint no reconoce el
+                   uso de un componente que llega desestructurado. */
                 const Icono = ruta.icon;
                 return (
                   <li key={ruta.to}>
-                    <Link to={ruta.to}>
+                    <Link to={ruta.to} className="tpp-footer-link">
                       <Icono aria-hidden="true" />
                       {ruta.label}
                     </Link>
@@ -107,28 +110,25 @@ const Footer = () => {
           </nav>
 
           <div className="tpp-footer-col">
-            <h2 className="tpp-footer-title">Hablemos</h2>
+            <h2 className="tpp-footer-title">Contacto</h2>
             <ul>
-              {/* WhatsApp primero y con el número a la vista: es el canal principal
-                  del negocio, y antes estaba al mismo nivel visual que el resto. */}
+              {/* WhatsApp primero y con el número a la vista: es el canal principal. */}
               <li>
                 <a
                   href={waLink(WHATSAPP_DEFAULT_MESSAGE)}
                   target="_blank"
                   rel="noreferrer"
-                  className="tpp-footer-wa"
+                  className="tpp-footer-link tpp-footer-link--wa"
                 >
                   <FaWhatsapp aria-hidden="true" />
                   {WHATSAPP_DISPLAY}
                 </a>
               </li>
               <li>
-                <a href={`mailto:${CONTACT_EMAIL}`}>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="tpp-footer-link">
                   <FaEnvelope aria-hidden="true" />
-                  {/* `<wbr>` marca la arroba como el único punto de corte: si el email
-                      no entra en la columna, se parte ahí y no en cualquier letra. No
-                      aporta caracteres, así que copiar y pegar sigue dando la dirección
-                      completa. */}
+                  {/* `<wbr>` deja la arroba como único punto de corte: si el email
+                      no entra, se parte ahí y no en cualquier letra. */}
                   <span>
                     {CONTACT_EMAIL_USER}@<wbr />
                     {CONTACT_EMAIL_DOMAIN}
@@ -140,6 +140,7 @@ const Footer = () => {
                   href={FALLBACK_TEACHER_LOCATION.mapsUrl}
                   target="_blank"
                   rel="noreferrer"
+                  className="tpp-footer-link"
                 >
                   <FaMapMarkerAlt aria-hidden="true" />
                   {FALLBACK_TEACHER_LOCATION.address}
@@ -147,31 +148,42 @@ const Footer = () => {
               </li>
             </ul>
           </div>
+
+          {SOCIAL_PROFILES.length > 0 && (
+            <div className="tpp-footer-col">
+              <h2 className="tpp-footer-title">Redes</h2>
+              <ul className="tpp-footer-social">
+                {SOCIAL_PROFILES.map(({ id, label, detalle, href }) => {
+                  const Logo = LOGO_SOCIAL[id];
+                  if (!Logo) return null;
+                  return (
+                    <li key={id}>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`tpp-footer-red tpp-footer-red--${id}`}
+                        aria-label={`${label}: ${detalle ?? label} (se abre en una pestaña nueva)`}
+                      >
+                        <span className="tpp-footer-red-logo" aria-hidden="true">
+                          <Logo />
+                        </span>
+                        <span className="tpp-footer-red-texto">
+                          <strong>{label}</strong>
+                          {detalle && <span>{detalle}</span>}
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="tpp-footer-base">
-          <p>© {anio} Agustín Elías Sosa. Todos los derechos reservados.</p>
-
-          {SOCIAL_PROFILES.length > 0 && (
-            <ul className="tpp-footer-social" aria-label="Redes sociales">
-              {SOCIAL_PROFILES.map(({ id, label, href }) => {
-                const Icono = ICONO_SOCIAL[id];
-                if (!Icono) return null;
-                return (
-                  <li key={id}>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={label}
-                    >
-                      <Icono aria-hidden="true" />
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <p>© {anio} Agustín Elías Sosa · Tu Profesor Particular</p>
+          <p>Temperley, Buenos Aires · Argentina</p>
         </div>
       </footer>
 

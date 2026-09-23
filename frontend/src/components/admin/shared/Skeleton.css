@@ -11,9 +11,9 @@
 .skeleton-block {
   background: linear-gradient(
     90deg,
-    var(--color-bg-light, #f1f5f9) 25%,
+    var(--color-bg-light, var(--sf-muted)) 25%,
     rgba(148, 163, 184, 0.18) 50%,
-    var(--color-bg-light, #f1f5f9) 75%
+    var(--color-bg-light, var(--sf-muted)) 75%
   );
   background-size: 1200px 100%;
   animation: shimmer 1.5s infinite linear;
@@ -51,13 +51,3 @@
 }
 
 /* Dark mode */
-[data-theme="dark"] .skeleton-line,
-[data-theme="dark"] .skeleton-block {
-  background: linear-gradient(
-    90deg,
-    #1e293b 25%,
-    rgba(148, 163, 184, 0.1) 50%,
-    #1e293b 75%
-  );
-  background-size: 1200px 100%;
-}

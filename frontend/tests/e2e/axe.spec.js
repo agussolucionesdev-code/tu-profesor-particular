@@ -126,7 +126,7 @@ test("sin violaciones en el paso del calendario, que es donde vivía la única f
   await porNombre("Secundaria. 1° a 6° año").click();
   await porNombre("Materia: Matemática").click();
   await page.getByRole("button", { name: /^Continuar/ }).click();
-  await porNombre("Online. Videollamada. Recibís el enlace por email.").click();
+  await page.getByRole("button", { name: /^Online. Videollamada/ }).click();
   await page.getByRole("button", { name: /^Continuar/ }).click();
 
   /* El calendario carga la disponibilidad del backend. */

@@ -4,7 +4,6 @@ import test from "node:test";
 
 const leer = (ruta) => readFileSync(new URL(ruta, import.meta.url), "utf8");
 
-const accesibilidad = leer("../../src/styles/accessibility-system.css");
 const calendario = leer("../../src/components/KioskSlotCalendar.css");
 const pulido = leer("../../src/styles/final-polish.css");
 
@@ -49,43 +48,49 @@ const bloquesDe = (css, selector) => {
   return [...css.matchAll(re)].map((m) => m[1]);
 };
 
-test("los botones utilitarios del navbar no se pueden encoger", () => {
-  const cuerpo = bloqueDe(accesibilidad, ".menu-toggle-icon");
-  assert.ok(cuerpo, "no encontré ninguna regla para .menu-toggle-icon");
-  /* La regla de `flex-shrink` es la que hace que el `width` se cumpla. Si alguien la
-     saca "porque el width ya está declarado", el botón vuelve a 14 px. */
-  assert.match(
-    accesibilidad,
-    /\.menu-toggle-icon,\s*\n?\s*\.voice-toggle-shell\s*\{[^}]*flex-shrink:\s*0/,
-    "falta flex-shrink: 0 en los botones utilitarios del navbar",
-  );
+/* LA BARRA SE REESCRIBIÓ DESDE CERO (Navbar.css) y estos tests la siguen a ella.
+   Lo que protegen no cambió: cada control táctil declara 44 px como MÍNIMO —el
+   requisito de WCAG 2.5.5 es un piso, no un número exacto— y `flex-shrink: 0`,
+   que es lo que hace que el tamaño declarado se cumpla. */
+const barra = leer("../../src/layouts/Navbar.css");
+const CONTROLES_DE_LA_BARRA = [".tpp-nav-tool", ".tpp-nav-cta", ".tpp-nav-menu"];
+
+test("los controles de la barra no se pueden encoger", () => {
+  for (const sel of CONTROLES_DE_LA_BARRA) {
+    const cuerpo = bloqueDe(barra, sel);
+    assert.ok(cuerpo, `no encontré regla para ${sel}`);
+    assert.match(cuerpo, /flex-shrink:\s*0/, `falta flex-shrink: 0 en ${sel}: sin eso el width es una intención`);
+  }
 });
 
 test("el botón del menú declara 48px", () => {
-  assert.match(accesibilidad, /\.menu-toggle-icon\s*\{[^}]*width:\s*48px\s*!important/);
-  assert.match(accesibilidad, /\.menu-toggle-icon\s*\{[^}]*height:\s*48px\s*!important/);
+  const cuerpo = bloqueDe(barra, ".tpp-nav-menu");
+  assert.match(cuerpo, /(?:^|;|\s)width:\s*48px/);
+  assert.match(cuerpo, /(?:^|;|\s)height:\s*48px/);
 });
 
-test("la guía por voz llega al mínimo táctil", () => {
-  /* Estaba en 38×38. No es un control secundario: enciende la asistencia para quien más
-     la necesita, así que es el último que debería costar acertar.
-   *
-   * Este test pedía 44px EXACTOS y falló cuando el control pasó a 48 para igualar a sus
-   * dos hermanos de la barra. Fallaba por un cambio que lo mejoraba, que es la peor clase
-   * de test: el requisito es un MÍNIMO —WCAG 2.5.5— así que ahora se verifica como
-   * mínimo. Si alguien lo baja de 44 vuelve a fallar, que es lo único que importa. */
-  const cuerpo = bloqueDe(accesibilidad, ".voice-toggle-btn");
-  assert.ok(cuerpo, "no encontré regla para .voice-toggle-btn");
-
-  const medida = (prop) => {
-    const m = cuerpo.match(new RegExp(`${prop}:\\s*(\\d+)px`)  /* barras dobles: en un template literal JS se come una */);
-    assert.ok(m, `la guía por voz no declara ${prop}`);
-    return Number(m[1]);
+test("ningún control táctil de la barra queda declarado por debajo de 44", () => {
+  /* Barrido sobre TODAS las reglas de cada control, no sólo la primera: el
+     tamaño puede vivir en un @media. */
+  /* Sin los pseudoelementos: la línea de 2 px bajo el enlace activo es un
+     `::after` decorativo, no el blanco táctil. */
+  const reglasSinPseudo = (css, sel) => {
+    const escapado = sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`${escapado}(?![-\\w])`);
+    return [...css.matchAll(/([^{}]*)\{([^}]*)\}/g)]
+      .filter(([, selector]) => re.test(selector) && !selector.includes("::"))
+      .map(([, , cuerpo]) => cuerpo);
   };
-
-  for (const prop of ["width", "height"]) {
-    const px = medida(prop);
-    assert.ok(px >= 44, `la guía por voz declara ${prop}: ${px}px y el mínimo táctil es 44`);
+  for (const sel of [...CONTROLES_DE_LA_BARRA, ".tpp-nav-link", ".tpp-nav-invite-yes"]) {
+    const bloques = reglasSinPseudo(barra, sel);
+    assert.ok(bloques.length > 0, `no encontré reglas para ${sel}`);
+    const declara = bloques.some((b) => /(?:min-)?(?:width|height):\s*(4[4-9]|[5-9]\d)px/.test(b));
+    assert.ok(declara, `${sel} no declara ningún tamaño táctil de 44 o más`);
+    for (const b of bloques) {
+      for (const m of b.matchAll(/(?:^|;|\s)(?:min-width|min-height|width|height):\s*(\d+)px/g)) {
+        assert.ok(Number(m[1]) >= 44, `${sel} declara ${m[1]}px, por debajo del mínimo táctil de 44`);
+      }
+    }
   }
 });
 
@@ -114,18 +119,3 @@ test("los días del calendario siguen en 44 en mobile", () => {
   assert.match(conTamaño[0], /height:\s*44px\s*!important/);
 });
 
-test("ningún control táctil del navbar queda declarado por debajo de 44", () => {
-  /* Barrido sobre las reglas de accesibilidad: si alguna declara un tamaño chico para un
-     control que se toca, salta acá. Los decorativos no entran porque no se listan. */
-  const controles = [".menu-toggle-icon", ".voice-toggle-btn", ".nav-utility-btn"];
-  for (const sel of controles) {
-    const cuerpo = bloqueDe(accesibilidad, sel);
-    if (!cuerpo) continue;
-    for (const m of cuerpo.matchAll(/(?:^|;)\s*(?:width|height|min-width|min-height):\s*(\d+)px/g)) {
-      assert.ok(
-        Number(m[1]) >= 44,
-        `${sel} declara ${m[1]}px, por debajo del mínimo táctil de 44`,
-      );
-    }
-  }
-});

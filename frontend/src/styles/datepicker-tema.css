@@ -1,0 +1,54 @@
+/* ==========================================================================
+   react-datepicker, con los colores del sitio
+
+   La librería trae su propia hoja con colores fijos: fondo #fff, cabecera
+   #f0f0f0, texto #000, bordes #aeaeae. Se importa DESPUÉS de index.css, así que
+   le ganaba a cualquier regla nuestra de igual especificidad, y en modo oscuro
+   el calendario de reprogramar quedaba blanco con el mes escrito en blanco
+   (1,09:1). Antes lo tapaban parches por tema en cada componente.
+
+   Esta hoja se importa inmediatamente después de la de la librería (main.jsx)
+   y re-apunta sólo los colores a la capa semántica. Vale para todos los
+   calendarios: el del kiosco y el del modal de reprogramar ajustan encima lo
+   suyo (día elegido, días libres), no la base.
+   ========================================================================== */
+
+.react-datepicker {
+  background-color: var(--sf-card);
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--tint) 18%, transparent);
+}
+
+.react-datepicker__header {
+  background-color: var(--sf-muted);
+  border-bottom-color: color-mix(in srgb, var(--tint) 14%, transparent);
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header,
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker__time-name {
+  color: var(--ink);
+}
+
+.react-datepicker__day:not([aria-disabled="true"]):hover,
+.react-datepicker__month-text:hover {
+  background-color: var(--sf-strong);
+}
+
+/* Deshabilitado: no pide contraste (WCAG 1.4.3 exime lo inactivo), pero se
+   deja legible igual para que el calendario no parezca vacío. */
+.react-datepicker__day--disabled,
+.react-datepicker__day--outside-month {
+  color: var(--ink-3);
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: var(--ink-3);
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: var(--ink);
+}

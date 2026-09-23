@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaArrowRight,
   FaBars,
   FaCalendarAlt,
-  FaClipboardList,
   FaExclamationTriangle,
-  FaHome,
   FaMoon,
   FaSun,
   FaTimes,
@@ -16,7 +13,6 @@ import {
 } from "react-icons/fa";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
-import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import {
   isVoiceMuted,
@@ -24,6 +20,26 @@ import {
   setVoiceMuted,
 } from "../utils/neuroToast";
 import "./Navbar.css";
+
+/* LA BARRA DE NAVEGACIÓN, REESCRITA DESDE CERO.
+ *
+ * La anterior era una cápsula de vidrio flotante con el botón «Reservar»
+ * envuelto en un efecto magnético: seguía al cursor y se desplazaba hacia el
+ * costado. Agustín lo describió exacto: «se mueve para el costado, se tilda».
+ * Además la cápsula cambiaba de alto al hacer scroll y arrastraba una barra de
+ * progreso; tres cosas moviéndose en la pieza que tiene que estar quieta.
+ *
+ * Ahora es una barra sólida de ancho completo:
+ *   · nada se desplaza: los estados cambian color, no posición ni tamaño;
+ *   · al hacer scroll sólo aparece una línea inferior, sin cambiar el alto;
+ *   · sin backdrop-filter: volvía a la barra contenedora de sus hijos fixed y
+ *     recortaba el menú del teléfono (menu-mobile.spec.js lo cuida);
+ *   · colores de la capa semántica: se ve bien en claro y en oscuro sin
+ *     ninguna regla por tema.
+ *
+ * Lo que se conserva tal cual: la guía por voz y su invitación, el cambio de
+ * tema con transición, y el menú del teléfono con el foco atrapado, Escape y
+ * el scroll del cuerpo bloqueado. */
 
 const VOICE_MUTED_EVENT = "neuro-voice-muted-changed";
 const VOICE_BLOCKED_EVENT = "neuro-voice-blocked";
@@ -35,19 +51,14 @@ const NAVBAR_VOICE_OPTIONS = {
 };
 
 /* ── Descubrimiento de la guía por voz ─────────────────────────────────────
-   La guía por voz es una función valiosa que antes vivía detrás de un ícono
-   mudo: nadie sabía que existía. Ahora se anuncia en tres capas, de menor a
-   mayor intrusión:
-     1. El control lleva rótulo visible ("Guía por voz"), no sólo un ícono.
-     2. Un punto pulsante mientras nunca se haya usado.
-     3. Una invitación que aparece a los 4 s y se puede aceptar o posponer.
-   Si la posponen, vuelve a ofrecerse cada 3 minutos, COMO MÁXIMO 3 veces en
-   total. Si la activan o la descartan, no molesta nunca más (se recuerda entre
-   visitas). El objetivo es que se entere, no perseguirla. */
+   Se anuncia en tres capas, de menor a mayor intrusión: rótulo visible en el
+   botón, un punto mientras nunca se haya usado, y una invitación a los 4 s que
+   se puede aceptar o posponer. Si la posponen vuelve cada 3 minutos, COMO
+   MÁXIMO 3 veces. Si la activan o la descartan, no molesta nunca más. */
 const VOICE_INVITE_KEY = "voice_invite_state_v2";
 const VOICE_INVITE_MAX = 3;
 const VOICE_INVITE_FIRST_DELAY = 4000;
-const VOICE_INVITE_REPEAT_DELAY = 180000; // 3 min
+const VOICE_INVITE_REPEAT_DELAY = 180000;
 const VOICE_INVITE_VISIBLE_MS = 15000;
 
 const readInviteState = () => {
@@ -67,55 +78,38 @@ const writeInviteState = (state) => {
   try {
     window.localStorage.setItem(VOICE_INVITE_KEY, JSON.stringify(state));
   } catch {
-    // Ignore storage errors silently.
+    // Almacenamiento bloqueado: la invitación sólo deja de recordarse.
   }
 };
+
+const navLinks = [
+  { title: "Inicio", path: "/" },
+  { title: "Mis Turnos", path: "/portal" },
+];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const sheetRef = useFocusTrap(isOpen);
   const [scrolled, setScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [voiceMuted, setVoiceMutedState] = useState(() => isVoiceMuted());
   const [voiceBlocked, setVoiceBlocked] = useState(false);
   const [showVoiceInvite, setShowVoiceInvite] = useState(false);
-  /* `inviteDone` = ya la activó o la descartó; no se vuelve a ofrecer nunca.
-     Es estado (no ref) porque decide si se pinta el punto pulsante.
-     El contador de apariciones sí va en un ref: no afecta al render. */
   const [inviteDone, setInviteDone] = useState(() => readInviteState().done);
   const inviteShownRef = useRef(readInviteState().shown);
   const themeTransitionTimerRef = useRef(null);
-  const rafRef = useRef(0);
   const location = useLocation();
   const { effectiveTheme, setThemePreference } = useUISettings();
 
-  // Scroll: estado compacto + barra de progreso de lectura (rAF-throttled).
+  /* Sólo un booleano: la línea inferior aparece al despegarse del borde. El
+     estado cambia una vez por cruce del umbral, no en cada píxel de scroll. */
   useEffect(() => {
-    const measure = () => {
-      rafRef.current = 0;
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      setScrolled(window.scrollY > 16);
-      setScrollProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
-    };
-
-    const handleScroll = () => {
-      if (!rafRef.current) {
-        rafRef.current = window.requestAnimationFrame(measure);
-      }
-    };
-
-    measure();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-      if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
-    };
+    const medir = () => setScrolled(window.scrollY > 8);
+    medir();
+    window.addEventListener("scroll", medir, { passive: true });
+    return () => window.removeEventListener("scroll", medir);
   }, []);
 
-  // Menú mobile: bloquea el scroll del body y cierra con Escape.
+  // Menú del teléfono: bloquea el scroll del cuerpo y cierra con Escape.
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -133,9 +127,6 @@ const Navbar = () => {
     };
   }, [isOpen]);
 
-  /* Ciclo de invitación a la guía por voz: primer ofrecimiento a los 4 s y
-     recordatorios cada 3 min, hasta 3 en total. Cada aparición dura 15 s. Se
-     detiene apenas la voz se activa o el visitante la descarta. */
   useEffect(() => {
     if (inviteDone || !voiceMuted || voiceBlocked) return undefined;
 
@@ -146,10 +137,7 @@ const Navbar = () => {
       inviteShownRef.current += 1;
       writeInviteState({ done: false, shown: inviteShownRef.current });
       hideTimers.push(
-        window.setTimeout(
-          () => setShowVoiceInvite(false),
-          VOICE_INVITE_VISIBLE_MS,
-        ),
+        window.setTimeout(() => setShowVoiceInvite(false), VOICE_INVITE_VISIBLE_MS),
       );
     };
 
@@ -176,13 +164,10 @@ const Navbar = () => {
   useEffect(() => {
     const syncVoiceState = (event) => {
       const nextMuted =
-        typeof event.detail?.muted === "boolean"
-          ? event.detail.muted
-          : isVoiceMuted();
+        typeof event.detail?.muted === "boolean" ? event.detail.muted : isVoiceMuted();
       setVoiceMutedState(nextMuted);
       if (nextMuted) setVoiceBlocked(false);
     };
-
     const handleBlocked = () => setVoiceBlocked(true);
     const handleReady = () => setVoiceBlocked(false);
 
@@ -196,8 +181,6 @@ const Navbar = () => {
     };
   }, []);
 
-  /* Cierra la invitación. `forever` la da por saldada: no se vuelve a ofrecer
-     en visitas futuras (se usa al activar la voz o al elegir "Ahora no"). */
   const closeVoiceInvite = (forever = false) => {
     setShowVoiceInvite(false);
     if (forever) {
@@ -208,13 +191,10 @@ const Navbar = () => {
 
   const applyTheme = (nextTheme) => {
     document.documentElement.classList.add("theme-transitioning");
-
     if (themeTransitionTimerRef.current) {
       window.clearTimeout(themeTransitionTimerRef.current);
     }
-
     setThemePreference(nextTheme);
-
     themeTransitionTimerRef.current = window.setTimeout(() => {
       document.documentElement.classList.remove("theme-transitioning");
     }, 420);
@@ -222,22 +202,14 @@ const Navbar = () => {
 
   const toggleTheme = () => {
     const nextTheme = effectiveTheme === "dark" ? "light" : "dark";
-    const prefersReducedMotion = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    )?.matches;
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
-    if (
-      !prefersReducedMotion &&
-      typeof document.startViewTransition === "function"
-    ) {
+    if (!prefersReducedMotion && typeof document.startViewTransition === "function") {
       document.startViewTransition(() => {
-        flushSync(() => {
-          applyTheme(nextTheme);
-        });
+        flushSync(() => applyTheme(nextTheme));
       });
       return;
     }
-
     applyTheme(nextTheme);
   };
 
@@ -245,7 +217,6 @@ const Navbar = () => {
     const nextMuted = !voiceMuted;
     setVoiceMuted(nextMuted);
     setVoiceMutedState(nextMuted);
-    // Ya conoce la función: se deja de ofrecer.
     closeVoiceInvite(true);
 
     if (!nextMuted) {
@@ -256,183 +227,133 @@ const Navbar = () => {
       });
       return;
     }
-
     window.speechSynthesis?.cancel?.();
   };
-
-  const navLinks = [
-    { title: "Inicio", path: "/", icon: <FaHome /> },
-    { title: "Mis Turnos", path: "/portal", icon: <FaClipboardList /> },
-  ];
 
   const voiceTitle = voiceBlocked
     ? "El navegador bloqueó la voz. Habilitá el sonido para este sitio y reintentá."
     : voiceMuted
       ? "Activar guía por voz: te acompaño hablado en cada paso"
       : "Pausar guía por voz";
-
-  // Punto pulsante mientras la función siga sin descubrirse.
+  const voiceLabel = voiceBlocked ? "Voz bloqueada" : voiceMuted ? "Guía por voz" : "Guía activa";
+  const VoiceIcon = voiceBlocked ? FaExclamationTriangle : voiceMuted ? FaVolumeMute : FaVolumeUp;
   const voiceIsUndiscovered = voiceMuted && !voiceBlocked && !inviteDone;
+  const themeTitle = effectiveTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+  const ThemeIcon = effectiveTheme === "dark" ? FaSun : FaMoon;
+  const enReservar = location.pathname === "/reservar";
+
+  /* Los dos utilitarios se pintan en dos lugares: en la barra (escritorio) y
+     al pie del menú (teléfono). Cada copia se oculta con display:none en el
+     tamaño que no le toca, así que nunca hay dos visibles ni dos en el árbol
+     de accesibilidad a la vez. */
+  const botonVoz = (lugar) => (
+    <button
+      type="button"
+      className={`tpp-nav-tool tpp-nav-voice tpp-nav-tool--${lugar}`}
+      data-estado={voiceBlocked ? "bloqueada" : voiceMuted ? "apagada" : "activa"}
+      onClick={toggleVoice}
+      title={voiceTitle}
+      aria-label={voiceTitle}
+      aria-pressed={!voiceMuted}
+    >
+      <VoiceIcon aria-hidden="true" />
+      <span className="tpp-nav-tool-label">{voiceLabel}</span>
+      {voiceIsUndiscovered && <span className="tpp-nav-voice-dot" aria-hidden="true" />}
+    </button>
+  );
+
+  const botonTema = (lugar) => (
+    <button
+      type="button"
+      className={`tpp-nav-tool tpp-nav-theme tpp-nav-tool--${lugar}`}
+      onClick={toggleTheme}
+      title={themeTitle}
+      aria-label={themeTitle}
+    >
+      <ThemeIcon aria-hidden="true" />
+      <span className="tpp-nav-tool-label">
+        {effectiveTheme === "dark" ? "Modo claro" : "Modo oscuro"}
+      </span>
+    </button>
+  );
 
   return (
-    <nav className={`navbar-elite ${scrolled ? "scrolled" : ""}`}>
-      <div className="navbar-container">
+    <nav
+      className="tpp-nav"
+      data-scrolled={scrolled ? "true" : "false"}
+      aria-label="Navegación principal"
+    >
+      <div className="tpp-nav-inner">
         <Link
           to="/"
           className="navbar-brand"
-          onClick={() => setIsOpen(false)}
-          aria-label="Tu Profesor Particular — Agustín Elías Sosa"
+          aria-label="Tu Profesor Particular, inicio"
         >
-          {/* Monograma sin caja ni borde: antes se leía como sticker pegado. */}
-          <ThemeLogo
-            variant="monogram"
-            imgClassName="brand-mark-img"
-            alt=""
-            aria-hidden="true"
-          />
-          <span className="brand-copy">
-            <span className="brand-title">
-              Tu Profesor <span className="brand-title-accent">Particular</span>
+          <ThemeLogo variant="monogram" imgClassName="tpp-nav-mark" alt="" aria-hidden="true" />
+          <span className="tpp-nav-brand-copy">
+            <span className="tpp-nav-brand-title">
+              Tu Profesor <em>Particular</em>
             </span>
-            <span className="brand-signature">Agustín Elías Sosa</span>
+            <span className="tpp-nav-brand-sub">Agustín Elías Sosa</span>
           </span>
         </Link>
 
-        <div className="navbar-right-zone">
-          {/* Backdrop del menú mobile */}
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-hidden="true"
-            className={`nav-sheet-backdrop ${isOpen ? "active" : ""}`}
-            onClick={() => setIsOpen(false)}
-          />
+        {/* El fondo del menú del teléfono. No es un control: el menú se cierra
+            con su botón o con Escape; esto es sólo para el toque afuera. */}
+        <div
+          className="tpp-nav-backdrop"
+          data-open={isOpen ? "true" : "false"}
+          aria-hidden="true"
+          onClick={() => setIsOpen(false)}
+        />
 
-          {/* El foco entra al panel al abrirlo y vuelve al botón al cerrarlo, y
-              mientras está abierto el Tab no se escapa a la página de atrás. Es
-              el mismo hook que usa el panel de accesibilidad.
-
-              En escritorio esta misma lista es el menú en línea de la barra y
-              `isOpen` nunca se enciende —el botón de hamburguesa no existe—, así
-              que el hook no hace nada ahí. */}
-          <ul
-            id="nav-menu-sheet"
-            ref={sheetRef}
-            className={`nav-menu-list ${isOpen ? "active" : ""}`}
-          >
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-
-              return (
-                <li key={link.path} className="nav-item">
-                  <Link
-                    to={link.path}
-                    className={`nav-link-btn ${isActive ? "active" : ""}`}
-                    onClick={() => setIsOpen(false)}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <span className="nav-icon" aria-hidden="true">
-                      {link.icon}
-                    </span>
-                    <span className="nav-text">{link.title}</span>
-                  </Link>
-                </li>
-              );
-            })}
-
-            {/* CTA principal: reservar. Destacado, no un link más. */}
-            <li className="nav-item nav-item-cta">
-              <Magnetic strength={0.4} className="nav-cta-magnetic">
+        {/* En escritorio esta lista son los enlaces en línea de la barra y
+            `isOpen` nunca se enciende: el botón de menú no existe ahí, y el
+            hook del foco no hace nada. En el teléfono es el panel desplegable. */}
+        <ul
+          id="nav-menu-sheet"
+          ref={sheetRef}
+          className="tpp-nav-links"
+          data-open={isOpen ? "true" : "false"}
+        >
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <li key={link.path}>
                 <Link
-                  to="/reservar"
-                  className={`nav-cta-btn ${location.pathname === "/reservar" ? "active" : ""}`}
+                  to={link.path}
+                  className="tpp-nav-link"
+                  aria-current={isActive ? "page" : undefined}
                   onClick={() => setIsOpen(false)}
-                  aria-current={
-                    location.pathname === "/reservar" ? "page" : undefined
-                  }
                 >
-                  <FaCalendarAlt aria-hidden="true" />
-                  <span>Reservar</span>
-                  <FaArrowRight className="nav-cta-arrow" aria-hidden="true" />
+                  {link.title}
                 </Link>
-              </Magnetic>
-            </li>
-          </ul>
+              </li>
+            );
+          })}
+          <li className="tpp-nav-sheet-tools">
+            {botonVoz("menu")}
+            {botonTema("menu")}
+          </li>
+        </ul>
 
-          <div
-            className="navbar-utility-cluster"
-            aria-label="Preferencias visuales y de voz"
+        <div className="tpp-nav-actions">
+          {botonVoz("barra")}
+          {botonTema("barra")}
+
+          <Link
+            to="/reservar"
+            className="tpp-nav-cta"
+            aria-current={enReservar ? "page" : undefined}
           >
-            <div
-              className={`voice-toggle-shell ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
-            >
-              <button
-                type="button"
-                className={`voice-toggle-btn ${voiceMuted ? "muted" : "active"} ${voiceBlocked ? "blocked" : ""}`}
-                onClick={toggleVoice}
-                title={voiceTitle}
-                aria-label={voiceTitle}
-                aria-pressed={!voiceMuted}
-              >
-                <span className="voice-toggle-icon" aria-hidden="true">
-                  {voiceBlocked ? (
-                    <FaExclamationTriangle />
-                  ) : voiceMuted ? (
-                    <FaVolumeMute />
-                  ) : (
-                    <FaVolumeUp />
-                  )}
-                </span>
-                {/* Rótulo visible: la función se entiende sin tocar nada. */}
-                <span className="voice-toggle-label">
-                  {voiceBlocked
-                    ? "Voz bloqueada"
-                    : voiceMuted
-                      ? "Guía por voz"
-                      : "Guía activa"}
-                </span>
-                {!voiceMuted && !voiceBlocked && (
-                  <span className="voice-wave" aria-hidden="true">
-                    <span className="voice-wave-bar" />
-                    <span className="voice-wave-bar" />
-                    <span className="voice-wave-bar" />
-                  </span>
-                )}
-                {voiceIsUndiscovered && (
-                  <span className="voice-new-dot" aria-hidden="true" />
-                )}
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="nav-utility-btn theme-toggle-btn"
-              onClick={toggleTheme}
-              title={
-                effectiveTheme === "dark"
-                  ? "Cambiar a modo claro"
-                  : "Cambiar a modo oscuro"
-              }
-              aria-label={
-                effectiveTheme === "dark"
-                  ? "Cambiar a modo claro"
-                  : "Cambiar a modo oscuro"
-              }
-            >
-              <span
-                className="nav-utility-icon theme-toggle-icon-wrap"
-                aria-hidden="true"
-              >
-                <FaSun className="theme-icon theme-icon--sun" />
-                <FaMoon className="theme-icon theme-icon--moon" />
-              </span>
-            </button>
-          </div>
+            <FaCalendarAlt aria-hidden="true" />
+            <span>Reservar</span>
+          </Link>
 
           <button
             type="button"
-            className="menu-toggle-icon"
-            onClick={() => setIsOpen((currentState) => !currentState)}
+            className="tpp-nav-menu"
+            onClick={() => setIsOpen((abierto) => !abierto)}
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isOpen}
             aria-controls="nav-menu-sheet"
@@ -440,36 +361,21 @@ const Navbar = () => {
             {isOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
           </button>
         </div>
-
-        {/* Progreso de lectura: hairline verde al pie de la cápsula. Va dentro
-            para que el overflow:hidden lo recorte siguiendo el border-radius. */}
-        <span
-          className="navbar-progress"
-          aria-hidden="true"
-          style={{ transform: `scaleX(${scrollProgress})` }}
-        />
       </div>
 
-      {/* Invitación a la guía por voz. Vive FUERA de la cápsula: el
-          backdrop-filter de ésta la vuelve contenedor de sus hijos fixed y su
-          overflow:hidden recortaría la tarjeta. */}
       {showVoiceInvite && voiceMuted && !voiceBlocked && (
-        <div className="voice-invite" role="status">
-          <p className="voice-invite-copy">
+        <div className="tpp-nav-invite" role="status">
+          <p className="tpp-nav-invite-copy">
             <strong>¿Querés que te guíe hablando?</strong>
             Te acompaño paso a paso mientras reservás tu turno.
           </p>
-          <div className="voice-invite-actions">
-            <button
-              type="button"
-              className="voice-invite-yes"
-              onClick={toggleVoice}
-            >
+          <div className="tpp-nav-invite-actions">
+            <button type="button" className="tpp-nav-invite-yes" onClick={toggleVoice}>
               Activar guía
             </button>
             <button
               type="button"
-              className="voice-invite-no"
+              className="tpp-nav-invite-no"
               onClick={() => closeVoiceInvite(true)}
             >
               Ahora no

@@ -18,6 +18,7 @@
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.06);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 6%, transparent);
 }
 .hp-about-photo::before {
   content: "";
@@ -84,11 +85,6 @@
   transition: color .2s ease, transform .2s ease;
 }
 .hp-about-wp:hover { transform: translateX(2px); }
-
-[data-theme="dark"] .hp-about-photo { border-color: rgba(204,217,235,.16); box-shadow: 0 0 0 1px rgba(204,217,235,.1); }
-[data-theme="dark"] .hp-about-wp,
-[data-theme="dark"] .hp-about-bio b,
-[data-theme="dark"] .hp-about-stat-value { color: var(--green-on-dark); }
 
 @media (max-width: 860px) {
   .hp-about-grid { grid-template-columns: minmax(0, 1fr); gap: 2rem; }

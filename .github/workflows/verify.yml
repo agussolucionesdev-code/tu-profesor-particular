@@ -125,7 +125,7 @@ jobs:
       # canonical.spec.js y tema-del-sistema.spec.js van acá porque también
       # necesitan el navegador: el canonical lo reescribe un efecto de React al
       # cambiar de ruta, y el tema se mide en la primera pintura.
-      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js tests/e2e/canonical.spec.js tests/e2e/tema-del-sistema.spec.js tests/e2e/foco-no-tapado.spec.js --project=desktop
+      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js tests/e2e/canonical.spec.js tests/e2e/tema-del-sistema.spec.js tests/e2e/foco-no-tapado.spec.js tests/e2e/modo-oscuro.spec.js --project=desktop
         env:
           TZ: America/Argentina/Buenos_Aires
       # El menú de celular va aparte y en el proyecto `mobile`: su bug sólo
@@ -136,7 +136,7 @@ jobs:
       # Los dos modales del portal van en el mismo proyecto y por el mismo motivo:
       # blancos táctiles, desborde y foco sólo existen con layout. En jsdom los
       # dos pasan cualquier test —el DOM dice que están abiertos y visibles—.
-      - run: npx playwright test tests/e2e/menu-mobile.spec.js tests/e2e/modales-portal.spec.js tests/e2e/materias-reparto.spec.js tests/e2e/foco-no-tapado.spec.js --project=mobile
+      - run: npx playwright test tests/e2e/menu-mobile.spec.js tests/e2e/modales-portal.spec.js tests/e2e/materias-reparto.spec.js tests/e2e/foco-no-tapado.spec.js tests/e2e/modo-oscuro.spec.js --project=mobile
         env:
           TZ: America/Argentina/Buenos_Aires
       - if: failure()

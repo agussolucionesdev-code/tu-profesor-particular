@@ -62,8 +62,8 @@
 
 /* Pulse del halo del CTA */
 @keyframes bi-cta-halo {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(1, 149, 60, 0); }
-  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.1); }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(1, 149, 60, 0); box-shadow: 0 0 0 0   color-mix(in srgb, var(--tint-accent) 0%, transparent); }
+  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.1); box-shadow: 0 0 0 6px color-mix(in srgb, var(--tint-accent) 10%, transparent); }
 }
 
 /* Entrada en cascada de secciones de horario */
@@ -86,8 +86,8 @@
 
 /* Pulsación suave del banner activo */
 @keyframes bi-banner-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.06); }
-  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.12); }
+  0%, 100% { box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.06); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 6%, transparent); }
+  50%       { box-shadow: 0 0 0 6px rgba(1, 149, 60, 0.12); box-shadow: 0 0 0 6px color-mix(in srgb, var(--tint-accent) 12%, transparent); }
 }
 
 /* =====================================================================
@@ -106,9 +106,11 @@
 /* Hover en día disponible: levitación + halo verde */
 .neuro-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected):not(.react-datepicker__day--outside-month):hover {
   background: rgba(1, 149, 60, 0.13) !important;
+  background: color-mix(in srgb, var(--tint-accent) 13%, transparent) !important;
   color: var(--brand-green-deep, #006d1f) !important;
   transform: scale(1.14) !important;
   box-shadow: 0 0 0 2.5px rgba(1, 149, 60, 0.3);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--tint-accent) 30%, transparent);
 }
 
 /* Día hoy hover: mantener borde ámbar pero añadir lift */
@@ -168,11 +170,8 @@
   padding-bottom: 0.7rem !important;
   margin-bottom: 0.9rem !important;
   border-bottom: 1px solid rgba(1, 149, 60, 0.1) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--tint-accent) 10%, transparent) !important;
   gap: 0.5rem !important;
-}
-
-[data-theme="dark"] .slot-section-header {
-  border-bottom-color: rgba(136, 206, 147, 0.12) !important;
 }
 
 .slot-section-header h4 {
@@ -196,6 +195,7 @@
 .slot-section-header > span {
   flex-shrink: 0;
   background: rgba(1, 149, 60, 0.1) !important;
+  background: color-mix(in srgb, var(--tint-accent) 10%, transparent) !important;
   color: var(--brand-green-deep, #006d1f) !important;
   font-size: 0.66rem !important;
   font-weight: 900 !important;
@@ -204,14 +204,9 @@
   padding: 4px 11px !important;
   border-radius: 999px !important;
   border: 1px solid rgba(1, 149, 60, 0.22) !important;
+  border: 1px solid color-mix(in srgb, var(--tint-accent) 22%, transparent) !important;
   line-height: 1.4 !important;
   transition: background 0.2s ease !important;
-}
-
-[data-theme="dark"] .slot-section-header > span {
-  background: rgba(136, 206, 147, 0.12) !important;
-  color: #9fd0a4 !important;
-  border-color: rgba(136, 206, 147, 0.22) !important;
 }
 
 /* Indicador visual de período por data-period */
@@ -276,6 +271,7 @@
   height: 2px;
   border-radius: 0 0 2px 2px;
   background: rgba(1, 149, 60, 0.5);
+  background: color-mix(in srgb, var(--tint-accent) 50%, transparent);
   opacity: 0;
   transition: opacity 0.2s ease !important;
 }
@@ -292,6 +288,7 @@
   color: var(--bi-slot-avail-color) !important;
   transform: translateY(-4px) scale(1.04) !important;
   box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
 }
 
 /* Estado SELECCIONADO */
@@ -301,8 +298,10 @@
   color: #ffffff !important;
   border: none !important;
   outline: 3px solid rgba(1, 149, 60, 0.35) !important;
+  outline: 3px solid color-mix(in srgb, var(--tint-accent) 35%, transparent) !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
   animation: bi-slot-select 0.42s var(--bi-ease-spring) forwards !important;
 }
 
@@ -373,6 +372,7 @@
 /* Focus ring accesible */
 .slot-stage-shell .slot-btn:focus-visible {
   outline: 3px solid rgba(1, 149, 60, 0.55) !important;
+  outline: 3px solid color-mix(in srgb, var(--tint-accent) 55%, transparent) !important;
   outline-offset: 3px !important;
 }
 
@@ -407,10 +407,11 @@
 
 /* Estado LISTO — CTA vivo */
 .btn-stage-next.is-ready {
-  background: var(--bi-cta-from) !important;
-  color: #ffffff !important;
+  background: var(--navy-solid-bg) !important;
+  color: var(--navy-solid-ink) !important;
   border: none !important;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
   animation:
     bi-cta-reveal 0.48s var(--bi-ease-spring) both,
     bi-cta-halo   3.2s ease-in-out 0.6s infinite !important;
@@ -431,8 +432,8 @@
 /* Hover del CTA listo */
 .btn-stage-next.is-ready:hover,
 .btn-stage-next.is-ready:focus-visible {
-  transform: translateY(-3px) !important;
   box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.14) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 14%, transparent) !important;
   animation: bi-cta-reveal 0.48s var(--bi-ease-spring) both !important; /* pausa el halo en hover */
 }
 
@@ -461,23 +462,17 @@
 .stage-sidebar-cards .selection-insight-card:hover {
   transform: translateY(-3px) !important;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
-}
-
-[data-theme="dark"] .stage-sidebar-cards .selection-insight-card:hover {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
 }
 
 /* Tarjeta "accent" (Próximo paso) — brillo suave */
 .stage-sidebar-cards .selection-insight-card.accent {
   background:
     rgba(1, 149, 60, 0.08) !important;
-  border-color: rgba(1, 149, 60, 0.2) !important;
-}
-
-[data-theme="dark"] .stage-sidebar-cards .selection-insight-card.accent {
   background:
-    rgba(136, 206, 147, 0.1) !important;
-  border-color: rgba(136, 206, 147, 0.2) !important;
+    color-mix(in srgb, var(--tint-accent) 8%, transparent) !important;
+  border-color: rgba(1, 149, 60, 0.2) !important;
+  border-color: color-mix(in srgb, var(--tint-accent) 20%, transparent) !important;
 }
 
 /* =====================================================================
@@ -492,6 +487,7 @@
 .stage-actions-mobile .btn-neuro-primary.btn-ready:hover {
   transform: translateY(-3px) !important;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 /* =====================================================================
@@ -659,7 +655,7 @@
 /* Días bloqueados por el admin */
 .neuro-calendar .react-datepicker__day.day-blocked {
   background: rgba(100, 100, 120, 0.08) !important;
-  color: #888 !important;
+  color: var(--ink-soft) !important;
   text-decoration: line-through;
   opacity: 0.55;
   cursor: not-allowed !important;
@@ -712,6 +708,7 @@
 .neuro-calendar .react-datepicker__day.day-partial.react-datepicker__day--selected::after,
 .neuro-calendar .react-datepicker__day.day-full.react-datepicker__day--selected::after {
   background: rgba(255, 255, 255, 0.65);
+  background: color-mix(in srgb, var(--tint-glass) 65%, transparent);
 }
 
 /* Días fuera del mes actual: no mostrar indicadores */
@@ -729,22 +726,6 @@
 }
 
 /* Dark mode */
-[data-theme="dark"] .neuro-calendar .react-datepicker__day.day-partial {
-  background: rgba(181, 107, 24, 0.12) !important;
-}
-
-[data-theme="dark"] .neuro-calendar .react-datepicker__day.day-partial::after {
-  background: #e08c35;
-}
-
-[data-theme="dark"] .neuro-calendar .react-datepicker__day.day-full {
-  background: rgba(168, 36, 51, 0.12) !important;
-  color: #d9707d !important;
-}
-
-[data-theme="dark"] .neuro-calendar .react-datepicker__day.day-full::after {
-  background: #d9707d;
-}
 
 /* ── Leyenda del calendario: indicadores de día ──────────────── */
 .calendar-legend .legend-icon.partial-day {
@@ -791,24 +772,6 @@
   border-color: #888;
   opacity: 0.6;
   text-decoration: line-through;
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.partial-day {
-  background: rgba(181, 107, 24, 0.18);
-  border-color: #e08c35;
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.partial-day::after {
-  background: #e08c35;
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.full-day {
-  background: rgba(168, 36, 51, 0.18);
-  border-color: #d9707d;
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.full-day::after {
-  background: #d9707d;
 }
 
 /* Reducción de movimiento: sin indicadores animados */

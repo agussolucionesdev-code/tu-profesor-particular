@@ -104,9 +104,6 @@
 /* En claro el relleno es el verde casi blanco de la marca. En oscuro ese verde
    sería una mancha clara, así que el relleno pasa a ser el mismo verde pero
    translúcido, que se apoya en el fondo en vez de taparlo. */
-[data-theme="dark"] .mant-diente {
-  fill: rgba(1, 149, 60, 0.16);
-}
 
 /* ── Movimiento reducido ── */
 /* Quien pidió menos movimiento en su sistema operativo recibe la misma

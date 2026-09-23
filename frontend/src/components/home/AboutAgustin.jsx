@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight, FaWhatsapp } from "react-icons/fa";
 import SectionHead from "./SectionHead";
-import Magnetic from "../ui/Magnetic";
 import { ANOS_ENSENANDO } from "../../constants/voz";
 import agustinPhoto from "../../assets/images/agustin-hero.webp";
 import "./AboutAgustin.css";
@@ -140,12 +139,10 @@ const AboutAgustin = () => (
           </dl>
 
           <div className="hp-about-ctas" data-reveal="up">
-            <Magnetic strength={0.35}>
-              <Link to="/reservar" className="hp-cta-main">
-                Reservar una clase conmigo
-                <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-              </Link>
-            </Magnetic>
+            <Link to="/reservar" className="hp-cta-main">
+              Reservar una clase conmigo
+              <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+            </Link>
             <a
               href={waLink("Hola Agustín, quiero hacerte una consulta.")}
               className="hp-about-wp"

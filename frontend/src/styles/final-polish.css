@@ -76,37 +76,13 @@
   box-shadow: none !important;
 }
 
-[data-theme="dark"] .react-datepicker__day--outside-month {
-  color: rgba(180, 195, 215, 0.35) !important;
-  border-color: rgba(180, 195, 215, 0.18) !important;
-}
-
-[data-theme="dark"] .react-datepicker__day--outside-month::after {
-  background: rgba(180, 195, 215, 0.28);
-}
-
 /* Refuerzo de contraste mes/año en oscuro */
-[data-theme="dark"] .react-datepicker__current-month {
-  color: var(--text-primary) !important;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-}
-
-[data-theme="dark"] .react-datepicker__day-name {
-  color: var(--text-tertiary) !important;
-}
-
-[data-theme="dark"] .react-datepicker__day {
-  color: var(--text-primary) !important;
-}
 
 /* El alpha de acá se MULTIPLICA con el `opacity: 0.5` que la regla del tachado
    aplica más abajo: 0.35 × 0.5 = 0.175 efectivo, y el número del día quedaba en
    1.48:1 —ilegible—. El día sigue leyéndose como no disponible por el tachado y
    por el contraste con los días libres, que van en texto pleno; no hace falta
    además borrarlo. Con la tinta sólida el efectivo queda en 0.62 → 4.24:1. */
-[data-theme="dark"] .react-datepicker__day--disabled {
-  color: rgb(180, 195, 215) !important;
-}
 
 /* Día seleccionado: contraste fuerte y reconocible al instante.
 
@@ -130,14 +106,8 @@
   font-weight: 900 !important;
   border: 2px solid var(--cta-solid-bg-hover, #004b04) !important;
   box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
   transform: scale(1.05) !important;
-}
-
-[data-theme="dark"] .react-datepicker__day--selected,
-[data-theme="dark"] .react-datepicker__day--keyboard-selected {
-  background: var(--color-accent) !important;
-  border-color: var(--color-accent-hover) !important;
-  color: var(--color-on-success) !important;
 }
 
 /* Hoy (custom): borde amarillo distintivo, no se confunde con seleccionado */
@@ -147,11 +117,6 @@
   background: rgba(245, 158, 11, 0.08) !important;
   color: var(--brand-accent-warm, #c8821e) !important;
   font-weight: 900 !important;
-}
-
-[data-theme="dark"] .react-datepicker__day.custom-today {
-  background: rgba(245, 158, 11, 0.14) !important;
-  color: var(--color-warning-emphasis) !important;
 }
 
 /* Día deshabilitado (pasado): tachado liviano para clarificar.
@@ -173,12 +138,14 @@
 /* Asegurar que el outline al focusear el día sea claro */
 .react-datepicker__day:focus-visible {
   outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5)) !important;
+  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 50%, transparent)) !important;
   outline-offset: 2px !important;
 }
 
 /* Header navegación: botones más finos y consistentes */
 .booking-month-nav:focus-visible {
   outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5));
+  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 50%, transparent));
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -195,12 +162,9 @@
 /* Separador sutil entre secciones */
 .slot-section-header {
   border-bottom: 1px solid var(--border-subtle, rgba(0, 33, 76, 0.06));
+  border-bottom: 1px solid var(--border-subtle, color-mix(in srgb, var(--tint) 6%, transparent));
   padding-bottom: 0.6rem;
   margin-bottom: 0.8rem;
-}
-
-[data-theme="dark"] .slot-section-header {
-  border-bottom-color: var(--border-subtle, rgba(248, 250, 252, 0.08));
 }
 
 /* Estados claros del slot: ahora cada estado tiene una pista visual */
@@ -212,23 +176,28 @@
 
 .slot-btn:not(.disabled):not(.selected) {
   background: rgba(1, 149, 60, 0.06) !important;
+  background: color-mix(in srgb, var(--tint-accent) 6%, transparent) !important;
   border: 1.5px solid rgba(1, 149, 60, 0.20) !important;
+  border: 1.5px solid color-mix(in srgb, var(--tint-accent) 20%, transparent) !important;
   color: var(--brand-green-deep, #006d1f) !important;
 }
 
 .slot-btn:not(.disabled):not(.selected):hover {
   background: rgba(1, 149, 60, 0.14) !important;
+  background: color-mix(in srgb, var(--tint-accent) 14%, transparent) !important;
   border-color: var(--brand-green, #01953c) !important;
   color: var(--brand-green-deep, #006d1f) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
 }
 
 .slot-btn.selected {
-  background: var(--brand-green, #01953c) !important;
-  color: var(--brand-white) !important;
-  border: 1.5px solid var(--brand-green-deep, #006d1f) !important;
+  background: var(--cta-solid-bg) !important;
+  color: var(--cta-solid-ink) !important;
+  border: 1.5px solid var(--cta-solid-bg) !important;
   box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
   transform: translateY(-2px) !important;
 }
 
@@ -250,32 +219,10 @@
   opacity: 0.7 !important;
 }
 
-[data-theme="dark"] .slot-btn:not(.disabled):not(.selected) {
-  background: rgba(136, 206, 147, 0.10) !important;
-  border-color: rgba(136, 206, 147, 0.28) !important;
-  color: #b6e0bb !important;
-}
-
-[data-theme="dark"] .slot-btn:not(.disabled):not(.selected):hover {
-  background: rgba(136, 206, 147, 0.20) !important;
-  border-color: var(--color-accent) !important;
-}
-
-[data-theme="dark"] .slot-btn.disabled {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(180, 195, 215, 0.18) !important;
-  color: rgba(180, 195, 215, 0.45) !important;
-}
-
-[data-theme="dark"] .slot-btn.selected {
-  background: var(--color-accent) !important;
-  color: var(--color-on-success) !important;
-  border-color: var(--color-accent-hover) !important;
-}
-
 /* Focus ring claro en slots */
 .slot-btn:focus-visible {
   outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5)) !important;
+  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 50%, transparent)) !important;
   outline-offset: 2px !important;
 }
 
@@ -334,7 +281,7 @@
    usa, y hay que ganarle en su propio terreno. La excepción de los campos de
    texto en esa regla está explicada allá.
    ===================================================================== */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+input:not([type="checkbox"]):not([data-foco="contenedor"]):not([type="radio"]):not([type="range"]):not([type="file"]),
 textarea,
 select {
   /* La transición vive en el estado de reposo Y en el de foco: si sólo
@@ -352,7 +299,7 @@ select {
    teléfono un :hover queda pegado después del toque y el campo parecería
    seleccionado sin estarlo. */
 @media (hover: hover) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):hover:not(:focus):not([aria-invalid="true"]),
+  input:not([type="checkbox"]):not([data-foco="contenedor"]):not([type="radio"]):not([type="range"]):not([type="file"]):hover:not(:focus):not([aria-invalid="true"]),
   textarea:hover:not(:focus):not([aria-invalid="true"]),
   select:hover:not(:focus):not([aria-invalid="true"]) {
     border-color: var(--field-border-hover);
@@ -361,7 +308,7 @@ select {
 
 .admin-input:focus,
 .search-input:focus,
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus-visible,
+input:not([type="checkbox"]):not([data-foco="contenedor"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none !important;
@@ -389,13 +336,13 @@ select:focus-visible {
    que quedaba era el texto de abajo. El texto es lo que hace que el error no
    dependa del color; el borde es lo que deja encontrar el campo de un
    vistazo cuando hay varios. */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"],
+input:not([type="checkbox"]):not([data-foco="contenedor"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"],
 textarea[aria-invalid="true"],
 select[aria-invalid="true"] {
   border-color: var(--error-color);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"]:focus-visible,
+input:not([type="checkbox"]):not([data-foco="contenedor"]):not([type="radio"]):not([type="range"]):not([type="file"])[aria-invalid="true"]:focus-visible,
 textarea[aria-invalid="true"]:focus-visible,
 select[aria-invalid="true"]:focus-visible {
   border-color: var(--error-color) !important;
@@ -405,31 +352,17 @@ select[aria-invalid="true"]:focus-visible {
 /* =====================================================================
    FOOTER y MISC
    ===================================================================== */
-.btn-up-floating {
-  background: var(--brand-navy);
-  color: var(--brand-white);
-}
-
-[data-theme="dark"] .btn-up-floating {
-  background: var(--brand-green);
-  color: var(--text-on-accent, #06140a);
-}
-
-[data-theme="dark"] .neuro-toast,
-[data-theme="dark"] .portal-toast {
-  background: var(--surface-1) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-strong) !important;
-}
 
 a:focus-visible {
   outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.4));
+  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 40%, transparent));
   outline-offset: 3px;
   border-radius: 4px;
 }
 
 .neuro-modal-overlay {
   background: var(--surface-overlay, rgba(0, 33, 76, 0.55));
+  background: var(--surface-overlay, color-mix(in srgb, var(--tint) 55%, transparent));
 }
 
 /* Mobile del calendario.
@@ -484,16 +417,12 @@ a:focus-visible {
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
   background: rgba(1, 149, 60, 0.12);
+  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
   color: var(--brand-green-deep, #006d1f);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-
-[data-theme="dark"] .step-voice-indicator {
-  background: rgba(136, 206, 147, 0.18);
-  color: #9fd0a4;
 }
 
 /* =====================================================================
@@ -521,30 +450,11 @@ a:focus-visible {
 
 .calendar-legend .legend-icon.available {
   background: rgba(1, 149, 60, 0.14);
+  background: color-mix(in srgb, var(--tint-accent) 14%, transparent);
   border-color: var(--brand-green, #01953c);
 }
 
 .calendar-legend .legend-icon.selected {
   background: var(--brand-green, #01953c);
   border-color: var(--brand-green-deep, #006d1f);
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.disabled {
-  background: rgba(180, 195, 215, 0.10);
-  border-color: rgba(180, 195, 215, 0.25);
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.today {
-  background: rgba(245, 158, 11, 0.18);
-  border-color: var(--color-warning-emphasis);
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.available {
-  background: rgba(136, 206, 147, 0.20);
-  border-color: var(--color-accent);
-}
-
-[data-theme="dark"] .calendar-legend .legend-icon.selected {
-  background: var(--color-accent);
-  border-color: var(--color-accent-hover);
 }

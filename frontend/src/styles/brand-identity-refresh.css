@@ -8,12 +8,17 @@
    Por ahora los valores se aplanan para que no reintroduzcan degradados y
    sombras difusas por la puerta de atrás. */
 :root {
-  --brand-shell-bg: var(--brand-gray-50);
+  --brand-shell-bg: var(--sf-page);
   --brand-shell-panel: rgba(255, 255, 255, 0.82);
+  --brand-shell-panel: color-mix(in srgb, var(--tint-glass) 82%, transparent);
   --brand-shell-panel-strong: rgba(255, 255, 255, 0.94);
+  --brand-shell-panel-strong: color-mix(in srgb, var(--tint-glass) 94%, transparent);
   --brand-shell-border: rgba(0, 33, 76, 0.1);
+  --brand-shell-border: color-mix(in srgb, var(--tint) 10%, transparent);
   --brand-shell-shadow: 0 0 0 1px rgba(0, 33, 76, 0.12);
+  --brand-shell-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 12%, transparent);
   --brand-shell-shadow-soft: 0 0 0 1px rgba(0, 33, 76, 0.08);
+  --brand-shell-shadow-soft: 0 0 0 1px color-mix(in srgb, var(--tint) 8%, transparent);
   /* Se consumia con background-clip:text para pintar los titulos con un
      degradado navy->verde. Un titulo es texto, no un adorno: color solido. */
   --brand-title-gradient: var(--brand-navy);
@@ -54,34 +59,6 @@ body {
   box-shadow: var(--brand-shell-shadow);
 }
 
-.navbar-elite {
-  background:
-    rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-}
-
-.navbar-utility-cluster,
-.nav-link-btn,
-.nav-utility-btn,
-.theme-toggle-btn,
-.menu-toggle-icon {
-  border-radius: 16px;
-}
-
-.nav-link-btn {
-  transition:
-    transform 180ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.nav-link-btn:hover,
-.nav-link-btn.active {
-  transform: translateY(-1px);
-}
-
 .booking-page-wrapper,
 .client-portal-wrapper,
 .admin-login-shell--minimal,
@@ -104,7 +81,10 @@ body {
 .form-card-elevation {
   background:
     rgba(255, 255, 255, 0.96);
+  background:
+    color-mix(in srgb, var(--tint-glass) 96%, transparent);
   border: 1px solid rgba(0, 33, 76, 0.1);
+  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
   box-shadow: 0 0 0 1px rgba(17, 37, 59, 0.14);
 }
 
@@ -121,6 +101,8 @@ body {
   pointer-events: none;
   background:
     rgba(255, 255, 255, 0.65);
+  background:
+    color-mix(in srgb, var(--tint-glass) 65%, transparent);
   opacity: 0.85;
 }
 
@@ -191,6 +173,7 @@ body {
 .admin-kpi-card {
   background: var(--brand-shell-panel);
   border: 1px solid rgba(0, 33, 76, 0.1);
+  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
   box-shadow: var(--brand-shell-shadow-soft);
 }
 
@@ -209,7 +192,9 @@ body {
 .admin-input,
 .admin-textarea {
   background: rgba(255, 255, 255, 0.88);
+  background: color-mix(in srgb, var(--tint-glass) 88%, transparent);
   border-color: rgba(0, 33, 76, 0.12);
+  border-color: color-mix(in srgb, var(--tint) 12%, transparent);
 }
 
 .premium-input:hover,
@@ -217,11 +202,13 @@ body {
 .admin-input:hover,
 .admin-textarea:hover {
   border-color: rgba(1, 149, 60, 0.22);
+  border-color: color-mix(in srgb, var(--tint-accent) 22%, transparent);
 }
 
 .premium-input:focus-within,
 .client-portal-wrapper .search-container:focus-within {
   box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 10%, transparent);
 }
 
 .journey-compass,
@@ -232,6 +219,7 @@ body {
 .journey-meter {
   background: rgba(20, 38, 58, 0.96);
   border-color: rgba(0, 33, 76, 0.08);
+  border-color: color-mix(in srgb, var(--tint) 8%, transparent);
   color: rgba(255, 255, 255, 0.84);
 }
 
@@ -257,7 +245,10 @@ body {
   padding: clamp(1.4rem, 3vw, 2.2rem);
   background:
     rgba(255, 255, 255, 0.96);
+  background:
+    color-mix(in srgb, var(--tint-glass) 96%, transparent);
   border: 1px solid rgba(0, 33, 76, 0.1);
+  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
   box-shadow: 0 0 0 1px rgba(17, 37, 59, 0.13);
 }
 
@@ -272,7 +263,9 @@ body {
   padding: 0.7rem;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
+  background: color-mix(in srgb, var(--tint-glass) 96%, transparent);
   border: 1px solid rgba(1, 149, 60, 0.16);
+  border: 1px solid color-mix(in srgb, var(--tint-accent) 16%, transparent);
   box-shadow: 0 0 0 1px rgba(74, 132, 82, 0.16);
 }
 
@@ -294,6 +287,7 @@ body {
 .admin-brand-badge,
 .kpi-icon {
   background: rgba(1, 149, 60, 0.14);
+  background: color-mix(in srgb, var(--tint-accent) 14%, transparent);
   color: #315c39;
 }
 
@@ -307,10 +301,12 @@ body {
 .btn-stage-next,
 .btn-neuro-primary,
 .btn-neuro-success {
-  background: #17304a;
-  color: #ffffff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   border: 1px solid rgba(0, 33, 76, 0.16);
+  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 .client-portal-wrapper .btn-search:hover,
@@ -318,14 +314,16 @@ body {
 .btn-stage-next:hover,
 .btn-neuro-primary:hover,
 .btn-neuro-success:hover {
-  transform: translateY(-1px);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 .client-portal-wrapper .portal-management-alert,
 .client-portal-wrapper .portal-results-summary {
   background:
     rgba(1, 149, 60, 0.08);
+  background:
+    color-mix(in srgb, var(--tint-accent) 8%, transparent);
 }
 
 .client-portal-wrapper .ticket-card {
@@ -335,6 +333,7 @@ body {
 .client-portal-wrapper .ticket-header,
 .client-portal-wrapper .ticket-footer {
   background: rgba(246, 249, 252, 0.88);
+  background: color-mix(in srgb, var(--sf-muted) 88%, transparent);
 }
 
 .admin-login-shell,
@@ -348,6 +347,8 @@ body {
 .admin-kpi-card {
   background:
     rgba(255, 255, 255, 0.96);
+  background:
+    color-mix(in srgb, var(--tint-glass) 96%, transparent);
 }
 
 .admin-hero {
@@ -355,6 +356,7 @@ body {
     rgba(16, 37, 60, 0.97);
   color: #ffffff;
   border-color: rgba(0, 33, 76, 0.08);
+  border-color: color-mix(in srgb, var(--tint) 8%, transparent);
   box-shadow: 0 0 0 1px rgba(20, 38, 58, 0.22);
 }
 
@@ -385,12 +387,16 @@ body {
 
 .footer-elite {
   border-top: 1px solid rgba(0, 33, 76, 0.08);
+  border-top: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
 }
 
 .footer-grid-container {
   background:
     rgba(255, 255, 255, 0.8);
+  background:
+    color-mix(in srgb, var(--tint-glass) 80%, transparent);
   border: 1px solid rgba(0, 33, 76, 0.08);
+  border: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
   box-shadow: var(--brand-shell-shadow);
   padding-top: clamp(3.4rem, 6vw, 4.6rem);
   padding-bottom: clamp(2.8rem, 5vw, 3.6rem);
@@ -398,7 +404,9 @@ body {
 
 .bottom-panel-container {
   background: rgba(255, 255, 255, 0.66);
+  background: color-mix(in srgb, var(--tint-glass) 66%, transparent);
   border: 1px solid rgba(0, 33, 76, 0.06);
+  border: 1px solid color-mix(in srgb, var(--tint) 6%, transparent);
   box-shadow: 0 0 0 1px rgba(20, 38, 58, 0.08);
 }
 
@@ -441,48 +449,6 @@ body {
   }
 }
 
-[data-theme="dark"] {
-  --brand-shell-bg:           var(--brand-page);
-  --brand-shell-panel:        var(--color-surface-1);
-  --brand-shell-panel-strong: var(--color-surface-2);
-  --brand-shell-border:       rgba(204, 217, 235, 0.10);
-  --brand-shell-shadow:       0 0 0 1px rgba(204, 217, 235, 0.16);
-  --brand-shell-shadow-soft:  0 0 0 1px rgba(204, 217, 235, 0.10);
-  --brand-title-gradient:     var(--brand-navy);
-}
-
-[data-theme="dark"] body {
-  background: #0b1424;
-}
-
-[data-theme="dark"] .main-content::before {
-  background: none;
-}
-
-[data-theme="dark"] .route-loader-card,
-[data-theme="dark"] .form-card-elevation,
-[data-theme="dark"] .client-portal-wrapper .portal-container,
-[data-theme="dark"] .premium-input,
-[data-theme="dark"] .adult-mode-copy,
-[data-theme="dark"] .adult-state-card,
-[data-theme="dark"] .selection-insight-card,
-[data-theme="dark"] .client-portal-wrapper .guidance-card,
-[data-theme="dark"] .client-portal-wrapper .portal-management-alert,
-[data-theme="dark"] .client-portal-wrapper .portal-support-card,
-[data-theme="dark"] .client-portal-wrapper .search-container,
-[data-theme="dark"] .client-portal-wrapper .ticket-card,
-[data-theme="dark"] .client-portal-wrapper .empty-state,
-[data-theme="dark"] .admin-login-card,
-[data-theme="dark"] .admin-sidebar-shell,
-[data-theme="dark"] .admin-card,
-[data-theme="dark"] .admin-kpi-card,
-[data-theme="dark"] .footer-grid-container,
-[data-theme="dark"] .bottom-panel-container {
-  background: var(--color-surface-1);
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
-}
-
 /* Remove the light-mode white shimmer overlay from card tops in dark mode */
 [data-theme="dark"] .form-card-elevation::before,
 [data-theme="dark"] .client-portal-wrapper .portal-container::before,
@@ -494,13 +460,6 @@ body {
 }
 
 /* Subtitle / body text: bump up contrast in dark mode */
-[data-theme="dark"] .form-subtitle,
-[data-theme="dark"] .client-portal-wrapper .portal-subtitle,
-[data-theme="dark"] .admin-hero p,
-[data-theme="dark"] .admin-login-subtitle,
-[data-theme="dark"] .brand-philosophy .neuro-copy {
-  color: var(--text-secondary);
-}
 
 /* Acá vivía el resto del degradado recortado al glifo en tema oscuro:
    `background: #eef6ff` + `background-clip: text`, sin el `color: transparent`
@@ -509,7 +468,3 @@ body {
    —el color sólido del texto tapa el recorte— y deja armado un andamiaje donde
    agregar `color: transparent` o cambiar el orden de las capas hace desaparecer
    el título. Los títulos toman su color de los tokens, como el resto. */
-
-[data-theme="dark"] .journey-meter {
-  background: var(--color-surface-1);
-}

@@ -162,7 +162,7 @@
   background: var(--cta-solid-bg);
   color: var(--cta-solid-ink);
 }
-.ksc-datepicker .react-datepicker__day--selected::after { background: #fff; }
+.ksc-datepicker .react-datepicker__day--selected::after { background: var(--sf-card); }
 .ksc-datepicker .react-datepicker__day--keyboard-selected {
   background: var(--state-selected-bg);
   color: var(--text-primary);
