@@ -1195,7 +1195,20 @@ describe("NotificationOutbox durable delivery", () => {
     }
   });
 
+  // El heartbeat renueva por setInterval(leaseMs / 3) y cada renovacion es una
+  // escritura contra Mongo. La version anterior de este test usaba leaseMs 90 y
+  // dormia 180 ms fijos: exigia que dos renovaciones entraran en esa ventana, asi
+  // que un atasco de 30 ms en una maquina cargada vencia el lease y lo hacia
+  // fallar con el codigo intacto. Timers falsos no lo arreglan: el reloj virtual
+  // avanza los seis ticks en microsegundos mientras las escrituras reales recien
+  // arrancan, y el lease queda atrasado respecto de un Date.now() que ya volo.
+  // Por eso aca no se espera tiempo, se espera EVIDENCIA: se leen renovaciones
+  // reales del lease hasta ver dos, y recien ahi se intenta el robo. leaseMs 900
+  // deja 900 ms de tolerancia por renovacion (10x el margen viejo) y el timeout
+  // del proveedor sube a 30 s para que no compita: lo que se prueba aca es el
+  // lease, no el timeout, que ya tiene su propio test.
   it("renews a per-record lease during a slow provider call", async () => {
+    const LEASE_MS = 900;
     const booking = await Booking.create(bookingInput());
     await enqueueBookingNotifications({
       booking,
@@ -1212,24 +1225,60 @@ describe("NotificationOutbox durable delivery", () => {
       await gate;
       return { sent: true, messageId: "heartbeat-success" };
     });
+    const readLease = () => NotificationOutbox.findOne({})
+      .select("+leaseOwner +leaseExpiresAt")
+      .lean();
+    const waitForRenewals = async (baselineMs, renewals) => {
+      const deadline = Date.now() + 8_000;
+      const observed = new Set();
+      let latest = null;
+      while (Date.now() < deadline) {
+        latest = await readLease();
+        const expiresAt = latest?.leaseExpiresAt?.getTime();
+        if (expiresAt && expiresAt > baselineMs) observed.add(expiresAt);
+        if (observed.size >= renewals) return latest;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      throw new Error(
+        `El heartbeat solo renovo el lease ${observed.size} vez/veces en 8 s (se esperaban ${renewals}).`,
+      );
+    };
     const restore = setNotificationProviderForTests(provider);
     try {
       const first = processNotificationOutbox({
         workerId: "heartbeat-a",
         limit: 1,
-        leaseMs: 90,
-        providerTimeoutMs: 1000,
+        leaseMs: LEASE_MS,
+        providerTimeoutMs: 30_000,
       });
       await providerEntered;
-      await new Promise((resolve) => setTimeout(resolve, 180));
+      const leased = await readLease();
+      expect(leased.leaseOwner).toBe("heartbeat-a");
+
+      // Dos renovaciones observadas empujan el vencimiento mas alla de la vida
+      // original del lease: sin heartbeat este await no termina nunca.
+      const renewed = await waitForRenewals(leased.leaseExpiresAt.getTime(), 2);
+      expect(renewed.leaseOwner).toBe("heartbeat-a");
+      expect(renewed.status).toBe("processing");
+      expect(renewed.leaseExpiresAt.getTime())
+        .toBeGreaterThan(leased.leaseExpiresAt.getTime());
+
       const second = await processNotificationOutbox({
         workerId: "heartbeat-b",
         limit: 1,
-        leaseMs: 90,
-        providerTimeoutMs: 1000,
+        leaseMs: LEASE_MS,
+        providerTimeoutMs: 30_000,
       });
       expect(second.processed).toBe(0);
       expect(provider).toHaveBeenCalledTimes(1);
+
+      // second.processed 0 tambien daria si el lease hubiera vencido y el registro
+      // cayera en cuarentena, asi que el aserto que importa es este: el registro
+      // sigue vivo y en manos de heartbeat-a.
+      const afterSteal = await readLease();
+      expect(afterSteal.leaseOwner).toBe("heartbeat-a");
+      expect(afterSteal.status).toBe("processing");
+
       release();
       await first;
     } finally {
