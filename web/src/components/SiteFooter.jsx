@@ -12,7 +12,6 @@ import {
   CONTACT,
   waLink,
 } from "../data/site.js";
-import monogram from "../assets/monogram.png";
 import "./SiteFooter.css";
 
 /* Se corta en la PRIMERA arroba: es la que separa usuario de dominio, y un email con
@@ -27,7 +26,12 @@ const SiteFooter = () => (
     <div className="shell sfoot-inner">
       <div className="sfoot-brand">
         <img
-          src={monogram}
+          /* La imagen se nombra por su ruta de `public/` y NO se importa: `prerender.mjs`
+             compila con esbuild declarando `".png": "dataurl"`, así que un import la
+             convierte en base64 y la deja empotrada en el HTML de CADA página. Este
+             monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
+             `tests/imagenesServidas.test.js`. */
+          src={"/monogram.png"}
           alt=""
           className="sfoot-mark"
           aria-hidden="true"
