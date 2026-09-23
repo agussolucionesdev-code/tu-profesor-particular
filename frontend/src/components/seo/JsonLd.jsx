@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { WHATSAPP_URL } from "../../constants/contactChannels";
 
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
@@ -23,7 +24,7 @@ const STRUCTURED_DATA = {
         contactType: "customer service",
         availableLanguage: "Spanish",
       },
-      sameAs: ["https://wa.me/5491133365937"],
+      sameAs: [WHATSAPP_URL],
     },
     {
       "@type": "Service",

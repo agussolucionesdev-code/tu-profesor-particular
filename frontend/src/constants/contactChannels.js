@@ -11,12 +11,23 @@
  *
  * Acá, en cambio, cambiar un perfil es un diff que alguien lee.
  *
- * El número de WhatsApp también vive acá porque estaba repetido a mano en 7 archivos
- * de este proyecto. La última vez que cambió hubo que tocarlos todos, y alcanzaba con
- * olvidarse de uno para dejar un teléfono viejo en producción.
+ * El número de WhatsApp también vive acá porque estaba repetido a mano en este
+ * proyecto, y alcanzaba con olvidarse de uno para dejar un teléfono viejo en
+ * producción. Ya pasó: cuando el número cambió a 3336-5937 se actualizó en los diez
+ * archivos del repo, pero la variable de entorno del servidor quedó con el viejo y los
+ * mails siguieron mandando el número anterior durante SEMANAS, sin que nada fallara
+ * ni avisara (ver el comentario de `backend/src/config/mailer.js`).
+ *
+ * ESTE ARCHIVO NO ALCANZÓ POR SÍ SOLO. Se creó, se migró el pie de página, se escribió
+ * un test llamado «una sola fuente de verdad»… y otros cinco archivos siguieron con el
+ * número escrito a mano, porque ese test miraba únicamente el pie. Una constante no
+ * centraliza nada si nadie la usa: lo que lo garantiza es el test que ahora barre todo
+ * `src/` y nombra al archivo que se salga de la línea.
  *
  * Espeja el criterio de `web/src/data/site.js`, que hace exactamente esto en el sitio
- * institucional.
+ * institucional. Son tres proyectos con bundles separados —turnos, sitio y backend— que
+ * no pueden importarse entre sí, así que en el repo hay tres literales del número y
+ * ninguno más.
  */
 
 /* Con extensión: este módulo lo carga `node --test` sin pasar por Vite, y el
@@ -45,6 +56,11 @@ export const CONTACT_EMAIL = "agustinsosa.profe@gmail.com";
 const [usuario, dominio = ""] = CONTACT_EMAIL.split("@");
 export const CONTACT_EMAIL_USER = usuario;
 export const CONTACT_EMAIL_DOMAIN = dominio;
+
+/* El enlace pelado, sin mensaje. Lo usa el JSON-LD: ahi `sameAs` declara DONDE
+   esta Agustin, no que decirle, y un `?text=` en un dato estructurado ensucia lo
+   que leen los buscadores. */
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 /* Un wa.me con el mensaje ya escrito. Que el mensaje venga puesto no es un detalle
    estético: quien abre WhatsApp sin saber qué decir muchas veces cierra sin escribir. */
