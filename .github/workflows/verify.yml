@@ -125,7 +125,11 @@ jobs:
       # canonical.spec.js y tema-del-sistema.spec.js van acá porque también
       # necesitan el navegador: el canonical lo reescribe un efecto de React al
       # cambiar de ruta, y el tema se mide en la primera pintura.
-      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js tests/e2e/canonical.spec.js tests/e2e/tema-del-sistema.spec.js tests/e2e/foco-no-tapado.spec.js tests/e2e/modo-oscuro.spec.js --project=desktop
+      # booking-accessibility.spec.js estuvo afuera porque apuntaba al wizard
+      # anterior y fallaba siempre; reescrito contra el kiosco, cuida lo que axe
+      # no ve: voz apagada por defecto, un solo paso expuesto, el progreso
+      # anunciado, el panel de accesibilidad con efecto real y el foco al navegar.
+      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js tests/e2e/canonical.spec.js tests/e2e/tema-del-sistema.spec.js tests/e2e/foco-no-tapado.spec.js tests/e2e/modo-oscuro.spec.js tests/e2e/booking-accessibility.spec.js --project=desktop
         env:
           TZ: America/Argentina/Buenos_Aires
       # El menú de celular va aparte y en el proyecto `mobile`: su bug sólo
