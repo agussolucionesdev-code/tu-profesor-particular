@@ -16,10 +16,13 @@ export const IMAGEN_POR_DEFECTO = `${SITIO}/og-cover.png`;
    una página nueva salga prerenderizada. */
 export const META_POR_RUTA = {
   "/": {
-    title:
-      "Tu Profesor Particular · Agustín Elías Sosa | Clases particulares en Temperley y online",
+    /* Lo que se busca primero y dónde: «clases particulares en Temperley».
+       El nombre de Agustín pasa a la descripción, que es donde lo lee quien ya
+       lo busca por nombre. Propuesta de ChatGPT, siguiendo la guía de Google
+       de títulos descriptivos por página. */
+    title: "Clases particulares en Temperley | Tu Profesor Particular",
     description:
-      "Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Online y presenciales en Temperley. Desde primaria hasta universitario, sin pagos por adelantado.",
+      "Clases particulares con Agustín Elías Sosa, online y en Temperley. Matemática, Física, Química, Fisicoquímica e Inglés, desde primaria hasta la facultad.",
   },
   "/sobre-mi": {
     title: "Sobre mí · Agustín Elías Sosa | Tu Profesor Particular",
@@ -33,7 +36,7 @@ export const META_POR_RUTA = {
   "/como-trabajo": {
     title: "Cómo trabajo · Tu Profesor Particular",
     description:
-      "Primera clase de diagnóstico, plan concreto, clases con orden y seguimiento del avance. Así se trabaja en Tu Profesor Particular.",
+      "La primera clase empieza por ver qué está costando. Después, un plan concreto, clases con orden y seguimiento del avance.",
   },
   "/contacto": {
     title: "Contacto · Tu Profesor Particular",

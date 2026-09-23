@@ -73,7 +73,9 @@ export const SUBJECTS = [
     label: "Matemáticas",
     bookingParam: "Matemática",
     tagline: "No sos malo en matemáticas.",
-    hook: "Nunca te las explicaron bien.",
+    /* Decía «Nunca te las explicaron bien», que le echa la culpa a otros
+       docentes. La frase nueva es del propio Agustín, del guion de su video. */
+    hook: "A veces falta una explicación distinta.",
     detail:
       "Aritmética, álgebra, funciones, trigonometría y análisis. Trabajamos la base primero: sin base, cada tema nuevo se apoya en el aire.",
     color: "#1a3a6b",
@@ -94,7 +96,9 @@ export const SUBJECTS = [
     slug: "fisicoquimica",
     label: "Fisicoquímica",
     bookingParam: "Fisicoquímica",
-    tagline: "El filtro más duro de cualquier carrera.",
+    /* Decía «El filtro más duro de cualquier carrera»: una generalización
+       que nadie puede sostener. Esto describe la dificultad concreta. */
+    tagline: "Junta física y química en una sola materia.",
     hook: "Con la guía correcta, se vuelve la más lógica.",
     detail:
       "El puente entre física y química: estructura de la materia, gases, soluciones y termodinámica básica.",
@@ -186,15 +190,18 @@ export const METHOD = [
 export const REASONS = [
   {
     title: "Sin pagos por adelantado",
-    desc: "No hay contratos ni señas. La primera clase es de diagnóstico: si no sentís que avanzaste, no volvés.",
+    desc: "No hay contratos ni señas. La primera clase empieza por ver qué está costando: si no sentís que avanzaste, no volvés.",
   },
   {
     title: "Online o presencial, vos elegís",
     desc: "Por videollamada desde donde estés, o presencial en Temperley. Se elige en cada reserva, según te quede cómodo.",
   },
   {
-    title: "Reservás en menos de un minuto",
-    desc: "Sin registro ni contraseña. Elegís materia, modalidad y horario, y listo.",
+    /* Decía «Reservás en menos de un minuto»: una promesa que nadie midió.
+       Lo que sí es verificable —hay un test en el kiosco que lo fija— es que el
+       precio aparece antes del paso de datos personales. */
+    title: "Ves el precio antes de dejar tus datos",
+    desc: "Sin registro ni contraseña. Elegís materia, modalidad y horario, y el precio aparece antes de pedirte nada.",
   },
   {
     title: "Reprogramás cuando la vida cambia",
@@ -205,7 +212,7 @@ export const REASONS = [
 export const FAQS = [
   {
     q: "¿Cómo reservo una clase?",
-    a: "Desde el sistema de turnos: elegís la materia, la modalidad y el horario en menos de un minuto, sin registro ni contraseña. Al confirmar recibís un código y un enlace seguro para gestionar tu turno.",
+    a: "Desde el sistema de turnos: elegís la materia, la modalidad y el horario, sin registro ni contraseña. Al confirmar recibís un código y un enlace seguro para gestionar tu turno.",
   },
   {
     q: "¿Las clases son online o presenciales?",

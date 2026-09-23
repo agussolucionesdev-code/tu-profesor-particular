@@ -153,14 +153,16 @@ const Contact = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Reservar mi clase
+              Reservar una clase
               <FaArrowUpRightFromSquare aria-hidden="true" />
               <span className="sr-only">(se abre en una pestaña nueva)</span>
             </a>
 
             <ul className="ct-seals">
+              {/* Decía «Menos de un minuto»: nadie lo midió. El precio antes de
+                  los datos sí está fijado por un test del kiosco. */}
               <li>
-                <FaCheck aria-hidden="true" /> Menos de un minuto
+                <FaCheck aria-hidden="true" /> Precio antes de tus datos
               </li>
               <li>
                 <FaCheck aria-hidden="true" /> Sin registro

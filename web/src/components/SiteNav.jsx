@@ -118,7 +118,7 @@ const SiteNav = () => {
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
           >
-            Reservar turno
+            Reservar una clase
             <FaArrowUpRightFromSquare aria-hidden="true" />
             <span className="sr-only">(se abre en una pestaña nueva)</span>
           </a>

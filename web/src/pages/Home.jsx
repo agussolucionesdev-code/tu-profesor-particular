@@ -68,14 +68,12 @@ const Home = () => {
               </span>
             </p>
 
-            {/* El {" "} antes del <br> no es decorativo: un <br> corta la línea
-                pero no aporta espacio al texto, así que el título se leía
-                "Entendé de verdad,no de memoria" —así lo dicta un lector de
-                pantalla y así lo indexa Google—. El salto visual no cambia. */}
+            {/* Sin <br>: el titular anterior era corto y el salto lo partía en
+                dos líneas prolijas, pero esta pregunta mide 41 caracteres y el
+                salto forzado dejaba «pero» solo en una línea en cuanto el ancho
+                no alcanzaba. Fluye y el navegador corta donde entra. */}
             <h1 className="display display--xl hero-title" data-reveal="clip">
-              Entendé de verdad,{" "}
-              <br />
-              <em>no de memoria</em>
+              ¿Tu hijo estudia, pero <em>sigue sin entender?</em>
             </h1>
 
             <p className="hero-tagline" data-reveal="up">
@@ -83,11 +81,15 @@ const Home = () => {
               <em>la meta.</em>
             </p>
 
+            {/* LE HABLA A LA FAMILIA. En primaria y secundaria quien reserva y
+                paga suele ser un adulto, y la portada le hablaba sólo al
+                estudiante. Decisión de Agustín, con la recomendación de ChatGPT
+                (GPT-6 Astra) de por medio. La bajada dice qué hace él, no qué le
+                pasa al chico: el titular ya nombró el problema. */}
             <p className="lead hero-lead" data-reveal="up">
-              Soy {BRAND.person}. Hace más de {BRAND.yearsTeaching} años doy
-              clases particulares a estudiantes de primaria, secundaria,
-              terciario y universitario. Si estudiás y el resultado no cambia,
-              probablemente el problema no seas vos.
+              Soy {BRAND.person}. Hace {BRAND.yearsTeaching} años doy clases
+              particulares. Reviso qué le está costando y preparo la clase para
+              trabajar sobre eso, con explicaciones y práctica.
             </p>
 
             <div className="hero-actions" data-reveal="up">
@@ -97,24 +99,41 @@ const Home = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Reservar mi clase
+                Reservar una clase
                 <FaArrowUpRightFromSquare aria-hidden="true" />
               </a>
-              <Link className="btn btn--ghost" to="/como-trabajo">
-                Ver cómo trabajo
-                <FaArrowRight aria-hidden="true" />
-              </Link>
+              {/* La secundaria es WhatsApp y no «Ver cómo trabajo»: una familia
+                  que duda quiere preguntar antes de reservar, no leer más. «Cómo
+                  trabajo» sigue en el menú y más abajo en la portada. */}
+              <a
+                className="btn btn--ghost"
+                href={waLink("Hola Agustín, quiero consultar antes de reservar una clase.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaWhatsapp aria-hidden="true" />
+                Consultar por WhatsApp
+              </a>
             </div>
+
+            {/* El otro público —estudiantes de secundaria, adultos en CENS,
+                terciario y facultad— entra por acá, sin carrusel que alterne
+                los dos mensajes: un titular que cambia solo no lo lee nadie
+                completo. */}
+            <Link className="hero-otro-publico" to="/materias" data-reveal="up">
+              ¿Son para vos? Materias y niveles
+              <FaArrowRight aria-hidden="true" />
+            </Link>
 
             <ul className="hero-trust" data-reveal="up">
               <li>
                 <FaCheck aria-hidden="true" /> Sin pagos por adelantado
               </li>
               <li>
-                <FaCheck aria-hidden="true" /> Primera clase de diagnóstico
+                <FaCheck aria-hidden="true" /> La primera clase parte de lo que cuesta
               </li>
               <li>
-                <FaCheck aria-hidden="true" /> Reservás en menos de un minuto
+                <FaCheck aria-hidden="true" /> Ves el precio antes de dejar tus datos
               </li>
             </ul>
           </div>

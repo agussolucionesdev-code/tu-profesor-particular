@@ -47,7 +47,7 @@ const CtaBlock = ({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Reservar mi clase
+          Reservar una clase
           <FaArrowUpRightFromSquare aria-hidden="true" />
         </a>
         <a
