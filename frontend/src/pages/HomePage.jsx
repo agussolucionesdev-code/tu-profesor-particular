@@ -75,7 +75,9 @@ const SUBJECTS = [
     icon:    FaCalculator,
     label:   "Matemáticas",
     tagline: "No sos malo en matemáticas.",
-    hook:    "Nunca te las explicaron bien.",
+    /* Decía «Nunca te las explicaron bien», que le echa la culpa a otros
+       docentes. Misma frase que el sitio institucional, del guion de Agustín. */
+    hook:    "A veces falta una explicación distinta.",
     color:   "#1a3a6b",
     ink:     "#8fb4e8",
     /* El título va en plural porque se lee mejor en el índice, pero el `param`
@@ -96,7 +98,9 @@ const SUBJECTS = [
   {
     icon:    FaAtom,
     label:   "Fisicoquímica",
-    tagline: "El filtro más duro de cualquier carrera.",
+    /* Decía «El filtro más duro de cualquier carrera»: una generalización que
+       nadie puede sostener. */
+    tagline: "Junta física y química en una sola materia.",
     hook:    "Con la guía correcta, se vuelve la más lógica.",
     color:   "#5b21b6",
     ink:     "#c4a5f5",
@@ -438,7 +442,7 @@ const HomePage = () => {
               <Magnetic strength={0.35}>
                 <Link to="/reservar" className="hp-cta-main">
                   <FaCalendarCheck aria-hidden="true" />
-                  Reservar mi clase
+                  Reservar una clase
                   <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
                 </Link>
               </Magnetic>
@@ -458,7 +462,9 @@ const HomePage = () => {
             <ul className="hp-hero-trust" aria-label="Cómo funciona">
               <li>Sin adelanto</li>
               <li>Sin registro ni contraseña</li>
-              <li>Reservás en menos de un minuto</li>
+              {/* Decía «Reservás en menos de un minuto»: nadie lo midió. Que el
+                  precio aparece antes de los datos sí lo fija un test del kiosco. */}
+              <li>Ves el precio antes de dejar tus datos</li>
             </ul>
           </div>
 
@@ -483,8 +489,11 @@ const HomePage = () => {
                 </figcaption>
               </figure>
 
+              {/* Decía «Reservás en 1 minuto»: la misma promesa sin medir, con
+                  otras palabras. Se escapó del primer barrido, que buscaba sólo
+                  «menos de un minuto». */}
               <span className="hp-hero-float hp-hero-float--a" aria-hidden="true">
-                <FaRegClock aria-hidden="true" /> Reservás en 1 minuto
+                <FaRegClock aria-hidden="true" /> Elegís tu horario
               </span>
             </div>
           </div>

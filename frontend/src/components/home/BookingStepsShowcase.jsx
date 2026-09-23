@@ -319,7 +319,8 @@ const BookingStepsShowcase = () => {
             Probalo ahora — sacá tu turno
             <FaArrowRight aria-hidden="true" />
           </Link>
-          <p className="bss-cta-note">Te lleva menos de un minuto. Sin tarjeta, sin compromiso.</p>
+          {/* Decía «Te lleva menos de un minuto»: nadie lo midió. */}
+          <p className="bss-cta-note">Ves el precio antes de tus datos. Sin tarjeta, sin compromiso.</p>
         </div>
       </div>
     </section>
