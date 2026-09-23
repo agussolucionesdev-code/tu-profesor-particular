@@ -48,9 +48,9 @@
 }
 .hp-faq-details[open] .hp-faq-icon {
   transform: rotate(45deg);
-  background: var(--green);
-  color: #fff;
-  border-color: var(--green);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
+  border-color: var(--cta-solid-bg);
 }
 
 /* Despliegue con altura REAL.
@@ -83,11 +83,6 @@
   transition: opacity .3s ease .1s;
 }
 .hp-faq-details[open] .hp-faq-a { opacity: 1; }
-
-[data-theme="dark"] .hp-faq-icon { border-color: rgba(204, 217, 235, .2); color: var(--green-on-dark); }
-[data-theme="dark"] .hp-faq-details[open] .hp-faq-icon { background: var(--green-on-dark); color: #06210f; border-color: var(--green-on-dark); }
-[data-theme="dark"] .hp-faq-q:hover,
-[data-theme="dark"] .hp-faq-details[open] .hp-faq-q { color: var(--green-on-dark); }
 
 @media (prefers-reduced-motion: reduce) {
   .hp-faq-a,

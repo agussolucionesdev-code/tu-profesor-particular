@@ -131,7 +131,7 @@
 }
 
 .bmat-op.is-activa {
-  background: var(--brand-green-soft);
+  background: var(--sf-accent);
 }
 
 .bmat-op-nombre {
@@ -200,8 +200,8 @@
 
 .bmat-btn-libre:hover,
 .bmat-otra:hover {
-  background: var(--brand-green-deep);
-  color: var(--brand-white);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
 }
 
 .bmat-otra {
@@ -217,7 +217,11 @@
   padding: 20px 22px;
   /* El único degradado de la pieza, y es de marca: el CBC es un producto
      aparte y tiene que verse aparte. */
-  background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-soft) 100%);
+  /* --sf-brand y no --brand-navy: --brand-navy pasa a ser un celeste de TEXTO
+     en oscuro, y la franja quedaba clara con el texto blanco encima. La franja
+     es navy en los dos temas; en oscuro, un navy un escalón más claro que la
+     página para que se despegue. */
+  background: linear-gradient(135deg, var(--sf-brand) 0%, color-mix(in srgb, var(--sf-brand) 70%, #3d5980) 100%);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-elevated);
 }
@@ -235,8 +239,10 @@
   width: 52px;
   height: 52px;
   border-radius: var(--radius-md);
-  background: var(--brand-green);
-  color: var(--brand-white);
+  /* El par del botón verde: el blanco sobre --brand-green daba 3,91:1, por
+     debajo de AA para este tamaño, también en claro. */
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   font-family: var(--ui-font-display);
   font-size: 1.05rem;
   font-weight: 800;
@@ -250,7 +256,7 @@
   font-weight: 600;
   font-variation-settings: "opsz" 120;
   letter-spacing: -0.015em;
-  color: var(--brand-white);
+  color: #ffffff;
 }
 
 .bmat-cbc-bajada {
@@ -276,7 +282,7 @@
   font-family: var(--font-primary);
   font-size: 0.97rem;
   font-weight: 700;
-  color: var(--brand-white);
+  color: #ffffff;
   cursor: pointer;
   transition: background-color 130ms ease, border-color 130ms ease;
 }
@@ -286,10 +292,11 @@
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+/* Blanco con tinta navy en los dos temas: va sobre la franja navy del CBC. */
 .bmat-chip.is-elegida {
-  background: var(--brand-white);
-  border-color: var(--brand-white);
-  color: var(--brand-navy);
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #00214c;
 }
 
 /* ── escribir otra ────────────────────────────────────────────────────────── */
@@ -334,19 +341,19 @@
   /* El verde profundo, no el de marca: sobre él el blanco da 6,55:1, mientras
      que sobre #01953c daría 3,91 y no pasaría AA. Es el mismo arreglo que se
      hizo en el calendario. */
-  background: var(--brand-green-deep);
-  border: 2px solid var(--brand-green-strong);
+  background: var(--cta-solid-bg);
+  border: 2px solid var(--cta-solid-bg-hover);
   border-radius: var(--radius-lg);
   font-family: var(--font-primary);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--brand-white);
+  color: var(--cta-solid-ink);
   cursor: pointer;
   transition: background-color 130ms ease;
 }
 
 .bmat-confirmar:hover:not(:disabled) {
-  background: var(--brand-green-strong);
+  background: var(--cta-solid-bg-hover);
 }
 
 .bmat-confirmar:disabled {
@@ -366,7 +373,7 @@
 .bmat-elegida {
   margin: 0;
   padding: 14px 18px;
-  background: var(--brand-green-soft);
+  background: var(--sf-accent);
   border-left: 4px solid var(--brand-green-deep);
   border-radius: var(--radius-md);
   font-size: 1rem;
@@ -416,4 +423,52 @@
   .bmat-confirmar {
     transition: none;
   }
+}
+
+/* ── las más pedidas ──────────────────────────────────────────────────────── */
+
+.bmat-rapidas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bmat-rapidas-titulo {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.bmat-rapidas-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bmat-rapida {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1.5px solid color-mix(in srgb, var(--tint) 24%, transparent);
+  border-radius: var(--radius-full);
+  background: var(--sf-card);
+  font-family: var(--font-primary);
+  font-size: 0.97rem;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 130ms ease, border-color 130ms ease;
+}
+
+.bmat-rapida:hover {
+  border-color: var(--accent-ink);
+  background: var(--sf-accent);
+}
+
+.bmat-rapida.is-elegida {
+  border-color: var(--navy-solid-bg);
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
 }

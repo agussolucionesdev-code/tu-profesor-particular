@@ -157,6 +157,20 @@ export const CBC = {
   materias: MATERIAS_SUPERIOR.filter((m) => m.cbc).map((m) => m.nombre),
 };
 
+/* LAS MÁS PEDIDAS, A UN TOQUE.
+
+   Agustín miró el paso 1 en terciario y le faltaba Fisicoquímica. No era un
+   olvido del CBC: el bloque de arriba muestra las cuatro materias del Ciclo
+   Básico Común de la UBA, y el CBC no tiene Fisicoquímica. Agregarla ahí sería
+   decir algo falso sobre el CBC.
+
+   Lo que faltaba era otra cosa: en terciario y universidad las únicas materias
+   a un toque eran las del CBC, y las principales de Agustín —Fisicoquímica
+   entre ellas, que da en profesorados y carreras— sólo aparecían escribiendo.
+   Esta fila las pone a la vista antes del CBC. Mismo orden que las materias
+   prioritarias de secundaria (constants/bookingWizard.js). */
+export const MAS_PEDIDAS = ["Matemática", "Física", "Química", "Fisicoquímica", "Inglés"];
+
 /* ¿Lo que se escribió apunta al CBC? Sirve para levantar el bloque destacado
    en cuanto alguien empieza a escribir "cbc", "ciclo basico" o "uba". */
 export const consultaEsCBC = (consulta) => {

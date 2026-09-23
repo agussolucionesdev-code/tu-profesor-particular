@@ -124,3 +124,36 @@ test("no hay materias repetidas", () => {
   const nombres = MATERIAS_SUPERIOR.map((m) => m.nombre);
   assert.equal(new Set(nombres).size, nombres.length, "hay nombres duplicados en la lista");
 });
+
+/* ── Las más pedidas ──────────────────────────────────────────────────────── */
+
+test("Fisicoquímica está a un toque en terciario y universidad", async () => {
+  /* Agustín lo encontró mirando el paso 1: en superior las únicas materias a un
+     toque eran las del CBC, y Fisicoquímica sólo aparecía escribiéndola. */
+  const { MAS_PEDIDAS } = await import("../../src/constants/materiasSuperior.js");
+  assert.ok(MAS_PEDIDAS.includes("Fisicoquímica"));
+
+  const { readFileSync } = await import("node:fs");
+  const componente = readFileSync(
+    new URL("../../src/components/booking/BuscadorDeMateria.jsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(componente, /MAS_PEDIDAS\.map\(/, "el buscador no muestra la fila de las más pedidas");
+});
+
+test("las más pedidas son materias que Agustín da en secundaria", async () => {
+  /* Misma fuente de verdad: si una se deja de dar, se va de las dos listas. */
+  const { MAS_PEDIDAS } = await import("../../src/constants/materiasSuperior.js");
+  const { getSubjectSuggestions } = await import("../../src/constants/bookingWizard.js");
+  const secundaria = getSubjectSuggestions("Secundaria");
+  for (const materia of MAS_PEDIDAS) {
+    assert.ok(secundaria.includes(materia), `${materia} no está entre las materias de secundaria`);
+  }
+});
+
+test("el CBC no lleva Fisicoquímica, porque el CBC no la tiene", () => {
+  /* La tentación obvia era sumarla al bloque del CBC. Sería falso: el Ciclo
+     Básico Común de la UBA no tiene esa materia. Va en la fila de las más
+     pedidas. */
+  assert.ok(!CBC.materias.some((m) => /fisicoqu/i.test(normalizar(m))));
+});

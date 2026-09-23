@@ -41,8 +41,17 @@ test("cada opción del menú se ve y recibe el toque", async ({ page }) => {
   const sheet = page.locator("#nav-menu-sheet");
   await expect(sheet).toBeVisible();
 
-  for (const nombre of ["Inicio", "Mis Turnos", "Reservar"]) {
-    const opcion = sheet.getByRole("link", { name: nombre });
+  /* «Reservar» ya no va adentro del menú: con la barra nueva queda en la barra,
+     a la vista y a un toque sin abrir nada (lo cuida el test de abajo). Adentro
+     van los enlaces y, al pie, la guía por voz y el cambio de tema. */
+  const opciones = [
+    sheet.getByRole("link", { name: "Inicio" }),
+    sheet.getByRole("link", { name: "Mis Turnos" }),
+    sheet.getByRole("button", { name: /guía por voz/i }),
+    sheet.getByRole("button", { name: /Cambiar a modo/ }),
+  ];
+  for (const opcion of opciones) {
+    const nombre = (await opcion.textContent())?.trim();
     await expect(opcion).toBeVisible();
     /* El ítem tiene que ser el que recibe el toque en su propio centro. Sin
        esto, un menú tapado por la página pasaría el `toBeVisible`. */
@@ -53,6 +62,20 @@ test("cada opción del menú se ve y recibe el toque", async ({ page }) => {
     });
     expect(loRecibe, `«${nombre}» está tapado por otro elemento`).toBe(true);
   }
+});
+
+test("«Reservar» está en la barra, a un toque, sin abrir el menú", async ({ page }) => {
+  await page.goto("/");
+  const reservar = page.locator(".tpp-nav").getByRole("link", { name: "Reservar" });
+  await expect(reservar).toBeVisible();
+  const loRecibe = await reservar.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    const encima = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    return el === encima || el.contains(encima);
+  });
+  expect(loRecibe, "«Reservar» está tapado por otro elemento").toBe(true);
+  const caja = await reservar.boundingBox();
+  expect(caja.height, "«Reservar» por debajo del mínimo táctil").toBeGreaterThanOrEqual(44);
 });
 
 test("tocar una opción navega", async ({ page }) => {

@@ -249,7 +249,7 @@ const BookingKiosk = () => {
       window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
     const top = node.getBoundingClientRect().top;
     if (top < 0 || top > 160) {
-      const navH = document.querySelector(".navbar-elite")?.getBoundingClientRect().height ?? 0;
+      const navH = document.querySelector(".tpp-nav")?.getBoundingClientRect().height ?? 0;
       const y = node.getBoundingClientRect().top + window.scrollY - navH - 16;
       window.scrollTo({ top: Math.max(0, y), behavior: prefersReduced ? "auto" : "smooth" });
     }

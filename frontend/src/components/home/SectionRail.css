@@ -80,10 +80,6 @@
   translate: 0 -50%;
 }
 
-[data-theme="dark"] .hp-srail-label {
-  background: var(--brand-navy-700, #1c3b64);
-}
-
 /* Marca de la sección activa */
 .hp-srail-tick {
   width: 16px;
@@ -100,9 +96,6 @@
   opacity: 1;
   background: var(--green);
 }
-
-[data-theme="dark"] .hp-srail-item.is-active { color: var(--green-on-dark); }
-[data-theme="dark"] .hp-srail-item.is-active .hp-srail-tick { background: var(--green-on-dark); }
 
 /* Sin espacio lateral suficiente no aporta: se retira. */
 @media (max-width: 1240px) {

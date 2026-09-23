@@ -8,29 +8,11 @@
 /* --------------------------------------------------------------------------
    2. NAVBAR — reduce height
    -------------------------------------------------------------------------- */
-.navbar-elite {
-  height: 72px;
-}
-
-.navbar-elite.scrolled {
-  height: 60px;
-}
-
-.logo-img-horizontal {
-  height: 52px;
-}
-
-.navbar-elite.scrolled .logo-img-horizontal {
-  height: 44px;
-}
 
 /* --------------------------------------------------------------------------
    3. LOGO — dark mode: the full logo has dark elements that vanish on the
       dark navy navbar. Invert to white so it's always legible.
    -------------------------------------------------------------------------- */
-[data-theme="dark"] .logo-img-horizontal {
-  filter: brightness(0) invert(1);
-}
 
 /* --------------------------------------------------------------------------
    4. NAV LINK — active state: clean understated highlight instead of the
@@ -38,19 +20,6 @@
       Light mode: subtle navy bg, dark text.
       Dark mode: subtle dark surface, light text.
    -------------------------------------------------------------------------- */
-.nav-link-btn.active {
-  background: rgba(0, 33, 76, 0.08);
-  color: var(--color-text-main);
-  border-color: rgba(0, 33, 76, 0.14);
-  box-shadow: none;
-}
-
-[data-theme="dark"] .nav-link-btn.active {
-  background: rgba(171, 195, 217, 0.12);
-  color: var(--color-text-main);
-  border-color: rgba(171, 195, 217, 0.18);
-  box-shadow: none;
-}
 
 /* El ícono del link activo toma el color del texto del link, que es lo que ya
    decía el comentario original. Pero estaba escrito repitiendo el color en dos
@@ -60,9 +29,6 @@
    perfectamente legible.
 
    `inherit` lo ata al color del link: no hay dos valores que puedan divergir. */
-.nav-link-btn.active .nav-icon {
-  color: inherit;
-}
 
 /* --------------------------------------------------------------------------
    5. NAVBAR UTILITY PILLS — the `.nav-utility-pill` class is never defined,
@@ -74,43 +40,14 @@
 }
 
 /* Ensure the buttons stay square icon-only after hiding text */
-.nav-utility-btn.nav-utility-pill {
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  gap: 0;
-}
 
 /* --------------------------------------------------------------------------
    6. VOICE TOGGLE — active state
       Light mode: was --color-primary (#00214c) bg + accent green icon → OK
       Dark mode:  --color-primary resolves to #E2E8F0 (near-white!) → broken
    -------------------------------------------------------------------------- */
-.voice-toggle-btn.active {
-  background: var(--brand-navy, #00214c);
-  color: #e2e8f0;
-}
-
-.voice-toggle-btn.active svg {
-  color: #a3d4a9;
-}
-
-[data-theme="dark"] .voice-toggle-btn.active {
-  background: rgba(136, 206, 147, 0.18);
-  color: #9ed4a5;
-}
-
-[data-theme="dark"] .voice-toggle-btn.active svg {
-  color: #9ed4a5;
-}
 
 /* Voice toggle muted state: neutral */
-.voice-toggle-btn.muted {
-  background: transparent;
-  color: var(--color-text-muted);
-}
 
 /* Voice hint bubble — prevent it from overflowing left edge on small screens */
 .voice-hint-bubble {
@@ -148,15 +85,6 @@
 /* --------------------------------------------------------------------------
    7. NAVBAR UTILITY CLUSTER — subtle dark mode surface
    -------------------------------------------------------------------------- */
-[data-theme="dark"] .navbar-utility-cluster {
-  background: rgba(171, 195, 217, 0.06);
-  border-color: rgba(171, 195, 217, 0.14);
-}
-
-[data-theme="dark"] .nav-utility-btn:hover {
-  background: rgba(171, 195, 217, 0.12);
-  color: var(--color-text-main);
-}
 
 /* compensate main-content padding-top (matches new nav heights) */
 .booking-page-wrapper {
@@ -268,8 +196,9 @@
 .step-circle.current {
   transform: none;
   box-shadow: 0 0 0 5px var(--surface-card, #fff);
-  background: var(--brand-navy, #00214c);
-  border-color: var(--brand-navy, #00214c);
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
+  border-color: var(--navy-solid-bg);
 }
 
 .step-circle {
@@ -366,28 +295,3 @@
 /* --------------------------------------------------------------------------
    18. DARK MODE — card / wrapper overrides
    -------------------------------------------------------------------------- */
-[data-theme="dark"] .form-card-elevation {
-  background: var(--color-white);
-  border-color: var(--border-soft);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
-}
-
-[data-theme="dark"] .booking-page-wrapper {
-  background-color: var(--color-bg-light);
-  background-image: none;
-}
-
-[data-theme="dark"] .journey-compass {
-  background: transparent;
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .support-pill {
-  background: transparent;
-  border-color: var(--border-soft);
-}
-
-[data-theme="dark"] .step-circle.current {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}

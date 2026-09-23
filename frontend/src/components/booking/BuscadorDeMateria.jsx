@@ -5,6 +5,7 @@ import {
   consultaEsCBC,
   normalizar,
   CBC,
+  MAS_PEDIDAS,
 } from "../../constants/materiasSuperior";
 import "./BuscadorDeMateria.css";
 
@@ -162,6 +163,10 @@ export default function BuscadorDeMateria({
           ref={campoRef}
           type="text"
           className="bmat-input"
+          /* El foco lo dibuja el contenedor (.bmat-campo:focus-within). Sin esta
+             marca, la regla global de campos le sumaba su propio halo y quedaban
+             dos recuadros, uno adentro del otro. */
+          data-foco="contenedor"
           placeholder="Buscar materia…"
           value={consulta}
           onChange={alCambiar}
@@ -230,6 +235,28 @@ export default function BuscadorDeMateria({
             <FaPencilAlt aria-hidden="true" /> Escribirla igual
           </button>
         </div>
+      )}
+
+      {/* ── las más pedidas: las materias principales, a un toque ─────────── */}
+      {consulta.length === 0 && !libreAbierto && (
+        <section className="bmat-rapidas" aria-labelledby={`${idBase}-rapidas`}>
+          <h3 id={`${idBase}-rapidas`} className="bmat-rapidas-titulo">
+            Las más pedidas
+          </h3>
+          <div className="bmat-rapidas-chips">
+            {MAS_PEDIDAS.map((nombre) => (
+              <button
+                key={nombre}
+                type="button"
+                className={`bmat-rapida ${valor === nombre ? "is-elegida" : ""}`}
+                onClick={() => elegir(nombre)}
+                aria-pressed={valor === nombre}
+              >
+                {nombre}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── el CBC, destacado ────────────────────────────────────────────── */}

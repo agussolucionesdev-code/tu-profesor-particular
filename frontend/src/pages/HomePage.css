@@ -18,19 +18,21 @@
    El hero y las secciones oscuras deben seguir oscuras en dark, así que toman
    la rampa. Aliasearlas a --brand-navy volvía el hero celeste en dark mode. */
 .hp {
-  --navy:       var(--brand-navy-800);    /* #00204a — estable en ambos temas */
+  --navy:       var(--sf-brand);    /* #00204a — estable en ambos temas */
   --navy-2:     var(--brand-navy-700);    /* #1c3b64 */
   --navy-3:     var(--brand-navy-600);    /* #3d5980 */
-  --green:      var(--brand-green-600);   /* #006d1f — 6.55:1 sobre blanco */
+  --green:      var(--accent-ink);   /* #006d1f — 6.55:1 sobre blanco */
   --green-lt:   var(--brand-green);       /* #01953c — sigue el tema a propósito */
   --green-on-dark: var(--brand-green-300);/* #88ce93 — 8.55:1 sobre el navy */
-  --green-pale: var(--brand-green-50);    /* #eafdec */
-  --white:      var(--brand-white);
-  --off:        var(--brand-gray-50);     /* #f6f7f8 */
-  --text:       var(--brand-navy-800);    /* el override de dark lo reapunta */
-  --muted:      var(--brand-gray-600);    /* #53595f — 7.09:1 */
+  --green-pale: var(--sf-accent);    /* #eafdec */
+  --white:      var(--sf-card);
+  --off:        var(--sf-muted);     /* #f6f7f8 */
+  --text:       var(--ink);
+  --muted:      var(--ink-muted);         /* #53595f — 7.09:1 */
   --border:     rgba(0, 33, 76, .1);
-  --row-hover:  rgba(0, 33, 76, .045);   /* hover de filas; se invierte en dark */
+  --border:     color-mix(in srgb, var(--tint) 10%, transparent);
+  --row-hover:  rgba(0, 33, 76, .045);
+  --row-hover:  color-mix(in srgb, var(--tint) 4.5%, transparent);   /* hover de filas; se invierte en dark */
   min-height: 100vh;
   /* clip (no hidden): contiene el desborde horizontal de los acentos y el
      ticker full-bleed SIN crear un contenedor de scroll. `overflow-x: hidden`
@@ -104,12 +106,14 @@
   font-size: 12px; font-weight: 800;
   color: var(--green-lt);
   background: rgba(1, 149, 60, .12);
+  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
   border: 1px solid rgba(1, 149, 60, .25);
+  border: 1px solid color-mix(in srgb, var(--tint-accent) 25%, transparent);
   padding: 4px 12px; border-radius: 100px;
   transition: background .15s;
 }
 .hp-web-banner-cta svg { font-size: 9px; }
-.hp-web-banner:hover .hp-web-banner-cta { background: rgba(1, 149, 60, .22); }
+.hp-web-banner:hover .hp-web-banner-cta { background: rgba(1, 149, 60, .22); background: color-mix(in srgb, var(--tint-accent) 22%, transparent); }
 
 /* ════════════════════════════════════════════════════
    HERO
@@ -185,6 +189,7 @@
   right: clamp(-160px, -8vw, -60px);
   bottom: -22%;
   background: rgba(1, 149, 60, .085);
+  background: color-mix(in srgb, var(--tint-accent) 8.5%, transparent);
   transform: translateY(var(--parallax-y, 0)) rotate(-14deg);
   will-change: transform;
 }
@@ -269,7 +274,7 @@
   font-weight: 460;
   line-height: .94;
   letter-spacing: -.022em;
-  color: var(--white);
+  color: #ffffff;
   margin: 0;
   text-wrap: balance;
   /* Gaze: sigue al cursor (--gaze-* seteadas en .hp-hero). Se usa el LONGHAND
@@ -395,7 +400,8 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.14);
   box-shadow: 0 0 0 1px rgba(0,33,76,.2);
-  background: var(--brand-navy-800);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 20%, transparent);
+  background: var(--sf-brand);
 }
 .hp-hero-photo::before {
   /* acento verde en el borde superior, plano */
@@ -511,13 +517,12 @@
 .hp-cta-xl { padding: 18px 34px; font-size: 16.5px; }
 
 .hp-cta-main {
-  background: var(--green);
-  color: #fff;
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   box-shadow: none;
 }
 .hp-cta-main:hover {
   background: #338040;
-  transform: translateY(-2px);
   box-shadow: none;
 }
 
@@ -530,14 +535,12 @@
 .hp-cta-ghost:hover {
   background: rgba(255,255,255,.18);
   border-color: rgba(255,255,255,.5);
-  transform: translateY(-2px);
 }
 
 .hp-cta-arrow {
   font-size: 13px;
   transition: transform .2s;
 }
-.hp-cta-main:hover .hp-cta-arrow { transform: translateX(5px); }
 
 /* ════════════════════════════════════════════════════
    SECCIONES
@@ -546,7 +549,7 @@
    se retiraron: ahora los provee <SectionHead>, que es el mismo sistema para
    todas las secciones. Se borran las reglas en vez de dejarlas colgando —
    este archivo ya arrastraba suficientes capas muertas. */
-.hp-section       { padding: clamp(72px, 8.5vw, 124px) clamp(20px, 5vw, 56px); background: var(--white); }
+.hp-section       { padding: clamp(72px, 8.5vw, 124px) clamp(20px, 5vw, 56px); background: var(--sf-card); }
 .hp-section--soft { background: var(--off); }
 .hp-section--dark { background: var(--navy); overflow:hidden; position:relative; }
 
@@ -581,6 +584,7 @@
 .hp-step-card:hover {
   transform: perspective(900px) rotateX(-4deg) rotateY(3deg) translateY(-6px) scale(1.02);
   border-color: rgba(1, 149, 60, .4);
+  border-color: color-mix(in srgb, var(--tint-accent) 40%, transparent);
   background: rgba(255,255,255,.09);
 }
 
@@ -598,6 +602,7 @@
   font-size: 11px; font-weight: 800;
   letter-spacing: .12em; color: var(--green-lt);
   background: rgba(1, 149, 60, .12);
+  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
   padding: 4px 10px; border-radius: 100px;
 }
 
@@ -605,7 +610,9 @@
   width: 58px; height: 58px;
   border-radius: 17px;
   background: rgba(1, 149, 60, .12);
+  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
   border: 1.5px solid rgba(1, 149, 60, .3);
+  border: 1.5px solid color-mix(in srgb, var(--tint-accent) 30%, transparent);
   color: var(--green-lt);
   display: flex; align-items: center; justify-content: center;
   font-size: 26px;
@@ -613,16 +620,18 @@
 }
 .hp-step-card:hover .hp-step-icon-wrap {
   background: rgba(1, 149, 60, .20);
+  background: color-mix(in srgb, var(--tint-accent) 20%, transparent);
   border-color: var(--green-lt);
 }
 
-.hp-step-title { font-size: 15.5px; font-weight: 800; color: var(--white); line-height: 1.2; }
+.hp-step-title { font-size: 15.5px; font-weight: 800; color: #ffffff; line-height: 1.2; }
 .hp-step-desc  { font-size: 13px; color: rgba(255,255,255,.52); line-height: 1.65; margin: 0; flex: 1; }
 .hp-step-tag   {
   display: inline-block;
   font-size: 11.5px; font-weight: 700;
   color: var(--green-lt);
   background: rgba(1, 149, 60, .1);
+  background: color-mix(in srgb, var(--tint-accent) 10%, transparent);
   padding: 4px 10px; border-radius: 100px;
   margin-top: 4px;
 }
@@ -632,6 +641,7 @@
   position: absolute; inset: -1px;
   border-radius: 22px;
   background: rgba(1, 149, 60, .10);
+  background: color-mix(in srgb, var(--tint-accent) 10%, transparent);
   opacity: 0; transition: opacity .3s;
   pointer-events: none;
 }
@@ -707,8 +717,8 @@
   display: inline-flex; align-items: center; justify-content: center;
   width: 52px; height: 52px; flex-shrink: 0;
   border-radius: 14px;
-  background: var(--subject-color, var(--brand-navy-800));
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   font-size: 22px;
   /* Lean magnético: el ícono se inclina hacia el cursor dentro de la fila
      (--row-lean, seteada por JS; 0 en reposo). Todo en `transform` para que el
@@ -803,8 +813,8 @@
   gap: 14px;
   padding: 14px 22px 14px 14px;
   border-radius: 18px;
-  background: var(--subject-color, var(--brand-navy-800));
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   pointer-events: none;
   opacity: 0;
   scale: .82;
@@ -879,7 +889,7 @@
 }
 .hp-more-subjects-copy strong {
   font-size: 16px; font-weight: 800;
-  color: var(--white);
+  color: #ffffff;
 }
 .hp-more-subjects-copy span {
   font-size: 13.5px; color: rgba(255,255,255,.6);
@@ -891,8 +901,8 @@
 .hp-more-subjects-btn {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 14px; font-weight: 800;
-  color: #fff;
-  background: var(--green);
+  color: var(--cta-solid-ink);
+  background: var(--cta-solid-bg);
   border: none;
   padding: 13px 22px; border-radius: 12px;
   text-decoration: none; flex-shrink: 0;
@@ -930,7 +940,7 @@
   display: flex; flex-direction: column;
   align-items: flex-start; gap: 12px;
   padding: 30px 26px;
-  background: var(--white);
+  background: var(--sf-card);
   border: 1.5px solid var(--border);
   border-radius: 18px;
   overflow: hidden;
@@ -953,6 +963,7 @@
 .hp-reason-card:hover {
   border-color: var(--navy-2);
   box-shadow: 0 12px 30px -14px rgba(0, 33, 76, .35);
+  box-shadow: 0 12px 30px -14px color-mix(in srgb, var(--tint-shadow) 35%, transparent);
   transform: translateY(-5px);
 }
 .hp-reason-card:hover::before { transform: scaleX(1); }
@@ -965,11 +976,13 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 23px;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, .18);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 18%, transparent);
   transition: transform .42s var(--ease-signature), background .32s ease;
 }
 .hp-reason-card:hover .hp-reason-icon {
   transform: scale(1.08) rotate(-4deg);
-  background: var(--green);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
 }
 
 .hp-reason-title { font-size: 15.5px; font-weight: 800; color: var(--text); }
@@ -1019,7 +1032,7 @@
   align-items: flex-start; gap: 10px;
   width: 100%;
   padding: 24px 22px 20px;
-  background: var(--white);
+  background: var(--sf-card);
   border: 2px solid var(--border);
   border-radius: 18px;
   text-decoration: none;
@@ -1036,6 +1049,7 @@
   border-color: var(--green);
   background: var(--navy);
   box-shadow: 0 16px 34px -16px rgba(0, 33, 76, .5);
+  box-shadow: 0 16px 34px -16px color-mix(in srgb, var(--tint-shadow) 50%, transparent);
 }
 /* Ícono en caja sólida, igual que las tarjetas de razones. El emoji anterior
    giraba en hover; acá el gesto lo hace la caja, más contenido y coherente. */
@@ -1046,14 +1060,15 @@
   /* empuja el resto del contenido al pie de la tarjeta: composición de póster */
   margin-bottom: auto;
   border-radius: 12px;
-  background: var(--brand-navy-800);
-  color: #fff;
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   font-size: 19px;
   transition: background .38s var(--ease-signature), transform .42s var(--ease-signature);
 }
 .hp-level-card:hover .hp-level-icon,
 .hp-levels > li:focus-within .hp-level-icon {
-  background: var(--green);
+  background: var(--cta-solid-bg);
+  color: var(--cta-solid-ink);
   transform: translateY(-3px) scale(1.06);
 }
 
@@ -1200,7 +1215,7 @@
   font-family: var(--ui-font-display);
   font-optical-sizing: auto;
   font-size: clamp(2.7rem, 7.6vw, 6.4rem);
-  font-weight: 460; color: var(--white);
+  font-weight: 460; color: #ffffff;
   margin: 0 0 20px;
   letter-spacing: -.026em; line-height: .95;
   text-wrap: balance;
@@ -1264,7 +1279,9 @@
   color: rgba(255,255,255,.9);
 }
 .hp-web-copy span {
-  font-size: 13.5px; color: rgba(255,255,255,.5);
+  /* Tinta fija de las franjas navy: 7,47:1 en claro y 6,87:1 en oscuro. El
+     blanco al 50% daba 4,9 en claro pero 4,41 sobre el navy más claro del oscuro. */
+  font-size: 13.5px; color: #a3b3cc;
   line-height: 1.5;
 }
 .hp-web-url {
@@ -1277,8 +1294,8 @@
 .hp-web-arrow-btn {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 14px; font-weight: 800;
-  color: var(--white);
-  background: var(--green);
+  color: var(--cta-solid-ink);
+  background: var(--cta-solid-bg);
   padding: 12px 22px; border-radius: 12px;
   flex-shrink: 0;
   box-shadow: none;
@@ -1293,34 +1310,14 @@
 /* ════════════════════════════════════════════════════
    DARK MODE
 ════════════════════════════════════════════════════ */
-[data-theme="dark"] .hp {
-  --text:#e0eaf6; --muted:#7a9cba; --border:rgba(138,172,202,.12);
-  --row-hover: rgba(255,255,255,.05);
-}
-[data-theme="dark"] .hp-section         { background:#0c1b2d; }
-[data-theme="dark"] .hp-section--soft   { background:#091523; }
-[data-theme="dark"] .hp-reason-card     { background:#101e2e; }
-[data-theme="dark"] .hp-level-card      { background:#0c1b2d; }
 /* Índice de materias: acento en la variante clara y un aro sutil en el ícono
    (la caja de color pleno se funde con el fondo oscuro sin él). */
 [data-theme="dark"] .hp-subj-link { --subject-accent: var(--subject-ink, var(--green-on-dark)); }
-[data-theme="dark"] .hp-subj-icon { box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
-[data-theme="dark"] .hp-level-card:hover { background:var(--navy-2); }
 /* En dark la tarjeta ya es oscura colapsada (#0c1b2d) y expandida (--navy-2),
    así que el chip nunca necesita la variante clara de mobile: si se dejara,
    el "+N más" quedaría en --green (#006d1f) sobre fondo oscuro, ilegible. */
-[data-theme="dark"] .hp-level-chip {
-  border-color: rgba(255, 255, 255, .16);
-  background: rgba(255, 255, 255, .07);
-  color: rgba(255, 255, 255, .86);
-}
-[data-theme="dark"] .hp-level-chip--more {
-  background: none;
-  color: var(--green-on-dark);
-}
 /* Mismo motivo para el CTA: apilado en mobile la tarjeta ya es oscura y el
    "Reservar →" quedaba en --green (#006d1f) sobre #0c1b2d — 2.65:1. */
-[data-theme="dark"] .hp-level-cta { color: var(--green-on-dark); }
 
 /* ════════════════════════════════════════════════════
    RESPONSIVE

@@ -29,7 +29,6 @@ import {
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import useScrollReveal from "../hooks/useScrollReveal";
-import Magnetic from "../components/ui/Magnetic";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import AboutAgustin from "../components/home/AboutAgustin";
 import BookingStepsShowcase from "../components/home/BookingStepsShowcase";
@@ -439,24 +438,20 @@ const HomePage = () => {
             </p>
 
             <div className="hp-hero-ctas">
-              <Magnetic strength={0.35}>
-                <Link to="/reservar" className="hp-cta-main">
-                  <FaCalendarCheck aria-hidden="true" />
-                  Reservar una clase
-                  <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
-                </Link>
-              </Magnetic>
-              <Magnetic strength={0.3}>
-                <a
-                  href={waLink("Hola, tengo una consulta antes de reservar.")}
-                  className="hp-cta-ghost"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaWhatsapp aria-hidden="true" />
-                  Consultar antes
-                </a>
-              </Magnetic>
+              <Link to="/reservar" className="hp-cta-main">
+                <FaCalendarCheck aria-hidden="true" />
+                Reservar una clase
+                <FaArrowRight className="hp-cta-arrow" aria-hidden="true" />
+              </Link>
+              <a
+                href={waLink("Hola, tengo una consulta antes de reservar.")}
+                className="hp-cta-ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FaWhatsapp aria-hidden="true" />
+                Consultar antes
+              </a>
             </div>
 
             <ul className="hp-hero-trust" aria-label="Cómo funciona">

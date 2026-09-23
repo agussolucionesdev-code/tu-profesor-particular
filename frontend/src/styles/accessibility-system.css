@@ -32,10 +32,11 @@ html[data-font-family="readable"] {
 html[data-accent-balance="navy"] {
   --brand-navy: #001636;
   --brand-navy-deep: #112f4a;
-  --color-primary: #001636;
+  --color-primary: var(--ink);
   --color-primary-dark: #112f4a;
   --nav-accent: #00214c;
   --nav-accent-glow: rgba(0, 33, 76, 0.14);
+  --nav-accent-glow: color-mix(in srgb, var(--tint) 14%, transparent);
   --ft-primary: #00214c;
   --ft-primary-dark: #001636;
 }
@@ -61,27 +62,13 @@ html[data-contrast="high"] {
   --border-strong: rgba(17, 40, 63, 0.28);
   --nav-border: rgba(17, 40, 63, 0.18);
   --ft-primary-glow: rgba(1, 149, 60, 0.22);
-}
-
-html[data-theme="dark"][data-contrast="high"] {
-  --color-text-main: #f7fbff;
-  --color-text-muted: #d5e2ee;
-  --color-text-soft: #bfd1e1;
-  --nav-text-main: #f7fbff;
-  --nav-text-soft: #d4e0ec;
-  --border-soft: rgba(237, 244, 251, 0.16);
-  --border-strong: rgba(237, 244, 251, 0.24);
-  --nav-border: rgba(237, 244, 251, 0.16);
+  --ft-primary-glow: color-mix(in srgb, var(--tint-accent) 22%, transparent);
 }
 
 body {
   font-family: var(--ui-font-family-active);
   background-image:
-    var(--ui-bg-light);
-}
-
-[data-theme="dark"] body {
-  background: #0b1424 !important;
+    var(--sf-page);
 }
 
 html[data-calm-ui="true"] body,
@@ -90,15 +77,7 @@ html[data-calm-ui="true"] .client-portal-wrapper,
 html[data-calm-ui="true"] .admin-login-shell,
 html[data-calm-ui="true"] .admin-shell {
   background-image:
-    var(--ui-bg-light) !important;
-}
-
-html[data-theme="dark"][data-calm-ui="true"] body,
-html[data-theme="dark"][data-calm-ui="true"] .booking-page-wrapper,
-html[data-theme="dark"][data-calm-ui="true"] .client-portal-wrapper,
-html[data-theme="dark"][data-calm-ui="true"] .admin-login-shell,
-html[data-theme="dark"][data-calm-ui="true"] .admin-shell {
-  background-image: none !important;
+    var(--sf-page) !important;
 }
 
 html[data-motion="reduced"] *,
@@ -128,8 +107,8 @@ html[data-motion="reduced"] *::after {
   z-index: 10002;
   padding: 0.9rem 1.1rem;
   border-radius: 999px;
-  background: #1d344d;
-  color: var(--brand-white);
+  background: var(--navy-solid-bg);
+  color: var(--navy-solid-ink);
   font-weight: 800;
   text-decoration: none;
   transform: translateY(-180%);
@@ -182,31 +161,6 @@ main.main-content {
   width: 100%;
 }
 
-.navbar-container {
-  gap: 0.85rem;
-}
-
-.navbar-right-zone {
-  min-width: 0;
-}
-
-.nav-menu-list {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.nav-link-btn {
-  overflow: visible;
-}
-
-.navbar-brand-logo {
-  border-radius: 1rem;
-}
-
-.navbar-brand-logo img {
-  display: block;
-}
-
 /* `width: 48px !important` NO alcanza para garantizar una caja de 48px, y esta regla es
    la prueba: el botón del menú medía 14 px de ancho en producción, a 375 px de viewport.
  *
@@ -221,12 +175,6 @@ main.main-content {
  * la marca, que es texto y puede achicarse sin dejar de servir (medido: 239 → 180 px, y
  * sin desborde horizontal). Un botón no puede: por debajo de 44 px deja de ser tocable,
  * y este es el que abre la navegación en todas las páginas. */
-.nav-utility-btn,
-.theme-toggle-btn,
-.menu-toggle-icon,
-.voice-toggle-shell {
-  flex-shrink: 0 !important;
-}
 
 /* ── El arreglo de arriba estaba a medias, y este es el segundo acto ──────────
  *
@@ -255,22 +203,6 @@ main.main-content {
  *   2. la zona de controles no tiene que encogerse nunca: son blancos táctiles
  *      de tamaño fijo, y es lo único de la barra que no admite negociación.
  * ──────────────────────────────────────────────────────────────────────────── */
-.navbar-elite .navbar-right-zone {
-  flex-shrink: 0 !important;
-}
-
-.navbar-elite .navbar-brand {
-  /* Sin esto el `min-width: auto` implícito le prohíbe bajar de 239 px. */
-  min-width: 0 !important;
-  flex-shrink: 1 !important;
-}
-
-.navbar-elite .brand-copy,
-.navbar-elite .brand-title {
-  min-width: 0 !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* 430 px no es un número elegido a ojo: es el umbral medido en el navegador.
  *
@@ -284,22 +216,6 @@ main.main-content {
  * Por debajo de eso el nombre no entra, y lo que se pierde si insiste es el
  * menú. Se queda el monograma, que es la marca igual y se reconoce solo. Vale
  * para 320, 360, 375 y 414 — que es casi todo el parque de teléfonos. */
-@media (max-width: 430px) {
-  .navbar-elite .brand-copy {
-    display: none !important;
-  }
-}
-
-.nav-utility-btn,
-.theme-toggle-btn,
-.menu-toggle-icon {
-  width: 48px !important;
-  height: 48px !important;
-}
-
-.voice-toggle-shell {
-  position: relative;
-}
 
 /* La guía por voz estaba diseñada en 38×38 (Navbar.css:318), 6 px por debajo del mínimo
    táctil. No es un botón secundario: es el que enciende la asistencia para quien más la
@@ -309,11 +225,6 @@ main.main-content {
  * controles pegados con dos tamaños distintos se leen como un accidente, y 48
  * es además el blanco más cómodo. A 320 px entran los tres de sobra: 144 px de
  * controles más 44 del monograma sobre 320 de pantalla. */
-.voice-toggle-shell,
-.voice-toggle-btn {
-  width: 48px !important;
-  height: 48px !important;
-}
 
 .voice-hint-bubble {
   top: calc(100% + 0.7rem) !important;
@@ -330,6 +241,7 @@ main.main-content {
   white-space: normal;
   text-align: center;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.19);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 19%, transparent);
 }
 
 .voice-hint-bubble::after {
@@ -373,16 +285,13 @@ main.main-content {
 .booking-page-wrapper {
   padding-top: clamp(6.75rem, 8vw, 7.75rem) !important;
   background-image:
-    var(--ui-bg-light) !important;
-}
-
-[data-theme="dark"] .booking-page-wrapper {
-  background-image: none !important;
+    var(--sf-page) !important;
 }
 
 .form-card-elevation {
   border-radius: 1.75rem;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
 }
 
 .client-portal-wrapper {
@@ -391,11 +300,7 @@ main.main-content {
   padding-top: clamp(6.2rem, 8vw, 7.2rem) !important;
   padding-bottom: clamp(2.5rem, 5vw, 4rem) !important;
   background-image:
-    var(--ui-bg-light) !important;
-}
-
-[data-theme="dark"] .client-portal-wrapper {
-  background-image: none !important;
+    var(--sf-page) !important;
 }
 
 .client-portal-wrapper .portal-container {
@@ -415,8 +320,11 @@ main.main-content {
   padding: 1rem 1.05rem;
   border-radius: 1.45rem;
   border: 1px solid rgba(0, 33, 76, 0.1);
+  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
   background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--tint-glass) 94%, transparent);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 10%, transparent);
 }
 
 .portal-support-card svg {
@@ -425,14 +333,14 @@ main.main-content {
 }
 
 .portal-support-card strong {
-  color: #1d344d;
+  color: var(--ink);
   line-height: 1.35;
 }
 
 .portal-support-card p,
 .portal-support-card span {
   margin: 0;
-  color: #5c7288;
+  color: var(--ink-3);
   line-height: 1.55;
 }
 
@@ -440,6 +348,8 @@ main.main-content {
   text-decoration: none;
   background:
     rgba(29, 52, 77, 0.98);
+  background:
+    color-mix(in srgb, var(--tint) 98%, transparent);
   border-color: transparent;
 }
 
@@ -460,12 +370,7 @@ main.main-content {
   padding-top: clamp(7rem, 10vw, 8rem);
   padding-bottom: 3rem;
   background-image:
-    var(--ui-bg-light) !important;
-}
-
-[data-theme="dark"] .admin-login-shell {
-  background-image:
-    var(--ui-bg-dark) !important;
+    var(--sf-page) !important;
 }
 
 .admin-login-layout {
@@ -487,9 +392,13 @@ main.main-content {
   gap: 1rem;
   padding: clamp(1.4rem, 3vw, 2.1rem);
   border: 1px solid rgba(0, 33, 76, 0.1);
+  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
   background:
     rgba(255, 255, 255, 0.98);
+  background:
+    color-mix(in srgb, var(--tint-glass) 98%, transparent);
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 13%, transparent);
 }
 
 .admin-login-kicker {
@@ -502,7 +411,7 @@ main.main-content {
 
 .admin-login-intro h1 {
   margin: 0;
-  color: #1d344d;
+  color: var(--ink);
   font-size: clamp(2rem, 3vw, 2.8rem);
   line-height: 1.02;
   letter-spacing: -0.04em;
@@ -510,7 +419,7 @@ main.main-content {
 
 .admin-login-intro > p {
   margin: 0;
-  color: #4f647a;
+  color: var(--ink-3);
   font-size: 1rem;
   line-height: 1.7;
   max-width: 56ch;
@@ -528,7 +437,9 @@ main.main-content {
   padding: 1rem;
   border-radius: 1.3rem;
   border: 1px solid rgba(0, 33, 76, 0.08);
+  border: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
   background: rgba(255, 255, 255, 0.82);
+  background: color-mix(in srgb, var(--tint-glass) 82%, transparent);
 }
 
 .admin-login-benefit svg {
@@ -537,13 +448,13 @@ main.main-content {
 }
 
 .admin-login-benefit strong {
-  color: #1d344d;
+  color: var(--ink);
   line-height: 1.35;
 }
 
 .admin-login-benefit p {
   margin: 0;
-  color: #5c7288;
+  color: var(--ink-3);
   line-height: 1.55;
 }
 
@@ -554,7 +465,9 @@ main.main-content {
   padding: 0.95rem 1rem;
   border-radius: 1.2rem;
   border: 1px solid rgba(1, 149, 60, 0.14);
+  border: 1px solid color-mix(in srgb, var(--tint-accent) 14%, transparent);
   background: rgba(237, 246, 238, 0.82);
+  background: color-mix(in srgb, var(--sf-accent) 82%, transparent);
 }
 
 .admin-login-trust svg {
@@ -679,70 +592,7 @@ textarea {
 [data-contrast="high"] .admin-sidebar-shell {
   border-color: var(--border-strong) !important;
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-}
-
-[data-theme="dark"][data-contrast="high"] .form-card-elevation,
-[data-theme="dark"][data-contrast="high"] .client-portal-wrapper .search-container,
-[data-theme="dark"][data-contrast="high"] .client-portal-wrapper .guidance-card,
-[data-theme="dark"][data-contrast="high"] .client-portal-wrapper .ticket-card,
-[data-theme="dark"][data-contrast="high"] .portal-support-card,
-[data-theme="dark"][data-contrast="high"] .admin-login-card,
-[data-theme="dark"][data-contrast="high"] .admin-login-intro,
-[data-theme="dark"][data-contrast="high"] .admin-card,
-[data-theme="dark"][data-contrast="high"] .admin-sidebar-shell {
-  border-color: rgba(237, 244, 251, 0.2) !important;
-}
-
-[data-theme="dark"] .portal-support-card {
-  background: rgba(13, 26, 41, 0.96);
-  border-color: rgba(171, 195, 217, 0.14);
-}
-
-[data-theme="dark"] .portal-support-card strong {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .portal-support-card p,
-[data-theme="dark"] .portal-support-card span {
-  color: #b6c6d5;
-}
-
-[data-theme="dark"] .portal-support-cta {
-  background: var(--color-surface-1);
-}
-
-[data-theme="dark"] .portal-support-cta svg,
-[data-theme="dark"] .portal-support-cta strong,
-[data-theme="dark"] .portal-support-cta p,
-[data-theme="dark"] .portal-support-cta span {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .admin-login-intro {
-  border-color: rgba(171, 195, 217, 0.16);
-  background: var(--color-surface-1);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
-}
-
-[data-theme="dark"] .admin-login-intro h1,
-[data-theme="dark"] .admin-login-benefit strong {
-  color: #edf4fb;
-}
-
-[data-theme="dark"] .admin-login-intro > p,
-[data-theme="dark"] .admin-login-benefit p,
-[data-theme="dark"] .admin-login-trust p {
-  color: #b6c6d5;
-}
-
-[data-theme="dark"] .admin-login-benefit {
-  background: rgba(17, 32, 50, 0.92);
-  border-color: rgba(171, 195, 217, 0.14);
-}
-
-[data-theme="dark"] .admin-login-trust {
-  background: rgba(136, 206, 147, 0.12);
-  border-color: rgba(136, 206, 147, 0.18);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
 }
 
 @media (max-width: 960px) {
@@ -751,10 +601,6 @@ textarea {
     right: 0 !important;
     width: min(10rem, calc(100vw - 2rem));
     max-width: min(10rem, calc(100vw - 2rem));
-  }
-
-  .nav-menu-list {
-    padding-top: 1.1rem !important;
   }
 
   .form-card-elevation {

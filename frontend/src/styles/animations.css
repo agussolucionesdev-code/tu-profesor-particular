@@ -23,9 +23,11 @@
 @keyframes focusGlow {
   0%, 100% {
     box-shadow: 0 0 0 2px rgba(1, 149, 60, 0.3);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tint-accent) 30%, transparent);
   }
   50% {
     box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.5);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 50%, transparent);
   }
 }
 
@@ -47,6 +49,7 @@
 .smart-guide-highlight {
   animation: gentleSlide var(--transition-slow);
   background: rgba(1, 149, 60, 0.08);
+  background: color-mix(in srgb, var(--tint-accent) 8%, transparent);
   border-left: 3px solid var(--brand-green);
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-md);

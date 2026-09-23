@@ -11,8 +11,9 @@
   justify-items: center;
   gap: 1rem;
   border: 1px solid var(--border-soft, #e2e8f0);
+  border: 1px solid var(--border-soft, color-mix(in srgb, var(--tint) 16%, transparent));
   border-radius: 1rem;
-  background: var(--surface-card, #fff);
+  background: var(--surface-card, var(--sf-card));
 }
 
 .manage-page-state--invalid svg,
@@ -28,13 +29,13 @@
   max-width: 48rem;
   margin: 1rem auto;
   padding: 1rem;
-  border: 1px solid var(--cp-border);
-  border-radius: var(--cp-radius-card);
-  background: var(--cp-surface);
+  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--sf-card);
 }
 
 .manage-booking-security p { margin: 0; }
-.manage-booking-security button { border: 1px solid var(--cp-border); border-radius: .5rem; padding: .65rem .9rem; background: transparent; color: var(--cp-text-main); font: inherit; cursor: pointer; }
+.manage-booking-security button { border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent); border-radius: .5rem; padding: .65rem .9rem; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
 
 @media (max-width: 600px) {
   .manage-booking-security { align-items: flex-start; flex-direction: column; }

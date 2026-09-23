@@ -81,14 +81,18 @@ const PERFILES = [
   {
     id: "instagram",
     label: "Instagram",
+    detalle: "@tuprofesor.ar",
     href: "https://www.instagram.com/tuprofesor.ar/",
   },
   {
     id: "linkedin",
     label: "LinkedIn",
+    detalle: "Agustín Elías Sosa",
     href: "https://www.linkedin.com/in/agustin-sosa",
   },
-  // { id: "facebook", label: "Facebook", href: "https://www.facebook.com/<pagina>" },
+  /* Cuando exista la página: descomentar y poner su URL. El pie ya tiene el logo
+     oficial y el estilo listos, así que aparece sola. */
+  // { id: "facebook", label: "Facebook", detalle: "Tu Profesor Particular", href: "https://www.facebook.com/<pagina>" },
 ];
 
 /* Se sigue pasando por el guard aunque las URLs ahora sean literales: es la red que

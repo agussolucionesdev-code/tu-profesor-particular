@@ -1,228 +1,266 @@
-/* Pie de página del sistema de turnos.
- *
- * Reemplaza 554 líneas. El archivo anterior sostenía una cinta con eslogan, un CTA, un
- * párrafo de filosofía, tres etiquetas de valor, tres columnas de tarjetas y un panel
- * inferior: 1434px de alto en un teléfono de 375px, más que el contenido de /reservar
- * (1252px) y /portal (961px). El pie era más grande que la página.
- * `web/src/components/SiteFooter.css` hace lo mismo en 99 líneas y fue el modelo.
- *
- * ── DOS TRAMPAS QUE DEJÓ EL ARCHIVO VIEJO, DOCUMENTADAS PARA QUE NO VUELVAN ──
- *
- * 1. ESPECIFICIDAD PELEADA. `theme-polish.css` declaraba
- *    `.footer-elite { background: rgba(248,251,253,0.98) }` —casi BLANCO— y el archivo
- *    viejo la vencía escribiendo `footer.footer-elite` (elemento + clase). El color del
- *    pie era un accidente del cascade: dos hojas en desacuerdo y la especificidad
- *    desempatando. El día que alguien "limpiara" ese selector a una sola clase, el pie
- *    se volvía blanco con la tinta clara encima: ilegible. Esas reglas se borraron de
- *    `theme-polish.css` junto con este archivo. El fondo se declara UNA vez, acá.
- *
- * 2. TINTA CLARA SOBRE RAMPA NUMERADA. El fondo es `--brand-navy-900`, de la rampa
- *    NUMERADA, que es estable: vale igual en tema claro y oscuro. Por eso la tinta de
- *    acá NO puede salir de `--text-primary` ni de ningún alias sin número —esos siguen
- *    al tema y en claro se vuelven oscuros, ilegibles sobre este navy—. Va tinta clara
- *    explícita. Que no haya bloque `[data-theme="dark"]` en este archivo es correcto,
- *    no un olvido.
- *
- * Tampoco hay animación de entrada. La versión anterior envolvía las columnas en
- * `Reveal`, que las posiciona 28px corridas y las devuelve cuando dispara un
- * IntersectionObserver. Mientras no dispara, la columna de contacto vive FUERA del
- * viewport. Nadie llega al pie buscando un efecto; el riesgo no compraba nada.
- */
+/* ==========================================================================
+   Pie de página
+
+   Navy en los dos temas (--sf-brand: #00214c en claro, #00275a en oscuro, un
+   escalón sobre la página para que se despegue). Como el fondo no cambia de
+   rol, los textos usan tintas fijas claras, medidas contra los dos navys:
+
+     #ffffff  15,89 / 14,61     títulos y enlaces al pasar
+     #c9d4e5  10,62 /  9,76     enlaces
+     #a3b3cc   7,47 /  6,87     texto secundario
+     #88ce93   8,55 /  7,86     acentos
+   ========================================================================== */
 
 .tpp-footer {
   margin-top: auto;
-  background: var(--brand-navy-900, #000b2b);
-  border-top: 1px solid rgba(1, 149, 60, 0.35);
-  /* La tinta base se declara una vez y la heredan los hijos. */
-  color: #dbe4f2;
+  background: var(--sf-brand);
+  color: #c9d4e5;
 }
 
 .tpp-footer-inner {
   display: grid;
-  /* 210px es el ancho al que "agustinsosa.profe@gmail.com" entra sin romper la grilla.
-     A 375px da una columna; desde ~700px, tres. Sin una sola media query. */
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 1.25rem 2rem;
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 48px);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.75rem 1.25rem 1.25rem;
+  padding: clamp(40px, 6vw, 64px) clamp(16px, 3vw, 32px) clamp(28px, 4vw, 40px);
 }
 
-/* min-width: 0 en los hijos de la grilla. Un hijo de grilla no baja de su contenido
-   mínimo por defecto, y el email largo no tiene espacios donde cortar: sin esto
-   ensancha la columna y empuja el layout. */
-.tpp-footer-inner > * {
-  min-width: 0;
-}
+/* ── Marca ──────────────────────────────────────────────────────────────── */
 
-/* ── Marca ────────────────────────────────────────────────────────────────── */
-
-.tpp-footer-brand {
+.tpp-footer-lockup {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
-/* CONTENER EL MONOGRAMA, pase lo que pase con la cascada global.
-   `tokens.css` declara `.theme-logo__image { width: auto }`, y cuando el monograma
-   medía 1254×1254 se dibujaba a 267px de ancho, se comía la fila y aplastaba el nombre
-   a 56px, que envolvía en cuatro líneas. Hoy el archivo es de 168 y sin esto quedaría a
-   56px (lo que dice su `sizes`), no a 40: la regla sigue haciendo falta.
-   Van dos clases y no una porque una clase sola empata con `.theme-logo__image` y
-   desempata el orden de los archivos. Mismo arreglo que `.brand-loader-mark`. */
-.tpp-footer-brand .theme-logo {
-  flex: 0 0 auto;
-  display: block;
-  width: 40px;
-  height: 40px;
-}
-
-.tpp-footer-brand .theme-logo__image {
-  display: block;
-  width: 100%;
-  height: 100%;
+/* Dos clases: `.theme-logo__image` declara `width: auto` y le gana a una sola. */
+.tpp-footer-lockup .theme-logo__image,
+.tpp-footer-lockup img {
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 
-.tpp-footer-person {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+.tpp-footer-name {
   margin: 0;
-  /* Ocupa lo que sobra, y min-width: 0 le permite envolver en lugar de empujar. */
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.tpp-footer-person strong {
-  color: #ffffff;
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-family: var(--ui-font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  color: #ffffff;
 }
 
-.tpp-footer-person span {
-  color: #a9bcd8;
-  font-size: 0.76rem;
-  line-height: 1.35;
+.tpp-footer-name em {
+  font-style: italic;
+  color: #88ce93;
 }
 
-/* ── Columnas de enlaces ──────────────────────────────────────────────────── */
+.tpp-footer-about {
+  max-width: 34ch;
+  margin: 14px 0 16px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #a3b3cc;
+}
+
+.tpp-footer-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #88ce93;
+  text-decoration: underline;
+  text-decoration-color: rgba(136, 206, 147, 0.4);
+  text-underline-offset: 4px;
+}
+
+.tpp-footer-site svg {
+  font-size: 0.72rem;
+}
+
+.tpp-footer-site:hover {
+  color: #b5e6bb;
+  text-decoration-color: currentColor;
+}
+
+/* ── Columnas ───────────────────────────────────────────────────────────── */
 
 .tpp-footer-title {
-  margin: 0 0 0.2rem;
-  color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 700;
+  margin: 0 0 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  color: #ffffff;
 }
 
 .tpp-footer-col ul {
+  display: grid;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.tpp-footer-col a {
-  display: flex;
+.tpp-footer-link {
+  display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  /* 44px de blanco táctil, el mínimo de WCAG 2.5.5, con padding y no con altura fija:
-     si el email envuelve en dos líneas el enlace crece en lugar de recortarlo. */
+  gap: 10px;
   min-height: 44px;
-  padding: 0.3rem 0;
-  color: #dbe4f2;
-  font-size: 0.84rem;
-  line-height: 1.3;
+  font-size: 0.93rem;
+  color: #c9d4e5;
   text-decoration: none;
-  /* El email no tiene espacios donde cortar. El punto de corte preferido lo marca un
-     `<wbr>` después de la arroba, en el JSX; esto queda sólo como red por si ni así
-     entra. `break-word` y no `anywhere`: `anywhere` parte en cualquier letra incluso
-     cuando el `<wbr>` alcanzaba, y quedaba "…@gm / ail.com". */
-  overflow-wrap: break-word;
-  transition: color 160ms ease;
+  overflow-wrap: anywhere;
+  transition: color 150ms ease;
 }
 
-.tpp-footer-col a svg {
-  flex: 0 0 auto;
-  font-size: 0.92rem;
-  color: var(--brand-green-300, #88ce93);
+.tpp-footer-link svg {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  color: #88ce93;
 }
 
-.tpp-footer-col a:hover,
-.tpp-footer-col a:focus-visible {
+.tpp-footer-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.tpp-footer-link--wa {
+  font-weight: 700;
   color: #ffffff;
 }
 
-/* WhatsApp es el canal principal del negocio: se lee primero y se nota que es un
-   canal, no un dato más de la lista. */
-.tpp-footer-wa {
-  font-weight: 650;
+/* ── Redes: logos oficiales sobre su color oficial ──────────────────────── */
+
+.tpp-footer-social {
+  gap: 10px !important;
 }
 
-.tpp-footer-wa svg {
-  font-size: 1.08rem;
+.tpp-footer-red {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
-/* ── Base: copyright y redes ──────────────────────────────────────────────── */
+.tpp-footer-red:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.tpp-footer-red-logo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 30px;
+}
+
+/* Instagram: el glifo blanco sobre el degradado oficial de la marca, como el
+   ícono de la app. */
+.tpp-footer-red--instagram .tpp-footer-red-logo {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+  color: #ffffff;
+  font-size: 22px;
+}
+
+/* Facebook: el círculo azul con la «f» calada. La «f» es hueca en el trazo
+   oficial, así que el blanco de la placa es el que la dibuja. */
+.tpp-footer-red--facebook .tpp-footer-red-logo {
+  color: #0866ff;
+}
+
+/* LinkedIn: el cuadrado azul con «in» calado, también sobre blanco. */
+.tpp-footer-red--linkedin .tpp-footer-red-logo {
+  color: #0a66c2;
+  font-size: 28px;
+}
+
+.tpp-footer-red-texto {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.tpp-footer-red-texto strong {
+  font-size: 0.93rem;
+  color: #ffffff;
+}
+
+.tpp-footer-red-texto span {
+  overflow: hidden;
+  font-size: 0.8rem;
+  color: #a3b3cc;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
 
 .tpp-footer-base {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  gap: 6px 24px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0.6rem 1.25rem 0.9rem;
-  border-top: 1px solid rgba(219, 228, 242, 0.14);
+  padding: 18px clamp(16px, 3vw, 32px) calc(18px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .tpp-footer-base p {
   margin: 0;
-  color: #a9bcd8;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
+  color: #a3b3cc;
 }
 
-.tpp-footer-social {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
+/* ── Foco ───────────────────────────────────────────────────────────────── */
 
-.tpp-footer-social a {
-  display: grid;
-  place-items: center;
-  /* 44px también acá: son los objetivos más chicos del pie y los más fáciles de errar
-     con el pulgar. */
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid rgba(219, 228, 242, 0.2);
-  color: #dbe4f2;
-  font-size: 1.05rem;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-.tpp-footer-social a:hover,
-.tpp-footer-social a:focus-visible {
-  background: var(--brand-green-deep, #006d1f);
-  border-color: transparent;
-  color: #ffffff;
-}
-
-/* Un solo anillo de foco para todo el pie, calculado para fondo oscuro. */
 .tpp-footer a:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(136, 206, 147, 0.6);
+  outline: 3px solid #88ce93;
+  outline-offset: 3px;
   border-radius: 8px;
 }
 
-/* ── Botón flotante para volver arriba ────────────────────────────────────── */
+/* ── Tamaños ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .tpp-footer-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tpp-footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .tpp-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .tpp-footer-base {
+    flex-direction: column;
+  }
+}
+
+/* ── Volver arriba ──────────────────────────────────────────────────────── */
 
 .btn-up-floating {
   position: fixed;
@@ -232,45 +270,47 @@
      «Continuar» —los de la flecha—, así que tocar ahí subía la página en lugar de
      avanzar la reserva. Fuera de la reserva la variable no existe y vale 0. */
   bottom: calc(1.25rem + var(--acciones-lift, 0px));
-  transition: bottom 200ms cubic-bezier(0.2, 0, 0, 1);
   z-index: 900;
   display: grid;
   place-items: center;
   width: 46px;
   height: 46px;
+  border: 1px solid color-mix(in srgb, var(--tint) 15%, transparent);
   border-radius: 14px;
-  border: 1px solid rgba(0, 33, 76, 0.15);
   background: var(--cta-solid-bg);
   color: var(--cta-solid-ink);
   font-size: 1rem;
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(10px);
-  transition: opacity 220ms ease, transform 220ms ease, visibility 0s 220ms,
-    background 160ms ease;
+  transition: opacity 200ms ease, visibility 0s 200ms, background-color 150ms ease, bottom 200ms ease;
 }
 
 .btn-up-floating.visible {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
-  transition: opacity 220ms ease, transform 220ms ease, background 160ms ease;
+  transition: opacity 200ms ease, background-color 150ms ease, bottom 200ms ease;
 }
 
 .btn-up-floating:hover {
-  background: var(--brand-green-deep, #006d1f);
+  background: var(--cta-solid-bg-hover);
 }
 
 .btn-up-floating:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.4);
+  outline: 3px solid var(--field-border-focus);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tpp-footer-col a,
-  .tpp-footer-social a,
+  .tpp-footer-link,
+  .tpp-footer-red,
   .btn-up-floating {
     transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .tpp-footer-red {
+    border: 1px solid CanvasText;
   }
 }
