@@ -36,8 +36,12 @@ test("/reservar declara su URL, sin la materia de la query", async ({ page }) =>
      copias del mismo formulario. */
   await page.goto("/reservar?materia=Qu%C3%ADmica");
   /* Se espera la condición misma y no un encabezado: la primera versión
-     esperaba el primer h1 de la página, y `.first()` tomaba uno oculto. */
-  await expect.poll(() => canonical(page)).toBe(`${HOST}/reservar`);
+     esperaba el primer h1 de la página, y `.first()` tomaba uno oculto.
+     20 s y no los 8 por defecto: en modo dev el kiosco son ~100 módulos sueltos
+     y en una máquina lenta tarda 9 s en montar —medido—. Mientras no monta, el
+     canonical sigue siendo el del index.html y el test fallaba sin bug. Es el
+     mismo margen que ya le dan al kiosco axe.spec.js y contraste.spec.js. */
+  await expect.poll(() => canonical(page), { timeout: 20_000 }).toBe(`${HOST}/reservar`);
 });
 
 test("/portal declara su URL", async ({ page }) => {

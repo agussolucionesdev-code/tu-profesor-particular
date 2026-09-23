@@ -42,10 +42,13 @@ test.describe("guided booking shell", () => {
       "Activar guía por voz",
     );
 
+    /* «Sistema» y no «claro»: el tema sigue al teléfono o la computadora. Antes
+       arrancaba siempre claro aunque la opción «Sistema» existía. Ver
+       tests/e2e/tema-del-sistema.spec.js. */
     const theme = await page.evaluate(
       () => document.documentElement.dataset.themePreference,
     );
-    expect(theme).toBe("light");
+    expect(theme).toBe("system");
   });
 
   test("keeps inactive wizard panels out of the accessibility path", async ({

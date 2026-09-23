@@ -4,8 +4,16 @@ import { createContext, useContext, useEffect, useState } from "react";
 const THEME_STORAGE_KEY = "theme";
 const ACCESSIBILITY_STORAGE_KEY = "ui_accessibility_preferences";
 
+/* Sube cuando cambia el significado de lo guardado. La 2 es la primera que
+   distingue un «claro» elegido de uno puesto por el sistema: ver la migración
+   en getStoredPreferences y en public/tema.js, que decide lo mismo antes de
+   que cargue React. */
+const PREFERENCES_VERSION = 2;
+
+/* «Sistema» y no «claro»: el tema sigue al teléfono o la computadora. Antes
+   arrancaba siempre en claro, aunque la opción «Sistema» existía. */
 const DEFAULT_PREFERENCES = {
-  themePreference: "light",
+  themePreference: "system",
   fontScale: "default",
   contrast: "default",
   fontFamily: "brand",
@@ -26,13 +34,21 @@ const getSystemTheme = () => {
     : "light";
 };
 
+/* LA MIGRACIÓN. Hasta la versión 2, el código escribía las preferencias en CADA
+   visita, con «claro» por defecto: todo el que entró alguna vez tiene «claro»
+   guardado sin haberlo elegido. Un «claro» sin marca de versión se lee como
+   «Sistema». Un «oscuro» se respeta: nunca fue el valor por defecto, así que si
+   está, alguien lo eligió. */
+const migrarTema = (tema, version) =>
+  tema === "light" && version !== PREFERENCES_VERSION ? "system" : tema;
+
 const getStoredThemePreference = () => {
   if (!canUseDom()) return DEFAULT_PREFERENCES.themePreference;
 
   try {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
     return ["light", "dark", "system"].includes(storedTheme)
-      ? storedTheme
+      ? migrarTema(storedTheme, undefined)
       : DEFAULT_PREFERENCES.themePreference;
   } catch {
     return DEFAULT_PREFERENCES.themePreference;
@@ -52,12 +68,14 @@ const getStoredPreferences = () => {
     }
 
     const parsedPreferences = JSON.parse(rawPreferences);
+    const tema = parsedPreferences?.themePreference;
 
     return {
       ...DEFAULT_PREFERENCES,
       ...parsedPreferences,
-      themePreference:
-        parsedPreferences?.themePreference || getStoredThemePreference(),
+      themePreference: ["light", "dark", "system"].includes(tema)
+        ? migrarTema(tema, parsedPreferences.version)
+        : getStoredThemePreference(),
     };
   } catch {
     return {
@@ -110,7 +128,7 @@ export const UISettingsProvider = ({ children }) => {
       window.localStorage.setItem(THEME_STORAGE_KEY, preferences.themePreference);
       window.localStorage.setItem(
         ACCESSIBILITY_STORAGE_KEY,
-        JSON.stringify(preferences),
+        JSON.stringify({ ...preferences, version: PREFERENCES_VERSION }),
       );
     } catch {
       // Ignore storage failures silently.

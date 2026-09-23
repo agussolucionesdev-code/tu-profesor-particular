@@ -7,6 +7,10 @@
          Android pinta la barra de direcciones. -->
     <meta name="theme-color" content="#00214c" />
     <meta name="color-scheme" content="light dark" />
+    <!-- Fija el tema antes de pintar: sin esto, con el sistema en oscuro, la
+         página aparecía blanca un instante. Archivo y no en línea porque la
+         CSP es script-src 'self'. Sincrónico a propósito: sin defer ni async. -->
+    <script src="/tema.js"></script>
 
     <link rel="icon" type="image/png" href="/logo-icon.png" />
     <link rel="apple-touch-icon" href="/logo-icon.png" />
