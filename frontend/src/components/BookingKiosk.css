@@ -1971,3 +1971,58 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
 }
+
+/* ── Cada clase: entender → practicar → aplicar (del PR #74) ──────────────
+   Una línea, no un bloque: acompaña al título, no compite con las tarjetas.
+   Las flechas son decorativas (::before) y el orden lo da la <ol>. */
+.kiosk-ruta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: -4px 0 18px;
+}
+
+.kiosk-ruta-titulo {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.kiosk-ruta-pasos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kiosk-ruta-pasos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.kiosk-ruta-pasos li + li::before {
+  content: "→";
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+/* ── Una línea por materia ─────────────────────────────────────────────── */
+.kiosk-subject-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}

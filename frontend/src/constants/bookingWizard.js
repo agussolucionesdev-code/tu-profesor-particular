@@ -166,8 +166,11 @@ const prioridadDe = (materia) => {
   return i === -1 ? MATERIAS_PRIORITARIAS.length : i;
 };
 
-export const getSubjectSuggestions = (educationLevel) => {
-  const materias = SUBJECT_SUGGESTIONS_BY_LEVEL[educationLevel] ?? [];
-  // Copia antes de ordenar: sort() muta, y estas listas son constantes del módulo.
-  return [...materias].sort((a, b) => prioridadDe(a) - prioridadDe(b));
-};
+/* Ordena cualquier lista de materias: la embebida o la que carga el panel.
+   Copia antes de ordenar: sort() muta, y las listas son constantes del módulo
+   o vienen del estado. */
+export const ordenarPorPrioridad = (materias = []) =>
+  [...materias].sort((a, b) => prioridadDe(a) - prioridadDe(b));
+
+export const getSubjectSuggestions = (educationLevel) =>
+  ordenarPorPrioridad(SUBJECT_SUGGESTIONS_BY_LEVEL[educationLevel] ?? []);

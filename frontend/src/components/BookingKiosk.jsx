@@ -26,7 +26,11 @@ import {
 } from "../api/bookingApi";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { useBookingAvailability } from "../hooks/useBookingAvailability";
-import { SUBJECT_SUGGESTIONS_BY_LEVEL } from "../constants/bookingWizard";
+import { SUBJECT_SUGGESTIONS_BY_LEVEL, ordenarPorPrioridad } from "../constants/bookingWizard";
+import {
+  getSubjectPresentation,
+  OTHER_SUBJECT_PRESENTATION,
+} from "../constants/presentacionesDeMaterias";
 import { usaBuscador } from "../constants/materiasSuperior";
 import BuscadorDeMateria from "./booking/BuscadorDeMateria";
 import NivelIcono from "./booking/NivelIcono";
@@ -263,7 +267,9 @@ const BookingKiosk = () => {
 
   const subjectsForLevel = useMemo(() => {
     const source = subjectsByLevelOverride ?? SUBJECT_SUGGESTIONS_BY_LEVEL;
-    return source[formData.educationLevel] ?? [];
+    /* Por prioridad y no alfabético: alfabético dejaba Matemática, la materia
+       principal, en la segunda fila. Vale también para la lista del panel. */
+    return ordenarPorPrioridad(source[formData.educationLevel] ?? []);
   }, [subjectsByLevelOverride, formData.educationLevel]);
 
   const selectableDurations = useMemo(
@@ -880,6 +886,16 @@ const BookingKiosk = () => {
                     <FaPencilAlt aria-hidden="true" /> Cambiar nivel
                   </button>
                 </div>
+                {/* Cómo es una clase, en tres pasos. Del PR #74. Es una lista
+                    ordenada porque es un orden: se lee como tal en un lector. */}
+                <div className="kiosk-ruta">
+                  <span className="kiosk-ruta-titulo" id="kiosk-ruta-titulo">Cada clase</span>
+                  <ol className="kiosk-ruta-pasos" aria-labelledby="kiosk-ruta-titulo">
+                    <li>Entender</li>
+                    <li>Practicar</li>
+                    <li>Aplicar</li>
+                  </ol>
+                </div>
                 {/* Terciario y Universitario no llevan grilla: la misma materia se
                     llama distinto en cada facultad y ninguna lista fija alcanza.
                     Ver el comentario largo en constants/materiasSuperior.js. */}
@@ -896,6 +912,8 @@ const BookingKiosk = () => {
                     /* El nivel decide la familia de portada: Primaria usa las
                        multicolor, el resto la de marca. Ver constants/bookingVisuals.js */
                     const visual = getSubjectVisual(subject, formData.educationLevel);
+                    const presentacion = getSubjectPresentation(subject, formData.educationLevel);
+                    const idDescripcion = `kiosk-materia-${index}-desc`;
                     return (
                       <button
                         /* La key lleva el nivel adelante porque Inglés, Lengua y
@@ -915,6 +933,10 @@ const BookingKiosk = () => {
                            tarjetas de nivel ya se salvaban porque tienen su propio
                            aria-label; estas no lo tenían. */
                         aria-label={`Materia: ${subject}`}
+                        /* El nombre queda corto y la descripción se lee aparte:
+                           con todo adentro del nombre, cada tarjeta se anunciaba
+                           como un párrafo. */
+                        aria-describedby={idDescripcion}
                       >
                         <span className="kiosk-visual-media" aria-hidden="true">
                           <span className="kiosk-visual-halo" />
@@ -928,8 +950,11 @@ const BookingKiosk = () => {
                           />
                         </span>
                         <span className="kiosk-visual-copy">
-                          <span className="kiosk-choice-kicker">Materia</span>
+                          <span className="kiosk-choice-kicker">{presentacion.kicker}</span>
                           <span className="kiosk-choice-label">{subject}</span>
+                          <span className="kiosk-subject-description" id={idDescripcion}>
+                            {presentacion.description}
+                          </span>
                         </span>
                         <span className="kiosk-selected-mark" aria-hidden="true"><FaCheckCircle /></span>
                       </button>
@@ -961,8 +986,11 @@ const BookingKiosk = () => {
                       />
                     </span>
                     <span className="kiosk-visual-copy">
-                      <span className="kiosk-choice-kicker">Personalizada</span>
+                      <span className="kiosk-choice-kicker">{OTHER_SUBJECT_PRESENTATION.kicker}</span>
                       <span className="kiosk-choice-label">Otra materia</span>
+                      <span className="kiosk-subject-description">
+                        {OTHER_SUBJECT_PRESENTATION.description}
+                      </span>
                     </span>
                     <span className="kiosk-card-arrow" aria-hidden="true"><FaPencilAlt /></span>
                   </button>
@@ -970,7 +998,12 @@ const BookingKiosk = () => {
                 )}
 
                 {formData.subject && !otherOpen && (
-                  <div className="kiosk-selection-dock" role="status" aria-live="polite">
+                  <div className="kiosk-selection-dock">
+                    {/* El anuncio va aparte: una región viva que contiene el botón
+                        se volvía a anunciar entera en cada cambio. */}
+                    <span className="sr-only" role="status" aria-live="polite">
+                      Elegiste {formData.subject}.
+                    </span>
                     <div className="kiosk-selection-copy">
                       <span className="kiosk-confirmar-label">Tu elección</span>
                       <strong>{formData.subject}</strong>
