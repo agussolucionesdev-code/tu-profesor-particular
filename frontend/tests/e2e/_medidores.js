@@ -215,6 +215,10 @@ export const MANCHAS = () => {
     const esControl = el.matches(CONTROL) || el.closest(CONTROL) !== null;
     if (esControl && area < 40_000) continue;
     if ((area < 12_000 || r.height <= 64) && PARES.has(cs.backgroundColor)) continue;
+    /* Un gráfico chico y decorativo (aria-hidden) se trata como una imagen,
+       que ya se excluye: la placa blanca de un logo oficial —la «f» de
+       Facebook va calada sobre blanco— es el logo, no una mancha. */
+    if (area < 6_000 && el.closest('[aria-hidden="true"]')) continue;
     manchas.push({
       cls: `${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/).slice(0, 2).join(".")}`.slice(0, 50),
       txt: (el.innerText || "").replace(/\s+/g, " ").trim().slice(0, 40),

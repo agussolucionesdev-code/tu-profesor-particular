@@ -10,6 +10,8 @@ import biologia from "../assets/booking/subjects/biologia.webp";
 import cbc from "../assets/booking/subjects/cbc.webp";
 import fisica from "../assets/booking/subjects/fisica.webp";
 import fisicoquimica from "../assets/booking/subjects/fisicoquimica.webp";
+import geografia from "../assets/booking/subjects/geografia.webp";
+import historia from "../assets/booking/subjects/historia.webp";
 import ingles from "../assets/booking/subjects/ingles.webp";
 import lenguaLiteratura from "../assets/booking/subjects/lengua-literatura.webp";
 import matematica from "../assets/booking/subjects/matematica.webp";
@@ -80,6 +82,11 @@ const SUBJECT_VISUALS = {
   cbc: { src: cbc, ...VISUAL_SIZE },
   fisica: { src: fisica, ...VISUAL_SIZE },
   fisicoquimica: { src: fisicoquimica, ...VISUAL_SIZE },
+  /* Historia y Geografía (Secundaria y CENS), generadas con ChatGPT sobre la
+     portada maestra de Matemática: mismo cuadriculado, navy, verde y título de
+     sticker. Geografía usa O de Oeste en la rosa de los vientos. */
+  geografia: { src: geografia, ...VISUAL_SIZE },
+  historia: { src: historia, ...VISUAL_SIZE },
   ingles: { src: ingles, ...VISUAL_SIZE },
   lenguaLiteratura: { src: lenguaLiteratura, ...VISUAL_SIZE },
   matematica: { src: matematica, ...VISUAL_SIZE },
@@ -155,6 +162,8 @@ export const getSubjectVisual = (subject, level) => {
   if (normalized.includes("lengua") || normalized.includes("literatura")) {
     return SUBJECT_VISUALS.lenguaLiteratura;
   }
+  if (normalized.includes("histori")) return SUBJECT_VISUALS.historia;
+  if (normalized.includes("geograf")) return SUBJECT_VISUALS.geografia;
 
   return SUBJECT_VISUALS.otraMateria;
 };

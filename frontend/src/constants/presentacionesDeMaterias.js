@@ -51,6 +51,14 @@ const PRESENTACIONES = {
     kicker: "Lectura y escritura",
     description: "Leer con estrategia y escribir con claridad.",
   },
+  historia: {
+    kicker: "Procesos y fuentes",
+    description: "Ordenar los hechos en el tiempo y entender por qué pasaron.",
+  },
+  geografia: {
+    kicker: "Territorio",
+    description: "Leer mapas y entender el territorio, el clima y la población.",
+  },
   cbc: {
     kicker: "Ciclo Básico Común",
     description: "Preparación para las materias del CBC de la UBA.",
@@ -107,6 +115,8 @@ const claveDeMateria = (normalized, level) => {
   if (normalized.includes("fisic")) return ["general", "fisica"];
   if (normalized.includes("quim")) return ["general", "quimica"];
   if (normalized.includes("biolog")) return ["general", "biologia"];
+  if (normalized.includes("histori")) return ["general", "historia"];
+  if (normalized.includes("geograf")) return ["general", "geografia"];
   if (normalized.includes("ingles")) return ["general", "ingles"];
   if (normalized.includes("lengua") || normalized.includes("literatura")) return ["general", "lenguaLiteratura"];
   return null;

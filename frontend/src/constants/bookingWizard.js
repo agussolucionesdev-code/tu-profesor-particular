@@ -88,8 +88,9 @@ export const BOOKING_SUPPORT_PILLS = [
    Quien no encuentre su materia acá tiene la opción "Otra materia" en el paso 1,
    que permite escribirla (el backend acepta texto libre de 2 a 120 caracteres). */
 /* Las materias que Agustín dicta en secundaria. Viven en una constante propia
-   porque Secundaria, Secundaria Técnica y CENS comparten exactamente la misma
-   lista, y repetirla tres veces garantizaba que alguna quedara vieja. */
+   porque Secundaria, Secundaria Técnica y CENS comparten esta base, y repetirla
+   tres veces garantizaba que alguna quedara vieja. Secundaria y CENS le suman
+   Historia y Geografía. */
 const SECUNDARIA = [
   "Biología",
   "Física",
@@ -108,7 +109,9 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
     "Lengua y Literatura",
     "Matemática",
   ],
-  Secundaria: SECUNDARIA,
+  /* Historia y Geografía: las pidió Agustín para Secundaria y CENS, no para
+     Técnica. Por eso Técnica sigue con la lista base y estas dos la extienden. */
+  Secundaria: [...SECUNDARIA, "Geografía", "Historia"],
   /* Secundaria Técnica dicta lo mismo que Secundaria, a efectos de las clases
      particulares de Agustín.
 
@@ -124,7 +127,7 @@ export const SUBJECT_SUGGESTIONS_BY_LEVEL = {
   "Secundaria Tecnica": SECUNDARIA,
   /* CENS, la secundaria de adultos. Mismo contenido que Secundaria: lo que
      cambia es la edad de quien cursa, no el programa. */
-  CENS: SECUNDARIA,
+  CENS: [...SECUNDARIA, "Geografía", "Historia"],
   /* Terciario y Universitario NO llevan grilla de tarjetas: llevan buscador.
 
      Antes había 18 materias cargadas en Terciario (Pedagogía, Antropología
