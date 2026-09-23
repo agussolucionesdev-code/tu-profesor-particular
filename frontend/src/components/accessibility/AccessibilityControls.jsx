@@ -50,7 +50,7 @@ const VARIABLE_LEVANTE = "--acciones-lift";
 
 const countActivePreferences = (preferences) =>
   [
-    preferences.themePreference !== "light",
+    preferences.themePreference !== "system",
     preferences.fontScale !== "default",
     preferences.contrast !== "default",
     preferences.fontFamily !== "brand",

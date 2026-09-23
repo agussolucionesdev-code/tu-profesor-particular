@@ -122,7 +122,7 @@ jobs:
       # mantenimiento y pasa por no haber mirado la página real—. Los dos casos
       # que sí necesitan disponibilidad real se saltean solos, con el motivo a la
       # vista en el informe.
-      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js --project=desktop
+      - run: npx playwright test tests/e2e/axe.spec.js tests/e2e/contraste.spec.js tests/e2e/blancos-tactiles.spec.js tests/e2e/tema-del-sistema.spec.js --project=desktop
         env:
           TZ: America/Argentina/Buenos_Aires
       # El menú de celular va aparte y en el proyecto `mobile`: su bug sólo
