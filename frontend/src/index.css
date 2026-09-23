@@ -14,6 +14,11 @@ html {
      position:sticky. `clip` deja el eje Y visible → sticky pinea al viewport. */
   overflow-x: clip;
   scroll-behavior: auto;
+  /* WCAG 2.4.11: al retroceder con Shift+Tab, el navegador deja el elemento
+     pegado al borde de arriba, debajo de la barra fija. Esto reserva ese alto
+     para todo desplazamiento hacia un foco o un ancla. Lo mide
+     tests/e2e/foco-no-tapado.spec.js en cada página y en los dos tamaños. */
+  scroll-padding-top: calc(var(--nav-height) + 12px);
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: #3f678c #e7eef4;
