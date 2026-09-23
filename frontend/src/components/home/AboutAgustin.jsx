@@ -6,6 +6,7 @@ import Magnetic from "../ui/Magnetic";
 import { ANOS_ENSENANDO } from "../../constants/voz";
 import agustinPhoto from "../../assets/images/agustin-hero.webp";
 import "./AboutAgustin.css";
+import { waLink } from "../../constants/contactChannels";
 
 /* "Quién es Agustín". Contenido real: materias y niveles salen del propio sitio,
    y el enfoque es el mensaje central de la marca. Sin título ni credenciales
@@ -146,7 +147,7 @@ const AboutAgustin = () => (
               </Link>
             </Magnetic>
             <a
-              href="https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn,%20quiero%20hacerte%20una%20consulta."
+              href={waLink("Hola Agustín, quiero hacerte una consulta.")}
               className="hp-about-wp"
               target="_blank"
               rel="noopener noreferrer"

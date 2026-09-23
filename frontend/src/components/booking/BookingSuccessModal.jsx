@@ -22,6 +22,7 @@ import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { downloadIcs } from "../../utils/icsExport";
 import { getSafeManagementUrl } from "../../utils/managementUrl";
 import ThemeLogo from "../ui/ThemeLogo";
+import { waLink } from "../../constants/contactChannels";
 
 const getDeliveryAlert = (successData) => {
   const emailRecipient = successData?.notifications?.client?.recipient;
@@ -357,7 +358,7 @@ const BookingSuccessModal = ({
             </Link>
           )}
           <a
-            href={`https://wa.me/5491133365937?text=${encodeURIComponent(whatsappConfirmText)}`}
+            href={waLink(whatsappConfirmText)}
             className="success-btn-whatsapp"
             target="_blank"
             rel="noopener noreferrer"

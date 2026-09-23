@@ -29,14 +29,14 @@ import {
   updateStudentNotes,
 } from "../api/bookingApi";
 import { clasificarFalla, mensajeDeFalla } from "../api/errorClassification";
+import { waLink } from "../constants/contactChannels";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import {
   FALLBACK_TEACHER_LOCATION,
   parseTeacherLocation,
 } from "../constants/teacherLocation";
 
-const WHATSAPP_URL =
-  "https://wa.me/5491133365937?text=Hola%20Agust%C3%ADn%2C%20necesito%20ayuda%20con%20un%20turno.";
+const WHATSAPP_URL = waLink("Hola Agustín, necesito ayuda con un turno.");
 
 /* El código nunca lleva I, L, O, 0 ni 1: el alfabeto los excluye justamente
    para que nadie dude entre un uno y una ele al copiarlo de un mail. Se

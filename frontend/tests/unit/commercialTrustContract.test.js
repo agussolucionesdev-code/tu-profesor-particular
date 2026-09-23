@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
+import { WHATSAPP_NUMBER } from "../../src/constants/contactChannels.js";
 import { isConfiguredSocialUrl } from "../../src/utils/socialUrl.js";
 
 const readSource = (relativePath) =>
@@ -85,12 +86,43 @@ test("keeps public profile URLs in code, not in environment variables", () => {
 });
 
 test("keeps one source of truth for the WhatsApp number", () => {
-  /* El número estaba escrito a mano en 7 archivos de este proyecto. La última vez que
-     cambió hubo que tocarlos todos, y alcanzaba con olvidarse de uno para dejar un
-     teléfono viejo en producción. El pie ahora lo lee de la constante. */
-  assert.doesNotMatch(footerSource, /wa\.me\/\d/);
+  /* ESTE TEST SE LLAMABA ASÍ Y MIRABA UN SOLO ARCHIVO.
+   *
+   * Verificaba que el PIE DE PÁGINA leyera el número de la constante, con un
+   * comentario que contaba en pasado que «estaba escrito a mano en 7 archivos».
+   * No estaba: seguía estándolo. Se migró el pie, se escribió el test con el
+   * nombre de la regla general, y los otros seis quedaron como estaban —más el
+   * que se sumó después—.
+   *
+   * Un test que se llama «una sola fuente de verdad» y revisa un archivo de
+   * siete es peor que no tenerlo: da por cerrado un problema abierto, y el
+   * próximo que lea el nombre se queda tranquilo.
+   *
+   * Ahora barre TODO `src/`. El día que alguien pegue un `wa.me/549…` en una
+   * pantalla nueva, este test lo nombra.
+   *
+   * Se mide contra `WHATSAPP_NUMBER`, no contra el número escrito acá: si el
+   * día de mañana cambia, este test sigue valiendo sin tocarlo. */
+  const raizDeFuentes = new URL("../../src/", import.meta.url);
+  const archivos = readdirSync(raizDeFuentes, { recursive: true, encoding: "utf8" })
+    .filter((ruta) => /\.(jsx?|tsx?)$/.test(ruta))
+    .filter((ruta) => !ruta.endsWith("contactChannels.js"));
+
+  const conElNumeroAMano = archivos.filter((ruta) =>
+    sinComentarios(readSource(`../../src/${ruta.replace(/\\/g, "/")}`)).includes(
+      WHATSAPP_NUMBER,
+    ),
+  );
+
+  assert.deepEqual(
+    conElNumeroAMano,
+    [],
+    `archivos con el número de WhatsApp escrito a mano:\n  ${conElNumeroAMano.join("\n  ")}`,
+  );
+
+  /* Y el pie, que fue el primero en migrar, sigue migrado. */
+  assert.doesNotMatch(sinComentarios(footerSource), /wa\.me\/\d/);
   assert.match(footerSource, /waLink\(/);
-  assert.match(channelsSource, /WHATSAPP_NUMBER = "5491133365937"/);
 });
 
 test("states one consistent online and in-person offer", () => {

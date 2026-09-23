@@ -249,7 +249,18 @@ const getFrontendUrl = () => getPublicFrontendUrl();
    ni avisara. Un dato que se cambia una vez cada varios años no justifica un
    punto de desincronización silenciosa.
 
-   Si algún día cambia de verdad: se cambia acá y en web/src/data/site.js.
+   Si algún día cambia de verdad, son TRES lugares y no dos. Esta lista decía
+   dos y se olvidaba del tercero, que es exactamente la forma de dejar un
+   teléfono viejo en producción que este comentario viene a evitar:
+
+     · acá, para los mails;
+     · web/src/data/site.js, para el sitio institucional;
+     · frontend/src/constants/contactChannels.js, para el sistema de turnos.
+
+   Son tres proyectos con bundles separados que no pueden importarse entre sí,
+   así que tres literales es lo correcto. Lo que no es correcto es que sean
+   tres y la nota diga dos.
+
    La variable CONTACT_PHONE de Render puede borrarse; ya no la lee nadie. */
 const CONTACT_PHONE = "+54 9 11 3336-5937";
 

@@ -20,6 +20,14 @@ export const BOOKING_URL = "https://turnos.tuprofesorparticular.com.ar";
 export const BOOKING_RESERVE_URL = `${BOOKING_URL}/reservar`;
 export const BOOKING_MANAGE_URL = `${BOOKING_URL}/portal`;
 
+/* El número vive acá, y no en una variable de entorno, por lo mismo que en los otros
+   dos proyectos: es dato de MARCA, no configuración de infraestructura. Ya hubo una
+   desincronización silenciosa por tenerlo en el entorno —los mails mandaron el número
+   viejo durante semanas— y un dato que cambia cada varios años no justifica ese riesgo.
+
+   Si cambia, son TRES lugares: acá, `backend/src/config/mailer.js` y
+   `frontend/src/constants/contactChannels.js`. Tres bundles separados que no pueden
+   importarse entre sí. */
 export const CONTACT = {
   whatsappNumber: "5491133365937",
   whatsappDisplay: "+54 9 11 3336-5937",
