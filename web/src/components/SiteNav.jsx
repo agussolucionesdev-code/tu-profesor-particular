@@ -60,19 +60,26 @@ const SiteNav = () => {
           onClick={() => setOpen(false)}
           aria-label={`${BRAND.name} — ${BRAND.person}`}
         >
-          <img
-            /* La imagen se nombra por su ruta de `public/` y NO se importa: `prerender.mjs`
-               compila con esbuild declarando `".png": "dataurl"`, así que un import la
-               convierte en base64 y la deja empotrada en el HTML de CADA página. Este
-               monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
-               `tests/imagenesServidas.test.js`. */
-            src={"/monogram.png"}
-            alt=""
-            className="snav-mark"
-            aria-hidden="true"
-            width="38"
-            height="38"
-          />
+          {/* Con fondo propio: el monograma tiene el blanco horneado en el PNG,
+              así que en la barra del modo oscuro sería un cuadrado blanco. El
+              navegador elige la versión según el tema, sin JavaScript. La
+              oscura es la oficial del kit de marca. */}
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcSet="/monogram-oscuro.png" />
+            <img
+              /* La imagen se nombra por su ruta de `public/` y NO se importa: `prerender.mjs`
+                 compila con esbuild declarando `".png": "dataurl"`, así que un import la
+                 convierte en base64 y la deja empotrada en el HTML de CADA página. Este
+                 monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
+                 `tests/imagenesServidas.test.js`. */
+              src={"/monogram.png"}
+              alt=""
+              className="snav-mark"
+              aria-hidden="true"
+              width="38"
+              height="38"
+            />
+          </picture>
           <span className="snav-brand-copy">
             <span className="snav-brand-name">
               Tu Profesor <em>Particular</em>

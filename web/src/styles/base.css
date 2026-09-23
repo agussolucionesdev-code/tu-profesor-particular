@@ -18,7 +18,12 @@
   --navy-200: #ccd9eb;
   --navy-50: #f2f7fe;
 
-  --green: #006d1f;          /* texto verde sobre claro (6.55:1) */
+  --green: #006d1f;          /* FONDO de botones, con texto blanco (6.55:1) */
+  /* El TEXTO verde tiene variable propia. `--green` pinta el fondo de seis
+     botones y el texto de veintiún títulos y enlaces; el modo oscuro necesita
+     aclarar lo segundo sin tocar lo primero —blanco sobre verde claro da
+     1,9:1—. Ver tests/modoOscuro.test.js. */
+  --green-ink: #006d1f;
   --green-brand: #01953c;    /* superficies y CTAs grandes */
   --green-deep: #005a19;
   --green-on-dark: #88ce93;  /* verde sobre navy (8.55:1) */
@@ -29,6 +34,11 @@
   --text: #00204a;
   --muted: #53595f;
   --border: rgba(0, 33, 76, 0.1);
+  /* Campos de formulario. El contorno de un control necesita 3:1 contra lo
+     que lo rodea (WCAG 1.4.11); con `--border` daba ~1,3:1 y el campo vacío
+     casi no se veía. Mismo valor que el kiosco de turnos: 3,31:1. */
+  --field-bg: #ffffff;
+  --field-border: #848e9d;
 
   --font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
   --font-body: "Inter Variable", Inter, system-ui, -apple-system, sans-serif;
@@ -38,6 +48,41 @@
   --nav-space: 92px;
 
   color-scheme: light;
+}
+
+/* ══════════════════════════════════════════════════════
+   MODO OSCURO
+
+   No había: cero reglas. Quien usa el teléfono en oscuro recibía una página
+   blanca a las once de la noche, justo cuando una familia se sienta a
+   resolver lo de la escuela.
+
+   Sigue al sistema con `prefers-color-scheme` y sin JavaScript: el HTML
+   prerenderizado ya sale con el tema correcto y no hay destello blanco antes
+   de que cargue nada. La paleta es la del monograma oscuro oficial: blanco y
+   verde sobre azul marino.
+
+   Las secciones oscuras (`--navy-800`) quedan un peldaño MÁS CLARAS que la
+   página, al revés que en claro: si fueran igual de oscuras, el ritmo de
+   bandas de la portada desaparecería. Los contrastes de cada par los mide
+   tests/modoOscuro.test.js leyendo estos mismos valores.
+══════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --white: #001633;
+    --off: #031e42;
+    --navy-800: #00275a;
+    --navy-600: #a9b8cf;
+    --text: #f2f5fa;
+    --muted: #a9b8cf;
+    --green-ink: #88ce93;
+    --green-50: #0b3340;
+    --border: rgba(169, 184, 207, 0.16);
+    --field-bg: #031e42;
+    --field-border: #6b7fa0;
+
+    color-scheme: dark;
+  }
 }
 
 *,
@@ -204,7 +249,7 @@ a { color: inherit; }
 
 .btn--ghost {
   background: none;
-  color: var(--navy);
+  color: var(--text);
   border-color: var(--border);
 }
 .btn--ghost:hover {
@@ -240,7 +285,7 @@ a { color: inherit; }
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
-.head-index { color: var(--green); }
+.head-index { color: var(--green-ink); }
 .section--dark .head-index { color: var(--green-on-dark); }
 .head-dash { width: 22px; height: 1px; background: var(--border); }
 .section--dark .head-dash { background: rgba(255, 255, 255, 0.28); }

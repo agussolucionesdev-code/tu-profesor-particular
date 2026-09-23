@@ -32,7 +32,7 @@
   transition: color 0.25s ease;
 }
 .fq-item summary:hover .fq-q,
-.fq-item[open] .fq-q { color: var(--green); }
+.fq-item[open] .fq-q { color: var(--green-ink); }
 
 /* Cruz hecha con dos hairlines: rota 135° al abrir y se vuelve una ×. */
 .fq-plus {

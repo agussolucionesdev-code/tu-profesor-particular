@@ -129,7 +129,7 @@
   text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
 }
-.hero-otro-publico:hover { color: var(--white); }
+.hero-otro-publico:hover { color: #fff; }
 .hero-otro-publico svg { font-size: 0.8em; transition: transform 0.2s var(--ease); }
 .hero-otro-publico:hover svg { transform: translateX(3px); }
 @media (prefers-reduced-motion: reduce) {
@@ -269,7 +269,7 @@
 .subj-tagline b { color: var(--text); font-weight: 800; }
 
 .subj-arrow {
-  color: var(--green);
+  color: var(--green-ink);
   opacity: 0.5;
   flex-shrink: 0;
   transition: opacity 0.35s ease, transform 0.45s var(--ease);
@@ -285,7 +285,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--green);
+  color: var(--green-ink);
   font-weight: 800;
   text-decoration: none;
 }
@@ -344,7 +344,7 @@
   font-variant-numeric: tabular-nums;
   transition: color 0.35s ease, opacity 0.35s ease;
 }
-.lvl-list > li:hover .lvl-num { color: var(--green); opacity: 1; }
+.lvl-list > li:hover .lvl-num { color: var(--green-ink); opacity: 1; }
 
 .lvl-name { margin: 0; color: var(--text); }
 .lvl-desc {
@@ -431,7 +431,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  color: var(--green);
+  color: var(--green-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

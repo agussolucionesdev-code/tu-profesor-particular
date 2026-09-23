@@ -59,13 +59,13 @@
   font-size: 1.28rem;
   font-weight: 600;
   letter-spacing: -0.012em;
-  color: var(--navy);
+  color: var(--text);
   white-space: nowrap;
 }
 .snav-brand-name em {
   font-style: italic;
   font-weight: 500;
-  color: var(--green);
+  color: var(--green-ink);
 }
 .snav-brand-person {
   font-size: 0.66rem;
@@ -102,11 +102,11 @@
   transition: color 180ms ease, background 180ms ease;
 }
 .snav-link:hover {
-  color: var(--navy);
+  color: var(--text);
   background: rgba(0, 33, 76, 0.05);
 }
 .snav-link.is-active {
-  color: var(--navy);
+  color: var(--text);
   background: rgba(0, 33, 76, 0.08);
 }
 
@@ -149,7 +149,7 @@
   border: none;
   border-radius: 11px;
   background: none;
-  color: var(--navy);
+  color: var(--text);
   font-size: 1.05rem;
   cursor: pointer;
   transition: background 180ms ease;
@@ -223,4 +223,32 @@
   .snav-mark,
   .snav-cta { transition: none; }
   .snav-brand:hover .snav-mark { transform: none; }
+}
+
+/* ── Modo oscuro ─────────────────────────────────────────
+   La cápsula tiene su blanco translúcido escrito a mano, no en una variable,
+   porque es un vidrio: necesita transparencia propia. Sin esto, en oscuro la
+   cápsula seguía blanca y el texto —que sí sigue a las variables— pasaba a
+   ser claro: «Tu Profesor» desaparecía. Mismo vidrio, sobre azul noche. */
+@media (prefers-color-scheme: dark) {
+  .snav-capsule {
+    background: rgba(0, 22, 51, 0.82);
+    border-color: rgba(169, 184, 207, 0.16);
+    box-shadow: 0 10px 34px -22px rgba(0, 0, 0, 0.7);
+  }
+  .snav.is-scrolled .snav-capsule {
+    background: rgba(0, 22, 51, 0.94);
+    border-color: rgba(169, 184, 207, 0.22);
+    box-shadow: 0 14px 40px -24px rgba(0, 0, 0, 0.8);
+  }
+  .snav-link:hover { background: rgba(242, 245, 250, 0.07); }
+  .snav-link.is-active { background: rgba(242, 245, 250, 0.1); }
+  .snav-burger:hover { background: rgba(242, 245, 250, 0.08); }
+}
+@media (prefers-color-scheme: dark) and (max-width: 940px) {
+  .snav-right {
+    background: var(--white);
+    border-color: rgba(169, 184, 207, 0.18);
+    box-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.8);
+  }
 }

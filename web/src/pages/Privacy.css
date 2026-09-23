@@ -107,4 +107,4 @@
   margin: 0;
   font-size: 0.94rem;
 }
-.pv-help svg { color: var(--green); flex-shrink: 0; }
+.pv-help svg { color: var(--green-ink); flex-shrink: 0; }
