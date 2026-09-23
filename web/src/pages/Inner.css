@@ -64,7 +64,7 @@
   color: var(--text);
   max-width: 56ch;
 }
-.about-bio b { font-weight: 800; color: var(--green); }
+.about-bio b { font-weight: 800; color: var(--green-ink); }
 
 .about-stats {
   display: flex;
@@ -82,7 +82,7 @@
   font-weight: 480;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--green);
+  color: var(--green-ink);
 }
 .about-stats dd { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); max-width: 18ch; }
 
@@ -188,7 +188,7 @@
   align-self: flex-start;
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--green);
+  color: var(--green-ink);
   text-decoration: none;
   transition: transform 0.35s var(--ease);
 }
@@ -228,7 +228,7 @@
 
 /* ── 404 ─────────────────────────────────────────────── */
 .nf { text-align: center; }
-.nf-code { color: var(--green); opacity: 0.22; margin-bottom: -0.4rem; }
+.nf-code { color: var(--green-ink); opacity: 0.22; margin-bottom: -0.4rem; }
 .nf-title { color: var(--text); margin-bottom: 1rem; }
 .nf-lead { margin: 0 auto 2rem; text-align: center; }
 
@@ -328,7 +328,7 @@
   font-size: clamp(1.3rem, 3.4vw, 1.9rem);
   font-weight: 700;
   line-height: 1.25;
-  color: var(--navy);
+  color: var(--text);
 }
 
 /* Las comillas se dibujan en CSS y no se escriben en el texto: así el contenido
@@ -358,7 +358,7 @@
   margin: 0 0 0.6rem;
   font-size: clamp(1.15rem, 2.6vw, 1.45rem);
   line-height: 1.25;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .voz-caso-entrada {
@@ -430,14 +430,14 @@
   font-family: var(--font-display, inherit);
   font-size: 1.35rem;
   font-weight: 800;
-  color: var(--green-deep);
+  color: var(--green-ink);
 }
 
 .voz-pasos h3 {
   margin: 0 0 0.35rem;
   font-size: 1.02rem;
   line-height: 1.3;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .voz-pasos p {
@@ -480,7 +480,7 @@
   margin: 0 0 0.25rem;
   font-size: 0.98rem;
   line-height: 1.35;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .voz-formacion p {
@@ -543,7 +543,7 @@
   font-weight: 500;
   color: var(--muted);
 }
-.precios-nota-col { color: var(--green); font-weight: 600; }
+.precios-nota-col { color: var(--green-ink); font-weight: 600; }
 /* La fila de ciencias depende de la de arriba: sin línea entre las dos y con
    sangría, se lee como parte del mismo nivel. */
 .precios-tabla tr:has(+ .precios-fila-ciencias) > * { border-bottom-color: transparent; }
@@ -559,7 +559,7 @@
   line-height: 1.6;
   color: var(--muted);
 }
-.precios-respaldo a { color: var(--green); font-weight: 700; }
+.precios-respaldo a { color: var(--green-ink); font-weight: 700; }
 
 /* La nota de la columna puede partirse en dos renglones; los importes no. */
 .precios-nota-col { white-space: normal; }

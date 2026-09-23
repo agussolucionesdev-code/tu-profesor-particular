@@ -43,7 +43,7 @@
   font-weight: 380;
   line-height: 0.82;
   letter-spacing: -0.03em;
-  color: var(--green);
+  color: var(--green-ink);
   opacity: 0.42;
   font-variant-numeric: tabular-nums;
   transition: opacity 0.4s ease;
