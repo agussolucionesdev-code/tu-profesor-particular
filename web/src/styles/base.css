@@ -95,6 +95,13 @@ html {
   /* clip, no hidden: hidden fuerza overflow-y auto y rompe position: sticky */
   overflow-x: clip;
   scroll-behavior: smooth;
+  /* WCAG 2.4.11: al retroceder con Shift+Tab, el navegador deja el elemento
+     pegado al borde de arriba, debajo de la barra fija. Medido: la cápsula
+     visible termina en 78px en escritorio y 74px en celular, y sin esto hasta
+     cuatro elementos quedaban tapados —una pregunta del FAQ, entera—. Reserva
+     ese alto, con aire, para todo desplazamiento hacia un foco o un ancla.
+     Lo cuida tests/focoNoTapado.test.js. */
+  scroll-padding-top: 104px;
   scrollbar-gutter: stable;
 }
 
