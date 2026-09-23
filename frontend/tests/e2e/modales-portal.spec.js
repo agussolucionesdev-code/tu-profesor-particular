@@ -78,6 +78,16 @@ const instalarPortalFalso = async (page) => {
   );
 };
 
+/* Espera a que TERMINEN las animaciones de entrada del diálogo antes de medirlo.
+   El modal entra con `scale(0.98)`: medido a mitad de camino, un botón de 44 px
+   da 43,1 y el test de blancos táctiles falla por azar. Pasó en CI, en un PR que
+   no tocaba el modal; el test pasaba antes por suerte de sincronización. */
+const esperarQueSeAcomode = (page, selector) =>
+  page.evaluate(
+    (sel) => Promise.all(document.querySelector(sel).getAnimations({ subtree: true }).map((a) => a.finished)),
+    selector,
+  );
+
 const entrarAlPortal = async (page) => {
   await instalarPortalFalso(page);
   await page.goto("/portal");
@@ -111,6 +121,7 @@ test.describe("el modal de cancelar", () => {
     await entrarAlPortal(page);
     await page.getByRole("button", { name: /^Cancelar$/ }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
+    await esperarQueSeAcomode(page, ".cancel-overlay");
   });
 
   test("sus botones entran en un dedo", async ({ page }) => {
@@ -155,6 +166,7 @@ test.describe("el modal de reprogramar", () => {
     await entrarAlPortal(page);
     await page.getByRole("button", { name: /cambiar horario/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
+    await esperarQueSeAcomode(page, ".reschedule-overlay");
   });
 
   test("sus botones entran en un dedo", async ({ page }) => {
