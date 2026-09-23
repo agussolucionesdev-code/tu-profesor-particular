@@ -9,7 +9,7 @@ import "./FaqSection.css";
 const FAQS = [
   {
     q: "¿Cómo reservo una clase?",
-    a: "Elegís la materia, la modalidad y el turno en menos de un minuto, sin registro ni contraseña. Al confirmar recibís un código y un enlace seguro para gestionar tu turno.",
+    a: "Elegís la materia, la modalidad y el turno, sin registro ni contraseña, y ves el precio antes de dejar tus datos. Al confirmar recibís un código y un enlace seguro para gestionar tu turno.",
   },
   {
     q: "¿Las clases son online o presenciales?",

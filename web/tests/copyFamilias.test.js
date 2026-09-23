@@ -35,6 +35,9 @@ const RETIRADAS = [
   /Nunca te las explicaron/i,
   /filtro más duro/i,
   /menos de un minuto/i,
+  /* La misma promesa con otras palabras («Reservás en 1 minuto»): en turnos
+     sobrevivió así. Misma lista que frontend/tests/unit/frasesRetiradas.test.js. */
+  /(reserv\w*|lleva)[^.<\n]{0,25}\b(1|un) minuto/i,
   /Reservar mi clase/,
 ];
 
