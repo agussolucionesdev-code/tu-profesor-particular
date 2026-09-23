@@ -218,9 +218,13 @@ const REASONS = [
 /* ── componente ────────────────────────────────────── */
 
 const HomePage = () => {
+  /* El hook le agrega « | Tu Profesor Particular», así que el título empezaba y
+     terminaba con la marca. Y los dos sitios competían por la misma búsqueda:
+     la landing es para conocer el servicio, turnos para reservar. Cada portada
+     nombra su intención. */
   usePageMeta(
-    "Tu Profesor Particular · Entendé de verdad, no de memoria — Clases online y presenciales",
-    "¿Estudiás pero el resultado no cambia? Clases online y presenciales en Temperley de Matemáticas, Física, Fisicoquímica, Química e Inglés. Sin registro ni pagos por adelantado.",
+    "Reservá tu clase",
+    "Reservá una clase con Agustín Elías Sosa. Elegí materia, modalidad y horario, revisá el precio y confirmá tu turno online o presencial en Temperley.",
   );
 
   // Motor de scroll-reveal: revela cada elemento [data-reveal] al entrar al

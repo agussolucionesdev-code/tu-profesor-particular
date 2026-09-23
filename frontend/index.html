@@ -3,25 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#204060" />
+    <!-- Azul del logo. Era #204060, que no sale de la marca; en Chrome de
+         Android pinta la barra de direcciones. -->
+    <meta name="theme-color" content="#00214c" />
     <meta name="color-scheme" content="light dark" />
 
     <link rel="icon" type="image/png" href="/logo-icon.png" />
     <link rel="apple-touch-icon" href="/logo-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="canonical" href="https://tuprofesorparticular.com.ar/" />
+    <!-- Apuntaba a la portada del sitio institucional. Como este <head> lo
+         comparten todas las rutas de la SPA, turnos entero se declaraba
+         duplicado de la landing. Al navegar, usePageMeta lo reemplaza por la
+         URL de cada ruta. -->
+    <link rel="canonical" href="https://turnos.tuprofesorparticular.com.ar/" />
 
     <meta name="robots" content="index, follow" />
     <meta name="author" content="Agustín Elías Sosa" />
     <link rel="preconnect" href="https://tu-profesor-particular-backend.onrender.com" />
     <meta
       name="description"
-      content="Reservá clases particulares con Agustín Elías Sosa. Elegí día y horario, recibí el comprobante por mail y gestioná tus turnos desde un solo lugar."
+      content="Reservá una clase con Agustín Elías Sosa. Elegí materia, modalidad y horario, revisá el precio y confirmá tu turno online o presencial en Temperley."
     />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://tuprofesorparticular.com.ar/" />
+    <meta property="og:url" content="https://turnos.tuprofesorparticular.com.ar/" />
     <meta property="og:site_name" content="Tu Profesor Particular" />
     <meta property="og:title" content="Tu Profesor Particular | Agustín Elías Sosa" />
     <meta
@@ -33,7 +39,6 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@agustinsosa_dev" />
     <meta name="twitter:title" content="Tu Profesor Particular | Agustín Elías Sosa" />
     <meta
       name="twitter:description"

@@ -143,3 +143,40 @@ test("el título y la descripción por defecto están bien escritos", () => {
     assert.doesNotMatch(metaHook, falta);
   }
 });
+
+const indexHtml = leer("../../index.html");
+
+test("turnos se declara original a sí mismo, no copia de la landing", () => {
+  /* El `index.html` declaraba `canonical` y `og:url` apuntando a
+     https://tuprofesorparticular.com.ar/. En una SPA ese <head> lo comparten
+     TODAS las rutas: la portada de turnos, /reservar y /portal le decían a
+     Google «soy un duplicado de la portada del sitio institucional». Un
+     buscador que obedece eso no indexa ninguna página de este host.
+
+     Lo encontraron por separado ChatGPT y la auditoría de este rediseño. */
+  assert.match(indexHtml, new RegExp(`<link rel="canonical" href="${HOST}/"`));
+  assert.match(indexHtml, new RegExp(`<meta property="og:url" content="${HOST}/"`));
+  assert.doesNotMatch(indexHtml, /rel="canonical" href="https:\/\/tuprofesorparticular\.com\.ar/);
+});
+
+test("cada ruta declara su propia URL canónica", () => {
+  /* El canonical del index.html sirve para la portada. Al navegar, el hook de
+     metadatos lo reemplaza por la URL de la ruta actual —sin query string, que
+     en /reservar lleva la materia elegida y no es otra página—. */
+  assert.match(metaHook, /function setCanonical\(/);
+  assert.match(metaHook, /window\.location\.pathname/);
+  assert.match(metaHook, /setCanonical\(/);
+});
+
+test("el <head> no nombra una cuenta que no es de la marca", () => {
+  /* `twitter:site` declaraba @agustinsosa_dev. La marca no tiene cuenta de X
+     verificada; la red de Tu Profesor Particular es Instagram (@tuprofesor.ar).
+     La etiqueta es opcional: sin ella la tarjeta al compartir se arma igual. */
+  assert.doesNotMatch(indexHtml, /twitter:site/);
+});
+
+test("el color del navegador en el teléfono es el de la marca", () => {
+  /* Era #204060, que no sale del logo. En Chrome de Android pinta la barra de
+     direcciones: es lo primero que se ve del sitio. */
+  assert.match(indexHtml, /<meta name="theme-color" content="#00214c"/i);
+});

@@ -57,6 +57,29 @@ function setRobots(noindex) {
   tag.setAttribute("content", "noindex, follow");
 }
 
+const HOST = "https://turnos.tuprofesorparticular.com.ar";
+
+/* La URL canónica de la ruta actual. El `index.html` trae la de la portada; sin
+   esto, /reservar y /portal heredaban esa y le decían a Google que eran la
+   portada. Se usa el pathname SIN query: /reservar?materia=Química no es otra
+   página, es la misma con una materia preseleccionada.
+
+   Una página con `noindex` no declara canónica: pedir que no se indexe y a la
+   vez nombrarse original son dos señales que se contradicen. */
+function setCanonical(pathname) {
+  let tag = document.querySelector('link[rel="canonical"]');
+  if (!pathname) {
+    tag?.remove();
+    return;
+  }
+  if (!tag) {
+    tag = document.createElement("link");
+    tag.setAttribute("rel", "canonical");
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("href", `${HOST}${pathname}`);
+}
+
 /**
  * Sets both document title and meta description for the current route.
  * @param {string} [title] - Page-specific title.
@@ -79,4 +102,10 @@ export function usePageMeta(title, description, options = {}) {
       setRobots(false);
     };
   }, [noindex]);
+  useEffect(() => {
+    setCanonical(noindex ? null : window.location.pathname);
+    return () => {
+      setCanonical("/");
+    };
+  }, [noindex, title]);
 }
