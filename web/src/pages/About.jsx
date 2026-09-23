@@ -13,7 +13,6 @@ import {
   POR_QUE_ENSENO,
   PRIMERA_CLASE,
 } from "../data/voz.js";
-import agustin from "../assets/agustin.webp";
 import "./Inner.css";
 
 const About = () => {
@@ -35,7 +34,10 @@ const About = () => {
           <div className="about-grid">
             <figure className="about-photo" data-reveal="up">
               <img
-                src={agustin}
+                /* Por ruta y no importada, por lo mismo que el monograma: un import termina
+                   empotrando los 17 KB de la foto dentro del HTML prerenderizado, y encima el
+                   navegador la vuelve a descargar al hidratar. Ver `tests/imagenesServidas.test.js`. */
+                src={"/agustin.webp"}
                 alt={`${BRAND.person} dando clases particulares`}
                 width="800"
                 height="1069"

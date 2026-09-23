@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { FaArrowUpRightFromSquare, FaBars, FaXmark } from "react-icons/fa6";
 import { BOOKING_RESERVE_URL, BRAND } from "../data/site.js";
-import monogram from "../assets/monogram.png";
 import "./SiteNav.css";
 
 const LINKS = [
@@ -62,7 +61,12 @@ const SiteNav = () => {
           aria-label={`${BRAND.name} — ${BRAND.person}`}
         >
           <img
-            src={monogram}
+            /* La imagen se nombra por su ruta de `public/` y NO se importa: `prerender.mjs`
+               compila con esbuild declarando `".png": "dataurl"`, así que un import la
+               convierte en base64 y la deja empotrada en el HTML de CADA página. Este
+               monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
+               `tests/imagenesServidas.test.js`. */
+            src={"/monogram.png"}
             alt=""
             className="snav-mark"
             aria-hidden="true"

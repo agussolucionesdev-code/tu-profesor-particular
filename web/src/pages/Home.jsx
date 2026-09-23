@@ -25,7 +25,6 @@ import {
 } from "../data/site.js";
 import { LA_AUTONOMIA, LO_QUE_SE_ESCUCHAN } from "../data/voz.js";
 import { PRUEBA, TESTIMONIOS, hayTestimonios } from "../data/prueba.js";
-import agustin from "../assets/agustin.webp";
 import "./Home.css";
 
 const Home = () => {
@@ -128,7 +127,10 @@ const Home = () => {
                 `decoding="async"` evita que decodificarla bloquee el hilo
                 principal mientras se pinta el texto de al lado. */}
             <img
-              src={agustin}
+              /* Por ruta y no importada, por lo mismo que el monograma: un import termina
+                 empotrando los 17 KB de la foto dentro del HTML prerenderizado, y encima el
+                 navegador la vuelve a descargar al hidratar. Ver `tests/imagenesServidas.test.js`. */
+              src={"/agustin.webp"}
               alt={`${BRAND.person}, profesor particular`}
               width="800"
               height="1069"
