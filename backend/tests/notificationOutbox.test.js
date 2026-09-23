@@ -968,7 +968,23 @@ describe("NotificationOutbox durable delivery", () => {
     }
   });
 
-  it("reports readiness as unavailable when mail delivery configuration is missing", async () => {
+  /* EL CORREO SE REPORTA, PERO NO DECIDE SI EL SERVICIO ESTA LISTO.
+   *
+   * `/ready` contesta UNA pregunta: puede este proceso atender trafico. La base
+   * de datos es dependencia dura —sin ella no hay nada que responder—; el
+   * correo no: el sitio toma reservas sin mandar un solo mail, que es
+   * exactamente lo que viene haciendo en produccion.
+   *
+   * Mezclar las dos cosas sale caro en los dos extremos. `render.yaml` apunta
+   * su `healthCheckPath` aca, asi que una contrasena de aplicacion de Gmail
+   * vencida —se revocan solas— marcaria el backend como no listo y tumbaria el
+   * servicio ENTERO porque no se pueden mandar correos: una falla parcial
+   * convertida en total.
+   *
+   * La senal no se pierde. El estado del correo sigue en el cuerpo, con su
+   * detalle —healthy, unhealthy, timeout, stale, unconfigured—, y cualquier
+   * monitor puede leerlo. Lo que cambia es quien decide que hacer con eso. */
+  it("reports mail delivery in the body without holding readiness down", async () => {
     const previousUser = process.env.EMAIL_USER;
     const previousPass = process.env.EMAIL_PASS;
     delete process.env.EMAIL_USER;
@@ -976,9 +992,9 @@ describe("NotificationOutbox durable delivery", () => {
     try {
       await request(app)
         .get("/ready")
-        .expect(503)
+        .expect(200)
         .expect(({ body }) => {
-          expect(body.status).toBe("not_ready");
+          expect(body.status).toBe("ready");
           expect(body.email).toEqual({
             configured: false,
             userConfigured: false,
@@ -1010,7 +1026,11 @@ describe("NotificationOutbox durable delivery", () => {
       }));
   });
 
-  it("uses cached SMTP verification for readiness and fails closed on failure, timeout or stale state", async () => {
+  /* La verificacion SMTP se sigue cacheando y se sigue informando con su
+     estado exacto. Lo unico que ya no hace es cambiar el codigo de respuesta:
+     los cuatro casos malos —credenciales rechazadas, tiempo agotado, estado
+     vencido y sin configurar— se leen en el cuerpo, no en un 503. */
+  it("caches SMTP verification and names every failure in the body", async () => {
     const healthy = { verify: vi.fn().mockResolvedValue(true), sendMail: vi.fn() };
     setEmailTransporterForTests(healthy);
     resetEmailDeliveryHealthForTests();
@@ -1025,7 +1045,8 @@ describe("NotificationOutbox durable delivery", () => {
     setEmailTransporterForTests(unhealthy);
     resetEmailDeliveryHealthForTests();
     await refreshEmailDeliveryHealth({ force: true, timeoutMs: 50, ttlMs: 1000 });
-    await request(app).get("/ready").expect(503).expect(({ body }) => {
+    await request(app).get("/ready").expect(200).expect(({ body }) => {
+      expect(body.status).toBe("ready");
       expect(body.email.status).toBe("unhealthy");
       expect(JSON.stringify(body.email)).not.toContain("secret-password");
     });
@@ -1034,7 +1055,8 @@ describe("NotificationOutbox durable delivery", () => {
     setEmailTransporterForTests(hanging);
     resetEmailDeliveryHealthForTests();
     await refreshEmailDeliveryHealth({ force: true, timeoutMs: 5, ttlMs: 1000 });
-    await request(app).get("/ready").expect(503).expect(({ body }) => {
+    await request(app).get("/ready").expect(200).expect(({ body }) => {
+      expect(body.status).toBe("ready");
       expect(body.email.status).toBe("timeout");
     });
 
@@ -1042,7 +1064,8 @@ describe("NotificationOutbox durable delivery", () => {
     resetEmailDeliveryHealthForTests();
     await refreshEmailDeliveryHealth({ force: true, timeoutMs: 50, ttlMs: 1 });
     await new Promise((resolve) => setTimeout(resolve, 5));
-    await request(app).get("/ready").expect(503).expect(({ body }) => {
+    await request(app).get("/ready").expect(200).expect(({ body }) => {
+      expect(body.status).toBe("ready");
       expect(body.email.status).toBe("stale");
     });
 
