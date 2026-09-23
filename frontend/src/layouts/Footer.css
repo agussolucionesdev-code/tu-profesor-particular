@@ -314,3 +314,16 @@
     border: 1px solid CanvasText;
   }
 }
+
+/* Una red anunciada que todavía no existe: se ve, pero no es un control. Sin
+   hover, sin cursor de enlace, y el borde punteado dice «todavía no». */
+.tpp-footer-red.is-proximo {
+  border-style: dashed;
+  background: transparent;
+  cursor: default;
+}
+
+.tpp-footer-red.is-proximo:hover {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.14);
+}

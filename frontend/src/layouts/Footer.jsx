@@ -17,6 +17,7 @@ import {
   CONTACT_EMAIL_DOMAIN,
   CONTACT_EMAIL_USER,
   SOCIAL_PROFILES,
+  SOCIAL_PROFILES_PROXIMOS,
   WHATSAPP_DEFAULT_MESSAGE,
   WHATSAPP_DISPLAY,
   waLink,
@@ -149,7 +150,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {SOCIAL_PROFILES.length > 0 && (
+          {SOCIAL_PROFILES.length + SOCIAL_PROFILES_PROXIMOS.length > 0 && (
             <div className="tpp-footer-col">
               <h2 className="tpp-footer-title">Redes</h2>
               <ul className="tpp-footer-social">
@@ -173,6 +174,25 @@ const Footer = () => {
                           {detalle && <span>{detalle}</span>}
                         </span>
                       </a>
+                    </li>
+                  );
+                })}
+                {/* Las que todavía no existen: logo oficial y «Próximamente», sin
+                    enlace. Ver SOCIAL_PROFILES_PROXIMOS en contactChannels.js. */}
+                {SOCIAL_PROFILES_PROXIMOS.map(({ id, label }) => {
+                  const Logo = LOGO_SOCIAL[id];
+                  if (!Logo) return null;
+                  return (
+                    <li key={id}>
+                      <span className={`tpp-footer-red tpp-footer-red--${id} is-proximo`}>
+                        <span className="tpp-footer-red-logo" aria-hidden="true">
+                          <Logo />
+                        </span>
+                        <span className="tpp-footer-red-texto">
+                          <strong>{label}</strong>
+                          <span>Próximamente</span>
+                        </span>
+                      </span>
                     </li>
                   );
                 })}
