@@ -204,12 +204,32 @@ app.get("/live", (req, res) => {
   });
 });
 
+/* Esta ruta contesta UNA pregunta: puede este proceso atender tráfico.
+ *
+ * De eso depende quién queda adentro de la condición. La base de datos es
+ * dependencia dura —sin ella no hay nada que responder—; la clave de cifrado
+ * del outbox también, porque sin ella ni siquiera se puede GUARDAR una
+ * notificación; y los trabajos del planificador porque, si no terminaron de
+ * registrarse, el proceso está a medio arrancar.
+ *
+ * El correo no. El sitio toma reservas sin mandar un solo mail, que es
+ * exactamente lo que viene haciendo en producción. Estaba adentro de la
+ * condición y salía caro en los dos extremos: `render.yaml` apunta su
+ * `healthCheckPath` acá, así que una contraseña de aplicación de Gmail vencida
+ * —se revocan solas— marcaría el backend como no listo y tumbaría el servicio
+ * ENTERO porque no se pueden mandar correos. Una falla parcial convertida en
+ * total.
+ *
+ * No se pierde nada: el estado del correo sigue viajando en el cuerpo con su
+ * detalle —healthy, unhealthy, timeout, stale, unconfigured— y cualquier
+ * monitor puede leerlo. Lo que cambia es quién decide qué hacer con eso: un
+ * tablero avisa, un health-check reinicia. */
 app.get("/ready", (req, res) => {
   const database = getDbHealth();
   const notifications = getNotificationEncryptionHealth();
   const email = getEmailDeliveryHealth();
   const workers = getRuntimeSchedulerHealth();
-  const ready = database.isConnected && notifications.configured && email.configured &&
+  const ready = database.isConnected && notifications.configured &&
     (!workers.required || workers.registrationsComplete);
   res.status(ready ? 200 : 503).json({
     status: ready ? "ready" : "not_ready",
