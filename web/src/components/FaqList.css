@@ -53,7 +53,9 @@
   left: 50%;
   width: 11px;
   height: 1.5px;
-  background: var(--green);
+  /* --green-ink y no --green: en oscuro el verde de fondo sobre azul noche
+     casi no se veía, y la cruz es lo único que dice que la pregunta se abre. */
+  background: var(--green-ink);
   translate: -50% -50%;
   transition: background 0.25s ease;
 }

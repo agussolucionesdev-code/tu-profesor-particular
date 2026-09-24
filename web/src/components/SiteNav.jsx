@@ -1,23 +1,68 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { FaArrowUpRightFromSquare, FaBars, FaXmark } from "react-icons/fa6";
+import {
+  LuArrowUpRight,
+  LuBookOpen,
+  LuCalendarPlus,
+  LuHouse,
+  LuMenu,
+  LuMessageCircle,
+  LuMoon,
+  LuRoute,
+  LuSun,
+  LuUserRound,
+  LuX,
+} from "react-icons/lu";
 import { BOOKING_RESERVE_URL, BRAND } from "../data/site.js";
+import { useTema } from "../hooks/useTema.js";
 import "./SiteNav.css";
 
+/* ══════════════════════════════════════════════════════
+   LA BARRA: UNA ISLA DE VIDRIO
+
+   Mismo lenguaje que la barra de la app de turnos, para que las dos se sientan
+   un producto: isla flotante de vidrio esmerilado, monograma grande, íconos
+   Lucide del mismo trazo y el mismo botón de tema.
+
+   El vidrio va en el ::before de la cápsula y no en la cápsula: un elemento
+   con backdrop-filter se vuelve el contenedor de sus hijos `position: fixed`,
+   y el menú del celular quedaba recortado por la barra.
+══════════════════════════════════════════════════════ */
+
 const LINKS = [
-  { to: "/", label: "Inicio" },
-  { to: "/sobre-mi", label: "Sobre mí" },
-  { to: "/materias", label: "Materias" },
-  { to: "/como-trabajo", label: "Cómo trabajo" },
-  { to: "/contacto", label: "Contacto" },
+  { to: "/", label: "Inicio", icon: LuHouse },
+  { to: "/sobre-mi", label: "Sobre mí", icon: LuUserRound },
+  { to: "/materias", label: "Materias", icon: LuBookOpen },
+  { to: "/como-trabajo", label: "Cómo trabajo", icon: LuRoute },
+  { to: "/contacto", label: "Contacto", icon: LuMessageCircle },
 ];
 
-/* Isla flotante: el <nav> es sólo el riel de posición y la cápsula es la barra.
-   Mismo lenguaje que la app de turnos, para que las dos se sientan un producto. */
+/* Los dos íconos se dibujan siempre y el CSS muestra el que corresponde según
+   `data-theme`: así el HTML prerenderizado ya sale con el ícono correcto, sin
+   esperar a que React lea el tema. */
+const BotonTema = ({ variante, oscuro, alternar }) => (
+  <button
+    type="button"
+    className={`snav-tema snav-tema--${variante}`}
+    onClick={alternar}
+    aria-label={oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+  >
+    <LuMoon className="snav-tema-luna" aria-hidden="true" />
+    <LuSun className="snav-tema-sol" aria-hidden="true" />
+    {variante === "menu" && (
+      <span className="snav-tema-texto" aria-hidden="true">
+        {oscuro ? "Modo claro" : "Modo oscuro"}
+      </span>
+    )}
+  </button>
+);
+
 const SiteNav = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { oscuro, alternar } = useTema();
+  const burgerRef = useRef(null);
 
   useEffect(() => {
     let raf = 0;
@@ -36,23 +81,32 @@ const SiteNav = () => {
     };
   }, []);
 
-  // El menú mobile bloquea el scroll del fondo y cierra con Escape.
+  /* El menú del celular bloquea el scroll del fondo y cierra con Escape,
+     devolviendo el foco al botón que lo abrió. Si la ventana crece hasta el
+     diseño de escritorio con el menú abierto, se cierra: si no, el scroll
+     quedaba bloqueado sin ningún menú a la vista. */
   useEffect(() => {
     if (!open) return undefined;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      burgerRef.current?.focus();
     };
+    const escritorio = window.matchMedia?.("(min-width: 1100px)");
+    const alCrecer = (e) => e.matches && setOpen(false);
     window.addEventListener("keydown", onKey);
+    escritorio?.addEventListener?.("change", alCrecer);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
+      escritorio?.removeEventListener?.("change", alCrecer);
     };
   }, [open]);
 
   return (
-    <nav className={`snav ${scrolled ? "is-scrolled" : ""}`} aria-label="Principal">
+    <nav className="snav" data-scrolled={scrolled} aria-label="Principal">
       <div className="snav-capsule">
         <Link
           to="/"
@@ -60,26 +114,29 @@ const SiteNav = () => {
           onClick={() => setOpen(false)}
           aria-label={`${BRAND.name} — ${BRAND.person}`}
         >
-          {/* Con fondo propio: el monograma tiene el blanco horneado en el PNG,
-              así que en la barra del modo oscuro sería un cuadrado blanco. El
-              navegador elige la versión según el tema, sin JavaScript. La
-              oscura es la oficial del kit de marca. */}
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcSet="/monogram-oscuro.png" />
+          {/* Dos archivos transparentes, recortados al trazo: navy para el
+              vidrio claro y blanco para el oscuro. El CSS muestra uno según
+              `data-theme`; un <picture> con `prefers-color-scheme` no se
+              enteraría del botón de tema. Se nombran por su ruta de
+              `public/` y NO se importan: ver tests/imagenesServidas.test.js. */}
+          <span className="snav-marca" aria-hidden="true">
             <img
-              /* La imagen se nombra por su ruta de `public/` y NO se importa: `prerender.mjs`
-                 compila con esbuild declarando `".png": "dataurl"`, así que un import la
-                 convierte en base64 y la deja empotrada en el HTML de CADA página. Este
-                 monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
-                 `tests/imagenesServidas.test.js`. */
-              src={"/monogram.png"}
+              src="/marca-claro.webp"
               alt=""
-              className="snav-mark"
-              aria-hidden="true"
-              width="38"
-              height="38"
+              className="snav-mark snav-mark--claro"
+              width="192"
+              height="192"
+              loading="lazy"
             />
-          </picture>
+            <img
+              src="/marca-oscuro.webp"
+              alt=""
+              className="snav-mark snav-mark--oscuro"
+              width="192"
+              height="192"
+              loading="lazy"
+            />
+          </span>
           <span className="snav-brand-copy">
             <span className="snav-brand-name">
               Tu Profesor <em>Particular</em>
@@ -88,34 +145,32 @@ const SiteNav = () => {
           </span>
         </Link>
 
-        <button
-          type="button"
-          className="snav-burger"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="snav-menu"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
-        >
-          {open ? <FaXmark aria-hidden="true" /> : <FaBars aria-hidden="true" />}
-        </button>
-
-        <div className={`snav-right ${open ? "is-open" : ""}`} id="snav-menu">
+        <div className="snav-right" id="snav-menu" data-open={open}>
           <ul className="snav-links">
-            {LINKS.map((link) => (
-              <li key={link.to}>
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `snav-link ${isActive ? "is-active" : ""}`
-                  }
-                  onClick={() => setOpen(false)}
-                  end={link.to === "/"}
-                >
-                  {link.label}
-                </NavLink>
-              </li>
-            ))}
+            {LINKS.map((link) => {
+              const Icono = link.icon;
+              return (
+                <li key={link.to}>
+                  <NavLink
+                    to={link.to}
+                    className={({ isActive }) => `snav-link ${isActive ? "is-active" : ""}`}
+                    onClick={() => setOpen(false)}
+                    end={link.to === "/"}
+                  >
+                    <Icono aria-hidden="true" />
+                    <span>{link.label}</span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
+          <div className="snav-menu-tools">
+            <BotonTema variante="menu" oscuro={oscuro} alternar={alternar} />
+          </div>
+        </div>
+
+        <div className="snav-actions">
+          <BotonTema variante="barra" oscuro={oscuro} alternar={alternar} />
 
           {/* El CTA sale del sitio hacia el sistema de turnos: se avisa. */}
           <a
@@ -125,10 +180,24 @@ const SiteNav = () => {
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
           >
-            Reservar una clase
-            <FaArrowUpRightFromSquare aria-hidden="true" />
+            <LuCalendarPlus aria-hidden="true" />
+            <span className="snav-cta-largo">Reservar una clase</span>
+            <span className="snav-cta-corto">Reservar</span>
+            <LuArrowUpRight className="snav-cta-sale" aria-hidden="true" />
             <span className="sr-only">(se abre en una pestaña nueva)</span>
           </a>
+
+          <button
+            ref={burgerRef}
+            type="button"
+            className="snav-burger"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="snav-menu"
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          >
+            {open ? <LuX aria-hidden="true" /> : <LuMenu aria-hidden="true" />}
+          </button>
         </div>
       </div>
 

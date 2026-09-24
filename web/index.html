@@ -10,6 +10,11 @@
       content="Clases particulares de Matemáticas, Física, Fisicoquímica, Química e Inglés. Online y presenciales en Temperley, Buenos Aires. Desde primaria hasta universitario. Sin pagos por adelantado."
     />
     <meta name="theme-color" content="#00214c" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Fija el tema antes de pintar: sin esto, quien eligió oscuro vería la
+         página blanca un instante. Archivo y no en línea porque la CSP es
+         script-src 'self'. Sincrónico a propósito: sin defer ni async. -->
+    <script src="/tema.js"></script>
     <link rel="canonical" href="https://tuprofesorparticular.com.ar/" />
 
     <meta property="og:type" content="website" />
