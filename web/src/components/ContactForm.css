@@ -110,15 +110,15 @@
   padding: 0.75rem 1.4rem;
   border: none;
   border-radius: 999px;
-  background: var(--green);
-  color: #fff;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 800;
   cursor: pointer;
   transition: background 0.16s var(--ease), transform 0.16s var(--ease);
 }
-.cf-enviar:not(:disabled):hover { background: var(--green-deep); transform: translateY(-1px); }
+.cf-enviar:not(:disabled):hover { background: var(--cta-bg-hover); transform: translateY(-1px); }
 .cf-enviar:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(1, 149, 60, 0.3);
@@ -176,7 +176,5 @@
    así que no seguían al tema: el texto de error quedaba en #b3261e sobre azul
    noche, y el aviso de envío fallido era un rectángulo rosa claro en medio de
    una página oscura. */
-@media (prefers-color-scheme: dark) {
-  .cf-error { color: #ffb4ab; }
-  .cf-estado--error { background: #3a1414; color: #ffb4ab; }
-}
+[data-theme="dark"] .cf-error { color: #ffb4ab; }
+[data-theme="dark"] .cf-estado--error { background: #3a1414; color: #ffb4ab; }

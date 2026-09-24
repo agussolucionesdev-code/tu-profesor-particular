@@ -40,12 +40,35 @@
   --field-bg: #ffffff;
   --field-border: #848e9d;
 
+  /* EL BOTÓN PRINCIPAL ES UN PAR: fondo y tinta cambian juntos.
+     En claro, verde oscuro con blanco (6,55:1). En oscuro ese mismo verde
+     sobre azul noche quedaba apagado, casi del color del fondo; se invierte a
+     verde claro con tinta navy, como en la app de turnos. `--green` no cambia
+     de tema: sigue siendo el fondo de las piezas que llevan blanco encima. */
+  --cta-bg: #006d1f;
+  --cta-bg-hover: #005a19;
+  --cta-ink: #ffffff;
+
+  /* Vidrio de la barra. Translúcido a propósito: necesita su propia alfa.
+     86 % y no 72 %: la portada es azul marino también en claro, y al 72 % el
+     vidrio blanco sobre ese azul quedaba gris y el subtítulo de la marca bajaba
+     a ~3,5:1. El medidor de contraste no lo ve —compone contra el fondo de la
+     página, no contra lo que pasa por detrás—; se midió a mano. */
+  --glass-bg: rgba(255, 255, 255, 0.86);
+  --glass-bg-strong: rgba(255, 255, 255, 0.94);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-ring: rgba(0, 33, 76, 0.1);
+  --glass-shadow: 0 12px 32px rgba(0, 33, 76, 0.1);
+  --glass-shadow-strong: 0 16px 40px rgba(0, 33, 76, 0.16);
+  --tint-soft: rgba(0, 33, 76, 0.05);
+  --tint-strong: rgba(0, 33, 76, 0.09);
+
   --font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
   --font-body: "Inter Variable", Inter, system-ui, -apple-system, sans-serif;
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --shell: 1180px;
-  --nav-space: 92px;
+  --nav-space: 100px;
 
   color-scheme: light;
 }
@@ -57,32 +80,44 @@
    blanca a las once de la noche, justo cuando una familia se sienta a
    resolver lo de la escuela.
 
-   Sigue al sistema con `prefers-color-scheme` y sin JavaScript: el HTML
-   prerenderizado ya sale con el tema correcto y no hay destello blanco antes
-   de que cargue nada. La paleta es la del monograma oscuro oficial: blanco y
-   verde sobre azul marino.
+   Lo decide `public/tema.js` antes de pintar: lo que la persona eligió con el
+   botón de la barra o, si no eligió nada, lo que dice el sistema. Por eso las
+   variables cuelgan de `[data-theme="dark"]` y no de `prefers-color-scheme`:
+   la media query no se entera del botón. La paleta es la del monograma oscuro
+   oficial: blanco y verde sobre azul marino.
 
    Las secciones oscuras (`--navy-800`) quedan un peldaño MÁS CLARAS que la
    página, al revés que en claro: si fueran igual de oscuras, el ritmo de
    bandas de la portada desaparecería. Los contrastes de cada par los mide
    tests/modoOscuro.test.js leyendo estos mismos valores.
 ══════════════════════════════════════════════════════ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --white: #001633;
-    --off: #031e42;
-    --navy-800: #00275a;
-    --navy-600: #a9b8cf;
-    --text: #f2f5fa;
-    --muted: #a9b8cf;
-    --green-ink: #88ce93;
-    --green-50: #0b3340;
-    --border: rgba(169, 184, 207, 0.16);
-    --field-bg: #031e42;
-    --field-border: #6b7fa0;
+:root[data-theme="dark"] {
+  --white: #001633;
+  --off: #031e42;
+  --navy-800: #00275a;
+  --navy-600: #a9b8cf;
+  --text: #f2f5fa;
+  --muted: #a9b8cf;
+  --green-ink: #88ce93;
+  --green-50: #0b3340;
+  --border: rgba(169, 184, 207, 0.16);
+  --field-bg: #031e42;
+  --field-border: #6b7fa0;
 
-    color-scheme: dark;
-  }
+  --cta-bg: #88ce93;
+  --cta-bg-hover: #a3dcab;
+  --cta-ink: #001633;
+
+  --glass-bg: rgba(3, 32, 74, 0.62);
+  --glass-bg-strong: rgba(3, 32, 74, 0.88);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-ring: rgba(169, 184, 207, 0.16);
+  --glass-shadow: 0 12px 32px rgba(0, 4, 14, 0.4);
+  --glass-shadow-strong: 0 16px 40px rgba(0, 4, 14, 0.55);
+  --tint-soft: rgba(242, 245, 250, 0.06);
+  --tint-strong: rgba(242, 245, 250, 0.1);
+
+  color-scheme: dark;
 }
 
 *,
@@ -97,7 +132,7 @@ html {
   scroll-behavior: smooth;
   /* WCAG 2.4.11: al retroceder con Shift+Tab, el navegador deja el elemento
      pegado al borde de arriba, debajo de la barra fija. Medido: la cápsula
-     visible termina en 78px en escritorio y 74px en celular, y sin esto hasta
+     visible termina en 88px en escritorio y 72px en celular, y sin esto hasta
      cuatro elementos quedaban tapados —una pregunta del FAQ, entera—. Reserva
      ese alto, con aire, para todo desplazamiento hacia un foco o un ancla.
      Lo cuida tests/focoNoTapado.test.js. */
@@ -246,11 +281,11 @@ a { color: inherit; }
    llega al 4.5 que pide el texto normal (el umbral de texto grande es 18.66px
    con peso ≥700, y no lo alcanza). Sobre #006d1f son 6.55:1. */
 .btn--primary {
-  background: var(--green);
-  color: #fff;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
 }
 .btn--primary:hover {
-  background: var(--green-deep);
+  background: var(--cta-bg-hover);
   transform: translateY(-2px);
 }
 

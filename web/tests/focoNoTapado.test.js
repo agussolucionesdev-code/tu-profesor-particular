@@ -12,11 +12,12 @@ import test from "node:test";
  *
  * El sitio no tiene tests de navegador (el CI sólo corre `node --test`), así
  * que esto no mide la página: fija la regla y el alto medido. La cápsula
- * visible termina en 78px en escritorio y 74px en celular. Si la barra crece,
- * este número tiene que crecer con ella.
+ * visible termina en 88px en escritorio y 72px en celular desde la barra de
+ * vidrio (septiembre de 2026; antes, 78 y 74). Si la barra crece, este número
+ * tiene que crecer con ella.
  */
 
-const ALTO_MEDIDO_DE_LA_BARRA = 78;
+const ALTO_MEDIDO_DE_LA_BARRA = 88;
 const AIRE = 12;
 
 const css = readFileSync(new URL("../src/styles/base.css", import.meta.url), "utf8");

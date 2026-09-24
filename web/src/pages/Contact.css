@@ -121,16 +121,17 @@
   padding: 1rem 1.7rem;
   border-radius: 14px;
   /* 1.02rem = 16.3px, por debajo del umbral de texto grande: pide 4.5:1. */
-  background: var(--green);
-  color: #fff;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
   font-size: 1.02rem;
   font-weight: 800;
   text-decoration: none;
   transition: background 0.2s ease, transform 0.35s var(--ease);
 }
 .ct-primary-cta svg { font-size: 0.78rem; }
+/* Era #17a94e: blanco encima daba 3,0:1 justo al pasar el mouse. */
 .ct-primary-cta:hover {
-  background: #17a94e;
+  background: var(--cta-bg-hover);
   transform: translateY(-2px);
 }
 

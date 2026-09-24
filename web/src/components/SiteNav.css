@@ -1,254 +1,556 @@
-/* Isla flotante. El <nav> es el riel (transparente); la cápsula es la barra. */
+/* ══════════════════════════════════════════════════════
+   LA BARRA: UNA ISLA DE VIDRIO
+
+   El <nav> es el riel de posición, transparente y sin eventos; la cápsula es
+   la barra. El vidrio vive en `.snav-capsule::before` —ver el comentario de
+   SiteNav.jsx— y sus colores en las variables `--glass-*` de base.css, que el
+   modo oscuro redefine.
+══════════════════════════════════════════════════════ */
+
 .snav {
+  /* Dónde termina la isla: el menú del celular se abre justo debajo. */
+  --snav-fondo: 88px;
+  --snav-activo: #ffffff;
+
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 60;
-  padding: clamp(10px, 1.4vw, 18px) clamp(10px, 2.4vw, 26px);
-  transition: padding 260ms var(--ease);
+  padding: 12px clamp(12px, 2vw, 24px) 0;
+  pointer-events: none;
 }
-.snav.is-scrolled { padding-top: clamp(6px, 0.8vw, 10px); }
+
+[data-theme="dark"] .snav {
+  --snav-activo: rgba(242, 245, 250, 0.1);
+}
 
 .snav-capsule {
   position: relative;
-  max-width: var(--shell);
+  isolation: isolate;
+  /* Más ancha que el contenido (--shell, 1180): cinco enlaces con ícono,
+     el tema y «Reservar una clase» no entran en 1180 junto a una marca
+     grande. Medido: desbordaba 51 px. */
+  max-width: 1290px;
+  height: 76px;
   margin: 0 auto;
-  min-height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: clamp(0.75rem, 2vw, 1.5rem);
-  padding: 0.5rem 0.5rem 0.5rem clamp(0.9rem, 2vw, 1.35rem);
-  border: 1px solid rgba(0, 33, 76, 0.09);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.84);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  box-shadow: 0 10px 34px -22px rgba(0, 33, 76, 0.5);
-  transition: min-height 260ms var(--ease), background 240ms ease,
-    border-color 240ms ease, box-shadow 260ms ease;
+  gap: clamp(0.6rem, 1.4vw, 1rem);
+  padding: 0 10px 0 14px;
+  border-radius: 24px;
+  pointer-events: auto;
 }
-.snav.is-scrolled .snav-capsule {
-  min-height: 56px;
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(0, 33, 76, 0.14);
-  box-shadow: 0 14px 40px -24px rgba(0, 33, 76, 0.6);
+
+.snav-capsule::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--glass-ring), var(--glass-shadow);
+  transition: background 240ms ease, box-shadow 240ms ease;
+}
+
+.snav[data-scrolled="true"] .snav-capsule::before {
+  background: var(--glass-bg-strong);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--glass-ring), var(--glass-shadow-strong);
+}
+
+/* Sin backdrop-filter el vidrio sería casi transparente sobre el contenido. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .snav-capsule::before {
+    background: var(--glass-bg-strong);
+  }
 }
 
 /* ── Marca ───────────────────────────────────────────── */
 .snav-brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  text-decoration: none;
+  gap: 0.75rem;
   flex-shrink: 0;
-  /* WCAG 2.5.5: 44px mínimo. Medido a 375px daba 38, la altura del monograma. */
+  /* WCAG 2.5.5: 44px mínimo. */
   min-height: 44px;
+  padding: 4px 8px 4px 0;
+  border-radius: 18px;
+  text-decoration: none;
 }
+
+/* El monograma, grande: tiene que imponer. Los archivos están recortados al
+   trazo, así que el tamaño de la caja es el tamaño del «TU» que se ve. */
+.snav-marca {
+  position: relative;
+  display: block;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+}
+
 .snav-mark {
-  width: 38px;
-  height: 38px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
   object-fit: contain;
   transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.snav-brand:hover .snav-mark { transform: rotate(-5deg) scale(1.07); }
 
-.snav-brand-copy { display: grid; gap: 1px; line-height: 1.05; }
+.snav-mark--oscuro,
+[data-theme="dark"] .snav-mark--claro {
+  display: none;
+}
+
+[data-theme="dark"] .snav-mark--oscuro {
+  display: block;
+}
+
+.snav-brand:hover .snav-mark {
+  transform: rotate(-4deg) scale(1.05);
+}
+
+.snav-brand-copy {
+  display: grid;
+  gap: 3px;
+  line-height: 1.05;
+}
+
 .snav-brand-name {
   font-family: var(--font-display);
   font-optical-sizing: auto;
-  font-size: 1.28rem;
+  font-size: 1.36rem;
   font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--text);
   white-space: nowrap;
 }
+
 .snav-brand-name em {
   font-style: italic;
   font-weight: 500;
   color: var(--green-ink);
 }
+
 .snav-brand-person {
   font-size: 0.66rem;
   font-weight: 800;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--navy-600);
+  white-space: nowrap;
 }
 
-/* ── Zona derecha ────────────────────────────────────── */
+/* ── Enlaces: un riel dentro de la isla ──────────────── */
 .snav-right {
   display: flex;
   align-items: center;
-  gap: clamp(0.4rem, 1.2vw, 0.9rem);
+  margin-left: auto;
 }
 
 .snav-links {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
-  list-style: none;
+  gap: 2px;
   margin: 0;
-  padding: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 999px;
+  background: var(--tint-soft);
 }
+
 .snav-link {
   display: inline-flex;
-  padding: 0.5rem 0.85rem;
-  border-radius: 10px;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--navy-600);
   text-decoration: none;
   white-space: nowrap;
-  transition: color 180ms ease, background 180ms ease;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
+
+.snav-link svg {
+  flex-shrink: 0;
+  font-size: 1.05rem;
+}
+
 .snav-link:hover {
   color: var(--text);
-  background: rgba(0, 33, 76, 0.05);
+  background: var(--tint-strong);
 }
+
 .snav-link.is-active {
   color: var(--text);
-  background: rgba(0, 33, 76, 0.08);
+  background: var(--snav-activo);
+  box-shadow: 0 1px 2px var(--tint-strong), 0 4px 12px var(--tint-soft);
 }
 
-.snav-cta {
+.snav-link.is-active svg {
+  color: var(--green-ink);
+}
+
+/* Las herramientas del menú sólo existen en el celular. */
+.snav-menu-tools {
+  display: none;
+}
+
+/* ── Acciones ────────────────────────────────────────── */
+.snav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.snav-tema {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.62rem 1.1rem;
-  border-radius: 999px;
-  /* 0.88rem = 14px: texto normal, pide 4.5:1. --green-brand daba 3.91:1. */
-  background: var(--green);
-  color: #fff;
-  font-size: 0.88rem;
-  font-weight: 800;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background 180ms ease, transform 300ms var(--ease);
-}
-.snav-cta svg { font-size: 0.7rem; }
-.snav-cta:hover {
-  background: var(--green-deep);
-  transform: translateY(-1px);
-}
-
-/* ── Hamburguesa y menú mobile ───────────────────────── */
-.snav-burger {
-  display: none;
-  align-items: center;
   justify-content: center;
-  /* 44×44 de WCAG 2.5.5. Van `min-*` además de `width`/`height` y con
-     `flex-shrink: 0` a propósito: en la app de turnos este mismo botón, siendo
-     un flex item, se comprimió a 14px de ancho pese a tener un `width` fijo
-     —el contenedor lo encogió—. Una medida que un flex container puede ignorar
-     no es una garantía. */
+  gap: 10px;
   width: 44px;
   height: 44px;
   min-width: 44px;
   min-height: 44px;
   flex-shrink: 0;
+  padding: 0;
   border: none;
-  border-radius: 11px;
-  background: none;
+  border-radius: 999px;
+  background: var(--tint-soft);
+  box-shadow: inset 0 0 0 1px var(--glass-ring);
   color: var(--text);
-  font-size: 1.05rem;
+  font-size: 1.12rem;
   cursor: pointer;
-  transition: background 180ms ease;
+  transition: background 160ms ease;
 }
-.snav-burger:hover { background: rgba(0, 33, 76, 0.06); }
 
-/* Scrim: usa unidades de viewport porque el backdrop-filter de la cápsula
-   convierte al nav en contenedor de sus hijos fixed. */
+.snav-tema:hover {
+  background: var(--tint-strong);
+}
+
+.snav-tema-sol,
+[data-theme="dark"] .snav-tema-luna {
+  display: none;
+}
+
+[data-theme="dark"] .snav-tema-sol {
+  display: block;
+}
+
+.snav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  flex-shrink: 0;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font-size: 0.94rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(1, 149, 60, 0.26);
+  transition: background 160ms ease, box-shadow 160ms ease, transform 300ms var(--ease);
+}
+
+.snav-cta svg {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.snav-cta .snav-cta-sale {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.snav-cta:hover {
+  background: var(--cta-bg-hover);
+  box-shadow: 0 8px 22px rgba(1, 149, 60, 0.34);
+  transform: translateY(-1px);
+}
+
+.snav-cta-corto {
+  display: none;
+}
+
+/* ── Hamburguesa ─────────────────────────────────────── */
+.snav-burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  /* 44×44 de WCAG 2.5.5, con margen. Van `min-*` además de `width`/`height`
+     y con `flex-shrink: 0` a propósito: en la app de turnos este mismo botón,
+     siendo un flex item, se comprimió a 14px de ancho pese a tener un `width`
+     fijo —el contenedor lo encogió—. Una medida que un flex container puede
+     ignorar no es una garantía. */
+  width: 48px;
+  height: 48px;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--tint-soft);
+  box-shadow: inset 0 0 0 1px var(--glass-ring);
+  color: var(--text);
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.snav-burger:hover {
+  background: var(--tint-strong);
+}
+
 .snav-scrim {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
+  inset: var(--snav-fondo) 0 0 0;
   z-index: -1;
   border: none;
   padding: 0;
   background: rgba(0, 11, 43, 0.5);
   cursor: pointer;
+  pointer-events: auto;
 }
 
-@media (max-width: 940px) {
-  .snav-burger { display: inline-flex; }
+/* ── Escritorio angosto: el riel pierde los íconos y el CTA se acorta ── */
+@media (max-width: 1339px) {
+  .snav-link {
+    padding: 0 12px;
+  }
+
+  .snav-link svg {
+    display: none;
+  }
+}
+
+@media (max-width: 1199px) {
+  .snav-cta-largo {
+    display: none;
+  }
+
+  .snav-cta-corto {
+    display: inline;
+  }
+}
+
+/* ── Tableta y celular: menú desplegable del mismo vidrio ──
+   Desde 1099 y no desde 1023: a 1024 el riel desbordaba 120 px. */
+@media (max-width: 1099px) {
+  .snav {
+    --snav-fondo: 80px;
+    padding: 8px 8px 0;
+  }
+
+  .snav-capsule {
+    height: 72px;
+    padding: 0 8px 0 12px;
+    border-radius: 22px;
+  }
+
+  .snav-marca {
+    width: 54px;
+    height: 54px;
+  }
+
+  .snav-burger {
+    display: inline-flex;
+  }
+
+  /* El riel pasa a ser un panel fijo y ya no empuja: empujan las acciones. */
+  .snav-actions {
+    margin-left: auto;
+  }
 
   .snav-right {
-    position: absolute;
-    top: calc(100% + 10px);
-    left: 0;
-    right: 0;
+    position: fixed;
+    top: calc(var(--snav-fondo) + 8px);
+    right: 8px;
+    z-index: 2;
+    /* 100 % y no 100vw: el vw incluye la barra de desplazamiento y el panel
+       quedaba pegado al borde izquierdo. */
+    width: min(400px, calc(100% - 16px));
+    display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-    padding: 0.9rem;
-    border: 1px solid rgba(0, 33, 76, 0.12);
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 22px 48px -26px rgba(0, 33, 76, 0.55);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: opacity 220ms ease, transform 260ms var(--ease),
-      visibility 0s 260ms;
-  }
-  .snav-right.is-open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    transition: opacity 220ms ease, transform 260ms var(--ease);
+    gap: 6px;
+    margin: 0;
+    padding: 10px;
+    border-radius: 22px;
+    background: var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--glass-ring), var(--glass-shadow-strong);
+    pointer-events: auto;
   }
 
-  .snav-links { flex-direction: column; align-items: stretch; gap: 0.2rem; }
-  .snav-link {
-    padding: 0.8rem 0.9rem;
-    border-radius: 12px;
-    font-size: 1rem;
+  .snav-right[data-open="true"] {
+    display: flex;
   }
-  .snav-cta {
-    justify-content: center;
-    padding: 0.9rem 1rem;
-    border-radius: 12px;
-    font-size: 1rem;
+
+  .snav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 0;
+    background: none;
+  }
+
+  .snav-link {
+    width: 100%;
+    min-height: 52px;
+    gap: 12px;
+    padding: 0 16px;
+    border-radius: 16px;
+    font-size: 1.04rem;
+  }
+
+  .snav-link svg {
+    display: block;
+    font-size: 1.2rem;
   }
 }
 
-@media (max-width: 480px) {
-  .snav-brand-person { display: none; }
-  .snav-brand-name { font-size: 1.1rem; }
+/* ── Celular: el tema pasa al menú y la marca se apila ── */
+@media (max-width: 640px) {
+  .snav {
+    --snav-fondo: 72px;
+  }
+
+  .snav-capsule {
+    height: 64px;
+    gap: 8px;
+    padding: 0 8px 0 10px;
+    border-radius: 20px;
+  }
+
+  .snav-marca {
+    width: 48px;
+    height: 48px;
+  }
+
+  .snav-brand {
+    gap: 8px;
+    padding-right: 0;
+  }
+
+  .snav-brand-name {
+    font-size: 1.04rem;
+    line-height: 1.08;
+  }
+
+  .snav-brand-name em {
+    display: block;
+  }
+
+  .snav-brand-person {
+    display: none;
+  }
+
+  .snav-tema--barra {
+    display: none;
+  }
+
+  .snav-cta {
+    gap: 6px;
+    padding: 0 16px;
+  }
+
+  .snav-cta .snav-cta-sale {
+    display: none;
+  }
+
+  .snav-menu-tools {
+    display: block;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .snav-tema--menu {
+    width: 100%;
+    height: 52px;
+    justify-content: flex-start;
+    padding: 0 16px;
+    border-radius: 16px;
+    font-size: 1.2rem;
+  }
+
+  .snav-tema-texto {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 389px) {
+  .snav-capsule {
+    gap: 6px;
+    padding: 0 6px 0 8px;
+  }
+
+  .snav-brand {
+    gap: 6px;
+  }
+
+  .snav-marca {
+    width: 44px;
+    height: 44px;
+  }
+
+  .snav-brand-name {
+    font-size: 0.96rem;
+  }
+
+  .snav-cta {
+    padding: 0 13px;
+  }
+}
+
+/* Muy chico: «Reservar» queda en ícono. Oculto a la vista, NO al lector. */
+@media (max-width: 359px) {
+  .snav-cta {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .snav-cta-corto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .snav-capsule::before,
   .snav-mark,
-  .snav-cta { transition: none; }
-  .snav-brand:hover .snav-mark { transform: none; }
+  .snav-link,
+  .snav-cta {
+    transition: none;
+  }
+
+  .snav-brand:hover .snav-mark,
+  .snav-cta:hover {
+    transform: none;
+  }
 }
 
-/* ── Modo oscuro ─────────────────────────────────────────
-   La cápsula tiene su blanco translúcido escrito a mano, no en una variable,
-   porque es un vidrio: necesita transparencia propia. Sin esto, en oscuro la
-   cápsula seguía blanca y el texto —que sí sigue a las variables— pasaba a
-   ser claro: «Tu Profesor» desaparecía. Mismo vidrio, sobre azul noche. */
-@media (prefers-color-scheme: dark) {
-  .snav-capsule {
-    background: rgba(0, 22, 51, 0.82);
-    border-color: rgba(169, 184, 207, 0.16);
-    box-shadow: 0 10px 34px -22px rgba(0, 0, 0, 0.7);
-  }
-  .snav.is-scrolled .snav-capsule {
-    background: rgba(0, 22, 51, 0.94);
-    border-color: rgba(169, 184, 207, 0.22);
-    box-shadow: 0 14px 40px -24px rgba(0, 0, 0, 0.8);
-  }
-  .snav-link:hover { background: rgba(242, 245, 250, 0.07); }
-  .snav-link.is-active { background: rgba(242, 245, 250, 0.1); }
-  .snav-burger:hover { background: rgba(242, 245, 250, 0.08); }
-}
-@media (prefers-color-scheme: dark) and (max-width: 940px) {
+@media (forced-colors: active) {
+  .snav-capsule::before,
   .snav-right {
-    background: var(--white);
-    border-color: rgba(169, 184, 207, 0.18);
-    box-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.8);
+    border: 1px solid CanvasText;
+  }
+
+  .snav-link.is-active {
+    outline: 2px solid Highlight;
   }
 }

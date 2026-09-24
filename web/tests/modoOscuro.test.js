@@ -8,9 +8,11 @@ import test from "node:test";
  * —medido: la máquina de Agustín lo está— recibía una página blanca a las once
  * de la noche, justo cuando una familia se sienta a resolver lo de la escuela.
  *
- * Sigue la preferencia del sistema con `prefers-color-scheme`, sin JavaScript:
- * la página prerenderizada ya sale del servidor con el tema correcto y no hay
- * destello blanco antes de que cargue nada.
+ * Desde septiembre de 2026 tiene además un botón para elegir claro u oscuro.
+ * Por eso el tema ya no cuelga de `prefers-color-scheme` —la media query no se
+ * entera del botón— sino de `[data-theme="dark"]`, que `public/tema.js` pone
+ * antes de pintar: lo elegido o, si no se eligió nada, lo que diga el sistema.
+ * El contrato del botón lo cuida tests/temaDelSitio.test.js.
  *
  * La paleta sale del monograma oscuro oficial: letras blancas y arco verde
  * sobre azul marino.
@@ -40,23 +42,51 @@ const contraste = (a, b) => {
    alguien cambia un color, este test mide el color nuevo. */
 const bloqueOscuro = () => {
   const s = sinComentarios(base);
-  const i = s.indexOf("@media (prefers-color-scheme: dark)");
-  assert.ok(i >= 0, "falta el bloque @media (prefers-color-scheme: dark) en base.css");
-  const rootIni = s.indexOf(":root", i);
+  const rootIni = s.indexOf(':root[data-theme="dark"]');
+  assert.ok(rootIni >= 0, 'falta el bloque :root[data-theme="dark"] en base.css');
   const rootFin = s.indexOf("}", rootIni);
   return Object.fromEntries(
     [...s.slice(rootIni, rootFin).matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1], m[2]]),
   );
 };
 
-test("hay un modo oscuro que sigue al sistema", () => {
+test("hay un modo oscuro completo", () => {
   const v = bloqueOscuro();
   for (const k of ["white", "off", "text", "muted", "green-ink", "navy-800"]) {
     assert.ok(v[k], `el modo oscuro no redefine --${k}`);
   }
   /* Sin esto los controles nativos —barras de desplazamiento, autocompletado,
      el selector de fecha— siguen claros sobre una página oscura. */
-  assert.match(sinComentarios(base), /prefers-color-scheme:\s*dark[\s\S]*?color-scheme:\s*dark/);
+  assert.match(sinComentarios(base), /:root\[data-theme="dark"\]\s*\{[^}]*color-scheme:\s*dark/);
+});
+
+test("el botón principal cambia de par con el tema y se lee en los dos", () => {
+  /* En oscuro, el verde de fondo #006d1f sobre azul noche quedaba apagado, casi
+     del color de la página. Se invierte a verde claro con tinta navy. Fondo y
+     tinta son un PAR: cambiar uno sin el otro da blanco sobre verde claro. */
+  const s = sinComentarios(base);
+  const raiz = s.slice(s.indexOf(":root"), s.indexOf("}", s.indexOf(":root")));
+  const claro = Object.fromEntries([...raiz.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1], m[2]]));
+  const oscuro = bloqueOscuro();
+  for (const [tema, v] of [["claro", claro], ["oscuro", oscuro]]) {
+    for (const fondo of ["cta-bg", "cta-bg-hover"]) {
+      const r = contraste(v["cta-ink"], v[fondo]);
+      assert.ok(r >= 4.5, `${tema}: --cta-ink sobre --${fondo} da ${r.toFixed(2)}:1`);
+    }
+  }
+  /* Y los botones lo usan: ninguno vuelve al blanco fijo sobre --green. */
+  for (const [hoja, selector] of [
+    ["styles/base.css", ".btn--primary"],
+    ["components/SiteNav.css", ".snav-cta"],
+    ["components/ContactForm.css", ".cf-enviar"],
+    ["pages/Contact.css", ".ct-primary-cta"],
+  ]) {
+    const css = sinComentarios(leer(`../src/${hoja}`));
+    const i = css.indexOf(`${selector} {`);
+    const regla = css.slice(i, css.indexOf("}", i));
+    assert.match(regla, /background:\s*var\(--cta-bg\)/, `${selector} no usa --cta-bg`);
+    assert.match(regla, /color:\s*var\(--cta-ink\)/, `${selector} no usa --cta-ink`);
+  }
 });
 
 test("todo el texto del modo oscuro se lee, sobre cada fondo", () => {
@@ -93,9 +123,19 @@ test("el verde de texto es una variable propia y no el de los botones", () => {
 });
 
 test("el monograma de la barra tiene su versión para fondo oscuro", () => {
+  /* Dos archivos transparentes y el CSS elige por `data-theme`. Un <picture>
+     con `prefers-color-scheme` —lo que había— no se entera del botón: con el
+     sistema en claro y el sitio en oscuro mostraba el trazo navy sobre azul. */
   const nav = leer("../src/components/SiteNav.jsx");
-  assert.match(nav, /<source[\s\S]*?media="\(prefers-color-scheme: dark\)"[\s\S]*?srcSet="\/monogram-oscuro\.png"/);
-  assert.ok(existsSync(new URL("../public/monogram-oscuro.png", import.meta.url)));
+  const css = sinComentarios(leer("../src/components/SiteNav.css"));
+  assert.match(nav, /src="\/marca-claro\.webp"/);
+  assert.match(nav, /src="\/marca-oscuro\.webp"/);
+  assert.doesNotMatch(sinComentarios(nav).replace(/\{\/\*[\s\S]*?\*\/\}/g, ""), /prefers-color-scheme/);
+  assert.match(css, /\[data-theme="dark"\] \.snav-mark--claro/);
+  assert.match(css, /\[data-theme="dark"\] \.snav-mark--oscuro\s*\{\s*display:\s*block/);
+  for (const f of ["marca-claro.webp", "marca-oscuro.webp"]) {
+    assert.ok(existsSync(new URL(`../public/${f}`, import.meta.url)), `falta public/${f}`);
+  }
 });
 
 test("los campos del formulario se ven y se leen en los dos temas", () => {
