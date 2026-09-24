@@ -10,3 +10,7 @@ dist-ssr
 
 # Temporal del prerender, si algo lo dejara a medias.
 .prerender-tmp.mjs
+
+# Salidas de Playwright
+test-results
+playwright-report
