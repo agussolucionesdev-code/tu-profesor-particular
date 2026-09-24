@@ -1,10 +1,10 @@
 /* Un backend mínimo, interceptado en el navegador.
  *
- * La app gatea TODAS las rutas menos `/` contra `GET /health`: si no responde,
- * muestra la pantalla de mantenimiento. Eso significa que sin un backend vivo
- * los specs de `/reservar` y `/portal` no miden la página que dicen medir —
- * miden un cartel de "en mantenimiento" y pasan igual, porque un cartel no
- * tiene fallas de contraste.
+ * La app pregunta por `GET /health` de fondo y, si tras varios intentos no
+ * contesta, manda toda ruta menos `/` a la pantalla de mantenimiento (ver
+ * src/hooks/useEstadoDelServidor.js). Sin un backend que conteste, un spec
+ * largo de `/reservar` o `/portal` podía terminar midiendo el cartel de "en
+ * mantenimiento" y pasar igual, porque un cartel no tiene fallas de contraste.
  *
  * Levantar el backend de verdad en CI cuesta el arranque de mongodb-memory-server
  * (unos 100 segundos) para verificar cosas que son puramente de front. Con esto,

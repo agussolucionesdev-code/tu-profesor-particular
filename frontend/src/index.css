@@ -87,6 +87,11 @@ select {
   padding: var(--nav-float-space) 0 0;
   overflow-x: clip;
   flex: 1;
+  /* El pie nace fuera de pantalla. Mientras llega la página (las rutas son
+     lazy) el contenido es chico y el pie quedaba a la vista al fondo; cuando
+     entraba el contenido, salía disparado hacia abajo: Lighthouse midió ese
+     salto como CLS 0,31 en la portada. Fuera de pantalla, moverse no cuenta. */
+  min-height: 100vh;
 }
 
 

@@ -1,5 +1,5 @@
-import { BRAND, CONTACT, SUBJECTS, FAQS, BOOKING_RESERVE_URL } from "./site.js";
-import { SITIO } from "./meta.js";
+import { BRAND, CONTACT, SUBJECTS, FAQS, BOOKING_RESERVE_URL, SOCIAL } from "./site.js";
+import { SITIO, META_POR_RUTA, IMAGEN_POR_DEFECTO, urlDe } from "./meta.js";
 
 /* Datos estructurados para Google.
 
@@ -13,8 +13,18 @@ import { SITIO } from "./meta.js";
    Para un negocio local —"clases particulares en Temperley"— LocalBusiness y
    FAQPage son los dos esquemas que más rinden: el primero alimenta el panel
    lateral de Google Maps, el segundo hace que las preguntas aparezcan
-   desplegables debajo del resultado. */
-export const construirGrafo = () => {
+   desplegables debajo del resultado.
+
+   EL GRAFO DEPENDE DE LA PÁGINA. La marca —negocio, persona, sitio— es la misma
+   en todas; lo propio de cada una va aparte: su WebPage, sus migas de pan, las
+   preguntas frecuentes sólo donde se ven (la portada) y los cursos donde se
+   ofrecen. Google pide que el marcado describa lo que la página muestra.
+
+   PARA QUE AL BUSCAR «Tu Profesor Particular» APAREZCA ESTE SITIO: `WebSite`
+   con el nombre y sus variantes (`alternateName`), y la organización con
+   `logo` y `sameAs`. De ahí sale el nombre del sitio y el ícono que Google
+   pone arriba del resultado. */
+export const construirGrafo = (ruta = "/") => {
   const idNegocio = `${SITIO}/#negocio`;
   const idPersona = `${SITIO}/#agustin`;
 
@@ -28,6 +38,8 @@ export const construirGrafo = () => {
     email: CONTACT.email,
     telephone: CONTACT.whatsappDisplay,
     knowsLanguage: "es-AR",
+    image: `${SITIO}/agustin.webp`,
+    sameAs: [SOCIAL.linkedin],
     worksFor: { "@id": idNegocio },
   };
 
@@ -43,6 +55,18 @@ export const construirGrafo = () => {
     /* El eslogan de la marca es el del logo. Acá decía «Entendé de verdad,
        no de memoria», que era el titular de la portada. */
     slogan: BRAND.tagline,
+    /* El ícono de 512 y no el logo horizontal: Google recorta el logo a un
+       cuadrado, y el monograma ya lo es. */
+    logo: {
+      "@type": "ImageObject",
+      "@id": `${SITIO}/#logo`,
+      url: `${SITIO}/icon-512.png`,
+      width: 512,
+      height: 512,
+      caption: BRAND.name,
+    },
+    image: [IMAGEN_POR_DEFECTO, `${SITIO}/agustin.webp`],
+    sameAs: [SOCIAL.instagram],
     founder: { "@id": idPersona },
     employee: { "@id": idPersona },
     address: {
@@ -99,15 +123,64 @@ export const construirGrafo = () => {
   const sitio = {
     "@type": "WebSite",
     "@id": `${SITIO}/#sitio`,
-    url: SITIO,
+    url: `${SITIO}/`,
     name: BRAND.name,
+    /* Cómo más la busca la gente: junta, con el dominio o con el nombre de
+       Agustín. Google usa esto para decidir qué nombre de sitio mostrar. */
+    alternateName: ["TuProfesorParticular", "tuprofesorparticular.com.ar", `${BRAND.name} · ${BRAND.person}`],
     inLanguage: "es-AR",
     publisher: { "@id": idNegocio },
   };
 
-  return { "@context": "https://schema.org", "@graph": [negocio, persona, sitio, faq, ...cursos] };
+  const url = urlDe(ruta);
+  const meta = META_POR_RUTA[ruta] ?? META_POR_RUTA["/"];
+  const idMigas = `${url}#migas`;
+  const pagina = {
+    "@type": ruta === "/sobre-mi" ? ["WebPage", "ProfilePage"] : "WebPage",
+    "@id": `${url}#pagina`,
+    url,
+    name: meta.title,
+    description: meta.description,
+    inLanguage: "es-AR",
+    isPartOf: { "@id": `${SITIO}/#sitio` },
+    about: { "@id": ruta === "/sobre-mi" ? idPersona : idNegocio },
+    ...(ruta === "/sobre-mi" ? { mainEntity: { "@id": idPersona } } : {}),
+    ...(ruta === "/" ? {} : { breadcrumb: { "@id": idMigas } }),
+  };
+  const migas =
+    ruta === "/"
+      ? []
+      : [
+          {
+            "@type": "BreadcrumbList",
+            "@id": idMigas,
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: META_POR_RUTA["/"].nombre, item: urlDe("/") },
+              { "@type": "ListItem", position: 2, name: meta.nombre, item: url },
+            ],
+          },
+        ];
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      negocio,
+      persona,
+      sitio,
+      pagina,
+      ...migas,
+      ...(ruta === "/" ? [faq] : []),
+      ...(ruta === "/" || ruta === "/materias" ? cursos : []),
+    ],
+  };
 };
 
 /* El script de prerender necesita el mismo grafo, y los effects no corren al
    renderizar en Node. Se expone la función en vez de duplicar el grafo en el
    build: dos copias se desincronizan en cuanto se agrega una materia. */
+
+/* El grafo va dentro de un <script>: un «</script>» en algún texto cortaría la
+   etiqueta. Se escapa el «<», que en JSON sigue siendo el mismo carácter. */
+export const grafoComoTexto = (grafo) => JSON.stringify(grafo).replace(/</g, "\\u003c");
+
+export const ID_GRAFO = "tpp-structured-data";

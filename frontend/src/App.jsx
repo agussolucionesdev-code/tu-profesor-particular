@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,7 +16,7 @@ import BrandLoader from "./components/ui/BrandLoader";
 import JsonLd from "./components/seo/JsonLd";
 import MaintenancePage from "./components/errors/MaintenancePage";
 import { bootNeuroVoice } from "./utils/neuroToast";
-import { API_BASE } from "./api/apiClient";
+import useEstadoDelServidor from "./hooks/useEstadoDelServidor";
 import "./styles/tokens.css";
 import "./index.css";
 import "./styles/accessibility-system.css";
@@ -60,32 +60,15 @@ const AppContent = () => {
   const isAdminRoute = pathname === "/admin";
   const isLandingRoute = pathname === "/";
   const isBookingExperience = pathname === "/reservar" || pathname === "/portal" || pathname === "/m";
-  const [backendStatus, setBackendStatus] = useState("loading");
+  /* La página se dibuja al instante; esto despierta al servidor de fondo y
+     sólo manda a mantenimiento si de verdad no contesta. Ver el hook. */
+  const estadoDelServidor = useEstadoDelServidor();
 
   useEffect(() => {
     bootNeuroVoice();
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12_000);
-
-    fetch(`${API_BASE}/health`, { signal: controller.signal })
-      .then((res) => {
-        if (res.ok) setBackendStatus("ok");
-        else setBackendStatus("down");
-      })
-      .catch(() => setBackendStatus("down"))
-      .finally(() => clearTimeout(timeout));
-
-    return () => {
-      clearTimeout(timeout);
-      controller.abort();
-    };
-  }, []);
-
-  if (!isLandingRoute && backendStatus === "loading") return <BrandLoader />;
-  if (!isLandingRoute && backendStatus === "down") return <MaintenancePage />;
+  if (!isLandingRoute && estadoDelServidor === "caido") return <MaintenancePage />;
 
   return (
     <>

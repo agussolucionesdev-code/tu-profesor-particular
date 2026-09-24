@@ -109,7 +109,52 @@ const verificarAssets = (html, ruta) => {
   }
 };
 
-const construirHead = ({ title, description, url, imagen, jsonLd }) => {
+/* El contenido NO puede traer <script>.
+ *
+ * React 19.2 "saca afuera" todo límite de Suspense de más de ~12 KB para
+ * transmitirlo de a partes (opción `progressiveChunkSize`), AUNQUE YA ESTÉ
+ * RESUELTO: el contenido sale en un <div hidden> con scripts en línea ($RC,
+ * $RV) que lo mueven a su lugar. El <Suspense> de App.jsx envuelve TODAS las
+ * rutas, así que le pasaba a todas, portada incluida. La CSP del sitio es
+ * `script-src 'self'` y bloquea esos scripts: medido en producción, /sobre-mi
+ * mostraba sólo la barra y el pie hasta que llegaba el bundle, y después todo
+ * saltaba (CLS 1,0; Lighthouse lo marcó con errores de CSP). El prerender
+ * existía y no se veía.
+ *
+ * El arreglo está en `renderizar` (sin límite de tamaño por bloque) y en
+ * `renderizarPagina` (dos pasadas, para los lazy). Esto es la red: si algún
+ * día vuelve a aparecer un <script> o un límite de Suspense sin resolver, el
+ * build falla en vez de publicar una página que depende de un script bloqueado. */
+const verificarSinSuspenso = (markup, ruta) => {
+  if (/<script[\s>]|<div hidden id="S:|<template id="B:/.test(markup)) {
+    throw new Error(
+      `${ruta}: el contenido salió con un Suspense sin resolver o un <script> en línea. ` +
+        "La CSP los bloquea y la página se vería vacía hasta que cargue el JS.",
+    );
+  }
+};
+
+/* Precarga de las dos fuentes que pinta la primera pantalla: Fraunces (títulos)
+ * e Inter (texto). Sin esto el navegador las descubre recién al leer el CSS, y
+ * el título se dibuja primero en Georgia y después salta. Los nombres llevan el
+ * hash de Vite, así que se leen de dist/assets; si @fontsource los cambia, el
+ * build falla en vez de precargar un archivo que no existe. */
+const FUENTES_CRITICAS = [/^fraunces-latin-opsz-normal-[\w-]+\.woff2$/, /^inter-latin-wght-normal-[\w-]+\.woff2$/];
+
+const conPrecargaDeFuentes = (html) => {
+  const archivos = fs.readdirSync(path.join(DIST, "assets"));
+  const enlaces = FUENTES_CRITICAS.map((patron) => {
+    const archivo = archivos.find((a) => patron.test(a));
+    if (!archivo) {
+      throw new Error(`No encontré la fuente ${patron} en dist/assets: cambió el nombre del archivo de @fontsource.`);
+    }
+    return `<link rel="preload" href="/assets/${archivo}" as="font" type="font/woff2" crossorigin />`;
+  });
+  const bloque = enlaces.map((e) => `    ${e}`).join("\n");
+  return html.replace("</head>", `${bloque}\n  </head>`);
+};
+
+const construirHead = ({ title, description, url, imagen, jsonLd, idGrafo }) => {
   const t = escaparAtributo(title);
   const d = escaparAtributo(description);
   return `
@@ -130,7 +175,7 @@ const construirHead = ({ title, description, url, imagen, jsonLd }) => {
     <meta name="twitter:title" content="${t}" />
     <meta name="twitter:description" content="${d}" />
     <meta name="twitter:image" content="${imagen}" />
-    <script type="application/ld+json">${jsonLd}</script>`;
+    <script type="application/ld+json" id="${idGrafo}">${jsonLd}</script>`;
 };
 
 /* El <head> del 404 es distinto al de una página real, y las diferencias
@@ -151,12 +196,12 @@ const construirHead404 = ({ title, description }) => `
     <meta name="robots" content="noindex, follow" />`;
 
 const main = async () => {
-  const plantilla = fs.readFileSync(path.join(DIST, "index.html"), "utf8");
+  const plantilla = conPrecargaDeFuentes(fs.readFileSync(path.join(DIST, "index.html"), "utf8"));
 
   const { META_POR_RUTA, META_404, IMAGEN_POR_DEFECTO, urlDe } = await compilarModulo(
     path.join(__dirname, "src/data/meta.js"),
   );
-  const { construirGrafo } = await compilarModulo(
+  const { construirGrafo, grafoComoTexto, ID_GRAFO } = await compilarModulo(
     path.join(__dirname, "src/data/structuredData.js"),
   );
   /* prerenderToNodeStream y NO renderToString: las páginas internas se cargan
@@ -179,6 +224,9 @@ const main = async () => {
   const renderizar = async (elemento, ruta) => {
     const errores = [];
     const { prelude } = await prerenderToNodeStream(elemento, {
+      /* Sin límite: un HTML estático no se transmite de a partes, y partirlo
+         exige scripts en línea que la CSP bloquea. Ver `verificarSinSuspenso`. */
+      progressiveChunkSize: Number.POSITIVE_INFINITY,
       onError: (error) => errores.push(error),
     });
     let html = "";
@@ -204,19 +252,25 @@ const main = async () => {
   const { StaticRouter } = await import("react-router");
   const { default: App } = await compilarModulo(path.join(__dirname, "src/App.jsx"));
 
-  const jsonLd = JSON.stringify(construirGrafo());
+  /* DOS PASADAS POR PÁGINA. En la primera, cada React.lazy de la ruta arranca
+     su import y el render espera a que resuelva: el resultado trae el
+     contenido escondido detrás de un Suspense (ver `verificarSinSuspenso`) y se
+     descarta. El lazy queda resuelto en el módulo, así que en la segunda
+     pasada la página se renderiza de un tirón, con el contenido a la vista. */
+  const renderizarPagina = async (ruta, ubicacion = ruta) => {
+    const elemento = () =>
+      React.createElement(StaticRouter, { location: ubicacion }, React.createElement(App));
+    await renderizar(elemento(), ruta);
+    const markup = await renderizar(elemento(), ruta);
+    verificarSinSuspenso(markup, ruta);
+    return markup;
+  };
+
   const rutas = Object.keys(META_POR_RUTA);
   const generadas = [];
 
   for (const ruta of rutas) {
-    const markup = await renderizar(
-      React.createElement(
-        StaticRouter,
-        { location: ruta },
-        React.createElement(App),
-      ),
-      ruta,
-    );
+    const markup = await renderizarPagina(ruta);
 
     const { title, description } = META_POR_RUTA[ruta];
     let html = plantilla.replace(
@@ -234,7 +288,8 @@ const main = async () => {
         description,
         url: urlDe(ruta),
         imagen: IMAGEN_POR_DEFECTO,
-        jsonLd,
+        jsonLd: grafoComoTexto(construirGrafo(ruta)),
+        idGrafo: ID_GRAFO,
       })}\n  </head>`,
     );
     verificarAssets(html, ruta);
@@ -264,15 +319,8 @@ const main = async () => {
 
      Con este archivo se obtienen las dos cosas: 404 de verdad para los bots y la
      pantalla del sitio para la persona. */
-  const markup404 = await renderizar(
-    React.createElement(
-      StaticRouter,
-      // Cualquier ruta inexistente cae en la <Route path="*"> del App.
-      { location: "/404" },
-      React.createElement(App),
-    ),
-    "404.html",
-  );
+  // Cualquier ruta inexistente cae en la <Route path="*"> del App.
+  const markup404 = await renderizarPagina("404.html", "/404");
   let html404 = plantilla.replace(
     '<div id="root"></div>',
     `<div id="root">${markup404}</div>`,

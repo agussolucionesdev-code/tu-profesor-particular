@@ -44,7 +44,10 @@
   line-height: 0.82;
   letter-spacing: -0.03em;
   color: var(--green-ink);
-  opacity: 0.42;
+  /* 0.68 y no 0.42: el número es decorativo, pero axe no lo sabe y Lighthouse
+     bajaba accesibilidad a 96. A 0.68 da ≥ 3:1 (texto grande) sobre blanco,
+     sobre --off y en los dos fondos oscuros; sigue viéndose secundario. */
+  opacity: 0.68;
   font-variant-numeric: tabular-nums;
   transition: opacity 0.4s ease;
 }

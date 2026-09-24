@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Las 5 rutas indexables del sitio. El 404 queda afuera a propósito.
+  Las 6 rutas indexables del sitio (las de META_POR_RUTA en src/data/meta.js).
+  El 404 queda afuera a propósito.
 
   Sin `lastmod`: un valor puesto a mano se desactualiza al primer cambio y
   Google descuenta las fechas en las que deja de confiar. Es preferible no

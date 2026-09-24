@@ -164,7 +164,6 @@ const Footer = () => {
                         target="_blank"
                         rel="noreferrer"
                         className={`tpp-footer-red tpp-footer-red--${id}`}
-                        aria-label={`${label}: ${detalle ?? label} (se abre en una pestaña nueva)`}
                       >
                         <span className="tpp-footer-red-logo" aria-hidden="true">
                           <Logo />
@@ -173,6 +172,9 @@ const Footer = () => {
                           <strong>{label}</strong>
                           {detalle && <span>{detalle}</span>}
                         </span>
+                        {/* El nombre sale del texto visible (WCAG 2.5.3); sólo
+                            se suma, oculto, que se abre aparte. */}
+                        <span className="sr-only">(se abre en una pestaña nueva)</span>
                       </a>
                     </li>
                   );

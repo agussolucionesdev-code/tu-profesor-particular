@@ -32,7 +32,7 @@ const About = () => {
           />
 
           <div className="about-grid">
-            <figure className="about-photo" data-reveal="up">
+            <figure className="about-photo" data-entrada="up" style={{ "--i": 2 }}>
               <img
                 /* Por ruta y no importada, por lo mismo que el monograma: un import termina
                    empotrando los 17 KB de la foto dentro del HTML prerenderizado, y encima el
@@ -41,32 +41,35 @@ const About = () => {
                 alt={`${BRAND.person} dando clases particulares`}
                 width="800"
                 height="1069"
-                loading="lazy"
+                /* Primer pliegue: es lo más grande de la pantalla. `lazy` la
+                   pedía tarde y Lighthouse la marcaba como el LCP demorado. */
+                fetchPriority="high"
+                decoding="async"
               />
             </figure>
 
             <div className="about-copy">
-              <p className="about-bio" data-reveal="up">
+              <p className="about-bio" data-entrada="up" style={{ "--i": 3 }}>
                 Soy {BRAND.person} y hace más de{" "}
                 <b>{BRAND.yearsTeaching} años</b> doy clases particulares.
                 Acompaño a estudiantes de primaria, secundaria, secundaria
                 técnica, terciario y universitario en Matemáticas, Física,
                 Fisicoquímica, Química e Inglés, entre otras materias.
               </p>
-              <p className="about-bio" data-reveal="up">
+              <p className="about-bio" data-entrada="up" style={{ "--i": 3 }}>
                 Mi forma de enseñar es simple: que{" "}
                 <b>entiendas de verdad, no que memorices para zafar.</b> La
                 mayoría de los que llegan no tienen un problema de capacidad;
                 tienen un tema anterior que quedó flojo y nadie se detuvo a
                 revisarlo. Ahí empezamos.
               </p>
-              <p className="about-bio" data-reveal="up">
+              <p className="about-bio" data-entrada="up" style={{ "--i": 4 }}>
                 Doy clases <b>online</b> por videollamada y{" "}
                 <b>presenciales</b> en {CONTACT.addressLine}. Cada clase tiene
                 orden, cercanía y un plan pensado para vos.
               </p>
 
-              <dl className="about-stats" data-reveal="up">
+              <dl className="about-stats" data-entrada="up" style={{ "--i": 5 }}>
                 <div>
                   <dt>+{BRAND.yearsTeaching}</dt>
                   <dd>años acompañando alumnos</dd>

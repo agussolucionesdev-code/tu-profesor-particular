@@ -41,11 +41,20 @@
       ]
     },
     {
-      "source": "/(.*\\.png|.*\\.svg|.*\\.webp|.*\\.ico|.*\\.webmanifest)",
+      "source": "/(.*\\.png|.*\\.jpg|.*\\.svg|.*\\.webp|.*\\.ico|.*\\.webmanifest)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=86400"
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(admin|m)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     },

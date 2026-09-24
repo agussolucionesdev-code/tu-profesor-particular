@@ -10,7 +10,8 @@ const notFound = leer("../../src/components/errors/NotFoundPage.jsx");
 const metaHook = leer("../../src/hooks/useDocumentTitle.js");
 const serverError = leer("../../src/components/errors/ServerErrorPage.jsx");
 const maintenance = leer("../../src/components/errors/MaintenancePage.jsx");
-const jsonLd = leer("../../src/components/seo/JsonLd.jsx");
+/* El grafo vive en su módulo; el componente sólo lo inyecta. */
+const jsonLd = leer("../../src/components/seo/grafoEstructurado.js");
 
 const vercel = JSON.parse(leer("../../vercel.json"));
 
@@ -179,4 +180,20 @@ test("el color del navegador en el teléfono es el de la marca", () => {
   /* Era #204060, que no sale del logo. En Chrome de Android pinta la barra de
      direcciones: es lo primero que se ve del sitio. */
   assert.match(indexHtml, /<meta name="theme-color" content="#00214c"/i);
+});
+
+test("el grafo es el MISMO negocio que el del sitio, con URLs que existen", () => {
+  /* Declaraba otra entidad (`#organization`), el servicio en
+     tuprofesorparticular.com.ar/reservar —que no existe— y el logo en una URL
+     que daba 404. Google veía dos negocios con el mismo nombre. */
+  assert.match(jsonLd, /\/#negocio`/, "tiene que usar el @id del sitio institucional");
+  assert.doesNotMatch(jsonLd, /#organization/);
+  assert.doesNotMatch(jsonLd, /logo-full\.png/);
+  assert.match(jsonLd, /serviceUrl: `\$\{TURNOS\}\/reservar`/);
+  assert.doesNotMatch(jsonLd, /sameAs: \[WHATSAPP_URL\]/, "un enlace de chat no es un perfil");
+});
+
+test("la vista previa al compartir usa una imagen de ESTE dominio", () => {
+  assert.match(indexHtml, new RegExp(`<meta property="og:image" content="${HOST}/og-cover\\.jpg"`));
+  assert.doesNotMatch(indexHtml, /content="https:\/\/tuprofesorparticular\.com\.ar\/logo-full\.png"/);
 });

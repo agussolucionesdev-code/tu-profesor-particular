@@ -29,6 +29,7 @@ const html = leer("../index.html");
    falsos, y devuelve lo que dejó escrito. */
 const correr = ({ guardado, sistemaOscuro = false, sinAlmacenamiento = false }) => {
   const dataset = {};
+  const clases = new Set();
   const window = {
     localStorage: {
       getItem: (k) => {
@@ -38,7 +39,8 @@ const correr = ({ guardado, sistemaOscuro = false, sinAlmacenamiento = false }) 
     },
     matchMedia: (q) => ({ matches: q.includes("dark") && sistemaOscuro }),
   };
-  vm.runInNewContext(tema, { window, document: { documentElement: { dataset } } });
+  vm.runInNewContext(tema, { window, document: { documentElement: { dataset, classList: { add: (c) => clases.add(c) } } } });
+  assert.ok(clases.has("js"), "tema.js tiene que marcar que hay JavaScript");
   return dataset;
 };
 

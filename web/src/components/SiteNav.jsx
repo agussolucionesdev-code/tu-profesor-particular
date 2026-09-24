@@ -112,8 +112,11 @@ const SiteNav = () => {
           to="/"
           className="snav-brand"
           onClick={() => setOpen(false)}
-          aria-label={`${BRAND.name} — ${BRAND.person}`}
         >
+          {/* Sin aria-label: el nombre accesible sale del texto visible («Tu
+              Profesor Particular Agustín Elías Sosa»). Un aria-label distinto
+              de lo que se lee rompe WCAG 2.5.3 —quien maneja la voz dice lo que
+              ve y el comando no coincide—, y Lighthouse lo marcaba. */}
           {/* Dos archivos transparentes, recortados al trazo: navy para el
               vidrio claro y blanco para el oscuro. El CSS muestra uno según
               `data-theme`; un <picture> con `prefers-color-scheme` no se

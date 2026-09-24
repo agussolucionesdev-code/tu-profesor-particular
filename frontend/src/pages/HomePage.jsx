@@ -352,7 +352,6 @@ const HomePage = () => {
         target="_blank"
         rel="noopener noreferrer"
         className="hp-web-banner"
-        aria-label="Visitá la web completa de Tu Profesor Particular"
       >
         <span className="hp-web-banner-pulse" aria-hidden="true" />
         <span className="hp-web-banner-text">
@@ -363,6 +362,7 @@ const HomePage = () => {
         <span className="hp-web-banner-cta">
           Visitar <FaExternalLinkAlt aria-hidden="true" />
         </span>
+        <span className="sr-only">(se abre en una pestaña nueva)</span>
       </a>
 
       {/* ════════════════════════════════════════
@@ -615,7 +615,6 @@ const HomePage = () => {
                     to={`/reservar?materia=${encodeURIComponent(s.param)}`}
                     className="hp-subj-link"
                     style={{ "--subject-color": s.color, "--subject-ink": s.ink }}
-                    aria-label={`Reservar clase de ${s.label}. ${niveles.join(", ")}`}
                     onMouseEnter={() => setActiveSubject(i)}
                     onFocus={() => setActiveSubject(null)}
                     onMouseMove={(e) => {
@@ -643,10 +642,14 @@ const HomePage = () => {
                       <Icon />
                     </span>
                     <span className="hp-subj-copy">
+                      <span className="sr-only">Reservar clase de </span>
                       <span className="hp-subj-name">{s.label}</span>
                       <span className="hp-subj-tagline">
                         <b>{s.tagline}</b> {s.hook}
                       </span>
+                      {niveles.length > 0 && (
+                        <span className="sr-only">. Niveles: {niveles.join(", ")}.</span>
+                      )}
                       {niveles.length > 0 && (
                         <span className="hp-subj-levels" aria-hidden="true">
                           {niveles.map((n) => (
@@ -903,8 +906,11 @@ const HomePage = () => {
           target="_blank"
           rel="noopener noreferrer"
           className="hp-web-section"
-          aria-label="Visitá la web completa de Tu Profesor Particular"
         >
+          {/* WCAG 2.5.3, en los tres enlaces de esta página que lo rompían: el
+              nombre accesible sale del texto visible. Con un aria-label distinto
+              de lo que se lee, quien maneja la computadora con la voz dice lo
+              que ve y el comando no encuentra el enlace. */}
           <div className="hp-web-section-inner">
             <ThemeLogo variant="monogram" surface="dark" imgClassName="hp-web-logo" alt="" aria-hidden="true" />
             <div className="hp-web-copy">
@@ -915,10 +921,11 @@ const HomePage = () => {
                 <FaExternalLinkAlt aria-hidden="true" />
               </span>
             </div>
-            <span className="hp-web-arrow-btn" aria-hidden="true">
-              Visitar <FaArrowRight />
+            <span className="hp-web-arrow-btn">
+              Visitar <FaArrowRight aria-hidden="true" />
             </span>
           </div>
+          <span className="sr-only">(se abre en una pestaña nueva)</span>
         </a>
       </section>
 

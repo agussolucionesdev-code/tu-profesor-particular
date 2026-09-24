@@ -351,13 +351,16 @@ a { color: inherit; }
 }
 
 /* ── Reveal al entrar en pantalla ────────────────────── */
-[data-reveal] {
+/* Escondido SÓLO si hay JavaScript: `public/tema.js` pone la clase `js` antes
+   de pintar. Sin JS —un lector que lo tiene apagado, un bot que no lo ejecuta—
+   nadie va a revelar nada, y el contenido tiene que verse igual. */
+.js [data-reveal] {
   opacity: 0;
   transform: translateY(28px);
   transition: opacity 0.85s var(--ease), transform 0.85s var(--ease);
   transition-delay: var(--reveal-delay, 0ms);
 }
-[data-reveal="clip"] {
+.js [data-reveal="clip"] {
   transform: none;
   clip-path: inset(0 0 105% 0);
   transition: opacity 0.85s var(--ease), clip-path 0.85s var(--ease);
@@ -374,5 +377,38 @@ a { color: inherit; }
     transform: none !important;
     clip-path: none !important;
     transition: none !important;
+  }
+}
+
+/* ── Entrada del primer pliegue ──────────────────────────
+   Lo que se ve al abrir la página NO espera al JavaScript: el reveal de arriba
+   depende de un IntersectionObserver que corre recién cuando llega el bundle, y
+   el texto principal de la portada —el elemento que Lighthouse mide como LCP—
+   quedaba invisible hasta entonces (2,6 s en un celular medio). Esta entrada es
+   CSS puro: arranca con la primera pintura. `--i` escalona los elementos. */
+[data-entrada] {
+  animation: entrada-sube 0.8s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+[data-entrada="clip"] {
+  animation-name: entrada-clip;
+}
+@keyframes entrada-sube {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes entrada-clip {
+  from {
+    clip-path: inset(0 0 105% 0);
+  }
+  to {
+    clip-path: inset(0 0 -5% 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-entrada] {
+    animation: none;
   }
 }
