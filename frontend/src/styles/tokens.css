@@ -242,7 +242,7 @@
   --scrollbar-shadow:      none;
 
   /* ── Navbar ─────────────────────────────────────────────────────────── */
-  --nav-height:         64px;
+  --nav-height:         92px;
   --nav-height-scrolled: 76px;
   --nav-radius-outer:   22px;
   --nav-radius-inner:   14px;
@@ -477,6 +477,16 @@
   --tint-glass:   #ffffff;   /* paneles de vidrio (blanco translúcido) */
   --tint-shadow:  #00214c;   /* sombras con desenfoque */
   --tint-gray:    #53595f;   /* velos grises (deshabilitado) */
+
+  /* Vidrio (barra de navegación y paneles flotantes). El fondo es la tarjeta
+     con transparencia; el canto es un brillo de 1 px que en claro es blanco y
+     en oscuro apenas se insinúa, como la luz sobre un vidrio real. */
+  --glass-bg:        color-mix(in srgb, var(--sf-card) 68%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--sf-card) 88%, transparent);
+  --glass-edge:      rgba(255, 255, 255, 0.72);
+  --glass-ring:      color-mix(in srgb, var(--tint) 10%, transparent);
+  --glass-shadow:    0 12px 32px color-mix(in srgb, var(--tint-shadow) 10%, transparent);
+  --glass-shadow-strong: 0 16px 40px color-mix(in srgb, var(--tint-shadow) 16%, transparent);
 }
 
 /* ==========================================================================
@@ -527,6 +537,13 @@
   --tint-glass:   #03204a;
   --tint-shadow:  #000510;
   --tint-gray:    #a9b8cf;
+
+  --glass-bg:        color-mix(in srgb, var(--sf-card) 62%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--sf-card) 86%, transparent);
+  --glass-edge:      rgba(255, 255, 255, 0.1);
+  --glass-ring:      color-mix(in srgb, var(--tint) 16%, transparent);
+  --glass-shadow:    0 12px 32px rgba(0, 4, 14, 0.4);
+  --glass-shadow-strong: 0 16px 44px rgba(0, 4, 14, 0.55);
 
   /* ── Marca: el navy y el verde cambian de rol ─────────────────────────
      En oscuro el navy deja de ser fondo y pasa a ser texto: toma los peldaños
@@ -774,4 +791,17 @@
 .theme-logo--full .theme-logo__image,
 .theme-logo--tagline .theme-logo__image {
   border-radius: 0.85rem;
+}
+
+/* ==========================================================================
+   Alto reservado para la barra flotante: su margen superior más su alto.
+   Lo usan el padding de la página, el scroll-padding (el foco no queda debajo
+   de la barra) y el menú del teléfono, que se abre justo debajo.
+   ========================================================================== */
+@media (max-width: 1023px) {
+  :root { --nav-height: 84px; }
+}
+
+@media (max-width: 767px) {
+  :root { --nav-height: 72px; }
 }

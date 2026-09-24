@@ -2,15 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaBars,
-  FaCalendarAlt,
-  FaExclamationTriangle,
-  FaMoon,
-  FaSun,
-  FaTimes,
-  FaVolumeMute,
-  FaVolumeUp,
-} from "react-icons/fa";
+  LuAudioLines,
+  LuCalendarCheck,
+  LuCalendarPlus,
+  LuHouse,
+  LuMenu,
+  LuMoon,
+  LuSun,
+  LuTriangleAlert,
+  LuVolumeOff,
+  LuX,
+} from "react-icons/lu";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import ThemeLogo from "../components/ui/ThemeLogo";
@@ -21,25 +23,23 @@ import {
 } from "../utils/neuroToast";
 import "./Navbar.css";
 
-/* LA BARRA DE NAVEGACIÓN, REESCRITA DESDE CERO.
+/* LA BARRA DE NAVEGACIÓN: UNA ISLA DE VIDRIO.
  *
- * La anterior era una cápsula de vidrio flotante con el botón «Reservar»
- * envuelto en un efecto magnético: seguía al cursor y se desplazaba hacia el
- * costado. Agustín lo describió exacto: «se mueve para el costado, se tilda».
- * Además la cápsula cambiaba de alto al hacer scroll y arrastraba una barra de
- * progreso; tres cosas moviéndose en la pieza que tiene que estar quieta.
+ * Tercera versión, pedida por Agustín: «súper profesional», con el logo
+ * grande —«tiene que imponer, es el logo de Tu Profesor Particular»— y con
+ * vidrio, algo de 2026. Las reglas que se mantienen de la anterior:
  *
- * Ahora es una barra sólida de ancho completo:
- *   · nada se desplaza: los estados cambian color, no posición ni tamaño;
- *   · al hacer scroll sólo aparece una línea inferior, sin cambiar el alto;
- *   · sin backdrop-filter: volvía a la barra contenedora de sus hijos fixed y
- *     recortaba el menú del teléfono (menu-mobile.spec.js lo cuida);
- *   · colores de la capa semántica: se ve bien en claro y en oscuro sin
- *     ninguna regla por tema.
+ *   · nada se desplaza: al pasar el mouse, al hacer scroll y al elegir
+ *     cambian color, sombra o fondo, nunca posición ni tamaño;
+ *   · colores sólo de la capa semántica, así que es la misma pieza en claro
+ *     y en oscuro;
+ *   · el desenfoque del vidrio va en un ::before, no en la barra: un
+ *     ancestro con backdrop-filter se vuelve el bloque contenedor de sus
+ *     hijos fixed y recortaba el menú del teléfono (menu-mobile.spec.js).
  *
- * Lo que se conserva tal cual: la guía por voz y su invitación, el cambio de
- * tema con transición, y el menú del teléfono con el foco atrapado, Escape y
- * el scroll del cuerpo bloqueado. */
+ * Íconos de Lucide, todos del mismo trazo. El logo es el monograma TU con
+ * el birrete, grande: ~64 px de trazo en escritorio, ~58 en tableta y ~50 en
+ * el teléfono (ver Navbar.css). */
 
 const VOICE_MUTED_EVENT = "neuro-voice-muted-changed";
 const VOICE_BLOCKED_EVENT = "neuro-voice-blocked";
@@ -83,8 +83,8 @@ const writeInviteState = (state) => {
 };
 
 const navLinks = [
-  { title: "Inicio", path: "/" },
-  { title: "Mis Turnos", path: "/portal" },
+  { title: "Inicio", path: "/", icon: LuHouse },
+  { title: "Mis Turnos", path: "/portal", icon: LuCalendarCheck },
 ];
 
 const Navbar = () => {
@@ -236,10 +236,10 @@ const Navbar = () => {
       ? "Activar guía por voz: te acompaño hablado en cada paso"
       : "Pausar guía por voz";
   const voiceLabel = voiceBlocked ? "Voz bloqueada" : voiceMuted ? "Guía por voz" : "Guía activa";
-  const VoiceIcon = voiceBlocked ? FaExclamationTriangle : voiceMuted ? FaVolumeMute : FaVolumeUp;
+  const VoiceIcon = voiceBlocked ? LuTriangleAlert : voiceMuted ? LuVolumeOff : LuAudioLines;
   const voiceIsUndiscovered = voiceMuted && !voiceBlocked && !inviteDone;
   const themeTitle = effectiveTheme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
-  const ThemeIcon = effectiveTheme === "dark" ? FaSun : FaMoon;
+  const ThemeIcon = effectiveTheme === "dark" ? LuSun : LuMoon;
   const enReservar = location.pathname === "/reservar";
 
   /* Los dos utilitarios se pintan en dos lugares: en la barra (escritorio) y
@@ -283,13 +283,14 @@ const Navbar = () => {
       data-scrolled={scrolled ? "true" : "false"}
       aria-label="Navegación principal"
     >
+      {/* La isla: el vidrio es su ::before. */}
       <div className="tpp-nav-inner">
         <Link
           to="/"
           className="navbar-brand"
           aria-label="Tu Profesor Particular, inicio"
         >
-          <ThemeLogo variant="monogram" imgClassName="tpp-nav-mark" alt="" aria-hidden="true" />
+          <ThemeLogo variant="monogram" imgClassName="tpp-nav-mark" sizes="100px" alt="" aria-hidden="true" />
           <span className="tpp-nav-brand-copy">
             <span className="tpp-nav-brand-title">
               Tu Profesor <em>Particular</em>
@@ -318,6 +319,7 @@ const Navbar = () => {
         >
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
+            const Icono = link.icon;
             return (
               <li key={link.path}>
                 <Link
@@ -326,7 +328,8 @@ const Navbar = () => {
                   aria-current={isActive ? "page" : undefined}
                   onClick={() => setIsOpen(false)}
                 >
-                  {link.title}
+                  <Icono aria-hidden="true" />
+                  <span>{link.title}</span>
                 </Link>
               </li>
             );
@@ -346,8 +349,8 @@ const Navbar = () => {
             className="tpp-nav-cta"
             aria-current={enReservar ? "page" : undefined}
           >
-            <FaCalendarAlt aria-hidden="true" />
-            <span>Reservar</span>
+            <LuCalendarPlus aria-hidden="true" />
+            <span className="tpp-nav-cta-texto">Reservar</span>
           </Link>
 
           <button
@@ -358,7 +361,7 @@ const Navbar = () => {
             aria-expanded={isOpen}
             aria-controls="nav-menu-sheet"
           >
-            {isOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
+            {isOpen ? <LuX aria-hidden="true" /> : <LuMenu aria-hidden="true" />}
           </button>
         </div>
       </div>

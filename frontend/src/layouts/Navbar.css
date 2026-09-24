@@ -1,85 +1,131 @@
 /* ==========================================================================
-   Barra de navegación
+   Barra de navegación: una isla de vidrio
 
-   Reescrita desde cero. Tres reglas de diseño:
+   Flota separada de los bordes, con esquinas redondeadas, desenfoque real del
+   contenido que pasa por detrás, un canto de 1 px que atrapa la luz y una
+   sombra suave. Al hacer scroll el vidrio se vuelve más opaco y la sombra más
+   presente: cambia la materia, no la forma.
 
-   1. NADA SE DESPLAZA. Hover, activo y scroll cambian color o una línea, nunca
-      posición ni tamaño. La versión anterior tenía el botón «Reservar»
-      magnético (seguía al cursor), una cápsula que se achicaba al scrollear y
-      una barra de progreso: tres movimientos en la pieza que tiene que estar
-      quieta para que se pueda apuntar.
-   2. TODO DE LA CAPA SEMÁNTICA. Ni un color literal ni una regla por tema: la
-      barra se ve bien en claro y en oscuro porque sus tokens cambian.
-   3. SIN backdrop-filter. Un ancestro con backdrop-filter se vuelve el bloque
-      contenedor de sus hijos `position: fixed`, y el menú del teléfono quedaba
-      recortado dentro de la barra (menu-mobile.spec.js).
+   Reglas:
+   1. NADA SE DESPLAZA. Ni hover ni scroll mueven o redimensionan nada.
+   2. TODO DE LA CAPA SEMÁNTICA (--sf-*, --ink-*, --glass-*): la misma pieza
+      en claro y en oscuro, sin reglas por tema.
+   3. EL DESENFOQUE VA EN ::before. Un elemento con backdrop-filter es el
+      bloque contenedor de sus hijos position:fixed; si lo tuviera la isla, el
+      menú del teléfono quedaría recortado adentro (menu-mobile.spec.js).
+   4. Cada control táctil: 44 px como mínimo y flex-shrink: 0, que es lo que
+      hace que el tamaño declarado se cumpla (blancosTactiles.test.js).
 
-   Cada control táctil declara 44 px como mínimo Y `flex-shrink: 0`: en un
-   flex item el `width` es la base, no el tamaño final, y sin eso el botón del
-   menú llegó a medir 14 px en producción (blancosTactiles.test.js).
+   Tamaños (--nav-height en tokens.css = margen superior + alto de la isla):
+     escritorio ≥1024   isla 80, logo 80 (trazo ~64)  → 92
+     tableta   768–1023  isla 72, logo 72 (trazo ~58)  → 84
+     teléfono   <768     isla 64, logo 62 (trazo ~50)  → 72
    ========================================================================== */
 
 .tpp-nav {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: var(--z-nav, 9999);
-  background: var(--sf-card);
-  /* La línea inferior va con box-shadow y no con border: un borde suma 1 px al
-     alto de la barra, y la página reserva exactamente --nav-height. Con borde,
-     el primer enlace de la portada quedaba 1 px debajo de la barra
-     (foco-no-tapado.spec.js). */
-  box-shadow: 0 1px 0 transparent;
-  transition: box-shadow 160ms ease;
-}
-
-.tpp-nav[data-scrolled="true"] {
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--tint) 14%, transparent);
+  padding: 12px clamp(12px, 2vw, 24px) 0;
+  pointer-events: none;
 }
 
 .tpp-nav-inner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: clamp(12px, 2vw, 24px);
-  max-width: 1200px;
-  height: var(--nav-height);
+  max-width: 1240px;
+  height: 80px;
   margin: 0 auto;
-  padding: 0 clamp(12px, 3vw, 32px);
+  padding: 0 12px 0 14px;
+  border-radius: 24px;
+  pointer-events: auto;
+  isolation: isolate;
 }
 
-/* ── Marca ──────────────────────────────────────────────────────────────── */
+/* El vidrio. Detrás del contenido (z-index -1 dentro del isolation). */
+.tpp-nav-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--glass-ring),
+    var(--glass-shadow);
+  transition: background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.tpp-nav[data-scrolled="true"] .tpp-nav-inner::before {
+  background: var(--glass-bg-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--glass-ring),
+    var(--glass-shadow-strong);
+}
+
+/* Sin backdrop-filter (navegadores viejos): vidrio casi sólido, legible. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tpp-nav-inner::before {
+    background: var(--glass-bg-strong);
+  }
+}
+
+/* ── Marca: el logo manda ───────────────────────────────────────────────── */
 
 .tpp-nav .navbar-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-height: 44px;
   flex-shrink: 0;
+  padding: 4px 8px 4px 2px;
+  border-radius: 18px;
   color: var(--ink);
   text-decoration: none;
-  border-radius: 10px;
 }
 
-/* Dos clases: `.theme-logo__image` declara `width: auto` y le gana a una sola
+/* El logo, grande: tiene que imponer. El PNG del monograma trae ~15 % de aire
+   por lado, así que a 64 px el «TU» medía unos 50. La imagen se dibuja más
+   grande que su caja y el margen negativo deja que ese aire invada el relleno
+   de la isla: el trazo visible crece sin que la barra crezca.
+   Dos clases: `.theme-logo__image` declara `width: auto` y le gana a una sola
    (la misma trampa que documenta BrandLoader.css). */
 .tpp-nav .tpp-nav-mark {
   display: block;
-  width: 36px;
-  height: 36px;
+  /* A 100 px el trazo visible mide ~66: casi el alto de la isla. */
+  width: 100px;
+  height: 100px;
+  /* Sin esto, el max-width: 100% global de las imágenes lo ata al ancho del
+     span que lo envuelve y el logo se achica: medido, quedaba en 68. */
+  max-width: none;
+  margin: -16px -14px;
   object-fit: contain;
+}
+
+.tpp-nav .theme-logo {
+  display: block;
+  flex-shrink: 0;
 }
 
 .tpp-nav-brand-copy {
   display: grid;
-  gap: 2px;
-  line-height: 1.05;
+  gap: 4px;
+  line-height: 1;
 }
 
 .tpp-nav-brand-title {
   font-family: var(--ui-font-display);
-  font-size: 1.12rem;
+  font-size: 1.42rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--ink);
+  white-space: nowrap;
 }
 
 .tpp-nav-brand-title em {
@@ -88,11 +134,13 @@
 }
 
 .tpp-nav-brand-sub {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  /* --ink-2 y no --ink-3: sobre el vidrio claro, --ink-3 daba 4,46:1. */
+  color: var(--ink-2);
+  white-space: nowrap;
 }
 
 /* ── Enlaces ────────────────────────────────────────────────────────────── */
@@ -101,43 +149,49 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin: 0 0 0 clamp(4px, 2vw, 28px);
-  padding: 0;
+  margin: 0 auto;
+  padding: 4px;
   list-style: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint) 5%, transparent);
 }
 
 .tpp-nav-link {
-  position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 14px;
-  border-radius: 10px;
+  padding: 0 18px;
+  border-radius: 999px;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--ink-2);
   text-decoration: none;
-  transition: color 150ms ease, background-color 150ms ease;
+  transition: color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.tpp-nav-link svg {
+  flex-shrink: 0;
+  font-size: 1.1rem;
 }
 
 .tpp-nav-link:hover {
   color: var(--ink);
-  background: var(--sf-muted);
+  background: color-mix(in srgb, var(--tint) 8%, transparent);
 }
 
+/* La página actual: una píldora elevada sobre el riel, con el ícono en verde.
+   No depende sólo del color (WCAG 1.4.1): cambian fondo, sombra y peso. */
 .tpp-nav-link[aria-current="page"] {
   color: var(--ink);
+  font-weight: 700;
+  background: var(--sf-card);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--tint-shadow) 12%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--tint) 10%, transparent);
 }
 
-/* La página actual: una línea verde bajo el texto. No es sólo color —quien no
-   distingue el verde igual ve la línea (WCAG 1.4.1). */
-.tpp-nav-link[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  inset: auto 14px 6px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--accent-ink);
+.tpp-nav-link[aria-current="page"] svg {
+  color: var(--accent-ink);
 }
 
 /* En escritorio los utilitarios viven en la barra, no en la lista. */
@@ -151,7 +205,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .tpp-nav-tool {
@@ -163,10 +217,10 @@
   min-width: 44px;
   min-height: 44px;
   flex-shrink: 0;
-  padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
-  border-radius: 10px;
-  background: transparent;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--tint) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sf-card) 55%, transparent);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
@@ -177,15 +231,21 @@
 
 .tpp-nav-tool:hover {
   color: var(--ink);
-  background: var(--sf-muted);
+  background: var(--sf-card);
+  border-color: color-mix(in srgb, var(--tint) 24%, transparent);
 }
 
 .tpp-nav-tool svg {
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
-/* El tema sólo con ícono en la barra: el rótulo queda para el menú. */
+/* El tema es un botón redondo sólo con ícono; el rótulo queda para el menú. */
+.tpp-nav-theme.tpp-nav-tool--barra {
+  width: 44px;
+  padding: 0;
+}
+
 .tpp-nav-theme.tpp-nav-tool--barra .tpp-nav-tool-label {
   display: none;
 }
@@ -193,7 +253,7 @@
 .tpp-nav-voice[data-estado="activa"] {
   color: var(--accent-ink);
   border-color: color-mix(in srgb, var(--tint-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--tint-accent) 10%, transparent);
+  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
 }
 
 .tpp-nav-voice[data-estado="bloqueada"] {
@@ -201,39 +261,45 @@
   border-color: color-mix(in srgb, var(--warning-color) 45%, transparent);
 }
 
-/* El punto de "función nueva". Quieto: un punto que late es otra cosa que se
-   mueve en la barra. */
+/* Punto de «función nueva», quieto: un punto que late es algo que se mueve. */
 .tpp-nav-voice-dot {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--tint-accent);
   box-shadow: 0 0 0 2px var(--sf-card);
 }
 
-/* ── Reservar ───────────────────────────────────────────────────────────── */
+/* ── Reservar: el único sólido de la barra ──────────────────────────────── */
 
 .tpp-nav-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 44px;
+  min-height: 48px;
   flex-shrink: 0;
-  padding: 0 18px;
-  border-radius: 10px;
+  padding: 0 22px;
+  border-radius: 999px;
   background: var(--cta-solid-bg);
   color: var(--cta-solid-ink);
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 150ms ease;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--tint-accent) 28%, transparent);
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.tpp-nav-cta svg {
+  flex-shrink: 0;
+  font-size: 1.15rem;
 }
 
 .tpp-nav-cta:hover {
   background: var(--cta-solid-bg-hover);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--tint-accent) 36%, transparent);
 }
 
 /* ── Botón del menú (sólo teléfono) ─────────────────────────────────────── */
@@ -246,11 +312,11 @@
   height: 48px;
   flex-shrink: 0;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
-  border-radius: 10px;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--tint) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sf-card) 55%, transparent);
   color: var(--ink);
-  font-size: 1.1rem;
+  font-size: 1.35rem;
   cursor: pointer;
 }
 
@@ -266,23 +332,25 @@
   outline-offset: 2px;
 }
 
-/* ── Invitación a la guía por voz ───────────────────────────────────────── */
+/* ── Invitación a la guía por voz: un panel del mismo vidrio ────────────── */
 
 .tpp-nav-invite {
   position: absolute;
-  top: calc(100% + 8px);
-  right: clamp(12px, 3vw, 32px);
-  width: min(320px, calc(100vw - 24px));
-  padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
-  border-radius: 14px;
-  background: var(--sf-raised);
-  box-shadow: 0 14px 34px color-mix(in srgb, var(--tint-shadow) 18%, transparent);
+  top: calc(100% + 10px);
+  right: clamp(12px, 2vw, 24px);
+  width: min(340px, calc(100vw - 24px));
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--glass-ring), var(--glass-shadow-strong);
   color: var(--ink);
+  pointer-events: auto;
 }
 
 .tpp-nav-invite-copy {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-size: 0.92rem;
   line-height: 1.45;
   color: var(--ink-2);
@@ -303,8 +371,8 @@
 .tpp-nav-invite-yes,
 .tpp-nav-invite-no {
   min-height: 44px;
-  padding: 0 14px;
-  border-radius: 10px;
+  padding: 0 16px;
+  border-radius: 999px;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 700;
@@ -329,20 +397,55 @@
 
 .tpp-nav-invite-no:hover {
   color: var(--ink);
-  background: var(--sf-muted);
+  background: color-mix(in srgb, var(--tint) 8%, transparent);
 }
 
 /* ── Escritorio angosto: la voz queda sólo con ícono ────────────────────── */
 
-@media (max-width: 1100px) {
+@media (max-width: 1180px) {
+  .tpp-nav-voice.tpp-nav-tool--barra {
+    width: 44px;
+    padding: 0;
+  }
+
   .tpp-nav-voice.tpp-nav-tool--barra .tpp-nav-tool-label {
     display: none;
   }
 }
 
-/* ── Teléfono y tableta: menú desplegable ───────────────────────────────── */
+/* ── Tableta ────────────────────────────────────────────────────────────── */
 
-@media (max-width: 860px) {
+@media (max-width: 1023px) {
+  .tpp-nav-inner {
+    height: 72px;
+    border-radius: 22px;
+  }
+
+  .tpp-nav .tpp-nav-mark {
+    width: 90px;
+    height: 90px;
+    margin: -15px -13px;
+  }
+
+  .tpp-nav-brand-title {
+    font-size: 1.22rem;
+  }
+
+  .tpp-nav-link {
+    padding: 0 14px;
+  }
+}
+
+/* ── Menú desplegable del mismo vidrio ──────────────────────────────────────
+   Desde 899 px y no desde 767: en una tableta vertical (768) el riel de
+   enlaces, las herramientas y «Reservar» no entran junto a una marca grande.
+   Medido: desbordaba 60 px. Con el menú, la barra queda en marca + Reservar. */
+
+@media (max-width: 899px) {
+  .tpp-nav-actions {
+    margin-left: auto;
+  }
+
   .tpp-nav-menu {
     display: inline-flex;
   }
@@ -353,19 +456,24 @@
 
   .tpp-nav-links {
     position: fixed;
-    top: var(--nav-height);
-    left: 0;
-    right: 0;
+    top: calc(var(--nav-height) + 8px);
+    /* Cae bajo el botón que lo abre: en tableta es un panel, en teléfono
+       ocupa el ancho entero menos el margen de la isla. */
+    right: clamp(8px, 2vw, 24px);
+    width: min(420px, calc(100vw - 16px));
     z-index: 2;
     display: none;
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
     margin: 0;
-    padding: 12px clamp(12px, 3vw, 32px) 20px;
-    background: var(--sf-card);
-    border-bottom: 1px solid color-mix(in srgb, var(--tint) 14%, transparent);
-    box-shadow: 0 18px 32px color-mix(in srgb, var(--tint-shadow) 14%, transparent);
+    padding: 10px;
+    border-radius: 22px;
+    background: var(--glass-bg-strong);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    box-shadow: inset 0 1px 0 var(--glass-edge), 0 0 0 1px var(--glass-ring), var(--glass-shadow-strong);
+    pointer-events: auto;
   }
 
   .tpp-nav-links[data-open="true"] {
@@ -373,55 +481,91 @@
   }
 
   .tpp-nav-link {
-    min-height: 52px;
+    width: 100%;
+    min-height: 54px;
     padding: 0 16px;
+    border-radius: 16px;
     font-size: 1.05rem;
   }
 
-  .tpp-nav-link[aria-current="page"] {
-    background: var(--sf-selected);
-  }
-
-  .tpp-nav-link[aria-current="page"]::after {
-    inset: 12px auto 12px 0;
-    width: 3px;
-    height: auto;
+  .tpp-nav-link svg {
+    font-size: 1.25rem;
   }
 
   .tpp-nav-sheet-tools {
     display: flex;
     gap: 8px;
-    margin-top: 8px;
-    padding-top: 12px;
+    margin-top: 6px;
+    padding-top: 10px;
     border-top: 1px solid color-mix(in srgb, var(--tint) 12%, transparent);
   }
 
   .tpp-nav-sheet-tools .tpp-nav-tool {
     flex: 1 1 0;
-    min-height: 48px;
+    min-height: 50px;
     justify-content: flex-start;
-    padding: 0 14px;
+    padding: 0 16px;
+    border-radius: 16px;
   }
 
+  /* Empieza debajo de la isla: si la tapara, taparía el botón que cierra. */
   .tpp-nav-backdrop[data-open="true"] {
     position: fixed;
     inset: var(--nav-height) 0 0 0;
     z-index: 1;
     display: block;
     background: var(--surface-overlay);
+    pointer-events: auto;
   }
 }
 
-/* ── Teléfono chico: la marca se apila para que entren Reservar y el menú ─ */
+/* ── Teléfono ───────────────────────────────────────────────────────────── */
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
+  .tpp-nav {
+    padding: 8px 8px 0;
+  }
+
+  .tpp-nav-inner {
+    height: 64px;
+    gap: 10px;
+    padding: 0 8px;
+    border-radius: 20px;
+  }
+
   .tpp-nav .tpp-nav-mark {
-    width: 32px;
-    height: 32px;
+    width: 80px;
+    height: 80px;
+    margin: -13px -12px;
+  }
+
+  .tpp-nav .navbar-brand {
+    gap: 8px;
+    padding-right: 4px;
   }
 
   .tpp-nav-brand-title {
-    font-size: 0.98rem;
+    font-size: 1.08rem;
+  }
+
+  .tpp-nav-brand-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+  }
+
+  .tpp-nav-cta {
+    padding: 0 16px;
+  }
+}
+
+/* ── Teléfono común: la marca se apila en dos renglones ─────────────────────
+   «Tu Profesor Particular» en una línea más «Reservar» y el menú suman
+   ~470 px: a 430 desbordaba 46. Apilado ocupa la mitad y sigue leyéndose
+   entero, que es lo que importa de una marca. */
+
+@media (max-width: 560px) {
+  .tpp-nav-brand-title {
+    line-height: 1.08;
   }
 
   .tpp-nav-brand-title em {
@@ -431,14 +575,85 @@
   .tpp-nav-brand-sub {
     display: none;
   }
+}
+
+@media (max-width: 400px) {
+  .tpp-nav-inner {
+    gap: 8px;
+  }
+
+  .tpp-nav-brand-title {
+    font-size: 1rem;
+  }
 
   .tpp-nav-cta {
+    gap: 6px;
     padding: 0 14px;
   }
 }
 
+/* ── iPhone SE y Android de 360: todo un punto más justo ────────────────── */
+
+@media (max-width: 380px) {
+  .tpp-nav-inner {
+    gap: 6px;
+    padding: 0 6px;
+  }
+
+  .tpp-nav .tpp-nav-mark {
+    width: 74px;
+    height: 74px;
+    margin: -12px -11px;
+  }
+
+  .tpp-nav .navbar-brand {
+    gap: 6px;
+    padding-right: 0;
+  }
+
+  .tpp-nav-brand-title {
+    font-size: 0.95rem;
+  }
+
+  .tpp-nav-actions {
+    gap: 6px;
+  }
+
+  .tpp-nav-cta {
+    gap: 5px;
+    padding: 0 12px;
+    font-size: 0.94rem;
+  }
+}
+
+/* ── Teléfono muy chico: «Reservar» queda en ícono ──────────────────────── */
+
+@media (max-width: 359px) {
+  .tpp-nav .tpp-nav-mark {
+    width: 70px;
+    height: 70px;
+    margin: -11px -10px;
+  }
+
+  .tpp-nav-cta {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* Oculto a la vista, NO al lector: el enlace sigue llamándose «Reservar». */
+  .tpp-nav-cta-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .tpp-nav,
+  .tpp-nav-inner::before,
   .tpp-nav-link,
   .tpp-nav-tool,
   .tpp-nav-cta {
@@ -446,11 +661,11 @@
   }
 }
 
-/* Alto contraste del sistema (Windows): los bordes se pintan con el color del
-   sistema para que los controles no desaparezcan. */
+/* Alto contraste del sistema: el vidrio se reemplaza por un borde real. */
 @media (forced-colors: active) {
-  .tpp-nav {
-    outline: 1px solid CanvasText;
+  .tpp-nav-inner::before {
+    border: 1px solid CanvasText;
+    background: Canvas;
   }
 
   .tpp-nav-tool,
