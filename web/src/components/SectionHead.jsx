@@ -16,20 +16,26 @@ const SectionHead = ({ index, kicker, title, titleId, lead, as = "h2" }) => {
      parámetros—. Así queda cubierto sin tocar la configuración. */
   const Titulo = as;
 
+  /* El encabezado que abre la página (el h1) está en el primer pliegue: entra
+     con CSS desde la primera pintura (`data-entrada`) en vez de esperar al
+     JavaScript del reveal. Ver base.css. Los demás se revelan al hacer scroll. */
+  const aparece = (tipo, orden) =>
+    as === "h1" ? { "data-entrada": tipo, style: { "--i": orden } } : { "data-reveal": tipo };
+
   return (
   <header className="head">
-    <div className="head-rule" data-reveal="up" aria-hidden="true" />
-    <p className="head-meta" data-reveal="up">
+    <div className="head-rule" {...aparece("up", 0)} aria-hidden="true" />
+    <p className="head-meta" {...aparece("up", 0)}>
       <span className="head-index">{index}</span>
       <span className="head-dash" aria-hidden="true" />
       <span className="head-kicker">{kicker}</span>
     </p>
     <div className="head-body">
-      <Titulo id={titleId} className="display display--lg" data-reveal="clip">
+      <Titulo id={titleId} className="display display--lg" {...aparece("clip", 1)}>
         {title}
       </Titulo>
       {lead && (
-        <p className="lead" data-reveal="up">
+        <p className="lead" {...aparece("up", 2)}>
           {lead}
         </p>
       )}

@@ -39,7 +39,7 @@ const Home = () => {
 
         <div className="shell hero-inner">
           <div className="hero-copy">
-            <p className="hero-eyebrow" data-reveal="up">
+            <p className="hero-eyebrow" data-entrada="up" style={{ "--i": 0 }}>
               <span className="hero-dot" aria-hidden="true" />
               Online y presencial
               <span className="hero-sep" aria-hidden="true" />
@@ -48,7 +48,7 @@ const Home = () => {
 
             {/* La frase que el visitante ya pensó, escribiéndose sola: primero
                 que se reconozca, después la promesa. */}
-            <p className="hero-pain" data-reveal="up">
+            <p className="hero-pain" data-entrada="up" style={{ "--i": 1 }}>
               <span className="hero-pain-quote" aria-hidden="true">
                 «
               </span>
@@ -72,11 +72,11 @@ const Home = () => {
                 dos líneas prolijas, pero esta pregunta mide 41 caracteres y el
                 salto forzado dejaba «pero» solo en una línea en cuanto el ancho
                 no alcanzaba. Fluye y el navegador corta donde entra. */}
-            <h1 className="display display--xl hero-title" data-reveal="clip">
+            <h1 className="display display--xl hero-title" data-entrada="clip" style={{ "--i": 1 }}>
               ¿Tu hijo estudia, pero <em>sigue sin entender?</em>
             </h1>
 
-            <p className="hero-tagline" data-reveal="up">
+            <p className="hero-tagline" data-entrada="up" style={{ "--i": 2 }}>
               <span>Juntos,</span> despejando el camino a{" "}
               <em>la meta.</em>
             </p>
@@ -86,13 +86,13 @@ const Home = () => {
                 estudiante. Decisión de Agustín, con la recomendación de ChatGPT
                 (GPT-6 Astra) de por medio. La bajada dice qué hace él, no qué le
                 pasa al chico: el titular ya nombró el problema. */}
-            <p className="lead hero-lead" data-reveal="up">
+            <p className="lead hero-lead" data-entrada="up" style={{ "--i": 2 }}>
               Soy {BRAND.person}. Hace {BRAND.yearsTeaching} años doy clases
               particulares. Reviso qué le está costando y preparo la clase para
               trabajar sobre eso, con explicaciones y práctica.
             </p>
 
-            <div className="hero-actions" data-reveal="up">
+            <div className="hero-actions" data-entrada="up" style={{ "--i": 3 }}>
               <a
                 className="btn btn--primary"
                 href={BOOKING_RESERVE_URL}
@@ -120,12 +120,12 @@ const Home = () => {
                 terciario y facultad— entra por acá, sin carrusel que alterne
                 los dos mensajes: un titular que cambia solo no lo lee nadie
                 completo. */}
-            <Link className="hero-otro-publico" to="/materias" data-reveal="up">
+            <Link className="hero-otro-publico" to="/materias" data-entrada="up" style={{ "--i": 4 }}>
               ¿Son para vos? Materias y niveles
               <FaArrowRight aria-hidden="true" />
             </Link>
 
-            <ul className="hero-trust" data-reveal="up">
+            <ul className="hero-trust" data-entrada="up" style={{ "--i": 5 }}>
               <li>
                 <FaCheck aria-hidden="true" /> Sin pagos por adelantado
               </li>
@@ -138,7 +138,7 @@ const Home = () => {
             </ul>
           </div>
 
-          <figure className="hero-photo" data-reveal="up">
+          <figure className="hero-photo" data-entrada="up" style={{ "--i": 2 }}>
             {/* La foto del hero es el elemento más grande de la portada, así
                 que suele ser el LCP. Sin `fetchpriority` el navegador la trata
                 como una imagen más y la pide después del resto; declarándola

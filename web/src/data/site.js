@@ -37,6 +37,15 @@ export const CONTACT = {
   mapsUrl: "https://maps.google.com/?q=Jujuy+414,Temperley,Buenos+Aires",
 };
 
+/* Perfiles públicos de la marca. Los mismos que el pie de la app de turnos
+   (`frontend/src/constants/contactChannels.js`): son otro bundle y no pueden
+   importarse. Instagram es de la marca; LinkedIn, de Agustín. Facebook se suma
+   cuando la página exista: un enlace a una página vacía resta. */
+export const SOCIAL = {
+  instagram: "https://www.instagram.com/tuprofesor.ar/",
+  linkedin: "https://www.linkedin.com/in/agustin-sosa",
+};
+
 export const waLink = (message) =>
   `https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(message)}`;
 

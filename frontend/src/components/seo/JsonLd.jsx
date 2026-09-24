@@ -1,85 +1,33 @@
 import { useEffect } from "react";
-import { WHATSAPP_URL } from "../../constants/contactChannels";
-
-const STRUCTURED_DATA = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "EducationalOrganization",
-      "@id": "https://tuprofesorparticular.com.ar/#organization",
-      name: "Tu Profesor Particular",
-      alternateName: "Agustín Elías Sosa - Clases particulares",
-      url: "https://tuprofesorparticular.com.ar",
-      logo: "https://tuprofesorparticular.com.ar/logo-full.png",
-      description:
-        "Clases particulares personalizadas de matemática, física, química y más. Reservá online con confirmación inmediata.",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Buenos Aires",
-        addressCountry: "AR",
-      },
-      contactPoint: {
-        "@type": "ContactPoint",
-        telephone: "+54-9-11-3336-5937",
-        contactType: "customer service",
-        availableLanguage: "Spanish",
-      },
-      sameAs: [WHATSAPP_URL],
-    },
-    {
-      "@type": "Service",
-      "@id": "https://tuprofesorparticular.com.ar/#service",
-      name: "Clases particulares",
-      provider: {
-        "@id": "https://tuprofesorparticular.com.ar/#organization",
-      },
-      serviceType: "Tutoring",
-      description:
-        "Clases individuales de apoyo escolar y universitario. Matemática, física, química y más materias.",
-      areaServed: {
-        "@type": "City",
-        name: "Buenos Aires",
-      },
-      availableChannel: {
-        "@type": "ServiceChannel",
-        serviceUrl: "https://tuprofesorparticular.com.ar/reservar",
-        name: "Reserva online",
-      },
-    },
-    {
-      "@type": "WebSite",
-      "@id": "https://tuprofesorparticular.com.ar/#website",
-      url: "https://tuprofesorparticular.com.ar",
-      name: "Tu Profesor Particular",
-      publisher: {
-        "@id": "https://tuprofesorparticular.com.ar/#organization",
-      },
-      inLanguage: "es-AR",
-    },
-  ],
-};
+import { useLocation } from "react-router-dom";
+import { construirGrafo } from "./grafoEstructurado";
 
 const SCRIPT_ID = "json-ld-structured-data";
 
 /**
- * Injects JSON-LD structured data into the document head.
- * Renders nothing visible — SEO only.
+ * Inyecta el JSON-LD de la ruta actual en el <head>. No dibuja nada.
  */
 const JsonLd = () => {
+  const { pathname } = useLocation();
+
   useEffect(() => {
-    if (document.getElementById(SCRIPT_ID)) return;
+    let script = document.getElementById(SCRIPT_ID);
+    if (!script) {
+      script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+    /* El «<» escapado: un «</script>» en algún texto cortaría la etiqueta. */
+    script.textContent = JSON.stringify(construirGrafo(pathname)).replace(/</g, "\\u003c");
+  }, [pathname]);
 
-    const script = document.createElement("script");
-    script.id = SCRIPT_ID;
-    script.type = "application/ld+json";
-    script.textContent = JSON.stringify(STRUCTURED_DATA);
-    document.head.appendChild(script);
-
-    return () => {
-      const existing = document.getElementById(SCRIPT_ID);
-      if (existing) existing.remove();
-    };
-  }, []);
+  useEffect(
+    () => () => {
+      document.getElementById(SCRIPT_ID)?.remove();
+    },
+    [],
+  );
 
   return null;
 };

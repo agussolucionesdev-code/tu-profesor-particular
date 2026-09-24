@@ -1,7 +1,10 @@
 import { BRAND, CONTACT } from "./site.js";
 
 export const SITIO = "https://tuprofesorparticular.com.ar";
-export const IMAGEN_POR_DEFECTO = `${SITIO}/og-cover.png`;
+/* JPEG y no PNG: el PNG pesaba 1,08 MB y WhatsApp tarda en mostrar la tarjeta
+   hasta bajarlo entero. WebP no sirve acá: varios bots de vista previa no lo
+   leen. */
+export const IMAGEN_POR_DEFECTO = `${SITIO}/og-cover.jpg`;
 
 /* Metadatos de cada ruta, en un solo lugar.
 
@@ -16,6 +19,8 @@ export const IMAGEN_POR_DEFECTO = `${SITIO}/og-cover.png`;
    una página nueva salga prerenderizada. */
 export const META_POR_RUTA = {
   "/": {
+    /* `nombre` es cómo se llama la página en las migas de pan de Google. */
+    nombre: "Inicio",
     /* Lo que se busca primero y dónde: «clases particulares en Temperley».
        El nombre de Agustín pasa a la descripción, que es donde lo lee quien ya
        lo busca por nombre. Propuesta de ChatGPT, siguiendo la guía de Google
@@ -25,20 +30,24 @@ export const META_POR_RUTA = {
       "Clases particulares con Agustín Elías Sosa, online y en Temperley. Matemática, Física, Química, Fisicoquímica e Inglés, desde primaria hasta la facultad.",
   },
   "/sobre-mi": {
+    nombre: "Sobre mí",
     title: "Sobre mí · Agustín Elías Sosa | Tu Profesor Particular",
     description: `Profesor particular con más de ${BRAND.yearsTeaching} años de experiencia. Clases de Matemáticas, Física, Química e Inglés en Temperley y online.`,
   },
   "/materias": {
+    nombre: "Materias y niveles",
     title: "Materias y niveles · Tu Profesor Particular",
     description:
       "Matemáticas, Física, Fisicoquímica, Química e Inglés, y más materias a consultar. Desde primaria hasta universitario, incluida secundaria técnica.",
   },
   "/como-trabajo": {
+    nombre: "Cómo trabajo",
     title: "Cómo trabajo · Tu Profesor Particular",
     description:
       "La primera clase empieza por ver qué está costando. Después, un plan concreto, clases con orden y seguimiento del avance.",
   },
   "/contacto": {
+    nombre: "Contacto",
     title: "Contacto · Tu Profesor Particular",
     description: `Escribime por WhatsApp al ${CONTACT.whatsappDisplay} o por email. Clases presenciales en ${CONTACT.addressLine} y online para toda Argentina.`,
   },
@@ -46,6 +55,7 @@ export const META_POR_RUTA = {
      canonical: alguien que busca "cómo manejan mis datos" tiene que poder
      encontrarla, y quien la comparte tiene que ver la vista previa correcta. */
   "/privacidad": {
+    nombre: "Privacidad",
     title: "Privacidad y datos personales · Tu Profesor Particular",
     description:
       "Qué datos se piden al reservar una clase, para qué se usan, quién más los ve y cómo pedir que se corrijan o se borren.",

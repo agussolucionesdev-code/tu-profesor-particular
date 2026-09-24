@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { paqueteDe } from "./paquetes.js";
+import precargaDeFuentes from "./precargaDeFuentes.js";
 
 const PROD_API = "https://tu-profesor-particular-backend.onrender.com";
 
@@ -17,6 +18,7 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
+    precargaDeFuentes(),
     ViteImageOptimizer({
       png: { quality: 80 },
       jpg: { quality: 82 },

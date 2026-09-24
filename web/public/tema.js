@@ -30,4 +30,8 @@
 
   raiz.dataset.theme = elegido || (sistemaOscuro ? "dark" : "light");
   raiz.dataset.themePreference = elegido || "system";
+
+  /* Hay JavaScript: recién ahí se esconde lo que se revela al hacer scroll
+     (`.js [data-reveal]` en base.css). Sin JS, nadie lo revelaría. */
+  raiz.classList.add("js");
 })();

@@ -8,8 +8,9 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "Nueva reserva", {
       body: payload.body || "",
-      icon: "/logo-icon.png",
-      badge: "/logo-icon.png",
+      icon: "/icon-192.png",
+      /* Silueta: Android pinta la insignia con el alfa y descarta el color. */
+      badge: "/badge-96.png",
       data: { url: payload.url || "/admin" },
     }),
   );

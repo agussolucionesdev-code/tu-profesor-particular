@@ -12,8 +12,12 @@
          CSP es script-src 'self'. Sincrónico a propósito: sin defer ni async. -->
     <script src="/tema.js"></script>
 
-    <link rel="icon" type="image/png" href="/logo-icon.png" />
-    <link rel="apple-touch-icon" href="/logo-icon.png" />
+    <!-- Íconos del logo nuevo, versión OSCURA (el sitio principal usa la clara:
+         con las dos pestañas abiertas se distinguen). Salen de
+         scripts/generar-iconos.mjs. Antes era el «TU» viejo en un PNG de 733 KB. -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <!-- Apuntaba a la portada del sitio institucional. Como este <head> lo
          comparten todas las rutas de la SPA, turnos entero se declaraba
@@ -38,7 +42,12 @@
       property="og:description"
       content="Reservá, consultá, reprogramá y gestioná turnos de clases particulares en pocos pasos."
     />
-    <meta property="og:image" content="https://tuprofesorparticular.com.ar/logo-full.png" />
+    <!-- En ESTE dominio: apuntaba a tuprofesorparticular.com.ar/logo-full.png,
+         que no existe (404), y los enlaces a turnos se compartían sin imagen. -->
+    <meta property="og:image" content="https://turnos.tuprofesorparticular.com.ar/og-cover.jpg" />
+    <meta property="og:image:width" content="1536" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="Tu Profesor Particular · Agustín Elías Sosa" />
     <meta property="og:locale" content="es_AR" />
 
     <!-- Twitter -->
@@ -48,7 +57,7 @@
       name="twitter:description"
       content="Reservá clases particulares con orden, claridad y seguimiento."
     />
-    <meta name="twitter:image" content="https://tuprofesorparticular.com.ar/logo-full.png" />
+    <meta name="twitter:image" content="https://turnos.tuprofesorparticular.com.ar/og-cover.jpg" />
 
     <title>Tu Profesor Particular | Agustín Elías Sosa</title>
   </head>

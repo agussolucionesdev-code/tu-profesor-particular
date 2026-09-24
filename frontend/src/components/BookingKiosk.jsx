@@ -803,7 +803,6 @@ const BookingKiosk = () => {
                       type="button"
                       className="kiosk-choice-card kiosk-para-quien-card"
                       onClick={() => elegirParaQuien(opcion.value)}
-                      aria-label={`${opcion.label}. ${opcion.hint}`}
                     >
                       <span className="kiosk-visual-copy">
                         <span className="kiosk-choice-label">{opcion.label}</span>

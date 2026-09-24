@@ -44,7 +44,7 @@ import "../styles/tokens.css";
 import "./AdminPanel.css";
 import "../styles/theme-polish.css";
 import "../styles/accessibility-system.css";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { usePageMeta } from "../hooks/useDocumentTitle";
 
 const VIEW_OPTIONS = [
   { id: "overview", label: "Resumen", icon: FaChartLine },
@@ -58,7 +58,10 @@ const VIEW_OPTIONS = [
 ];
 
 const AdminPanel = () => {
-  useDocumentTitle("Panel de administracion");
+  /* noindex: el panel pide login y no es contenido. robots.txt evita que se
+     rastree, pero no que se indexe si alguien lo enlaza; esto sí. Y sin esto
+     conservaba el canonical de la portada. */
+  usePageMeta("Panel de administración", "Panel privado del profesor.", { noindex: true });
   const pauseAutoRefreshRef = useRef(false);
   const {
     authConfig,
