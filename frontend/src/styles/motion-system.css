@@ -376,3 +376,23 @@
     transform: none !important;
   }
 }
+
+/* ── Cambio de tema: un círculo que nace del botón ─────────────────────────
+   Lo arma utils/fundidoDeTema.js con la View Transitions API; sólo se aplica
+   mientras dura el cambio de tema (`data-cambio-de-tema`), no a otras
+   transiciones. La imagen vieja queda quieta debajo y la nueva crece encima. */
+@keyframes tema-circulo {
+  from {
+    clip-path: circle(0 at var(--tema-x, 50%) var(--tema-y, 0));
+  }
+  to {
+    clip-path: circle(var(--tema-radio, 150vmax) at var(--tema-x, 50%) var(--tema-y, 0));
+  }
+}
+html[data-cambio-de-tema]::view-transition-old(root) {
+  animation: none;
+}
+html[data-cambio-de-tema]::view-transition-new(root) {
+  animation: tema-circulo 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
+}
