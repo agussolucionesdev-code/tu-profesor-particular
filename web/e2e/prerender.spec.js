@@ -69,13 +69,25 @@ for (const ruta of ["/sobre-mi", "/materias", "/como-trabajo", "/contacto"]) {
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     await page.addInitScript(() => {
       window.__cls = 0;
+      window.__saltos = [];
+      const describir = (s) =>
+        `${s.node?.nodeName ?? "?"}.${String(s.node?.className ?? "").split(" ")[0]} ` +
+        `y ${Math.round(s.previousRect.y)}→${Math.round(s.currentRect.y)}, ` +
+        `alto ${Math.round(s.previousRect.height)}→${Math.round(s.currentRect.height)}`;
       new PerformanceObserver((lista) => {
-        for (const e of lista.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+        for (const e of lista.getEntries()) {
+          if (e.hadRecentInput) continue;
+          window.__cls += e.value;
+          window.__saltos.push(`${e.value.toFixed(3)} a los ${Math.round(e.startTime)} ms: ${e.sources.map(describir).join(" | ")}`);
+        }
       }).observe({ type: "layout-shift", buffered: true });
     });
     await page.goto(ruta, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
-    const cls = await page.evaluate(() => window.__cls);
-    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}`).toBeLessThan(0.05);
+    const { cls, saltos } = await page.evaluate(() => ({ cls: window.__cls, saltos: window.__saltos }));
+    /* Si falla, dice qué se movió: sin eso, un CLS es un número sin culpable. */
+    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}:
+  ${saltos.join("
+  ")}`).toBeLessThan(0.05);
   });
 }
