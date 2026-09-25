@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { conFundidoCircular } from "../lib/fundidoDeTema.js";
 
 /* El tema del sitio: claro u oscuro.
  *
@@ -44,7 +45,7 @@ export const useTema = () => {
     return () => consulta.removeEventListener?.("change", alCambiarElSistema);
   }, []);
 
-  const alternar = useCallback(() => {
+  const alternar = useCallback((evento) => {
     const nuevo = leer() === "dark" ? "light" : "dark";
     const cambiar = () => {
       aplicar(nuevo, nuevo);
@@ -55,11 +56,8 @@ export const useTema = () => {
     } catch {
       /* sin almacenamiento: el cambio vale para esta visita */
     }
-    /* Fundido entre temas donde el navegador lo sabe hacer, salvo que la
-       persona haya pedido menos movimiento. */
-    const quieta = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (document.startViewTransition && !quieta) document.startViewTransition(cambiar);
-    else cambiar();
+    /* El tema nuevo se abre en círculo desde el botón (ver lib/fundidoDeTema). */
+    conFundidoCircular(evento, cambiar);
   }, []);
 
   return { tema, oscuro: tema === "dark", alternar };

@@ -34,6 +34,22 @@ const RouteChrome = () => {
   return null;
 };
 
+/* TRANSICIÓN ENTRE PÁGINAS. La página nueva entra con un fundido corto y una
+   subida leve (base.css, `.pagina--entra`). Sólo al NAVEGAR: en la entrada
+   inicial del historial React Router da `key === "default"`, y ahí no se anima
+   nada —animar la primera carga demoraría lo que Lighthouse mide como LCP—.
+   El `key` del envoltorio lo vuelve a montar en cada ruta, y como está DENTRO
+   del Suspense, la animación corre cuando la página ya llegó, no sobre el
+   espacio vacío de la espera. */
+const Pagina = ({ children }) => {
+  const { pathname, key } = useLocation();
+  return (
+    <div key={pathname} className={key === "default" ? "pagina" : "pagina pagina--entra"}>
+      {children}
+    </div>
+  );
+};
+
 const App = () => (
   <>
     <a className="skip-link" href="#main">
@@ -55,15 +71,17 @@ const App = () => (
           </p>
         }
       >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/sobre-mi" element={<About />} />
-          <Route path="/materias" element={<Subjects />} />
-          <Route path="/como-trabajo" element={<Method />} />
-          <Route path="/contacto" element={<Contact />} />
-          <Route path="/privacidad" element={<Privacy />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Pagina>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/sobre-mi" element={<About />} />
+            <Route path="/materias" element={<Subjects />} />
+            <Route path="/como-trabajo" element={<Method />} />
+            <Route path="/contacto" element={<Contact />} />
+            <Route path="/privacidad" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Pagina>
       </Suspense>
     </main>
     <SiteFooter />

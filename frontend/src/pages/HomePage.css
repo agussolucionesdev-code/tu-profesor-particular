@@ -555,6 +555,21 @@
 
 .hp-section-inner { max-width: 1240px; margin: 0 auto; }
 
+/* RENDIMIENTO: lo que está debajo del pliegue no se calcula hasta que te
+   acercás. Lighthouse midió 7,5 s de estilo y layout al cargar la portada en un
+   celular medio (TBT de casi 2 s): el navegador maquetaba y pintaba de entrada
+   las ocho secciones, que nadie ve hasta hacer scroll. `content-visibility:
+   auto` las saltea mientras están lejos; el alto de reserva evita que la barra
+   de desplazamiento salte cuando se calculan.
+   Salvo la sección de materias: `content-visibility` implica contención de
+   pintura, y eso recortaría al seguidor del cursor (`position: fixed`) dentro de
+   la sección. Con `:has()` queda afuera sin nombrarla. */
+.hp-section:not(:has(.hp-subj-follower)),
+.hp-cta-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
 /* ════════════════════════════════════════════════════
    PASOS — 3D cards
 ════════════════════════════════════════════════════ */

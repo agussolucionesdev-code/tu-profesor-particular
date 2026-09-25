@@ -16,6 +16,7 @@ import {
 import { useUISettings } from "../components/accessibility/UISettingsContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import ThemeLogo from "../components/ui/ThemeLogo";
+import { conFundidoCircular } from "../utils/fundidoDeTema";
 import {
   isVoiceMuted,
   primeVoicePlayback,
@@ -200,17 +201,12 @@ const Navbar = () => {
     }, 420);
   };
 
-  const toggleTheme = () => {
+  /* El tema nuevo se abre en círculo desde el botón (ver utils/fundidoDeTema).
+     flushSync: la View Transition fotografía el DOM apenas vuelve la función,
+     así que React tiene que haber aplicado el cambio para entonces. */
+  const toggleTheme = (evento) => {
     const nextTheme = effectiveTheme === "dark" ? "light" : "dark";
-    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-
-    if (!prefersReducedMotion && typeof document.startViewTransition === "function") {
-      document.startViewTransition(() => {
-        flushSync(() => applyTheme(nextTheme));
-      });
-      return;
-    }
-    applyTheme(nextTheme);
+    conFundidoCircular(evento, () => flushSync(() => applyTheme(nextTheme)));
   };
 
   const toggleVoice = () => {

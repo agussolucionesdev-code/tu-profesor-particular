@@ -224,6 +224,16 @@ a { color: inherit; }
   overflow: hidden;
 }
 
+/* RENDIMIENTO: las secciones de abajo no se maquetan ni se pintan hasta que
+   te acercás. En un celular medio, la portada gastaba ~1 s de estilo y layout
+   al cargar en secciones que nadie ve todavía. Afuera el hero y el
+   encabezado de cada página (primer pliegue) y el pie. El alto de reserva
+   evita que la barra de desplazamiento salte cuando se calculan. */
+.section:not(.hero):not(.pagehead) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 820px;
+}
+
 /* Retícula de hairlines: textura plana, no un degradado de color. */
 .grid-texture {
   position: absolute;
@@ -394,6 +404,23 @@ a { color: inherit; }
   }
 }
 
+/* ── Transición entre páginas ────────────────────────────
+   Ver `Pagina` en App.jsx: sólo al navegar, nunca en la primera carga. */
+/* `backwards` y no `both`: al terminar no queda ningún transform aplicado; un
+   transform en un ancestro rompe los sticky y fixed de adentro (Contacto). */
+.pagina--entra {
+  animation: pagina-entra 0.42s var(--ease) backwards;
+}
+@keyframes pagina-entra {
+  from {
+    opacity: 0.001;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pagina--entra { animation: none; }
+}
+
 /* ── Entrada del primer pliegue ──────────────────────────
    Lo que se ve al abrir la página NO espera al JavaScript: el reveal de arriba
    depende de un IntersectionObserver que corre recién cuando llega el bundle, y
@@ -438,4 +465,24 @@ a { color: inherit; }
   [data-entrada] {
     animation: none;
   }
+}
+
+/* ── Cambio de tema: un círculo que nace del botón ─────────────────────────
+   Lo arma lib/fundidoDeTema.js con la View Transitions API; sólo se aplica
+   mientras dura el cambio de tema (`data-cambio-de-tema`), no a otras
+   transiciones. La imagen vieja queda quieta debajo y la nueva crece encima. */
+@keyframes tema-circulo {
+  from {
+    clip-path: circle(0 at var(--tema-x, 50%) var(--tema-y, 0));
+  }
+  to {
+    clip-path: circle(var(--tema-radio, 150vmax) at var(--tema-x, 50%) var(--tema-y, 0));
+  }
+}
+html[data-cambio-de-tema]::view-transition-old(root) {
+  animation: none;
+}
+html[data-cambio-de-tema]::view-transition-new(root) {
+  animation: tema-circulo 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: normal;
 }
