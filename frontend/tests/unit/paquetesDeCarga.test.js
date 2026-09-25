@@ -33,9 +33,15 @@ test("la hoja del calendario no arrastra su paquete de JavaScript", () => {
 
 test("el JavaScript del calendario sigue agrupado aparte", () => {
   assert.equal(paqueteDe(nm("react-datepicker/dist/index.es.js")), "vendor-datepicker");
-  assert.equal(paqueteDe(nm("date-fns/format.js")), "vendor-datepicker");
-  assert.equal(paqueteDe(nm("date-fns/locale/es.js")), "vendor-datepicker");
   assert.equal(paqueteDe(nm("@floating-ui/react/dist/floating-ui.react.mjs")), "vendor-datepicker");
+});
+
+test("date-fns NO viaja con el calendario", () => {
+  /* El kiosco formatea fechas desde el primer paso. Con date-fns dentro del
+     paquete del calendario, pedir `format` arrastraba react-datepicker entero a
+     la primera pantalla de /reservar: 43 KB sin usar, medido por Lighthouse. */
+  assert.equal(paqueteDe(nm("date-fns/format.js")), "vendor-fechas");
+  assert.equal(paqueteDe(nm("date-fns/locale/es.js")), "vendor-fechas");
 });
 
 test("React y los íconos siguen en sus paquetes de siempre", () => {

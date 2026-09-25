@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { addMinutes, format } from "date-fns";
 import es from "date-fns/locale/es";
@@ -17,7 +17,6 @@ import {
   FaPencilAlt,
 } from "react-icons/fa";
 import BookingSuccessModal from "./booking/BookingSuccessModal";
-import KioskSlotCalendar from "./KioskSlotCalendar";
 import ThemeLogo from "./ui/ThemeLogo";
 import {
   createBooking,
@@ -75,6 +74,7 @@ import { materiaCanonica } from "../utils/materiaCanonica";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
+import { diferido } from "../utils/diferido";
 import "../styles/tokens.css";
 import "../index.css";
 // BookingSuccessModal no trae su CSS: sus clases (.success-overlay, .success-modal…)
@@ -83,6 +83,13 @@ import "../index.css";
 import "./booking/BookingFinalExperience.css";
 import "../styles/theme-polish.css";
 import "./BookingKiosk.css";
+
+/* EL CALENDARIO SE PIDE CUANDO HACE FALTA. Recién aparece en el paso 3, con la
+   disponibilidad ya cargada, y traía consigo react-datepicker y floating-ui
+   desde la primera pantalla. Se precarga en segundo plano al llegar al paso 2
+   (ver el efecto sobre `step`): cuando la persona llega al 3, ya está, y
+   `diferido` lo dibuja directo, sin pasar por el recuadro de espera. */
+const KioskSlotCalendar = diferido(() => import("./KioskSlotCalendar"));
 
 const RELATIONSHIP_OPTIONS = [
   { value: "madre", label: "Madre" },
@@ -223,6 +230,8 @@ const BookingKiosk = () => {
     const anterior = pasoAnteriorRef.current;
     if (anterior !== step) funnelRef.current.stageChange(anterior, step);
     pasoAnteriorRef.current = step;
+    /* Desde el paso 2, el calendario del paso 3 se baja de fondo. */
+    if (step >= 2) KioskSlotCalendar.precargar().catch(() => {});
   }, [step]);
 
   /* Los ajustes públicos son mejoras sobre valores que ya tienen fallback: el
@@ -1299,13 +1308,15 @@ const BookingKiosk = () => {
                     de hacer lo mismo, y el que llegaba primero a la lista no sabía
                     que existía el resto de la agenda. */}
                 {availabilityStatus === "ready" && upcomingSlotsByDay.length > 0 && (
-                  <KioskSlotCalendar
-                    slotsByDay={upcomingSlotsByDay}
-                    onPick={chooseSlot}
-                    selectedSlot={formData.timeSlot}
-                    onConfirm={confirmSlot}
-                    onNeedFullRange={() => setShowAllDays(true)}
-                  />
+                  <Suspense fallback={<div className="kiosk-calendario-cargando" aria-hidden="true" />}>
+                    <KioskSlotCalendar
+                      slotsByDay={upcomingSlotsByDay}
+                      onPick={chooseSlot}
+                      selectedSlot={formData.timeSlot}
+                      onConfirm={confirmSlot}
+                      onNeedFullRange={() => setShowAllDays(true)}
+                    />
+                  </Suspense>
                 )}
               </div>
             ) : (

@@ -20,7 +20,12 @@
    calendario al paquete de React —que se carga en todas las páginas—. */
 const GRUPOS = [
   ["vendor-react", ["react", "react-dom", "react-router", "react-router-dom", "scheduler", "@remix-run/router"]],
-  ["vendor-datepicker", ["react-datepicker", "date-fns", "@floating-ui/react", "@floating-ui/react-dom", "@floating-ui/dom", "@floating-ui/core", "@floating-ui/utils"]],
+  /* date-fns va aparte del calendario: el kiosco formatea fechas desde el
+     primer paso, y juntas arrastraban react-datepicker (43 KB sin usar, medido
+     por Lighthouse en /reservar) a la primera pantalla. El calendario se pide
+     recién cuando hace falta (ver BookingKiosk.jsx). */
+  ["vendor-fechas", ["date-fns"]],
+  ["vendor-datepicker", ["react-datepicker", "@floating-ui/react", "@floating-ui/react-dom", "@floating-ui/dom", "@floating-ui/core", "@floating-ui/utils"]],
   ["vendor-icons", ["react-icons"]],
 ];
 

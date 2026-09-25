@@ -76,6 +76,11 @@ const montar = async () => {
 };
 
 const tocar = (nombre) => userEvent.click(screen.getByRole("button", { name: nombre }));
+/* El calendario del paso 3 se carga diferido (BookingKiosk.jsx): aparece un
+   instante después de llegar al paso. Se espera a que esté, como lo haría
+   una persona, en vez de buscarlo en el mismo tick. */
+const tocarCuandoAparezca = async (nombre) =>
+  userEvent.click(await screen.findByRole("button", { name: nombre }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -130,7 +135,7 @@ describe("reservando para otra persona", () => {
     await tocar(/Continuar/i);
     await tocar(/^Online./i);
     await tocar(/Continuar/i);
-    await tocar(/Marcar turno de prueba/i);
+    await tocarCuandoAparezca(/Marcar turno de prueba/i);
     await tocar(/Confirmar turno de prueba/i);
 
     // Paso 3 → 4 necesita un turno elegido, así que se salta al 4 por el stepper.
@@ -177,7 +182,7 @@ describe("el autocompletado apunta a la persona correcta", () => {
     await tocar(/Continuar/i);
     await tocar(/^Online./i);
     await tocar(/Continuar/i);
-    await tocar(/Marcar turno de prueba/i);
+    await tocarCuandoAparezca(/Marcar turno de prueba/i);
     await tocar(/Confirmar turno de prueba/i);
 
     const alumno = screen.getByLabelText(/Nombre completo del alumno/i);
