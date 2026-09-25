@@ -43,6 +43,8 @@ const accentOptions = [
    botones: medido en 375 × 812, accesibilidad se comía 39 px de «Volver» y el botón
    de volver arriba, 39 px de «Continuar», justo los de la flecha. */
 const bookingPrimaryActionSelector = [".kiosk-nav", ".kiosk-selection-dock"].join(", ");
+/* Los botones fijos que el levante aparta: éste y el de volver arriba del pie. */
+const FLOTANTES = [".a11y-fab", ".btn-up-floating"].join(", ");
 
 /* La medida se publica en <html> y no sólo en este componente: el botón de «volver
    al inicio» vive en el pie, no sabe nada del wizard, y necesita apartarse igual. */
@@ -96,17 +98,28 @@ const AccessibilityControls = ({
         else raiz.style.removeProperty(VARIABLE_LEVANTE);
       };
 
-      if (!isBookingRoute || window.innerWidth > 720) {
+      if (!isBookingRoute) {
         publicarLevante(0);
         return;
       }
+
+      /* En cualquier ancho, pero sólo si la fila les pasa POR DEBAJO a los
+         flotantes (accesibilidad y volver arriba). Antes corría sólo hasta
+         720 px: en una tablet o notebook chica (1024 × 647, medido) el muelle de
+         «Continuar» quedaba debajo de Accesibilidad, y tocar el centro de
+         «Continuar» abría el panel. En una pantalla ancha donde la fila termina
+         antes de la esquina, no hace falta moverlos. */
+      const flotantes = [...window.document.querySelectorAll(FLOTANTES)].map((el) =>
+        el.getBoundingClientRect(),
+      );
+      const pasaPorDebajo = (r) => flotantes.some((f) => r.left < f.right && r.right > f.left);
 
       /* La fila que esté MÁS ABAJO de las visibles: en el paso de materias conviven
          el muelle pegajoso y la fila del pie, y apartarse de la primera que aparece
          en el DOM dejaría la otra tapada. */
       const filas = [...window.document.querySelectorAll(bookingPrimaryActionSelector)]
         .map((fila) => fila.getBoundingClientRect())
-        .filter((r) => r.height > 0 && r.top < window.innerHeight && r.bottom > 0);
+        .filter((r) => r.height > 0 && r.top < window.innerHeight && r.bottom > 0 && pasaPorDebajo(r));
       const masBaja = filas.sort((a, b) => b.bottom - a.bottom)[0];
 
       /* Sólo cuando la fila cae en la franja de los flotantes. Más arriba no se
