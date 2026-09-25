@@ -1,6 +1,6 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import {
-  BrowserRouter as Router,
+  BrowserRouter,
   Routes,
   Route,
   useLocation,
@@ -26,12 +26,15 @@ import "./styles/booking-interactions.css";
 import "./styles/brand-identity-refresh.css";
 import "./styles/motion-system.css";
 
-const HomePage = lazy(() => import("./pages/HomePage"));
-const BookingKiosk = lazy(() => import("./components/BookingKiosk"));
-const AdminPanel = lazy(() => import("./components/AdminPanel"));
-const ClientPortal = lazy(() => import("./components/ClientPortal"));
-const ManageBooking = lazy(() => import("./components/ManageBooking"));
-const NotFoundPage = lazy(() => import("./components/errors/NotFoundPage"));
+/* Diferidas pero precargables: ver paginas.js. */
+import {
+  AdminPanel,
+  BookingKiosk,
+  ClientPortal,
+  HomePage,
+  ManageBooking,
+  NotFoundPage,
+} from "./paginas";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -105,11 +108,17 @@ const AppContent = () => {
   );
 };
 
-function App() {
+/* El router entra desde afuera: BrowserRouter en el navegador y StaticRouter
+   en el prerender de la portada (prerender.mjs), que corre en Node, donde no
+   hay `window` ni historial. */
+function App({ enrutador, routerProps = {} }) {
+  /* Variable aparte y no renombrada en la firma: este ESLint no ve el uso
+     dentro del JSX de un parámetro desestructurado. */
+  const Router = enrutador ?? BrowserRouter;
   return (
     <ErrorBoundary>
       <UISettingsProvider>
-        <Router>
+        <Router {...routerProps}>
           <ScrollToTop />
           <AppContent />
           {/* Dentro del Router: necesita la ruta. Registra además cada paso del

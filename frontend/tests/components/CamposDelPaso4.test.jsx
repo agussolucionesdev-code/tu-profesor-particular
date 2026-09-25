@@ -56,6 +56,11 @@ vi.mock("../../src/components/KioskSlotCalendar", () => ({
 }));
 
 const tocar = (nombre) => userEvent.click(screen.getByRole("button", { name: nombre }));
+/* El calendario del paso 3 se carga diferido (BookingKiosk.jsx): aparece un
+   instante después de llegar al paso. Se espera a que esté, como lo haría
+   una persona, en vez de buscarlo en el mismo tick. */
+const tocarCuandoAparezca = async (nombre) =>
+  userEvent.click(await screen.findByRole("button", { name: nombre }));
 
 const llegarAlPaso4 = async (paraQuien) => {
   fetchPublicSettings.mockResolvedValue({ data: { data: {} } });
@@ -73,7 +78,7 @@ const llegarAlPaso4 = async (paraQuien) => {
   await tocar(/Continuar/i);
   await tocar(/^Online./i);
   await tocar(/Continuar/i);
-  await tocar(/Marcar turno de prueba/i);
+  await tocarCuandoAparezca(/Marcar turno de prueba/i);
   await tocar(/Confirmar turno de prueba/i);
 };
 

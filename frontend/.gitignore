@@ -29,3 +29,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Temporales del prerender, si algo lo dejara a medias.
+.prerender-*.mjs

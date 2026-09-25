@@ -1,0 +1,11 @@
+/* El monograma que sigue al tema trae las dos variantes; se muestra la del tema
+   activo. `data-theme` lo fija public/tema.js antes de pintar, así que esto
+   vale también para el HTML prerenderizado, antes de que corra React.
+   Sólo se OCULTA la que no va —nunca se le da display a la visible—, para no
+   pisar el display que cada lugar le pone a su logo. !important porque varias
+   reglas de lugar (`.tpp-nav .tpp-nav-mark`, `.hp-web-logo`…) declaran display
+   con más especificidad y tienen que perder sólo en esto. */
+:root:not([data-theme="dark"]) .theme-logo__image--oscuro,
+:root[data-theme="dark"] .theme-logo__image--claro {
+  display: none !important;
+}

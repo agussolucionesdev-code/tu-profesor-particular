@@ -1886,3 +1886,11 @@
   color: var(--ink-2);
   text-wrap: pretty;
 }
+
+/* Lugar reservado mientras llega el calendario (se carga diferido, ver
+   BookingKiosk.jsx): mismo alto aproximado, así nada salta cuando aparece. */
+.kiosk-calendario-cargando {
+  min-height: 380px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--tint) 5%, transparent);
+}

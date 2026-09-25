@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import "./ThemeLogo.css";
 import mainLogoWithTagline from "../../assets/images/brand-logo-main-tagline.png";
 import monogramDark168 from "../../assets/images/brand-logo-monogram-dark-168.png";
 import monogramDark336 from "../../assets/images/brand-logo-monogram-dark-336.png";
@@ -32,17 +32,22 @@ const MAIN_LOGO = {
   height: 1024,
 };
 
-const getDocumentTheme = () => {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-};
-
 /* `surface` es el color de lo que queda DETRÁS del logo, cuando no sigue al tema.
    Mientras los PNG traían el fondo pegado, el contraste venía dentro del archivo
    y alcanzaba con mirar el tema. Con transparencia ya no: el footer y el CTA de
    la home son navy en los dos temas, y el trazo navy del tema claro ahí
    desaparece. Sin `surface`, sigue al tema, que es lo correcto para todo lo que
-   se apoya en el fondo de la página. */
+   se apoya en el fondo de la página.
+
+   CÓMO SIGUE AL TEMA: con CSS, no con JavaScript. Van las dos variantes en el
+   HTML y ThemeLogo.css muestra la que corresponde a `data-theme`, que
+   `public/tema.js` fija antes de pintar. Antes el componente elegía con un
+   estado y un MutationObserver: correcto en el navegador, pero la portada
+   prerenderizada (prerender.mjs) salía con el logo claro, y quien usa modo
+   oscuro veía el trazo azul sobre la barra azul hasta que corría React. Ahora
+   el componente es puro: sin estado ni efectos, igual en Node y en el
+   navegador. La variante oculta tiene `display: none`: no se ve ni la lee un
+   lector de pantalla. */
 const ThemeLogo = ({
   variant = "monogram",
   surface,
@@ -52,39 +57,49 @@ const ThemeLogo = ({
   alt = "Tu Profesor Particular",
   ...imgProps
 }) => {
-  const [theme, setTheme] = useState(getDocumentTheme);
+  const clases = `theme-logo theme-logo--${variant} ${className}`.trim();
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const syncTheme = () => setTheme(getDocumentTheme());
-    const observer = new MutationObserver(syncTheme);
+  if (variant !== "monogram") {
+    return (
+      <span className={clases}>
+        <img
+          src={MAIN_LOGO.src}
+          width={MAIN_LOGO.width}
+          height={MAIN_LOGO.height}
+          alt={alt}
+          className={`theme-logo__image ${imgClassName}`.trim()}
+          {...imgProps}
+        />
+      </span>
+    );
+  }
 
-    syncTheme();
-    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
+  /* `sizes` y `srcSet` antes que `src`: los atributos se asignan en este
+     orden, y un navegador que ve `src` primero puede empezar a bajarlo antes
+     de enterarse de que había candidatos. */
+  const imagen = (tono, modificador) => (
+    <img
+      key={tono}
+      sizes={sizes}
+      srcSet={MONOGRAM[tono].srcSet}
+      src={MONOGRAM[tono].src}
+      width={MONOGRAM_SIDE}
+      height={MONOGRAM_SIDE}
+      alt={alt}
+      className={`theme-logo__image ${modificador} ${imgClassName}`.replace(/\s+/g, " ").trim()}
+      {...imgProps}
+    />
+  );
 
-  // Un valor mal escrito cae al tema en vez de dejar el `img` sin archivo: el
-  // logo está en el navbar de todas las páginas.
-  const tone = surface === "light" || surface === "dark" ? surface : theme;
-  const isMonogram = variant === "monogram";
-  const selectedVariant = variant === "monogram" ? MONOGRAM[tone] : MAIN_LOGO;
+  /* Un valor mal escrito cae al tema en vez de dejar el `img` sin archivo: el
+     logo está en el navbar de todas las páginas. */
+  const fijo = surface === "light" || surface === "dark" ? surface : null;
 
   return (
-    <span className={`theme-logo theme-logo--${variant} ${className}`.trim()}>
-      {/* `sizes` y `srcSet` antes que `src`: los atributos se asignan en este
-          orden, y un navegador que ve `src` primero puede empezar a bajarlo
-          antes de enterarse de que había candidatos. */}
-      <img
-        sizes={isMonogram ? sizes : undefined}
-        srcSet={isMonogram ? selectedVariant.srcSet : undefined}
-        src={selectedVariant.src}
-        width={isMonogram ? MONOGRAM_SIDE : selectedVariant.width}
-        height={isMonogram ? MONOGRAM_SIDE : selectedVariant.height}
-        alt={alt}
-        className={`theme-logo__image ${imgClassName}`.trim()}
-        {...imgProps}
-      />
+    <span className={clases}>
+      {fijo
+        ? imagen(fijo, "")
+        : [imagen("light", "theme-logo__image--claro"), imagen("dark", "theme-logo__image--oscuro")]}
     </span>
   );
 };
