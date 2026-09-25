@@ -192,11 +192,17 @@ test("ThemeLogo excludes ZIP files with a baked checkerboard", () => {
   assert.doesNotMatch(source, /brand-logo-main-(?:light|dark)\.png/);
 });
 
-test("ThemeLogo keeps one rendered image and responds to the explicit app theme", () => {
-  const imageTags = source.match(/\n\s*<img\b/g) ?? [];
-  assert.equal(imageTags.length, 1);
-  assert.match(source, /MutationObserver/);
-  assert.match(source, /dataset\.theme/);
+test("ThemeLogo sigue al tema con CSS, sin estado: sirve igual prerenderizado", () => {
+  /* Antes elegía la variante con useState + MutationObserver. La portada de
+     turnos ahora se prerenderiza, y ese HTML salía con el logo claro para quien
+     usa modo oscuro hasta que corría React. Ahora van las dos variantes y
+     ThemeLogo.css muestra la de `data-theme`, que tema.js fija antes de pintar. */
+  assert.doesNotMatch(source, /useState|useEffect/);
+  assert.match(source, /theme-logo__image--claro/);
+  assert.match(source, /theme-logo__image--oscuro/);
+  const css = readFileSync(new URL("../../src/components/ui/ThemeLogo.css", import.meta.url), "utf8");
+  assert.match(css, /:root:not\(\[data-theme="dark"\]\) \.theme-logo__image--oscuro/);
+  assert.match(css, /:root\[data-theme="dark"\] \.theme-logo__image--claro/);
 });
 
 test("compact square surfaces use the monogram instead of shrinking the main lockup", () => {
@@ -213,5 +219,6 @@ test("admin login constrains the monogram wrapper independently from global logo
 });
 
 test("full and tagline variants keep the stable supplied lockup in both themes", () => {
-  assert.match(source, /variant === "monogram" \? MONOGRAM\[tone\] : MAIN_LOGO/);
+  /* Lo que no es monograma dibuja siempre el lockup oficial, sin variante por tema. */
+  assert.match(source, /if \(variant !== "monogram"\) \{[\s\S]*?src=\{MAIN_LOGO\.src\}/);
 });
