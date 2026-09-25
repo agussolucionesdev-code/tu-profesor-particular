@@ -27,13 +27,17 @@ const Subjects = () => {
             lead="Estas son las que más piden. Doy varias más: si la tuya no está, escribime y lo vemos."
           />
 
-          <ul className="subj-cards" data-reveal-group="80">
+          {/* Las tarjetas están en el primer pliegue y la primera portada es lo que
+              Lighthouse mide como LCP: entran con CSS (`data-entrada`) y no esperan
+              al JavaScript del revelado. Con `data-reveal` la imagen se bajaba en
+              0,1 s y se pintaba a los 3,5 s. */}
+          <ul className="subj-cards">
             {SUBJECTS.map((s, i) => (
               <li
                 key={s.slug}
                 className="subj-card"
-                style={{ "--subject-color": s.color }}
-                data-reveal="up"
+                style={{ "--subject-color": s.color, "--i": i }}
+                data-entrada="up"
               >
                 {/* La franja recorta la PARTE DE ARRIBA de la ilustración, donde
                     están los objetos. Cada portada tiene el nombre de la materia
