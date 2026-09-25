@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -11,13 +11,9 @@ import useReveal from "./hooks/useReveal.js";
 /* La portada va en el bundle inicial: es la puerta de entrada y cargarla en
    diferido agregaría una espera justo donde no se puede.
    Las otras cinco se piden al navegar. Antes viajaban las seis siempre, aunque
-   el visitante no pasara de la home —que es lo que hace la mayoría—. */
-const About = lazy(() => import("./pages/About.jsx"));
-const Subjects = lazy(() => import("./pages/Subjects.jsx"));
-const Method = lazy(() => import("./pages/Method.jsx"));
-const Contact = lazy(() => import("./pages/Contact.jsx"));
-const Privacy = lazy(() => import("./pages/Privacy.jsx"));
-const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+   el visitante no pasara de la home —que es lo que hace la mayoría—. Son
+   diferidas pero precargables: ver paginas.js. */
+import { About, Contact, Method, NotFound, Privacy, Subjects } from "./paginas.js";
 
 /* Al navegar entre páginas el scroll vuelve arriba (sin animar: un smooth acá
    se siente como un salto raro) y el foco va al contenido, para que quien use
