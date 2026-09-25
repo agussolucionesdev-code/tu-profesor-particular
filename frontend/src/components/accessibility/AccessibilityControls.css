@@ -5,7 +5,12 @@
 .a11y-shell {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(max(1rem, calc(var(--safe-area-bottom) + 1rem)) + var(--a11y-footer-lift, 0px));
+  /* `--acciones-lift`: en la reserva, cuando la fila de «Continuar» le pasa por
+     debajo (lo publica AccessibilityControls.jsx, en cualquier ancho). */
+  bottom: calc(
+    max(1rem, calc(var(--safe-area-bottom) + 1rem)) + var(--a11y-footer-lift, 0px) +
+      var(--acciones-lift, 0px)
+  );
   z-index: 10001;
   display: flex;
   flex-direction: column;

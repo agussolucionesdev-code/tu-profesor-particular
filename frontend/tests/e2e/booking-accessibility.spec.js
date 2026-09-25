@@ -238,3 +238,57 @@ test.describe("el panel de administración en el teléfono", () => {
     expect(boton.y + boton.height).toBeLessThanOrEqual(barra.y - 8);
   });
 });
+
+/* «CONTINUAR» NO PUEDE QUEDAR DEBAJO DE UN BOTÓN FLOTANTE, EN NINGÚN ANCHO.
+ *
+ * El levante que aparta a Accesibilidad y a «volver arriba» corría sólo hasta
+ * 720 px. Medido en producción a 1024 × 647 (tablet apaisada, notebook chica):
+ * el muelle de «Continuar» del paso de materias quedaba debajo de Accesibilidad,
+ * y en el centro de «Continuar» lo que había era el botón del panel. Tocarlo
+ * abría el panel en vez de avanzar la reserva. */
+test.describe("los flotantes y el muelle de «Continuar»", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.clear());
+  });
+
+  for (const [ancho, alto] of [
+    [390, 844],
+    [768, 1024],
+    [1024, 647],
+    [1280, 720],
+  ]) {
+    test(`a ${ancho} × ${alto}, en el centro de «Continuar» está «Continuar»`, async ({ page }) => {
+      await page.setViewportSize({ width: ancho, height: alto });
+      await abrirKiosco(page);
+      await page.getByRole("button", { name: /Para otra persona/i }).click();
+      await page.getByRole("button", { name: /Secundaria\. 1° a 6° año/i }).click();
+      await page.getByRole("button", { name: /Materia: Matemática/i }).click();
+
+      const continuar = page.locator(".kiosk-selection-dock").getByRole("button", { name: /^Continuar$/ });
+      await expect(continuar).toBeVisible();
+
+      /* Con poll: los flotantes se apartan con una transición de 0,28 s. */
+      await expect
+        .poll(
+          () =>
+            continuar.evaluate((boton) => {
+              const r = boton.getBoundingClientRect();
+              const arriba = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+              return arriba?.closest("button") === boton;
+            }),
+          { timeout: 5_000 },
+        )
+        .toBe(true);
+
+      /* Y ningún flotante le pisa ni una esquina. */
+      const pisados = await continuar.evaluate((boton) => {
+        const r = boton.getBoundingClientRect();
+        return [...document.querySelectorAll(".a11y-fab, .btn-up-floating")]
+          .filter((f) => getComputedStyle(f).visibility !== "hidden")
+          .map((f) => f.getBoundingClientRect())
+          .filter((f) => r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top).length;
+      });
+      expect(pisados).toBe(0);
+    });
+  }
+});

@@ -92,3 +92,17 @@ test("el levante se limpia al salir de la reserva", () => {
      sitio. */
   assert.match(controles, /removeProperty\(VARIABLE_LEVANTE\)/);
 });
+
+test("el levante corre en cualquier ancho, sólo si la fila pasa por debajo de un flotante", () => {
+  /* Corría sólo hasta 720 px. A 768 × 1024, 1024 × 647 y 1280 × 720 el muelle de
+     «Continuar» quedaba debajo de Accesibilidad (medido; lo cubre el e2e «los
+     flotantes y el muelle de Continuar» de booking-accessibility.spec.js). */
+  const codigo = sinComentarios(controles);
+  assert.doesNotMatch(codigo, /innerWidth\s*>\s*720/);
+  assert.match(codigo, /FLOTANTES = \[".a11y-fab", ".btn-up-floating"\]/);
+  assert.match(codigo, /r\.left < f\.right && r\.right > f\.left/);
+
+  /* Y el botón de accesibilidad lo aplica también fuera del celular. */
+  const reglaBase = controlesCss.match(/^\.a11y-shell\s*\{[^}]*\}/m)?.[0] ?? "";
+  assert.match(reglaBase, /var\(--acciones-lift, 0px\)/);
+});
