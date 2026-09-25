@@ -29,5 +29,8 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    /* El prerender lo lee para saber qué CSS lleva cada página (y lo borra
+       después de usarlo: no se publica). Ver prerender.mjs. */
+    manifest: true,
   },
 });

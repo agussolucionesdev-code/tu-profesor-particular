@@ -154,6 +154,56 @@ const conPrecargaDeFuentes = (html) => {
   return html.replace("</head>", `${bloque}\n  </head>`);
 };
 
+/* EL CSS DE CADA PÁGINA, EN SU PROPIO HTML.
+ *
+ * Vite separa el CSS por página: el de las internas (Inner.css, Contact.css…)
+ * viaja con su código diferido. El HTML prerenderizado se pintaba ANTES de que
+ * llegara, y cuando llegaba todo se reacomodaba: medido en producción, el
+ * encabezado de /sobre-mi bajaba 34 px y la columna de texto aparecía de golpe
+ * (CLS 0,52, intermitente según la red). Es lo que resuelven los frameworks con
+ * SSR: el HTML de cada ruta trae en el <head> las hojas que esa ruta usa.
+ *
+ * El manifiesto de Vite dice qué CSS generó cada archivo de página (y los que
+ * importa); se omite el del punto de entrada, que ya está en la plantilla.
+ * Cuando después llega el código de la página, Vite no duplica la hoja: antes
+ * de pedirla mira si ya hay un <link> con esa URL. */
+const ARCHIVO_DE_PAGINA = {
+  "/sobre-mi": "src/pages/About.jsx",
+  "/materias": "src/pages/Subjects.jsx",
+  "/como-trabajo": "src/pages/Method.jsx",
+  "/contacto": "src/pages/Contact.jsx",
+  "/privacidad": "src/pages/Privacy.jsx",
+  "/404": "src/pages/NotFound.jsx",
+};
+
+const leerManifiesto = () => {
+  const ruta = path.join(DIST, ".vite", "manifest.json");
+  if (!fs.existsSync(ruta)) throw new Error("Falta dist/.vite/manifest.json: vite.config.js tiene que tener build.manifest.");
+  return JSON.parse(fs.readFileSync(ruta, "utf8"));
+};
+
+const cssDePagina = (manifiesto, archivo) => {
+  const hojas = new Set();
+  const vistos = new Set();
+  const recorrer = (clave) => {
+    if (vistos.has(clave)) return;
+    vistos.add(clave);
+    const entrada = manifiesto[clave];
+    if (!entrada) throw new Error(`${clave} no está en el manifiesto de Vite: ¿se movió la página?`);
+    if (entrada.isEntry) return;
+    for (const hoja of entrada.css ?? []) hojas.add(hoja);
+    for (const importado of entrada.imports ?? []) recorrer(importado);
+  };
+  recorrer(archivo);
+  return [...hojas];
+};
+
+const conCssDePagina = (html, hojas) => {
+  if (hojas.length === 0) return html;
+  const enlaces = hojas.map((h) => `    <link rel="stylesheet" crossorigin href="/${h}">`).join("\n");
+  return html.replace("</head>", `${enlaces}\n  </head>`);
+};
+
 const construirHead = ({ title, description, url, imagen, ancho, alto, jsonLd, idGrafo }) => {
   const t = escaparAtributo(title);
   const d = escaparAtributo(description);
@@ -197,6 +247,8 @@ const construirHead404 = ({ title, description }) => `
 
 const main = async () => {
   const plantilla = conPrecargaDeFuentes(fs.readFileSync(path.join(DIST, "index.html"), "utf8"));
+  const manifiesto = leerManifiesto();
+  const hojasDe = (ruta) => (ARCHIVO_DE_PAGINA[ruta] ? cssDePagina(manifiesto, ARCHIVO_DE_PAGINA[ruta]) : []);
 
   const { META_POR_RUTA, META_404, IMAGEN_POR_DEFECTO, IMAGEN_ANCHO, IMAGEN_ALTO, urlDe } = await compilarModulo(
     path.join(__dirname, "src/data/meta.js"),
@@ -273,7 +325,7 @@ const main = async () => {
     const markup = await renderizarPagina(ruta);
 
     const { title, description } = META_POR_RUTA[ruta];
-    let html = plantilla.replace(
+    let html = conCssDePagina(plantilla, hojasDe(ruta)).replace(
       '<div id="root"></div>',
       `<div id="root">${markup}</div>`,
     );
@@ -323,7 +375,7 @@ const main = async () => {
      pantalla del sitio para la persona. */
   // Cualquier ruta inexistente cae en la <Route path="*"> del App.
   const markup404 = await renderizarPagina("404.html", "/404");
-  let html404 = plantilla.replace(
+  let html404 = conCssDePagina(plantilla, hojasDe("/404")).replace(
     '<div id="root"></div>',
     `<div id="root">${markup404}</div>`,
   );
@@ -335,6 +387,9 @@ const main = async () => {
   verificarContenido(html404, "404.html");
   fs.writeFileSync(path.join(DIST, "404.html"), html404);
   generadas.push(`(no encontrado) → 404.html (${Math.round(html404.length / 1024)} KB)`);
+
+  /* El manifiesto sólo le sirve a este script: no se publica. */
+  fs.rmSync(path.join(DIST, ".vite"), { recursive: true, force: true });
 
   console.log("Prerender:\n  " + generadas.join("\n  "));
 };
