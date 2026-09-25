@@ -5,7 +5,6 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import AccessibilityControls from "./components/accessibility/AccessibilityControls";
 import { UISettingsProvider } from "./components/accessibility/UISettingsContext";
@@ -14,6 +13,7 @@ import Navbar from "./layouts/Navbar";
 import Footer from "./layouts/Footer";
 import BrandLoader from "./components/ui/BrandLoader";
 import JsonLd from "./components/seo/JsonLd";
+import AnaliticaDeTurnos from "./components/analitica/AnaliticaDeTurnos";
 import MaintenancePage from "./components/errors/MaintenancePage";
 import { bootNeuroVoice } from "./utils/neuroToast";
 import useEstadoDelServidor from "./hooks/useEstadoDelServidor";
@@ -112,6 +112,9 @@ function App() {
         <Router>
           <ScrollToTop />
           <AppContent />
+          {/* Dentro del Router: necesita la ruta. Registra además cada paso del
+              kiosco como una página virtual (ver utils/rutaVirtual). */}
+          <AnaliticaDeTurnos />
         </Router>
 
         {/* Medición. Hasta ahora la app de turnos no tenía ninguna —el sitio
@@ -137,7 +140,6 @@ function App() {
             Speed Insights mide Core Web Vitals de visitantes reales, que es la
             única forma honesta de saberlo: en una máquina de desarrollo todo carga
             rápido. */}
-        <Analytics />
         <SpeedInsights />
       </UISettingsProvider>
     </ErrorBoundary>

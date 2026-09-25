@@ -64,14 +64,16 @@ test("el enlace a reservar usa bookingParam y NO label", () => {
   /* El campo puede estar perfecto y no servir de nada si la página sigue
      enlazando el título. Es exactamente lo que pasaba: el dato correcto no
      existía y `label` se usaba para las dos cosas. */
+  /* Desde que los enlaces llevan su origen, se arman con enlaceDeReserva()
+     (src/data/site.js), que codifica la materia con URLSearchParams. */
   assert.match(
     fuenteSubjects,
-    /\?materia=\$\{encodeURIComponent\(s\.bookingParam\)\}/,
+    /enlaceDeReserva\("materia", \{ materia: s\.bookingParam \}\)/,
     "Subjects.jsx no está enlazando con bookingParam",
   );
   assert.doesNotMatch(
     fuenteSubjects,
-    /\?materia=\$\{encodeURIComponent\(s\.label\)\}/,
+    /materia: s\.label/,
     "Subjects.jsx volvió a enlazar con el título visible",
   );
 });

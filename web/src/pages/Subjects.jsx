@@ -5,7 +5,7 @@ import CtaBlock from "../components/CtaBlock.jsx";
 import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import usePrecios from "../hooks/usePrecios.js";
-import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
+import { LEVELS, SUBJECTS, enlaceDeReserva, waLink } from "../data/site.js";
 import { formatearPesos } from "../data/precios.js";
 import { PORTADA_POR_SLUG, PORTADA_SIZE } from "../data/portadas.js";
 import "./Inner.css";
@@ -73,7 +73,7 @@ const Subjects = () => {
                      "Matemática" y acá el título dice "Matemáticas". Mandar el
                      plural dejaba la tarjeta sin preseleccionar y —lo caro— la
                      clase cotizada a la tarifa base. Ver `site.js`. */
-                  href={`${BOOKING_RESERVE_URL}?materia=${encodeURIComponent(s.bookingParam)}`}
+                  href={enlaceDeReserva("materia", { materia: s.bookingParam })}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -218,7 +218,7 @@ const Subjects = () => {
                 {precios.fase === "cargando"
                   ? "Cargando los precios…"
                   : "El precio de tu clase lo ves al reservar, antes de dejar tus datos."}{" "}
-                <a href={BOOKING_RESERVE_URL} target="_blank" rel="noopener noreferrer">
+                <a href={enlaceDeReserva("materias-otras")} target="_blank" rel="noopener noreferrer">
                   Ver precio y horarios
                 </a>
               </p>

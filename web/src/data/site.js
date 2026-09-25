@@ -20,6 +20,22 @@ export const BOOKING_URL = "https://turnos.tuprofesorparticular.com.ar";
 export const BOOKING_RESERVE_URL = `${BOOKING_URL}/reservar`;
 export const BOOKING_MANAGE_URL = `${BOOKING_URL}/portal`;
 
+/* EL ENLACE A LA RESERVA, CON DE DÓNDE VIENE.
+   Todos los botones de reservar pasan por acá. Además de la materia (si la
+   hay), cada enlace lleva `utm_*` con el botón de origen: el sitio y turnos son
+   dos proyectos distintos, y sin esto no había forma de saber qué botón trae
+   las reservas —el navegador manda como referencia sólo el dominio, no la
+   página ni el botón—. `origen` es una etiqueta corta y estable: `barra`,
+   `portada`, `bloque-final`, `materia`… */
+export const enlaceDeReserva = (origen, { materia } = {}) => {
+  const url = new URL(BOOKING_RESERVE_URL);
+  if (materia) url.searchParams.set("materia", materia);
+  url.searchParams.set("utm_source", "sitio");
+  url.searchParams.set("utm_medium", "web");
+  url.searchParams.set("utm_content", origen);
+  return url.toString();
+};
+
 /* El número vive acá, y no en una variable de entorno, por lo mismo que en los otros
    dos proyectos: es dato de MARCA, no configuración de infraestructura. Ya hubo una
    desincronización silenciosa por tenerlo en el entorno —los mails mandaron el número

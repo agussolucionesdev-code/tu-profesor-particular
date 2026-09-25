@@ -16,12 +16,12 @@ import FaqList from "../components/FaqList.jsx";
 import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
-  BOOKING_RESERVE_URL,
   BRAND,
   CONTACT,
   LEVELS,
   REASONS,
   SUBJECTS,
+  enlaceDeReserva,
   waLink,
 } from "../data/site.js";
 import { LA_AUTONOMIA, LO_QUE_SE_ESCUCHAN } from "../data/voz.js";
@@ -96,7 +96,7 @@ const Home = () => {
             <div className="hero-actions" data-entrada="up" style={{ "--i": 3 }}>
               <a
                 className="btn btn--primary"
-                href={BOOKING_RESERVE_URL}
+                href={enlaceDeReserva("portada")}
                 target="_blank"
                 rel="noopener noreferrer"
               >
