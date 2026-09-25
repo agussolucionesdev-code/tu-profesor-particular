@@ -31,6 +31,35 @@
 }
 .plain-grid p { margin: 0; font-size: 0.9rem; line-height: 1.62; color: var(--muted); }
 
+/* Sticker arriba de la tarjeta, corrido hacia el borde: se lee como pegado. */
+.plain-ilus {
+  width: 84px;
+  margin: -6px 0 12px -8px;
+}
+.plain-ilus--nivel { width: 72px; }
+.plain-grid > li:hover .plain-ilus { transform: rotate(-4deg) scale(1.06); }
+
+/* Texto de un lado y sticker del otro. En el celular el sticker va arriba,
+   chico: acompaña, no empuja el texto fuera de la pantalla. */
+.con-ilus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+.con-ilus-imagen { width: clamp(150px, 18vw, 240px); }
+.con-ilus:hover .con-ilus-imagen { transform: rotate(-3deg) scale(1.04); }
+@media (max-width: 720px) {
+  .con-ilus { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .con-ilus-imagen { order: -1; width: 128px; }
+  /* En el encabezado de una página, el título va primero: el sticker, abajo. */
+  .con-ilus--encabezado .con-ilus-imagen { order: 0; margin-top: -1rem; }
+}
+/* El encabezado ya trae su propio margen inferior (.head); el sticker se
+   alinea con el título, no con ese aire. */
+.con-ilus--encabezado { align-items: start; }
+.con-ilus--encabezado .con-ilus-imagen { width: clamp(170px, 20vw, 260px); }
+
 /* ── Sobre mí ────────────────────────────────────────── */
 .about-grid {
   display: grid;
@@ -227,10 +256,36 @@
    viven junto a cada componente. */
 
 /* ── 404 ─────────────────────────────────────────────── */
-.nf { text-align: center; }
-.nf-code { color: var(--green-ink); opacity: 0.22; margin-bottom: -0.4rem; }
+/* 404: texto a un lado, la brújula del otro, y salidas concretas. El número
+   a 0.68 y no 0.22: a 0.22 no llegaba ni al 3:1 de un texto grande. */
+.nf-code { color: var(--green-ink); opacity: 0.68; margin-bottom: -0.4rem; }
 .nf-title { color: var(--text); margin-bottom: 1rem; }
-.nf-lead { margin: 0 auto 2rem; text-align: center; }
+.nf-lead { margin: 0 0 1rem; }
+.nf-salidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.8rem;
+  padding: 0;
+  list-style: none;
+}
+.nf-salidas a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.nf-salidas a svg { font-size: 0.75em; color: var(--green-ink); }
+.nf-salidas a:hover { border-color: var(--green-ink); background: var(--tint-soft); }
+.nf-ilus { width: clamp(180px, 24vw, 300px); }
 
 @media (prefers-reduced-motion: reduce) {
   .plain-grid > li:hover,

@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { FaArrowUpRightFromSquare, FaWhatsapp } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
+import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import usePrecios from "../hooks/usePrecios.js";
 import { BOOKING_RESERVE_URL, LEVELS, SUBJECTS, waLink } from "../data/site.js";
@@ -120,6 +121,7 @@ const Subjects = () => {
           <ul className="plain-grid" data-reveal-group="70">
             {LEVELS.map((l) => (
               <li key={l.label} data-reveal="up">
+                <Ilustracion className="plain-ilus plain-ilus--nivel" src={l.ilustracion} lado={240} />
                 <h3>{l.label}</h3>
                 <p>{l.desc}</p>
               </li>

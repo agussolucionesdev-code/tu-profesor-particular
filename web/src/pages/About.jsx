@@ -1,5 +1,6 @@
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
+import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import { BRAND, CONTACT, REASONS } from "../data/site.js";
 import {
@@ -103,11 +104,14 @@ const About = () => {
             lead={POR_QUE_ENSENO.origen}
           />
 
-          <div className="voz-bloque" data-reveal="up">
-            {POR_QUE_ENSENO.parrafos.map((p) => (
-              <p className="voz-cita" key={p.cita}>{p.cita}</p>
-            ))}
-            <p className="voz-firma">{POR_QUE_ENSENO.cierre}</p>
+          <div className="con-ilus">
+            <div className="voz-bloque" data-reveal="up">
+              {POR_QUE_ENSENO.parrafos.map((p) => (
+                <p className="voz-cita" key={p.cita}>{p.cita}</p>
+              ))}
+              <p className="voz-firma">{POR_QUE_ENSENO.cierre}</p>
+            </div>
+            <Ilustracion className="con-ilus-imagen" src="/img/sobremi-el-clic.webp" />
           </div>
 
           {/* EL MOMENTO MÁS IMPORTANTE DE LA PÁGINA.
@@ -142,11 +146,14 @@ const About = () => {
             title={LA_AUTONOMIA.title}
             titleId="about-autonomia"
           />
-          <div className="voz-bloque" data-reveal="up">
-            {LA_AUTONOMIA.citas.map((cita) => (
-              <p className="voz-cita" key={cita}>{cita}</p>
-            ))}
-            <p className="voz-prueba">{LA_AUTONOMIA.prueba}</p>
+          <div className="con-ilus">
+            <div className="voz-bloque" data-reveal="up">
+              {LA_AUTONOMIA.citas.map((cita) => (
+                <p className="voz-cita" key={cita}>{cita}</p>
+              ))}
+              <p className="voz-prueba">{LA_AUTONOMIA.prueba}</p>
+            </div>
+            <Ilustracion className="con-ilus-imagen" src="/img/sobremi-autonomia.webp" />
           </div>
         </div>
       </section>
@@ -187,12 +194,15 @@ const About = () => {
           secuencia y no como promesa: se puede contrastar. */}
       <section className="section section--soft" aria-labelledby="about-primera">
         <div className="shell">
-          <SectionHead
-            index="05"
-            kicker={PRIMERA_CLASE.kicker}
-            title={PRIMERA_CLASE.title}
-            titleId="about-primera"
-          />
+          <div className="con-ilus con-ilus--encabezado">
+            <SectionHead
+              index="05"
+              kicker={PRIMERA_CLASE.kicker}
+              title={PRIMERA_CLASE.title}
+              titleId="about-primera"
+            />
+            <Ilustracion className="con-ilus-imagen" src="/img/sobremi-primera-clase.webp" />
+          </div>
           <ol className="voz-pasos" data-reveal-group="80">
             {PRIMERA_CLASE.pasos.map((paso, i) => (
               <li key={paso.titulo} data-reveal="up">
@@ -220,6 +230,7 @@ const About = () => {
           <ul className="plain-grid" data-reveal-group="80">
             {REASONS.map((r) => (
               <li key={r.title} data-reveal="up">
+                <Ilustracion className="plain-ilus" src={r.ilustracion} />
                 <h3>{r.title}</h3>
                 <p>{r.desc}</p>
               </li>

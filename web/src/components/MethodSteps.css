@@ -9,8 +9,8 @@
 .ms-step {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: clamp(18px, 3.4vw, 46px);
   padding: clamp(26px, 3.2vw, 40px) 4px;
   border-bottom: 1px solid var(--border);
@@ -54,6 +54,18 @@
 .section--dark .ms-index { color: var(--green-on-dark); }
 .ms-step:hover .ms-index { opacity: 1; }
 
+/* El sticker del paso. Chico en el Inicio (compacto), protagonista en
+   /como-trabajo. Se inclina apenas al pasar el mouse por el paso: la misma
+   señal que la barra verde, dicha con la imagen. */
+.ms-ilus {
+  display: block;
+  width: clamp(112px, 13vw, 168px);
+  height: auto;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ms-list--compacto .ms-ilus { width: clamp(72px, 8vw, 104px); }
+.ms-step:hover .ms-ilus { transform: rotate(-4deg) scale(1.06); }
+
 .ms-title {
   margin: 0 0 0.55rem;
   color: var(--text);
@@ -71,15 +83,20 @@
 
 @media (max-width: 620px) {
   .ms-step {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem 1rem;
     padding-left: 10px;
   }
-  .ms-index { font-size: 2.2rem; opacity: 1; }
+  /* El número arriba, a todo el ancho; debajo, el texto y el sticker. */
+  .ms-index { grid-column: 1 / -1; font-size: 2.2rem; opacity: 1; }
+  .ms-ilus,
+  .ms-list--compacto .ms-ilus { width: 76px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ms-step,
   .ms-step::before,
-  .ms-index { transition: none; }
+  .ms-index,
+  .ms-ilus { transition: none; }
+  .ms-step:hover .ms-ilus { transform: none; }
 }

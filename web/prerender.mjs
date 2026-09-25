@@ -154,7 +154,7 @@ const conPrecargaDeFuentes = (html) => {
   return html.replace("</head>", `${bloque}\n  </head>`);
 };
 
-const construirHead = ({ title, description, url, imagen, jsonLd, idGrafo }) => {
+const construirHead = ({ title, description, url, imagen, ancho, alto, jsonLd, idGrafo }) => {
   const t = escaparAtributo(title);
   const d = escaparAtributo(description);
   return `
@@ -168,8 +168,8 @@ const construirHead = ({ title, description, url, imagen, jsonLd, idGrafo }) => 
     <meta property="og:description" content="${d}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${imagen}" />
-    <meta property="og:image:width" content="1536" />
-    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:width" content="${ancho}" />
+    <meta property="og:image:height" content="${alto}" />
     <meta property="og:image:alt" content="Tu Profesor Particular · Agustín Elías Sosa" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${t}" />
@@ -198,7 +198,7 @@ const construirHead404 = ({ title, description }) => `
 const main = async () => {
   const plantilla = conPrecargaDeFuentes(fs.readFileSync(path.join(DIST, "index.html"), "utf8"));
 
-  const { META_POR_RUTA, META_404, IMAGEN_POR_DEFECTO, urlDe } = await compilarModulo(
+  const { META_POR_RUTA, META_404, IMAGEN_POR_DEFECTO, IMAGEN_ANCHO, IMAGEN_ALTO, urlDe } = await compilarModulo(
     path.join(__dirname, "src/data/meta.js"),
   );
   const { construirGrafo, grafoComoTexto, ID_GRAFO } = await compilarModulo(
@@ -287,7 +287,9 @@ const main = async () => {
         title,
         description,
         url: urlDe(ruta),
-        imagen: IMAGEN_POR_DEFECTO,
+        imagen: META_POR_RUTA[ruta].imagen ?? IMAGEN_POR_DEFECTO,
+        ancho: IMAGEN_ANCHO,
+        alto: IMAGEN_ALTO,
         jsonLd: grafoComoTexto(construirGrafo(ruta)),
         idGrafo: ID_GRAFO,
       })}\n  </head>`,

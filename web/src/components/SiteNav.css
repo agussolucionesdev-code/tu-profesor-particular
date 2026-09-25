@@ -83,8 +83,9 @@
 .snav-marca {
   position: relative;
   display: block;
-  width: 58px;
-  height: 58px;
+  /* 64, a la par del «TU» visible de la barra de turnos (~66). */
+  width: 64px;
+  height: 64px;
   flex-shrink: 0;
 }
 
