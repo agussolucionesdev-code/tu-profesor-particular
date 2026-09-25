@@ -226,31 +226,6 @@ main.main-content {
  * es además el blanco más cómodo. A 320 px entran los tres de sobra: 144 px de
  * controles más 44 del monograma sobre 320 de pantalla. */
 
-.voice-hint-bubble {
-  top: calc(100% + 0.7rem) !important;
-  right: -0.15rem !important;
-  left: auto !important;
-  transform: none !important;
-  width: 9.6rem;
-  min-height: 44px;
-  max-width: 9.6rem;
-  padding: 0.52rem 0.72rem !important;
-  font-size: 0.75rem !important;
-  font-weight: 800 !important;
-  line-height: 1.28;
-  white-space: normal;
-  text-align: center;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.19);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 19%, transparent);
-}
-
-.voice-hint-bubble::after {
-  top: -0.42rem !important;
-  right: 1.9rem !important;
-  left: auto !important;
-  transform: rotate(-45deg) !important;
-}
-
 .manage-booking-link,
 .footer-link-item,
 .contact-card,
@@ -263,35 +238,6 @@ main.main-content {
 .admin-danger-btn,
 .admin-logout-btn {
   min-height: 44px;
-}
-
-.manage-booking-link {
-  font-size: var(--ui-text-micro) !important;
-}
-
-.footer-link-item {
-  padding: 0.35rem 0;
-}
-
-.contact-card {
-  padding: 0.8rem 0.85rem;
-}
-
-.social-bubble {
-  width: 48px;
-  height: 48px;
-}
-
-.booking-page-wrapper {
-  padding-top: clamp(6.75rem, 8vw, 7.75rem) !important;
-  background-image:
-    var(--sf-page) !important;
-}
-
-.form-card-elevation {
-  border-radius: 1.75rem;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
 }
 
 .client-portal-wrapper {
@@ -307,63 +253,6 @@ main.main-content {
   max-width: 60rem !important;
 }
 
-.portal-support-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
-  margin-top: 1.35rem;
-}
-
-.portal-support-card {
-  display: grid;
-  gap: 0.45rem;
-  padding: 1rem 1.05rem;
-  border-radius: 1.45rem;
-  border: 1px solid rgba(0, 33, 76, 0.1);
-  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
-  background: rgba(255, 255, 255, 0.94);
-  background: color-mix(in srgb, var(--tint-glass) 94%, transparent);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.1);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 10%, transparent);
-}
-
-.portal-support-card svg {
-  color: var(--brand-green);
-  font-size: 1.12rem;
-}
-
-.portal-support-card strong {
-  color: var(--ink);
-  line-height: 1.35;
-}
-
-.portal-support-card p,
-.portal-support-card span {
-  margin: 0;
-  color: var(--ink-3);
-  line-height: 1.55;
-}
-
-.portal-support-cta {
-  text-decoration: none;
-  background:
-    rgba(29, 52, 77, 0.98);
-  background:
-    color-mix(in srgb, var(--tint) 98%, transparent);
-  border-color: transparent;
-}
-
-.portal-support-cta svg,
-.portal-support-cta strong,
-.portal-support-cta p,
-.portal-support-cta span {
-  color: #edf4fb;
-}
-
-.portal-support-cta span {
-  font-weight: 800;
-}
-
 .admin-login-shell {
   min-height: auto !important;
   place-items: start center;
@@ -373,113 +262,9 @@ main.main-content {
     var(--sf-page) !important;
 }
 
-.admin-login-layout {
-  width: min(1100px, 100%);
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.9fr);
-  gap: 1.1rem;
-  align-items: stretch;
-}
-
 .admin-login-intro,
 .admin-login-card {
   border-radius: 1.75rem !important;
-}
-
-.admin-login-intro {
-  display: grid;
-  align-content: center;
-  gap: 1rem;
-  padding: clamp(1.4rem, 3vw, 2.1rem);
-  border: 1px solid rgba(0, 33, 76, 0.1);
-  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
-  background:
-    rgba(255, 255, 255, 0.98);
-  background:
-    color-mix(in srgb, var(--tint-glass) 98%, transparent);
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.13);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 13%, transparent);
-}
-
-.admin-login-kicker {
-  color: var(--brand-green);
-  font-size: 0.8rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.admin-login-intro h1 {
-  margin: 0;
-  color: var(--ink);
-  font-size: clamp(2rem, 3vw, 2.8rem);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.admin-login-intro > p {
-  margin: 0;
-  color: var(--ink-3);
-  font-size: 1rem;
-  line-height: 1.7;
-  max-width: 56ch;
-}
-
-.admin-login-benefits {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
-}
-
-.admin-login-benefit {
-  display: grid;
-  gap: 0.45rem;
-  padding: 1rem;
-  border-radius: 1.3rem;
-  border: 1px solid rgba(0, 33, 76, 0.08);
-  border: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
-  background: rgba(255, 255, 255, 0.82);
-  background: color-mix(in srgb, var(--tint-glass) 82%, transparent);
-}
-
-.admin-login-benefit svg {
-  color: var(--brand-green);
-  font-size: 1.15rem;
-}
-
-.admin-login-benefit strong {
-  color: var(--ink);
-  line-height: 1.35;
-}
-
-.admin-login-benefit p {
-  margin: 0;
-  color: var(--ink-3);
-  line-height: 1.55;
-}
-
-.admin-login-trust {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.95rem 1rem;
-  border-radius: 1.2rem;
-  border: 1px solid rgba(1, 149, 60, 0.14);
-  border: 1px solid color-mix(in srgb, var(--tint-accent) 14%, transparent);
-  background: rgba(237, 246, 238, 0.82);
-  background: color-mix(in srgb, var(--sf-accent) 82%, transparent);
-}
-
-.admin-login-trust svg {
-  margin-top: 0.1rem;
-  color: #006d1f;
-  flex-shrink: 0;
-}
-
-.admin-login-trust p {
-  margin: 0;
-  color: #486276;
-  line-height: 1.6;
 }
 
 .admin-shell {
@@ -596,27 +381,6 @@ textarea {
 }
 
 @media (max-width: 960px) {
-  .voice-hint-bubble {
-    top: calc(100% + 0.55rem) !important;
-    right: 0 !important;
-    width: min(10rem, calc(100vw - 2rem));
-    max-width: min(10rem, calc(100vw - 2rem));
-  }
-
-  .form-card-elevation {
-    padding: 1.35rem !important;
-    border-radius: 1.5rem;
-  }
-
-  .portal-support-strip,
-  .admin-login-benefits,
-  .admin-login-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-login-intro {
-    order: 2;
-  }
 
   .admin-login-card {
     order: 1;

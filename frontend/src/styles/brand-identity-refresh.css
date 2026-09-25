@@ -48,17 +48,6 @@ body {
   z-index: -1;
 }
 
-.route-loader-shell {
-  background: transparent;
-}
-
-.route-loader-card {
-  border-radius: 24px;
-  background: var(--brand-shell-panel-strong);
-  border: 1px solid var(--brand-shell-border);
-  box-shadow: var(--brand-shell-shadow);
-}
-
 .booking-page-wrapper,
 .client-portal-wrapper,
 .admin-login-shell--minimal,
@@ -76,16 +65,6 @@ body {
 .footer-grid-container,
 .bottom-panel-container {
   border-radius: 28px;
-}
-
-.form-card-elevation {
-  background:
-    rgba(255, 255, 255, 0.96);
-  background:
-    color-mix(in srgb, var(--tint-glass) 96%, transparent);
-  border: 1px solid rgba(0, 33, 76, 0.1);
-  border: 1px solid color-mix(in srgb, var(--tint) 10%, transparent);
-  box-shadow: 0 0 0 1px rgba(17, 37, 59, 0.14);
 }
 
 .form-card-elevation::before,
@@ -211,31 +190,6 @@ body {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 10%, transparent);
 }
 
-.journey-compass,
-.neuro-stepper {
-  border-radius: 24px;
-}
-
-.journey-meter {
-  background: rgba(20, 38, 58, 0.96);
-  border-color: rgba(0, 33, 76, 0.08);
-  border-color: color-mix(in srgb, var(--tint) 8%, transparent);
-  color: rgba(255, 255, 255, 0.84);
-}
-
-.journey-meter span,
-.journey-meter small {
-  color: #ffffff;
-}
-
-.journey-meter-track {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.journey-meter-track div {
-  background: #9cd4a3;
-}
-
 .client-portal-wrapper {
   padding: clamp(7rem, 8vw, 8.5rem) 1.2rem 4rem;
 }
@@ -256,29 +210,6 @@ body {
   margin-bottom: 1.8rem;
 }
 
-.client-portal-wrapper .portal-header-logo {
-  width: 68px;
-  height: 68px;
-  margin-bottom: 0.9rem;
-  padding: 0.7rem;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.96);
-  background: color-mix(in srgb, var(--tint-glass) 96%, transparent);
-  border: 1px solid rgba(1, 149, 60, 0.16);
-  border: 1px solid color-mix(in srgb, var(--tint-accent) 16%, transparent);
-  box-shadow: 0 0 0 1px rgba(74, 132, 82, 0.16);
-}
-
-.client-portal-wrapper .portal-guidance,
-.client-portal-wrapper .portal-support-strip {
-  gap: 1rem;
-}
-
-.client-portal-wrapper .guidance-card,
-.client-portal-wrapper .portal-support-card {
-  border-radius: 22px;
-}
-
 .client-portal-wrapper .guidance-card svg,
 .client-portal-wrapper .portal-support-card svg,
 .client-portal-wrapper .portal-management-icon,
@@ -289,11 +220,6 @@ body {
   background: rgba(1, 149, 60, 0.14);
   background: color-mix(in srgb, var(--tint-accent) 14%, transparent);
   color: #315c39;
-}
-
-.client-portal-wrapper .search-container {
-  padding: 0.7rem;
-  border-radius: 22px;
 }
 
 .client-portal-wrapper .btn-search,
@@ -316,14 +242,6 @@ body {
 .btn-neuro-success:hover {
   box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-}
-
-.client-portal-wrapper .portal-management-alert,
-.client-portal-wrapper .portal-results-summary {
-  background:
-    rgba(1, 149, 60, 0.08);
-  background:
-    color-mix(in srgb, var(--tint-accent) 8%, transparent);
 }
 
 .client-portal-wrapper .ticket-card {
@@ -390,36 +308,6 @@ body {
   border-top: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
 }
 
-.footer-grid-container {
-  background:
-    rgba(255, 255, 255, 0.8);
-  background:
-    color-mix(in srgb, var(--tint-glass) 80%, transparent);
-  border: 1px solid rgba(0, 33, 76, 0.08);
-  border: 1px solid color-mix(in srgb, var(--tint) 8%, transparent);
-  box-shadow: var(--brand-shell-shadow);
-  padding-top: clamp(3.4rem, 6vw, 4.6rem);
-  padding-bottom: clamp(2.8rem, 5vw, 3.6rem);
-}
-
-.bottom-panel-container {
-  background: rgba(255, 255, 255, 0.66);
-  background: color-mix(in srgb, var(--tint-glass) 66%, transparent);
-  border: 1px solid rgba(0, 33, 76, 0.06);
-  border: 1px solid color-mix(in srgb, var(--tint) 6%, transparent);
-  box-shadow: 0 0 0 1px rgba(20, 38, 58, 0.08);
-}
-
-.footer-link-item,
-.contact-card {
-  border-radius: 20px;
-}
-
-.link-icon-box,
-.contact-icon {
-  border-radius: 12px;
-}
-
 @media (max-width: 1024px) {
   .form-card-elevation,
   .client-portal-wrapper .portal-container,
@@ -442,10 +330,6 @@ body {
   .footer-grid-container,
   .bottom-panel-container {
     border-radius: 22px;
-  }
-
-  .client-portal-wrapper .search-container {
-    padding: 0.65rem;
   }
 }
 

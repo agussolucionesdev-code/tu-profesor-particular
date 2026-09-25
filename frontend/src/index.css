@@ -99,50 +99,6 @@ select {
   max-width: none;
 }
 
-.route-loader-shell {
-  min-height: calc(100vh - 100px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-}
-
-.route-loader-card {
-  width: min(100%, 420px);
-  padding: 1.5rem 1.4rem;
-  border-radius: 12px;
-  background: var(--sf-card);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: var(--shadow-card);
-  text-align: center;
-}
-
-.route-loader-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.75rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(76, 175, 80, 0.12);
-  color: var(--color-accent);
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.route-loader-card strong {
-  display: block;
-  color: var(--color-text-main);
-  font-size: 1.05rem;
-}
-
-.route-loader-card p {
-  margin: 0.45rem 0 0;
-  color: var(--color-text-muted);
-}
-
 .main-content.admin-page-content {
   width: 100%;
   max-width: none;
@@ -175,10 +131,6 @@ select {
 @media (max-width: 768px) {
   .main-content.admin-page-content {
     padding-top: calc(var(--nav-height) + 12px);
-  }
-
-  .route-loader-shell {
-    min-height: calc(100vh - 85px);
   }
 }
 

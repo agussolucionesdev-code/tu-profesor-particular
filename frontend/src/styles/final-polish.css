@@ -143,29 +143,14 @@
 }
 
 /* Header navegación: botones más finos y consistentes */
-.booking-month-nav:focus-visible {
-  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5));
-  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 50%, transparent));
-  outline-offset: 2px;
-  border-radius: 8px;
-}
 
 /* =====================================================================
    TIME SLOTS — pulido de selección de horarios
    ===================================================================== */
 
 /* Aire entre secciones del slot grid (mañana/tarde/noche) */
-.slot-section + .slot-section {
-  margin-top: 1.4rem;
-}
 
 /* Separador sutil entre secciones */
-.slot-section-header {
-  border-bottom: 1px solid var(--border-subtle, rgba(0, 33, 76, 0.06));
-  border-bottom: 1px solid var(--border-subtle, color-mix(in srgb, var(--tint) 6%, transparent));
-  padding-bottom: 0.6rem;
-  margin-bottom: 0.8rem;
-}
 
 /* Estados claros del slot: ahora cada estado tiene una pista visual */
 .slot-btn {
@@ -227,13 +212,6 @@
 }
 
 /* Sub-label del slot (Libre/Ocupado/Elegido) */
-.slot-sub-label {
-  font-size: 0.7rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.85;
-}
 
 /* Mejor uso del espacio en mobile */
 @media (max-width: 640px) {
@@ -360,11 +338,6 @@ a:focus-visible {
   border-radius: 4px;
 }
 
-.neuro-modal-overlay {
-  background: var(--surface-overlay, rgba(0, 33, 76, 0.55));
-  background: var(--surface-overlay, color-mix(in srgb, var(--tint) 55%, transparent));
-}
-
 /* Mobile del calendario.
 
    Los días estaban en 34px: 10 por debajo del mínimo táctil de 44 (WCAG 2.5.5),
@@ -395,66 +368,12 @@ a:focus-visible {
 /* =====================================================================
    VOZ — animación del hint
    ===================================================================== */
-.voice-hint-bubble {
-  animation: tpp-voice-hint-pulse 2.6s ease-in-out infinite;
-}
 
 @keyframes tpp-voice-hint-pulse {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-2px) scale(1.03); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .voice-hint-bubble {
-    animation: none;
-  }
-}
-
-.step-voice-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(1, 149, 60, 0.12);
-  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
-  color: var(--brand-green-deep, #006d1f);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
 /* =====================================================================
    LEYENDA del calendario — pintar bien los iconos
    ===================================================================== */
-.calendar-legend .legend-icon {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  vertical-align: middle;
-  margin-right: 4px;
-  border: 1px solid transparent;
-}
-
-.calendar-legend .legend-icon.disabled {
-  background: rgba(148, 163, 184, 0.20);
-  border-color: rgba(148, 163, 184, 0.4);
-}
-
-.calendar-legend .legend-icon.today {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: var(--brand-accent-warm, #f59e0b);
-}
-
-.calendar-legend .legend-icon.available {
-  background: rgba(1, 149, 60, 0.14);
-  background: color-mix(in srgb, var(--tint-accent) 14%, transparent);
-  border-color: var(--brand-green, #01953c);
-}
-
-.calendar-legend .legend-icon.selected {
-  background: var(--brand-green, #01953c);
-  border-color: var(--brand-green-deep, #006d1f);
-}
