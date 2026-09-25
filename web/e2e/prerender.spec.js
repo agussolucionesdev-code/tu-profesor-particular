@@ -22,6 +22,11 @@ test.describe("sin JavaScript", () => {
     test.skip(!(await esPrerender(request)), "servidor de desarrollo: no hay prerender que mirar");
     for (const ruta of RUTAS) {
       await page.goto(ruta);
+      /* Que sea el HTML de ESTA ruta y no el de la portada: `vite preview`
+         servía el index.html de la portada para /sobre-mi, y este test miraba
+         la portada en todas las rutas sin darse cuenta. */
+      const canonica = await page.locator('link[rel="canonical"]').getAttribute("href");
+      expect(new URL(canonica).pathname, `${ruta}: el servidor mandó el HTML de otra página`).toBe(ruta);
       await expect(page.locator("h1").first(), `${ruta}: sin h1 visible`).toBeVisible();
       expect(await page.locator('div[hidden][id^="S:"], template[id^="B:"]').count(), `${ruta}: quedó un Suspense sin resolver`).toBe(0);
       /* Sin JS no hay reveal: el contenido tiene que verse igual. */

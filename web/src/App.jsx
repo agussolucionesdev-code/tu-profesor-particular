@@ -26,7 +26,6 @@ const RouteChrome = () => {
     document.getElementById("main")?.focus({ preventScroll: true });
   }, [pathname]);
 
-  useReveal(pathname);
   return null;
 };
 
@@ -39,6 +38,11 @@ const RouteChrome = () => {
    espacio vacío de la espera. */
 const Pagina = ({ children }) => {
   const { pathname, key } = useLocation();
+  /* El revelado vive acá, DENTRO del Suspense, y no en RouteChrome: al
+     hidratar, React adopta primero el marco y después el contenido de la
+     página. Desde afuera, el efecto tocaba el DOM de la página antes de que se
+     hidratara, y React encontraba atributos que el servidor no había puesto. */
+  useReveal(pathname);
   return (
     <div key={pathname} className={key === "default" ? "pagina" : "pagina pagina--entra"}>
       {children}
