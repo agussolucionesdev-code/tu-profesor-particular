@@ -77,7 +77,7 @@ jobs:
   web:
     name: Sitio institucional
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: web
@@ -96,6 +96,19 @@ jobs:
       # filtró, no hay que desplegar.
       - run: npm test
       - run: npm run build
+      # El sitio en un navegador, contra ESTE build (prerender incluido) servido
+      # con `vite preview`: accesibilidad y contraste en los dos temas, el HTML
+      # visible sin JS, la barra sin desbordes y su vidrio legible sobre la
+      # portada. Todo eso se rompió alguna vez sin que un test de código lo viera.
+      # Usa el medidor de contraste de turnos (frontend/tests/e2e/_medidores.js).
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-sitio
+          path: web/test-results/
+          retention-days: 7
 
   accesibilidad:
     name: Accesibilidad

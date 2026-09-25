@@ -164,7 +164,15 @@ const Privacy = () => {
             titleId="pv-quien-mas"
             lead="Solo los servicios que hacen falta para que esto funcione. Están listados con nombre y con el motivo."
           />
-          <div className="pv-table-wrap">
+          {/* En el celular la tabla se desplaza de costado. Sin tabIndex, quien
+              usa teclado no podía recorrerla (axe: scrollable-region-focusable).
+              Con foco, las flechas la mueven; el role y el nombre dicen qué es. */}
+          <div
+            className="pv-table-wrap"
+            tabIndex={0}
+            role="region"
+            aria-label="Servicios que procesan datos (se desplaza hacia el costado)"
+          >
             <table className="pv-table">
               <caption className="sr-only">
                 Servicios que procesan datos y para qué
