@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import "./Typewriter.css";
 
 /**
@@ -17,13 +17,23 @@ const TYPE_MS = 85;
 const ERASE_MS = 40;
 const HOLD_MS = 1700;
 
-const prefersReduced = () =>
-  typeof window !== "undefined" &&
-  Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+/* «Reducir movimiento», leído con useSyncExternalStore: durante la
+   hidratación vale lo mismo que en el prerender (`false`, el servidor no lo
+   sabe) y enseguida el valor real. Leído en el render directo, el primer dibujo
+   del navegador no coincidía con el HTML para quien tiene la opción activada. */
+const CONSULTA = "(prefers-reduced-motion: reduce)";
+const suscribirMovimiento = (avisar) => {
+  const m = window.matchMedia?.(CONSULTA);
+  m?.addEventListener?.("change", avisar);
+  return () => m?.removeEventListener?.("change", avisar);
+};
+const pideQuietud = () => Boolean(window.matchMedia?.(CONSULTA)?.matches);
+const delServidor = () => false;
 
 const Typewriter = ({ words, className = "" }) => {
-  const reduced = prefersReduced();
-  const [text, setText] = useState(reduced ? words[0] : "");
+  const reduced = useSyncExternalStore(suscribirMovimiento, pideQuietud, delServidor);
+  const [animado, setText] = useState("");
+  const text = reduced ? words[0] : animado;
   const timer = useRef(0);
 
   useEffect(() => {
