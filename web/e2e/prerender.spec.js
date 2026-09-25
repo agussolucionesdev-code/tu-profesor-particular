@@ -86,8 +86,7 @@ for (const ruta of ["/sobre-mi", "/materias", "/como-trabajo", "/contacto"]) {
     await page.waitForTimeout(1500);
     const { cls, saltos } = await page.evaluate(() => ({ cls: window.__cls, saltos: window.__saltos }));
     /* Si falla, dice qué se movió: sin eso, un CLS es un número sin culpable. */
-    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}:
-  ${saltos.join("
-  ")}`).toBeLessThan(0.05);
+    const detalle = saltos.map((s) => `\n  ${s}`).join("");
+    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}:${detalle}`).toBeLessThan(0.05);
   });
 }
