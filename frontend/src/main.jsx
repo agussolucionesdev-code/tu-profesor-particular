@@ -23,10 +23,14 @@ import { precargarPagina } from "./paginas";
    cargador reemplazaría al HTML. Mientras tanto se ve el HTML. Se hidrata sólo
    si el HTML es de ESTA ruta (/index.html sirve la portada con otra dirección).
 
-   EL RESTO de las rutas recibe app.html, vacío, y se dibuja YA: la barra con
-   el logo no espera al código de la pantalla. Esperarlo acá no protegía nada y
-   atrasaba el logo, que en /reservar es el elemento LCP (medido: +1 s en
-   celular). El código de la pantalla igual se pide ahora, en paralelo. */
+   EL RESTO de las rutas recibe app.html, vacío, y se dibuja YA, sin precargar:
+   primero la barra con el cargador, después la pantalla, cuando llega. En
+   /reservar el logo de la barra es el elemento LCP. Medido en producción:
+     · esperar la pantalla antes de dibujar: LCP 4,1-4,3 s;
+     · pedirla antes de dibujar, sin esperarla: 3,5-3,7 s. El código llegaba y
+       se evaluaba antes que el primer dibujo, que entonces cargaba con todo el
+       kiosco y pedía el logo más tarde;
+     · pedirla al dibujar (así): 3,0-3,2 s, el valor de antes de todo esto. */
 const raiz = document.getElementById("root");
 const hidratar = raiz.dataset.prerender === window.location.pathname;
 const app = (
@@ -35,8 +39,7 @@ const app = (
   </StrictMode>
 );
 
-const precarga = precargarPagina(window.location.pathname);
-if (hidratar) precarga.then(() => hydrateRoot(raiz, app));
+if (hidratar) precargarPagina(window.location.pathname).then(() => hydrateRoot(raiz, app));
 else createRoot(raiz).render(app);
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
