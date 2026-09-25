@@ -101,12 +101,6 @@
   background: rgba(220, 38, 38, 0.05);
 }
 
-.notifications-global-feedback.success {
-  border-color: rgba(22, 163, 74, 0.3);
-  color: var(--color-success-deep, #166534);
-  background: rgba(22, 163, 74, 0.05);
-}
-
 .notifications-load-error p { margin: 0 0 0.6rem; }
 
 .notifications-table {

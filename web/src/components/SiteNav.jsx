@@ -13,7 +13,7 @@ import {
   LuUserRound,
   LuX,
 } from "react-icons/lu";
-import { BOOKING_RESERVE_URL, BRAND } from "../data/site.js";
+import { BRAND, enlaceDeReserva } from "../data/site.js";
 import { useTema } from "../hooks/useTema.js";
 import "./SiteNav.css";
 
@@ -178,7 +178,7 @@ const SiteNav = () => {
           {/* El CTA sale del sitio hacia el sistema de turnos: se avisa. */}
           <a
             className="snav-cta"
-            href={BOOKING_RESERVE_URL}
+            href={enlaceDeReserva("barra")}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}

@@ -1,5 +1,5 @@
 import { FaArrowUpRightFromSquare, FaWhatsapp } from "react-icons/fa6";
-import { BOOKING_RESERVE_URL, waLink } from "../data/site.js";
+import { enlaceDeReserva, waLink } from "../data/site.js";
 import "./CtaBlock.css";
 
 /* Cierre de página. Se repite al final de cada sección del sitio para que el
@@ -43,7 +43,7 @@ const CtaBlock = ({
       <div className="cta-actions" data-reveal="up">
         <a
           className="btn btn--primary"
-          href={BOOKING_RESERVE_URL}
+          href={enlaceDeReserva("bloque-final")}
           target="_blank"
           rel="noopener noreferrer"
         >

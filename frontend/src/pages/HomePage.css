@@ -573,100 +573,8 @@
 /* ════════════════════════════════════════════════════
    PASOS — 3D cards
 ════════════════════════════════════════════════════ */
-.hp-steps-grid {
-  list-style: none; padding: 0; margin: 0 0 56px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.hp-step-card {
-  position: relative;
-  border-radius: 22px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.09);
-  overflow: hidden;
-  cursor: default;
-  transition: transform .25s cubic-bezier(.22,.68,0,1.2), border-color .25s, background .25s;
-  transform-style: preserve-3d;
-  animation: card-in .5s ease both;
-}
-.hp-step-card:nth-child(1) { animation-delay: 0s; }
-.hp-step-card:nth-child(2) { animation-delay: .1s; }
-.hp-step-card:nth-child(3) { animation-delay: .2s; }
-.hp-step-card:nth-child(4) { animation-delay: .3s; }
-
-.hp-step-card:hover {
-  transform: perspective(900px) rotateX(-4deg) rotateY(3deg) translateY(-6px) scale(1.02);
-  border-color: rgba(1, 149, 60, .4);
-  border-color: color-mix(in srgb, var(--tint-accent) 40%, transparent);
-  background: rgba(255,255,255,.09);
-}
-
-.hp-step-card-inner {
-  padding: 30px 24px 28px;
-  display: flex; flex-direction: column;
-  align-items: flex-start; gap: 10px;
-  position: relative; z-index: 1;
-}
-
-.hp-step-num-wrap {
-  margin-bottom: 4px;
-}
-.hp-step-num {
-  font-size: 11px; font-weight: 800;
-  letter-spacing: .12em; color: var(--green-lt);
-  background: rgba(1, 149, 60, .12);
-  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
-  padding: 4px 10px; border-radius: 100px;
-}
-
-.hp-step-icon-wrap {
-  width: 58px; height: 58px;
-  border-radius: 17px;
-  background: rgba(1, 149, 60, .12);
-  background: color-mix(in srgb, var(--tint-accent) 12%, transparent);
-  border: 1.5px solid rgba(1, 149, 60, .3);
-  border: 1.5px solid color-mix(in srgb, var(--tint-accent) 30%, transparent);
-  color: var(--green-lt);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px;
-  transition: background .2s, border-color .2s;
-}
-.hp-step-card:hover .hp-step-icon-wrap {
-  background: rgba(1, 149, 60, .20);
-  background: color-mix(in srgb, var(--tint-accent) 20%, transparent);
-  border-color: var(--green-lt);
-}
-
-.hp-step-title { font-size: 15.5px; font-weight: 800; color: #ffffff; line-height: 1.2; }
-.hp-step-desc  { font-size: 13px; color: rgba(255,255,255,.52); line-height: 1.65; margin: 0; flex: 1; }
-.hp-step-tag   {
-  display: inline-block;
-  font-size: 11.5px; font-weight: 700;
-  color: var(--green-lt);
-  background: rgba(1, 149, 60, .1);
-  background: color-mix(in srgb, var(--tint-accent) 10%, transparent);
-  padding: 4px 10px; border-radius: 100px;
-  margin-top: 4px;
-}
 
 /* glow en hover */
-.hp-step-glow {
-  position: absolute; inset: -1px;
-  border-radius: 22px;
-  background: rgba(1, 149, 60, .10);
-  background: color-mix(in srgb, var(--tint-accent) 10%, transparent);
-  opacity: 0; transition: opacity .3s;
-  pointer-events: none;
-}
-.hp-step-card:hover .hp-step-glow { opacity: 1; }
-
-.hp-steps-cta {
-  display: flex; flex-direction: column;
-  align-items: center; gap: 12px;
-}
-.hp-steps-note { margin: 0; font-size: 13px; color: rgba(255,255,255,.32); }
 
 /* ════════════════════════════════════════════════════
    MATERIAS — índice editorial
@@ -1393,7 +1301,6 @@
   .hp-reasons-grid  { grid-template-columns: repeat(2,1fr); }
   .hp-reasons-grid > li:nth-child(4),
   .hp-reasons-grid > li:nth-child(5) { grid-column: auto; }
-  .hp-steps-grid    { grid-template-columns: repeat(2,1fr); }
 }
 
 /* Hero editorial → el demo baja bajo el cuerpo, el rail se mantiene */
@@ -1442,7 +1349,6 @@
   .hp-reasons-grid  { grid-template-columns: 1fr; }
   .hp-reasons-grid > li:nth-child(1) { grid-column: auto; }
   .hp-level-card    { padding: 18px 20px; }
-  .hp-logo-img      { width: min(240px, 75vw); }
   .hp-more-subjects-inner { padding: 22px 20px; }
 }
 
@@ -1461,7 +1367,6 @@
 }
 
 @media (max-width: 540px) {
-  .hp-steps-grid    { grid-template-columns: 1fr; }
   .hp-web-banner    { gap: 8px; }
   .hp-ticker-item   { padding: 0 18px; font-size: 13px; }
 }

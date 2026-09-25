@@ -9,10 +9,10 @@ import {
 } from "react-icons/fa6";
 import {
   BOOKING_MANAGE_URL,
-  BOOKING_RESERVE_URL,
   BRAND,
   CONTACT,
   SOCIAL,
+  enlaceDeReserva,
   waLink,
 } from "../data/site.js";
 import "./SiteFooter.css";
@@ -70,7 +70,7 @@ const SiteFooter = () => (
         <h2 className="sfoot-title">Tus turnos</h2>
         <ul>
           <li>
-            <a href={BOOKING_RESERVE_URL} target="_blank" rel="noopener noreferrer">
+            <a href={enlaceDeReserva("pie")} target="_blank" rel="noopener noreferrer">
               Reservar una clase <FaArrowUpRightFromSquare aria-hidden="true" />
             </a>
           </li>

@@ -35,9 +35,6 @@
       so the 42×42px icon buttons leak their `.nav-utility-copy` text
       at every zoom level. Fix: hide the text, keep icon + tooltip.
    -------------------------------------------------------------------------- */
-.nav-utility-copy {
-  display: none;
-}
 
 /* Ensure the buttons stay square icon-only after hiding text */
 
@@ -50,172 +47,38 @@
 /* Voice toggle muted state: neutral */
 
 /* Voice hint bubble — prevent it from overflowing left edge on small screens */
-.voice-hint-bubble {
-  right: auto;
-  left: 50%;
-  top: calc(100% + 0.6rem);
-  transform: translateX(-50%);
-  white-space: nowrap;
-  z-index: 200;
-}
-
-.voice-hint-bubble::after {
-  right: auto;
-  left: 50%;
-  top: -0.38rem;
-  transform: translateX(-50%) rotate(-135deg);
-}
 
 /* On wider screens restore the original side-bubble position */
-@media (min-width: 640px) {
-  .voice-hint-bubble {
-    left: auto;
-    right: calc(100% + 0.8rem);
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  .voice-hint-bubble::after {
-    left: auto;
-    right: -0.38rem;
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg);
-  }
-}
 
 /* --------------------------------------------------------------------------
    7. NAVBAR UTILITY CLUSTER — subtle dark mode surface
    -------------------------------------------------------------------------- */
 
 /* compensate main-content padding-top (matches new nav heights) */
-.booking-page-wrapper {
-  padding-top: 92px;
-}
 
 /* --------------------------------------------------------------------------
    8. BOOKING FORM — page wrapper
    -------------------------------------------------------------------------- */
-.booking-page-wrapper {
-  background-color: var(--color-bg-light);
-  background-image: none;
-}
 
 /* --------------------------------------------------------------------------
    9. BOOKING FORM — card
    -------------------------------------------------------------------------- */
-.form-card-elevation {
-  border-radius: 16px;
-  box-shadow: var(--shadow-card);
-  border: 1px solid var(--border-soft);
-  padding: 2rem 2.25rem;
-}
 
 /* --------------------------------------------------------------------------
    10. BOOKING FORM — header / titles
    -------------------------------------------------------------------------- */
-.form-supertitle {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  background: transparent;
-  border: none;
-  padding: 0;
-  margin-bottom: 10px;
-}
-
-.form-main-title {
-  font-size: 1.85rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--color-text-main);
-}
-
-.form-subtitle {
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
-}
 
 /* --------------------------------------------------------------------------
    11. BOOKING FORM — support pills
    -------------------------------------------------------------------------- */
-.form-support-strip {
-  margin-top: 0.85rem;
-  gap: 0.5rem;
-}
-
-.support-pill {
-  background: transparent;
-  border: 1px solid var(--border-soft);
-  padding: 0.45rem 0.75rem;
-  font-size: 0.79rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  border-radius: 6px;
-  box-shadow: none;
-}
-
-.support-pill svg {
-  color: var(--color-accent);
-  font-size: 0.85rem;
-}
 
 /* --------------------------------------------------------------------------
    12. BOOKING FORM — journey compass strip
    -------------------------------------------------------------------------- */
-.journey-compass {
-  background: transparent;
-  border: 1px solid var(--border-soft);
-  border-left: 1px solid var(--border-soft);
-  border-radius: 10px;
-  padding: 1rem 1.1rem;
-  margin: -0.5rem 0 1.75rem;
-}
-
-.journey-kicker {
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.journey-copy h3 {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.journey-copy p {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
-}
 
 /* --------------------------------------------------------------------------
    13. STEPPER — cleaner circles, no scale bounce
    -------------------------------------------------------------------------- */
-.step-circle.current {
-  transform: none;
-  box-shadow: 0 0 0 5px var(--surface-card, #fff);
-  background: var(--navy-solid-bg);
-  color: var(--navy-solid-ink);
-  border-color: var(--navy-solid-bg);
-}
-
-.step-circle {
-  width: 32px;
-  height: 32px;
-  font-size: 0.82rem;
-  box-shadow: 0 0 0 4px var(--surface-card, #fff);
-}
-
-.neuro-stepper {
-  margin-bottom: 2.75rem;
-}
-
-.stepper-progress-bar {
-  top: auto;
-  height: 3px;
-}
 
 /* --------------------------------------------------------------------------
    14. SECTION DIVIDER — flat line instead of gradient
@@ -236,11 +99,6 @@
 /* --------------------------------------------------------------------------
    16. CLIENT PORTAL
    -------------------------------------------------------------------------- */
-.client-portal-wrapper .header-decoration {
-  width: 36px;
-  height: 2px;
-  border-radius: 2px;
-}
 
 .client-portal-wrapper .portal-title {
   font-size: 1.75rem;
@@ -248,49 +106,9 @@
   letter-spacing: -0.02em;
 }
 
-.client-portal-wrapper .search-container {
-  box-shadow: none;
-  border: 1px solid var(--border-soft);
-  padding: 6px;
-  border-radius: 10px;
-}
-
 /* --------------------------------------------------------------------------
    17. FOOTER
    -------------------------------------------------------------------------- */
-.footer-ambient-glow {
-  display: none;
-}
-
-.footer-grid-container {
-  padding-top: 3.5rem;
-  padding-bottom: 3rem;
-  gap: 3rem;
-}
-
-.footer-bottom-panel {
-  border-top: 1px solid var(--border-soft);
-}
-
-.brand-philosophy h4.neuro-hook {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.brand-philosophy .neuro-copy {
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.footer-section-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted);
-  margin-bottom: 1.1rem;
-}
 
 /* --------------------------------------------------------------------------
    18. DARK MODE — card / wrapper overrides

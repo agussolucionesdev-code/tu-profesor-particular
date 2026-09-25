@@ -79,23 +79,8 @@
 }
 
 /* Stagger: cada hijo recibe --i para escalonar el delay */
-.stagger-children > * {
-  transition-delay: calc(var(--i, 0) * var(--stagger-step));
-}
 
 /* Stagger automático para los primeros 12 hijos (sin necesitar --i) */
-.stagger-auto > *:nth-child(1)  { transition-delay: calc(1  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(2)  { transition-delay: calc(2  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(3)  { transition-delay: calc(3  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(4)  { transition-delay: calc(4  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(5)  { transition-delay: calc(5  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(6)  { transition-delay: calc(6  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(7)  { transition-delay: calc(7  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(8)  { transition-delay: calc(8  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(9)  { transition-delay: calc(9  * var(--stagger-step)); }
-.stagger-auto > *:nth-child(10) { transition-delay: calc(10 * var(--stagger-step)); }
-.stagger-auto > *:nth-child(11) { transition-delay: calc(11 * var(--stagger-step)); }
-.stagger-auto > *:nth-child(12) { transition-delay: calc(12 * var(--stagger-step)); }
 
 
 /* ──────────────────────────────────────────────────────────────────
@@ -136,47 +121,12 @@
 }
 
 /* ── 3b. Hover lift en cards ─────────────────────────────────────── */
-.contact-card,
-.footer-link-item {
-  transition:
-    transform var(--motion-swift),
-    box-shadow var(--motion-swift),
-    border-color var(--motion-swift),
-    background var(--motion-swift);
-}
 
 @media (hover: hover) {
-  .contact-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-  }
-
-  .footer-link-item:hover .link-arrow {
-    transform: translateX(5px);
-    opacity: 1;
-  }
 
   /* Social bubbles — spin on hover */
-  .social-bubble {
-    transition: transform var(--motion-spring), box-shadow var(--motion-swift);
-  }
-
-  .social-bubble:hover {
-    transform: translateY(-4px) scale(1.1);
-    box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-  }
 
   /* Booking form card subtle hover */
-  .booking-form-card {
-    transition: box-shadow var(--motion-smooth);
-  }
-
-  .booking-form-card:hover {
-    box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
-  }
 
   /* Field flow card active hover */
   .field-flow-block.is-active:hover {
@@ -185,17 +135,9 @@
   }
 
   /* Custom select hover */
-  .custom-select-trigger:hover {
-    border-color: rgba(0, 33, 76, 0.22);
-    border-color: color-mix(in srgb, var(--tint) 22%, transparent);
-  }
 }
 
 /* ── 3c. Link arrow fluido ───────────────────────────────────────── */
-.footer-link-item .link-arrow {
-  transition: transform var(--motion-swift), opacity var(--motion-swift);
-  opacity: 0.5;
-}
 
 /* ── 3d. Focus ring animado ──────────────────────────────────────── */
 :focus-visible {
@@ -247,32 +189,16 @@
   50%       { transform: translateY(-6px); }
 }
 
-.motion-float {
-  animation: motionFloat 4s ease-in-out infinite;
-}
-
 /* ── Shimmer de carga ── */
 @keyframes motionShimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
 
-.motion-shimmer {
-  background: rgba(0, 33, 76, 0.06);
-  background: color-mix(in srgb, var(--tint) 6%, transparent);
-  background-size: 200% 100%;
-  animation: motionShimmer 1.6s ease-in-out infinite;
-  border-radius: 8px;
-}
-
 /* ── Glow verde pulsante ── */
 @keyframes motionGlowPulse {
   0%, 100% { box-shadow: 0 0 0 0px   rgba(1, 149, 60, 0); box-shadow: 0 0 0 0px   color-mix(in srgb, var(--tint-accent) 0%, transparent); }
   50%       { box-shadow: 0 0 0 6px   rgba(1, 149, 60, 0.18); box-shadow: 0 0 0 6px   color-mix(in srgb, var(--tint-accent) 18%, transparent); }
-}
-
-.motion-glow {
-  animation: motionGlowPulse 2.4s ease-in-out infinite;
 }
 
 /* ── Bounce para iconos de confirmación ── */
@@ -282,18 +208,10 @@
   70%                      { transform: translateY(-5px); }
 }
 
-.motion-bounce {
-  animation: motionBounce 1s ease both;
-}
-
 /* ── Spin suave ── */
 @keyframes motionSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
-}
-
-.motion-spin {
-  animation: motionSpin 1s linear infinite;
 }
 
 /* ── Page transition: fade al cambiar ruta ── */
@@ -316,43 +234,14 @@
   40%           { transform: scale(1);   opacity: 1; }
 }
 
-.typing-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: typingDot 1.2s ease-in-out infinite;
-}
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
 
 /* ──────────────────────────────────────────────────────────────────
    5. UTILIDADES
    ────────────────────────────────────────────────────────────────── */
 
 /* Wrapper para aplicar reveal a listas enteras */
-.reveal-list > li,
-.reveal-list > .item {
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity  var(--motion-smooth),
-    transform var(--motion-smooth);
-}
-
-.reveal-list.is-visible > li,
-.reveal-list.is-visible > .item {
-  opacity: 1;
-  transform: none;
-}
 
 /* Transición de height para paneles colapsables */
-.collapse-transition {
-  overflow: hidden;
-  transition: max-height var(--motion-smooth), opacity var(--motion-smooth);
-}
 
 
 /* ──────────────────────────────────────────────────────────────────

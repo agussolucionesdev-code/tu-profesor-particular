@@ -13,7 +13,7 @@ import ContactForm from "../components/ContactForm.jsx";
 import SectionHead from "../components/SectionHead.jsx";
 import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
-import { BOOKING_RESERVE_URL, CONTACT, waLink } from "../data/site.js";
+import { CONTACT, enlaceDeReserva, waLink } from "../data/site.js";
 import "./Inner.css";
 import "./Contact.css";
 
@@ -153,7 +153,7 @@ const Contact = () => {
 
             <a
               className="ct-primary-cta"
-              href={BOOKING_RESERVE_URL}
+              href={enlaceDeReserva("contacto")}
               target="_blank"
               rel="noopener noreferrer"
             >

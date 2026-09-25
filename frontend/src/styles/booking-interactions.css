@@ -95,424 +95,82 @@
    ===================================================================== */
 
 /* Asegurar que los días tengan base para las transiciones */
-.neuro-calendar .react-datepicker__day {
-  transition: transform 0.18s var(--bi-ease-spring),
-              background 0.16s ease,
-              box-shadow 0.18s ease,
-              color 0.12s ease !important;
-  will-change: transform;
-}
 
 /* Hover en día disponible: levitación + halo verde */
-.neuro-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected):not(.react-datepicker__day--outside-month):hover {
-  background: rgba(1, 149, 60, 0.13) !important;
-  background: color-mix(in srgb, var(--tint-accent) 13%, transparent) !important;
-  color: var(--brand-green-deep, #006d1f) !important;
-  transform: scale(1.14) !important;
-  box-shadow: 0 0 0 2.5px rgba(1, 149, 60, 0.3);
-  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--tint-accent) 30%, transparent);
-}
 
 /* Día hoy hover: mantener borde ámbar pero añadir lift */
-.neuro-calendar .react-datepicker__day.custom-today:not(.react-datepicker__day--selected):hover {
-  transform: scale(1.12) !important;
-  box-shadow: 0 0 0 2.5px rgba(245, 158, 11, 0.45);
-}
 
 /* Día seleccionado: pop animado */
-.neuro-calendar .react-datepicker__day--selected {
-  animation: bi-day-select 0.42s var(--bi-ease-spring) forwards !important;
-  transform-origin: center center !important;
-}
 
 /* Entrada del contenedor del calendario */
-.calendar-glass-box {
-  animation: bi-section-in 0.38s var(--bi-ease-out) both !important;
-}
 
 /* =====================================================================
    3. BANNER DE SELECCIÓN — transición fluida vacío → activo
    ===================================================================== */
 
-.calendar-selection-banner {
-  transition:
-    border-color 0.32s var(--bi-ease-out),
-    box-shadow   0.32s var(--bi-ease-out),
-    background   0.32s var(--bi-ease-out) !important;
-}
-
-.calendar-selection-banner.is-active {
-  animation: bi-banner-in 0.4s var(--bi-ease-out) both,
-             bi-banner-pulse 3.5s ease-in-out 0.8s infinite !important;
-}
-
-.calendar-selection-banner strong {
-  transition: color 0.25s ease !important;
-}
-
 /* =====================================================================
    4. SECCIONES DE HORARIO — entrada en cascada
    ===================================================================== */
 
-.slot-section {
-  animation: bi-section-in 0.38s var(--bi-ease-out) both !important;
-}
-
-.slot-section:nth-child(1) { animation-delay:   0ms !important; }
-.slot-section:nth-child(2) { animation-delay:  70ms !important; }
-.slot-section:nth-child(3) { animation-delay: 140ms !important; }
-
 /* Header de sección: layout limpio con pill contador */
-.slot-section-header {
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  padding-bottom: 0.7rem !important;
-  margin-bottom: 0.9rem !important;
-  border-bottom: 1px solid rgba(1, 149, 60, 0.1) !important;
-  border-bottom: 1px solid color-mix(in srgb, var(--tint-accent) 10%, transparent) !important;
-  gap: 0.5rem !important;
-}
-
-.slot-section-header h4 {
-  font-size: 0.75rem !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.09em !important;
-  color: var(--text-secondary) !important;
-  line-height: 1.2 !important;
-  margin: 0 !important;
-}
-
-.slot-section-header p {
-  font-size: 0.68rem !important;
-  color: var(--text-tertiary) !important;
-  margin: 3px 0 0 !important;
-  letter-spacing: 0.01em !important;
-}
 
 /* Pill de contador (N libres) */
-.slot-section-header > span {
-  flex-shrink: 0;
-  background: rgba(1, 149, 60, 0.1) !important;
-  background: color-mix(in srgb, var(--tint-accent) 10%, transparent) !important;
-  color: var(--brand-green-deep, #006d1f) !important;
-  font-size: 0.66rem !important;
-  font-weight: 900 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.07em !important;
-  padding: 4px 11px !important;
-  border-radius: 999px !important;
-  border: 1px solid rgba(1, 149, 60, 0.22) !important;
-  border: 1px solid color-mix(in srgb, var(--tint-accent) 22%, transparent) !important;
-  line-height: 1.4 !important;
-  transition: background 0.2s ease !important;
-}
 
 /* Indicador visual de período por data-period */
-.slot-section[data-period="morning"] .slot-section-header h4::before {
-  content: "☀  ";
-  font-style: normal;
-  opacity: 0.7;
-}
-.slot-section[data-period="afternoon"] .slot-section-header h4::before {
-  content: "🌤  ";
-  font-style: normal;
-  opacity: 0.7;
-}
-.slot-section[data-period="evening"] .slot-section-header h4::before {
-  content: "🌙  ";
-  font-style: normal;
-  opacity: 0.7;
-}
 
 /* =====================================================================
    5. SLOTS DE HORARIO — rediseño visual completo
    ===================================================================== */
 
 /* Grid: más compacto y con mejor uso del espacio */
-.slot-stage-shell .slots-grid,
-.booking-page-wrapper .slot-stage-shell .slots-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-}
 
 /* Base del botón: glass-card centrado */
-.slot-stage-shell .slot-btn,
-.booking-page-wrapper .slot-stage-shell .slot-btn {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 5px !important;
-  min-height: 76px !important;
-  padding: 12px 8px !important;
-  border-radius: 16px !important;
-  border: 1.5px solid var(--bi-slot-avail-border) !important;
-  background: var(--bi-slot-avail-bg) !important;
-  color: var(--bi-slot-avail-color) !important;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  text-align: center !important;
-  transition:
-    transform    0.22s var(--bi-ease-spring),
-    box-shadow   0.22s ease,
-    background   0.18s ease,
-    border-color 0.18s ease !important;
-  will-change: transform, box-shadow;
-}
 
 /* Línea de acento en la parte superior del slot disponible */
-.slot-stage-shell .slot-btn:not(.disabled):not(.selected)::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 16px; right: 16px;
-  height: 2px;
-  border-radius: 0 0 2px 2px;
-  background: rgba(1, 149, 60, 0.5);
-  background: color-mix(in srgb, var(--tint-accent) 50%, transparent);
-  opacity: 0;
-  transition: opacity 0.2s ease !important;
-}
-
-.slot-stage-shell .slot-btn:not(.disabled):not(.selected):hover::before {
-  opacity: 1;
-}
 
 /* Hover estado disponible */
-.slot-stage-shell .slot-btn:not(.disabled):not(.selected):hover,
-.booking-page-wrapper .slot-stage-shell .slot-btn:not(.disabled):not(.selected):hover {
-  background: var(--bi-slot-hover-bg) !important;
-  border-color: var(--bi-slot-hover-border) !important;
-  color: var(--bi-slot-avail-color) !important;
-  transform: translateY(-4px) scale(1.04) !important;
-  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
-}
 
 /* Estado SELECCIONADO */
-.slot-stage-shell .slot-btn.selected,
-.booking-page-wrapper .slot-stage-shell .slot-btn.selected {
-  background: var(--bi-slot-sel-from) !important;
-  color: #ffffff !important;
-  border: none !important;
-  outline: 3px solid rgba(1, 149, 60, 0.35) !important;
-  outline: 3px solid color-mix(in srgb, var(--tint-accent) 35%, transparent) !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-  animation: bi-slot-select 0.42s var(--bi-ease-spring) forwards !important;
-}
 
 /* Checkmark badge en slot seleccionado */
-.slot-stage-shell .slot-btn.selected::after {
-  content: "✓";
-  position: absolute;
-  top: 5px;
-  right: 6px;
-  font-size: 0.58rem;
-  font-weight: 900;
-  line-height: 17px;
-  text-align: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: var(--bi-check-bg);
-  color: #ffffff;
-  animation: bi-check-pop 0.36s var(--bi-ease-spring) 0.12s both !important;
-  pointer-events: none;
-}
 
 /* Estado DESHABILITADO / OCUPADO */
-.slot-stage-shell .slot-btn.disabled,
-.booking-page-wrapper .slot-stage-shell .slot-btn.disabled {
-  background: var(--bi-slot-dis-bg) !important;
-  border: 1.5px dashed var(--bi-slot-dis-border) !important;
-  color: var(--bi-slot-dis-color) !important;
-  cursor: not-allowed !important;
-  opacity: 0.62 !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
 
 /* Tachado del tiempo en slot deshabilitado */
-.slot-stage-shell .slot-btn.disabled .slot-main-label,
-.booking-page-wrapper .slot-stage-shell .slot-btn.disabled .slot-main-label {
-  text-decoration: line-through !important;
-  text-decoration-color: var(--bi-slot-dis-color) !important;
-  text-decoration-thickness: 1.5px !important;
-}
 
 /* Tiempo (HH:mm) */
-.slot-stage-shell .slot-main-label,
-.booking-page-wrapper .slot-stage-shell .slot-main-label {
-  font-size: 1rem !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.01em !important;
-  line-height: 1 !important;
-  font-variant-numeric: tabular-nums !important;
-}
 
 /* Sub-etiqueta (Libre / Ocupado / Elegido) */
-.slot-stage-shell .slot-sub-label,
-.booking-page-wrapper .slot-stage-shell .slot-sub-label {
-  font-size: 0.62rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.07em !important;
-  text-transform: uppercase !important;
-  opacity: 0.75 !important;
-  line-height: 1 !important;
-}
-
-.slot-stage-shell .slot-btn.selected .slot-sub-label {
-  opacity: 0.88 !important;
-}
 
 /* Focus ring accesible */
-.slot-stage-shell .slot-btn:focus-visible {
-  outline: 3px solid rgba(1, 149, 60, 0.55) !important;
-  outline: 3px solid color-mix(in srgb, var(--tint-accent) 55%, transparent) !important;
-  outline-offset: 3px !important;
-}
 
 /* =====================================================================
    6. BOTÓN CTA btn-stage-next — rediseño completo
    ===================================================================== */
 
-.btn-stage-next {
-  position: relative;
-  overflow: hidden;
-  transition:
-    transform    0.3s var(--bi-ease-out),
-    box-shadow   0.3s ease,
-    background   0.3s ease,
-    border-color 0.25s ease !important;
-  will-change: transform, box-shadow;
-}
-
 /* Estado BLOQUEADO — fantasma elegante */
-.btn-stage-next.is-locked {
-  background: transparent !important;
-  color: rgba(148, 163, 184, 0.7) !important;
-  border: 1.5px dashed rgba(148, 163, 184, 0.28) !important;
-  box-shadow: none !important;
-  cursor: not-allowed !important;
-  backdrop-filter: none !important;
-}
-
-.btn-stage-next.is-locked svg {
-  opacity: 0.35 !important;
-}
 
 /* Estado LISTO — CTA vivo */
-.btn-stage-next.is-ready {
-  background: var(--navy-solid-bg) !important;
-  color: var(--navy-solid-ink) !important;
-  border: none !important;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-  animation:
-    bi-cta-reveal 0.48s var(--bi-ease-spring) both,
-    bi-cta-halo   3.2s ease-in-out 0.6s infinite !important;
-}
 
 /* Barrido de brillo */
-.btn-stage-next.is-ready::before {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0;
-  left: -110%;
-  width: 55%;
-  background: rgba(255, 255, 255, 0.06);
-  animation: bi-shine 2.8s ease-in-out 1s infinite !important;
-  pointer-events: none;
-}
 
 /* Hover del CTA listo */
-.btn-stage-next.is-ready:hover,
-.btn-stage-next.is-ready:focus-visible {
-  box-shadow: 0 0 0 4px rgba(1, 149, 60, 0.14) !important;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tint-accent) 14%, transparent) !important;
-  animation: bi-cta-reveal 0.48s var(--bi-ease-spring) both !important; /* pausa el halo en hover */
-}
 
 /* Flecha del CTA animada */
-.btn-stage-next.is-ready svg {
-  animation: bi-arrow-nudge 1.9s ease-in-out 1.2s infinite !important;
-}
-
-.btn-stage-next.is-locked svg {
-  animation: none !important;
-}
 
 /* =====================================================================
    7. TARJETAS DEL SIDEBAR — entrada escalonada y hover depth
    ===================================================================== */
 
-.stage-sidebar-cards .selection-insight-card {
-  animation: bi-card-in 0.42s var(--bi-ease-out) both !important;
-  transition: transform 0.26s var(--bi-ease-spring), box-shadow 0.26s ease !important;
-}
-
-.stage-sidebar-cards .selection-insight-card:nth-child(1) { animation-delay:  30ms !important; }
-.stage-sidebar-cards .selection-insight-card:nth-child(2) { animation-delay: 110ms !important; }
-.stage-sidebar-cards .selection-insight-card:nth-child(3) { animation-delay: 190ms !important; }
-
-.stage-sidebar-cards .selection-insight-card:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.16);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 16%, transparent);
-}
-
 /* Tarjeta "accent" (Próximo paso) — brillo suave */
-.stage-sidebar-cards .selection-insight-card.accent {
-  background:
-    rgba(1, 149, 60, 0.08) !important;
-  background:
-    color-mix(in srgb, var(--tint-accent) 8%, transparent) !important;
-  border-color: rgba(1, 149, 60, 0.2) !important;
-  border-color: color-mix(in srgb, var(--tint-accent) 20%, transparent) !important;
-}
 
 /* =====================================================================
    8. BTN MOBILE (stage-actions-mobile) — pastilla flotante
    ===================================================================== */
 
-.stage-actions-mobile .btn-neuro-primary.btn-ready {
-  transition: transform 0.28s var(--bi-ease-spring), box-shadow 0.28s ease !important;
-  will-change: transform, box-shadow;
-}
-
-.stage-actions-mobile .btn-neuro-primary.btn-ready:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 0 0 1px rgba(0, 33, 76, 0.22);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent);
-}
-
 /* =====================================================================
    9. NAVEGACIÓN DE MESES — transición del header
    ===================================================================== */
-
-.booking-datepicker-header {
-  transition: opacity 0.2s ease !important;
-}
-
-.booking-month-nav {
-  transition:
-    transform   0.18s var(--bi-ease-spring),
-    background  0.18s ease,
-    box-shadow  0.18s ease !important;
-}
-
-.booking-month-nav:hover {
-  transform: scale(1.12) !important;
-}
-
-.booking-month-nav:active {
-  transform: scale(0.94) !important;
-  transition-duration: 80ms !important;
-}
 
 /* =====================================================================
    10. CAMPOS DE INPUT — micro-interacciones de foco
@@ -543,85 +201,13 @@
    11. STEPPER — transiciones del progreso
    ===================================================================== */
 
-.stepper-progress-fill {
-  transition: width 0.55s var(--bi-ease-out) !important;
-}
-
-.stepper-item {
-  transition: opacity 0.3s ease !important;
-}
-
 /* =====================================================================
    12. RESPONSIVE — móvil y tablet
    ===================================================================== */
 
-@media (max-width: 640px) {
-  .slot-stage-shell .slots-grid,
-  .booking-page-wrapper .slot-stage-shell .slots-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .slot-stage-shell .slot-btn,
-  .booking-page-wrapper .slot-stage-shell .slot-btn {
-    min-height: 64px !important;
-    padding: 10px 6px !important;
-    border-radius: 13px !important;
-  }
-
-  .slot-stage-shell .slot-main-label,
-  .booking-page-wrapper .slot-stage-shell .slot-main-label {
-    font-size: 0.92rem !important;
-  }
-
-  .slot-stage-shell .slot-sub-label,
-  .booking-page-wrapper .slot-stage-shell .slot-sub-label {
-    font-size: 0.59rem !important;
-  }
-
-  .slot-stage-shell .slot-btn.selected::after {
-    width: 15px;
-    height: 15px;
-    font-size: 0.54rem;
-    line-height: 15px;
-    top: 4px;
-    right: 5px;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1023px) {
-  .slot-stage-shell .slots-grid,
-  .booking-page-wrapper .slot-stage-shell .slots-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-  }
-}
-
 /* =====================================================================
    13. REDUCCIÓN DE MOVIMIENTO — respeto de preferencias
    ===================================================================== */
-
-@media (prefers-reduced-motion: reduce) {
-  .neuro-calendar .react-datepicker__day,
-  .slot-stage-shell .slot-btn,
-  .booking-page-wrapper .slot-stage-shell .slot-btn,
-  .btn-stage-next,
-  .calendar-selection-banner,
-  .selection-insight-card,
-  .slot-section {
-    animation: none !important;
-    transition-duration: 0ms !important;
-  }
-
-  .btn-stage-next.is-ready::before {
-    animation: none !important;
-    display: none;
-  }
-
-  .btn-stage-next.is-ready svg {
-    animation: none !important;
-  }
-}
 
 /* =====================================================================
    14. DISPONIBILIDAD POR DÍA EN EL CALENDARIO
@@ -630,154 +216,18 @@
    rose = sin cupos.
    ===================================================================== */
 
-.neuro-calendar .react-datepicker__day {
-  position: relative;
-}
-
 /* Días con algunos turnos (parcial) */
-.neuro-calendar .react-datepicker__day.day-partial {
-  background: rgba(181, 107, 24, 0.07) !important;
-}
-
-.neuro-calendar .react-datepicker__day.day-partial::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #b56b18;
-  pointer-events: none;
-}
 
 /* Días bloqueados por el admin */
-.neuro-calendar .react-datepicker__day.day-blocked {
-  background: rgba(100, 100, 120, 0.08) !important;
-  color: var(--ink-soft) !important;
-  text-decoration: line-through;
-  opacity: 0.55;
-  cursor: not-allowed !important;
-  pointer-events: none;
-}
-
-.neuro-calendar .react-datepicker__day.day-blocked::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #888;
-  pointer-events: none;
-}
 
 /* Días completamente llenos (sin cupos) */
-.neuro-calendar .react-datepicker__day.day-full {
-  background: rgba(168, 36, 51, 0.06) !important;
-  color: #9e2030 !important;
-  text-decoration: line-through;
-  opacity: 0.72;
-}
-
-.neuro-calendar .react-datepicker__day.day-full::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #a82433;
-  pointer-events: none;
-}
 
 /* El día seleccionado siempre luce seleccionado, sin importar ocupación */
-.neuro-calendar .react-datepicker__day.day-partial.react-datepicker__day--selected,
-.neuro-calendar .react-datepicker__day.day-full.react-datepicker__day--selected {
-  background: var(--cta-solid-bg) !important;
-  color: var(--cta-solid-ink) !important;
-  text-decoration: none !important;
-  opacity: 1 !important;
-}
-
-.neuro-calendar .react-datepicker__day.day-partial.react-datepicker__day--selected::after,
-.neuro-calendar .react-datepicker__day.day-full.react-datepicker__day--selected::after {
-  background: rgba(255, 255, 255, 0.65);
-  background: color-mix(in srgb, var(--tint-glass) 65%, transparent);
-}
 
 /* Días fuera del mes actual: no mostrar indicadores */
-.neuro-calendar .react-datepicker__day--outside-month.day-partial,
-.neuro-calendar .react-datepicker__day--outside-month.day-full {
-  background: transparent !important;
-  color: var(--text-tertiary, #94a3b8) !important;
-  text-decoration: none !important;
-  opacity: 0.30 !important;
-}
-
-.neuro-calendar .react-datepicker__day--outside-month.day-partial::after,
-.neuro-calendar .react-datepicker__day--outside-month.day-full::after {
-  display: none;
-}
 
 /* Dark mode */
 
 /* ── Leyenda del calendario: indicadores de día ──────────────── */
-.calendar-legend .legend-icon.partial-day {
-  background: rgba(181, 107, 24, 0.12);
-  border-color: #b56b18;
-  position: relative;
-}
-
-.calendar-legend .legend-icon.partial-day::after {
-  content: "";
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #b56b18;
-  pointer-events: none;
-}
-
-.calendar-legend .legend-icon.full-day {
-  background: rgba(168, 36, 51, 0.10);
-  border-color: #a82433;
-  opacity: 0.8;
-  position: relative;
-}
-
-.calendar-legend .legend-icon.full-day::after {
-  content: "";
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #a82433;
-  pointer-events: none;
-}
-
-.calendar-legend .legend-icon.day-blocked {
-  background: rgba(100, 100, 120, 0.10);
-  border-color: #888;
-  opacity: 0.6;
-  text-decoration: line-through;
-}
 
 /* Reducción de movimiento: sin indicadores animados */
-@media (prefers-reduced-motion: reduce) {
-  .neuro-calendar .react-datepicker__day.day-partial::after,
-  .neuro-calendar .react-datepicker__day.day-full::after {
-    animation: none;
-  }
-}

@@ -46,23 +46,6 @@
   }
 }
 
-.smart-guide-highlight {
-  animation: gentleSlide var(--transition-slow);
-  background: rgba(1, 149, 60, 0.08);
-  background: color-mix(in srgb, var(--tint-accent) 8%, transparent);
-  border-left: 3px solid var(--brand-green);
-  padding: var(--spacing-3) var(--spacing-4);
-  border-radius: var(--radius-md);
-  margin: var(--spacing-3) 0;
-}
-
-.intent-arrow {
-  display: inline-block;
-  animation: intentArrow 2s ease-in-out infinite;
-  color: var(--brand-accent-warm);
-  margin-left: var(--spacing-2);
-}
-
 .field-complete-glow {
   animation: focusGlow 2s ease-in-out infinite;
   border-radius: var(--radius-md);
@@ -76,12 +59,4 @@
     animation: none !important;
     transition: none !important;
   }
-}
-
-.fade-in {
-  animation: gentleSlide var(--transition-base);
-}
-
-.pulse-subtle {
-  animation: softPulse 3s ease-in-out infinite;
 }

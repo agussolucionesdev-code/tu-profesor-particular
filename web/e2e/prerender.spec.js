@@ -53,3 +53,24 @@ test("ninguna página dispara errores de CSP ni de consola", async ({ page }) =>
   );
   expect(propios).toEqual([]);
 });
+
+/* Entrar DIRECTO a una página interna no puede mover la página.
+ * Se medía CLS 1 en /sobre-mi y /materias: React vaciaba el contenido un
+ * instante mientras llegaba el código de la página (ver src/paginas.js). Con la
+ * CPU frenada, como en un celular medio, que es donde aparecía. */
+for (const ruta of ["/sobre-mi", "/materias", "/como-trabajo", "/contacto"]) {
+  test(`entrar directo a ${ruta} no hace saltar la página`, async ({ page, context }) => {
+    const cdp = await context.newCDPSession(page);
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    await page.addInitScript(() => {
+      window.__cls = 0;
+      new PerformanceObserver((lista) => {
+        for (const e of lista.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    await page.goto(ruta, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    const cls = await page.evaluate(() => window.__cls);
+    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}`).toBeLessThan(0.05);
+  });
+}

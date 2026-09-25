@@ -164,7 +164,6 @@
   border-color: var(--state-selected-brd);
   background: var(--state-selected-bg);
 }
-.kiosk-choice-compact { padding: 0.85rem 1rem; }
 
 /* Tiene que venir DESPUÉS de `.kiosk-choice-card`, y no es un detalle de orden:
    esa regla declara `padding` en atajo, así que resetea `padding-right` de cualquier
@@ -188,7 +187,6 @@
   font-weight: 800;
   color: var(--text-primary);
 }
-.kiosk-choice-compact .kiosk-choice-label { font-size: 0.98rem; }
 .kiosk-choice-hint {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -199,7 +197,6 @@
   margin-bottom: 0.25rem;
   line-height: 1;
 }
-.kiosk-choice-icon-sm { font-size: 1.15rem; margin-bottom: 0; }
 .kiosk-choice-modality {
   align-items: flex-start;
   padding: 1.4rem 1.25rem;
@@ -345,113 +342,25 @@
 .kiosk-chip.is-selected .kiosk-chip-tag { background: rgba(255, 255, 255, 0.24); }
 
 /* ── Turnos ──────────────────────────────────────────────────────────────── */
-.kiosk-day-group { margin-bottom: 1.1rem; }
-.kiosk-day-label {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  font-size: 0.95rem;
-  font-weight: 800;
-  /* --brand-navy es fijo y oscuro: sobre el tema oscuro casi no se leía. */
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
 /* Igual que en el resumen: solo la primera letra. Con `capitalize` el título del
    día salía "Miércoles 12 De Agosto", con la preposición en mayúscula. */
-.kiosk-day-label::first-letter { text-transform: uppercase; }
 
 /* Cuántos horarios tiene el día: evita que haya que contarlos a ojo. */
-.kiosk-day-count {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
-.kiosk-slots { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-.kiosk-slot {
-  min-width: 74px;
-  padding: 0.6rem 0.9rem;
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-base);
-  background: var(--surface-card);
-  font-weight: 800;
-  font-size: 1rem;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
-}
-.kiosk-slot:hover { border-color: var(--brand-green); background: var(--state-hover-bg); }
-.kiosk-slot:active { transform: translateY(1px); }
-.kiosk-slot:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 /* ── Desplegar / condensar los horarios de un día ────────────────────────
    Antes acá había un `.kiosk-slot-more`: un span con "+N más" que NO era
    interactivo, así que los horarios de la tarde eran inalcanzables. Ahora es un
    botón real. */
-.kiosk-slot-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.6rem;
-  padding: 0.5rem 0.9rem;
-  border: 1.5px dashed var(--border-color);
-  border-radius: var(--radius-base);
-  background: none;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
-}
-.kiosk-slot-toggle:hover {
-  border-color: var(--brand-green);
-  border-style: solid;
-  color: var(--accent-primary);
-  background: var(--state-hover-bg);
-}
-.kiosk-slot-toggle:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
 
 /* La flecha gira al desplegar: señal de estado sin agregar texto. */
-.kiosk-slot-toggle-icon {
-  font-size: 0.72rem;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.kiosk-slot-toggle[aria-expanded="true"] .kiosk-slot-toggle-icon {
-  transform: rotate(180deg);
-}
 
 /* Entrada de los horarios recién revelados. Con KIOSK_SLOTS_PER_DAY = 6, los
    seis primeros ya estaban en pantalla: animar del 7º en adelante evita que
    toda la fila "parpadee" al expandir. El escalonado corta a los 10 para que
    una tarde con 25 turnos no tarde una eternidad en aparecer. */
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 7) {
-  animation: kioskSlotIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(7)  { animation-delay: 0ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(8)  { animation-delay: 22ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(9)  { animation-delay: 44ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(10) { animation-delay: 66ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(11) { animation-delay: 88ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(12) { animation-delay: 110ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(13) { animation-delay: 132ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(14) { animation-delay: 154ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(15) { animation-delay: 176ms; }
-.kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 16) { animation-delay: 198ms; }
 
 @keyframes kioskSlotIn {
   from { opacity: 0; transform: translateY(-6px) scale(0.96); }
   to   { opacity: 1; transform: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kiosk-slots.is-expanded .kiosk-slot:nth-child(n + 7) { animation: none; }
-  .kiosk-slot-toggle-icon { transition: none; }
 }
 
 /* ── Formulario ──────────────────────────────────────────────────────────── */
@@ -574,7 +483,6 @@
   font-size: 0.9rem;
   line-height: 1.4;
 }
-.kiosk-check input { width: 18px; height: 18px; accent-color: var(--brand-green); }
 
 /* ── Resumen final ───────────────────────────────────────────────────────── */
 .kiosk-summary {
@@ -664,7 +572,6 @@
   padding: 0.3rem 0;
 }
 .kiosk-inline-btn:hover { text-decoration: underline; }
-.kiosk-more-days { margin-top: 0.5rem; }
 .kiosk-muted { color: var(--text-secondary); font-size: 0.95rem; }
 .kiosk-empty { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; }
 .kiosk-error {
@@ -934,50 +841,6 @@
  * una marca dentro de la tarjeta, este era el diseño acordado y sirve de
  * punto de partida. Si en la próxima pasada sigue sin usarse, va afuera.
  * ─────────────────────────────────────────────────────────────────────────── */
-.kiosk-brand-lockup {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.72rem;
-  min-width: 0;
-}
-
-.kiosk-brand-logo {
-  display: block;
-  width: 46px;
-  height: 46px;
-  flex: 0 0 46px;
-  overflow: hidden;
-  border-radius: 14px;
-  box-shadow: 0 8px 18px rgba(0, 33, 76, 0.14);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--tint-shadow) 14%, transparent);
-}
-
-.kiosk-brand-logo-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.kiosk-brand-copy {
-  display: grid;
-  line-height: 1.18;
-}
-
-.kiosk-brand-copy strong {
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-}
-
-.kiosk-brand-copy span {
-  color: var(--accent-ink);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
 .kiosk-portal-link {
   min-height: 44px;
@@ -1571,7 +1434,6 @@
 @media (max-width: 680px) {
   .kiosk-card { border-radius: 22px; padding: 1rem; }
   .kiosk-card-head { align-items: center; }
-  .kiosk-brand-logo { width: 42px; height: 42px; flex-basis: 42px; }
   .kiosk-grid-levels,
   .kiosk-grid-subjects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kiosk-choice-card.kiosk-choice-subject { min-height: 218px; grid-template-rows: minmax(126px, 1fr) auto; }
@@ -1586,8 +1448,6 @@
 
 @media (max-width: 470px) {
   .kiosk-wrapper { padding-inline: 0.55rem; }
-  .kiosk-brand-copy span { display: none; }
-  .kiosk-brand-copy strong { max-width: 124px; font-size: 0.78rem; }
   .kiosk-portal-link { font-size: 0.76rem; padding-inline: 0.68rem; }
   .kiosk-stepper { padding-inline: 0.35rem; }
   .kiosk-level-card { min-height: 232px; }

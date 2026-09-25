@@ -213,6 +213,18 @@ const BookingKiosk = () => {
     funnelRef.current.start(1);
   }, []);
 
+  /* El embudo sigue al paso. Antes el kiosco cambiaba de paso con setStep sin
+     avisarle al tracker, así que el embudo sólo registraba el arranque y no se
+     podía saber en qué paso abandonaba la gente. Un efecto sobre `step` cubre
+     todos los caminos —avanzar, volver, saltar desde el indicador— en un solo
+     lugar. Lo escucha components/analitica/AnaliticaDeTurnos. */
+  const pasoAnteriorRef = useRef(step);
+  useEffect(() => {
+    const anterior = pasoAnteriorRef.current;
+    if (anterior !== step) funnelRef.current.stageChange(anterior, step);
+    pasoAnteriorRef.current = step;
+  }, [step]);
+
   /* Los ajustes públicos son mejoras sobre valores que ya tienen fallback: el
      precio, las materias configuradas y la dirección. Si la llamada falla, el
      wizard tiene que seguir funcionando —bloquear una reserva porque no cargó un
@@ -613,6 +625,7 @@ const BookingKiosk = () => {
         managementMethods,
         managementUrl,
       });
+      funnelRef.current.complete(step);
       setShowModal(true);
     } catch (error) {
       const msg = getBookingApiMessage(error);

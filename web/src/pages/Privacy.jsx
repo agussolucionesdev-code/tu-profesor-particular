@@ -4,7 +4,7 @@ import SectionHead from "../components/SectionHead.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
   BOOKING_MANAGE_URL,
-  BOOKING_RESERVE_URL,
+  enlaceDeReserva,
   BRAND,
   CONTACT,
   waLink,
@@ -315,7 +315,7 @@ const Privacy = () => {
             </Link>
             <a
               className="btn btn--primary"
-              href={BOOKING_RESERVE_URL}
+              href={enlaceDeReserva("privacidad")}
               target="_blank"
               rel="noopener noreferrer"
             >
