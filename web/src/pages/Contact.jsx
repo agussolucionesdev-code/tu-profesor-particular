@@ -113,9 +113,11 @@ const Contact = () => {
           <Ilustracion className="con-ilus-imagen" src="/img/contacto-celular.webp" lado={640} prioridad />
         </div>
 
+        {/* Las dos primeras tarjetas están en el primer pliegue: entran con CSS
+            y no esperan al JavaScript del revelado (ver base.css). */}
         <div className="ct-layout">
           {/* ── Camino 1: reservar (la acción principal) ── */}
-          <article className="ct-primary" data-reveal="up">
+          <article className="ct-primary" data-entrada="up" style={{ "--i": 2 }}>
             <p className="ct-eyebrow">
               <span className="ct-dot" aria-hidden="true" />
               El camino más rápido
@@ -179,7 +181,7 @@ const Contact = () => {
 
           {/* ── Camino 2: escribir, con el mensaje ya armado ── */}
           <div className="ct-channels">
-            <article className="ct-card ct-card--wa" data-reveal="up">
+            <article className="ct-card ct-card--wa" data-entrada="up" style={{ "--i": 3 }}>
               <header className="ct-card-head">
                 <span className="ct-icon ct-icon--wa" aria-hidden="true">
                   <FaWhatsapp />
