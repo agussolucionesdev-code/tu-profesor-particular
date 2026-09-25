@@ -30,7 +30,9 @@ test("Vercel proxies health and API requests before the SPA fallback", () => {
       destination: "/api/preview-proxy?__proxy_path=$1",
     },
   ]);
-  assert.equal(vercelConfig.rewrites.at(-1).destination, "/index.html");
+  /* app.html y no index.html: el index.html ya trae la portada dibujada
+     (prerender.mjs), y /reservar la mostraría un instante antes de su paso 1. */
+  assert.equal(vercelConfig.rewrites.at(-1).destination, "/app.html");
 });
 
 /* EL CATCH-ALL NO SE PUEDE COMER /_vercel.

@@ -12,12 +12,19 @@ import "react-datepicker/dist/react-datepicker.css";
 // librería para ganarle a sus colores fijos. Ver styles/datepicker-tema.css.
 import "./styles/datepicker-tema.css";
 import App from "./App.jsx";
+import { precargarPagina } from "./paginas";
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+/* Primero el código de la pantalla en la que ya estás, después el dibujo. La
+   portada llega prerenderizada: sin esto, el primer dibujo de React pasaría por
+   el cargador del Suspense y la portada parpadearía entera (ver paginas.js).
+   Mientras tanto se ve el HTML del servidor. */
+precargarPagina(window.location.pathname).then(() => {
+  createRoot(document.getElementById("root")).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+});
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {

@@ -36,6 +36,9 @@ export default defineConfig(({ mode }) => {
     strictPort: true,
   },
   build: {
+    /* Lo lee prerender.mjs para saber qué CSS lleva la portada y con qué
+       nombre salió cada imagen. Después lo borra: no se publica. */
+    manifest: true,
     rollupOptions: {
       output: {
         /* Función y no objeto: con el objeto, la hoja de estilos del
