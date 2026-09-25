@@ -267,28 +267,25 @@ test.describe("los flotantes y el muelle de «Continuar»", () => {
       const continuar = page.locator(".kiosk-selection-dock").getByRole("button", { name: /^Continuar$/ });
       await expect(continuar).toBeVisible();
 
-      /* Con poll: los flotantes se apartan con una transición de 0,28 s. */
+      /* En el centro está «Continuar» y ningún flotante le pisa ni una
+         esquina. Las dos cosas en el MISMO poll: los flotantes se apartan con
+         una transición de 0,28 s, y en el CI (más rápido) una medida suelta de
+         las esquinas caía en plena transición, con el centro ya libre. */
       await expect
         .poll(
           () =>
             continuar.evaluate((boton) => {
               const r = boton.getBoundingClientRect();
               const arriba = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-              return arriba?.closest("button") === boton;
+              const pisados = [...document.querySelectorAll(".a11y-fab, .btn-up-floating")]
+                .filter((f) => getComputedStyle(f).visibility !== "hidden")
+                .map((f) => f.getBoundingClientRect())
+                .filter((f) => r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top).length;
+              return { centroLibre: arriba?.closest("button") === boton, pisados };
             }),
           { timeout: 5_000 },
         )
-        .toBe(true);
-
-      /* Y ningún flotante le pisa ni una esquina. */
-      const pisados = await continuar.evaluate((boton) => {
-        const r = boton.getBoundingClientRect();
-        return [...document.querySelectorAll(".a11y-fab, .btn-up-floating")]
-          .filter((f) => getComputedStyle(f).visibility !== "hidden")
-          .map((f) => f.getBoundingClientRect())
-          .filter((f) => r.left < f.right && r.right > f.left && r.top < f.bottom && r.bottom > f.top).length;
-      });
-      expect(pisados).toBe(0);
+        .toEqual({ centroLibre: true, pisados: 0 });
     });
   }
 });
