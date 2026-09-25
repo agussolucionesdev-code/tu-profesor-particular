@@ -65,9 +65,20 @@ test("la app precarga la portada y la hidrata sólo sobre el HTML de su ruta", (
      animaciones del título volvían a arrancar (el test de componentes
      HidratarLaPortada verifica que el primer dibujo coincida). */
   const main = leer("src/main.jsx");
-  assert.match(main, /precargarPagina\(window\.location\.pathname\)\.then\(/);
+  assert.match(main, /const precarga = precargarPagina\(window\.location\.pathname\);/);
   assert.match(main, /raiz\.dataset\.prerender === window\.location\.pathname/);
-  assert.match(main, /if \(hidratar\) hydrateRoot\(raiz, app\);\s*else createRoot\(raiz\)\.render\(app\);/);
+  assert.match(main, /if \(hidratar\) precarga\.then\(\(\) => hydrateRoot\(raiz, app\)\);/);
+});
+
+test("las rutas sin prerender se dibujan sin esperar el código de la pantalla", () => {
+  /* Medido en producción: esperar la pantalla antes del primer dibujo
+     atrasaba ~1 s el logo de la barra, el elemento LCP de /reservar. */
+  const main = leer("src/main.jsx");
+  assert.match(main, /\n\s*else createRoot\(raiz\)\.render\(app\);/);
+  assert.doesNotMatch(main, /\.then\(\(\) => \{?\s*createRoot/);
+});
+
+test("el prerender marca la ruta que dibujó", () => {
   assert.match(leer("prerender.mjs"), /<div id="root" data-prerender="\/">/);
   assert.match(leer("src/App.jsx"), /from "\.\/paginas"/);
 });
