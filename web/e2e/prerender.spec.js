@@ -22,6 +22,11 @@ test.describe("sin JavaScript", () => {
     test.skip(!(await esPrerender(request)), "servidor de desarrollo: no hay prerender que mirar");
     for (const ruta of RUTAS) {
       await page.goto(ruta);
+      /* Que sea el HTML de ESTA ruta y no el de la portada: `vite preview`
+         servía el index.html de la portada para /sobre-mi, y este test miraba
+         la portada en todas las rutas sin darse cuenta. */
+      const canonica = await page.locator('link[rel="canonical"]').getAttribute("href");
+      expect(new URL(canonica).pathname, `${ruta}: el servidor mandó el HTML de otra página`).toBe(ruta);
       await expect(page.locator("h1").first(), `${ruta}: sin h1 visible`).toBeVisible();
       expect(await page.locator('div[hidden][id^="S:"], template[id^="B:"]').count(), `${ruta}: quedó un Suspense sin resolver`).toBe(0);
       /* Sin JS no hay reveal: el contenido tiene que verse igual. */
@@ -64,13 +69,24 @@ for (const ruta of ["/sobre-mi", "/materias", "/como-trabajo", "/contacto"]) {
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     await page.addInitScript(() => {
       window.__cls = 0;
+      window.__saltos = [];
+      const describir = (s) =>
+        `${s.node?.nodeName ?? "?"}.${String(s.node?.className ?? "").split(" ")[0]} ` +
+        `y ${Math.round(s.previousRect.y)}→${Math.round(s.currentRect.y)}, ` +
+        `alto ${Math.round(s.previousRect.height)}→${Math.round(s.currentRect.height)}`;
       new PerformanceObserver((lista) => {
-        for (const e of lista.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+        for (const e of lista.getEntries()) {
+          if (e.hadRecentInput) continue;
+          window.__cls += e.value;
+          window.__saltos.push(`${e.value.toFixed(3)} a los ${Math.round(e.startTime)} ms: ${e.sources.map(describir).join(" | ")}`);
+        }
       }).observe({ type: "layout-shift", buffered: true });
     });
     await page.goto(ruta, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
-    const cls = await page.evaluate(() => window.__cls);
-    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}`).toBeLessThan(0.05);
+    const { cls, saltos } = await page.evaluate(() => ({ cls: window.__cls, saltos: window.__saltos }));
+    /* Si falla, dice qué se movió: sin eso, un CLS es un número sin culpable. */
+    const detalle = saltos.map((s) => `\n  ${s}`).join("");
+    expect(cls, `CLS ${cls.toFixed(3)} en ${ruta}:${detalle}`).toBeLessThan(0.05);
   });
 }

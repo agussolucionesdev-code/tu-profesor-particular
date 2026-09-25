@@ -139,7 +139,9 @@ const SiteFooter = () => (
     </div>
 
     <div className="shell sfoot-base">
-      <p>
+      {/* El año sale del prerender (el del último deploy): si el navegador ya
+          está en el año siguiente, la hidratación no lo marca como error. */}
+      <p suppressHydrationWarning>
         © {new Date().getFullYear()} {BRAND.person}. Todos los derechos
         reservados.
       </p>
