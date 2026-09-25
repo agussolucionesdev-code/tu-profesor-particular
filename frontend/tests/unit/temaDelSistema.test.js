@@ -15,9 +15,11 @@ import vm from "node:vm";
  * 1. EL DESTELLO. React aplica el tema en un efecto, DESPUÉS de pintar. Con
  *    «Sistema», quien usa oscuro vería la página blanca un instante y después el
  *    salto a oscuro. La solución es un script en el <head> que fije el tema antes
- *    de la primera pintura. Como la política de seguridad dice
- *    `script-src 'self'`, no puede ir en línea: es un archivo propio,
- *    `public/tema.js`, cargado de forma sincrónica.
+ *    de la primera pintura: `public/tema.js`, sincrónico. En la plantilla
+ *    (index.html) es un archivo; en el build, prerender.mjs lo pone en línea
+ *    —como archivo costaba un viaje de red antes de pintar— y la CSP
+ *    (`script-src 'self'`) lo autoriza por su hash. Lo cuida
+ *    prerenderDeLaPortada.test.js.
  *
  * 2. LO QUE YA ESTABA GUARDADO. El código escribía las preferencias en
  *    `localStorage` en CADA visita, así que todo el que entró alguna vez tiene
@@ -96,7 +98,7 @@ test("un valor guardado basura no rompe nada", () => {
   assert.equal(d.theme, "dark");
 });
 
-test("el script carga antes de la primera pintura, y desde un archivo", () => {
+test("el script carga antes de la primera pintura (en la plantilla, desde un archivo)", () => {
   const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
   const script = html.indexOf('<script src="/tema.js"></script>');
   assert.ok(script > 0, "index.html tiene que cargar /tema.js sincrónico: sin defer, sin async, sin type=module");

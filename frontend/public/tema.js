@@ -2,8 +2,13 @@
  *
  * React aplica el tema en un efecto, después de pintar. Sin este script, quien
  * tiene el sistema en oscuro vería la página blanca un instante y después el
- * salto. Va en un archivo y no en línea porque la política de seguridad del
- * sitio es `script-src 'self'`: un <script> en línea quedaría bloqueado.
+ * salto.
+ *
+ * En el sitio publicado va EN LÍNEA: prerender.mjs lo copia adentro de un
+ * <script> (como archivo costaba un viaje de red antes de poder pintar) y la
+ * CSP, que es `script-src 'self'`, lo autoriza por su hash en vercel.json.
+ * Cualquier cambio acá —comentarios incluidos— cambia el hash: el build falla
+ * y dice cuál poner. En desarrollo se carga como archivo (index.html).
  *
  * Tiene que decidir EXACTAMENTE lo mismo que UISettingsContext.jsx. Si el
  * script dijera «oscuro» y React arrancara en «claro», el efecto de React
