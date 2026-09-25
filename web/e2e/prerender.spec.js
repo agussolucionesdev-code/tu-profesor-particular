@@ -43,8 +43,13 @@ test("ninguna página dispara errores de CSP ni de consola", async ({ page }) =>
   for (const ruta of RUTAS) {
     await page.goto(ruta, { waitUntil: "networkidle" });
   }
-  /* Vercel Analytics sólo existe en Vercel: en `vite preview` su script da 404
-     y eso no es un error del sitio. */
-  const propios = errores.filter((e) => !/_vercel\/(insights|speed-insights)/.test(e));
+  /* Dos ruidos del entorno de prueba, no del sitio:
+     · Vercel Analytics sólo existe en Vercel: en `vite preview` su script da 404.
+     · /materias pide los precios al backend, y el backend acepta sólo los
+       orígenes de producción (CORS): desde 127.0.0.1 lo rechaza, y la página
+       muestra los precios de respaldo, que es su comportamiento previsto. */
+  const propios = errores.filter(
+    (e) => !/_vercel\/(insights|speed-insights)/.test(e) && !/onrender\.com/.test(e),
+  );
   expect(propios).toEqual([]);
 });
