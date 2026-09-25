@@ -13,6 +13,7 @@ import Credentials from "../components/Credentials.jsx";
 import PullQuote from "../components/PullQuote.jsx";
 import MethodSteps from "../components/MethodSteps.jsx";
 import FaqList from "../components/FaqList.jsx";
+import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import {
   BOOKING_RESERVE_URL,
@@ -72,7 +73,7 @@ const Home = () => {
                 dos líneas prolijas, pero esta pregunta mide 41 caracteres y el
                 salto forzado dejaba «pero» solo en una línea en cuanto el ancho
                 no alcanzaba. Fluye y el navegador corta donde entra. */}
-            <h1 className="display display--xl hero-title" data-entrada="clip" style={{ "--i": 1 }}>
+            <h1 className="display display--xl hero-title" data-entrada="titular">
               ¿Tu hijo estudia, pero <em>sigue sin entender?</em>
             </h1>
 
@@ -309,6 +310,7 @@ const Home = () => {
                 <span className="lvl-num" aria-hidden="true">
                   {String(i + 1).padStart(2, "0")}
                 </span>
+                <Ilustracion className="lvl-ilus" src={l.ilustracion} lado={240} />
                 <h3 className="display display--md lvl-name">{l.label}</h3>
                 <p className="lvl-desc">{l.desc}</p>
               </li>
@@ -331,6 +333,7 @@ const Home = () => {
           <ul className="why-grid" data-reveal-group="80">
             {REASONS.map((r) => (
               <li key={r.title} className="why-card" data-reveal="up">
+                <Ilustracion className="why-ilus" src={r.ilustracion} />
                 <h3 className="why-title">{r.title}</h3>
                 <p className="why-desc">{r.desc}</p>
               </li>

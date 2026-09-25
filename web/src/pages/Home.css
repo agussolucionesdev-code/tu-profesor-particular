@@ -309,8 +309,8 @@
 .lvl-list > li {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 22ch) minmax(0, 1fr);
-  align-items: baseline;
+  grid-template-columns: auto auto minmax(0, 22ch) minmax(0, 1fr);
+  align-items: center;
   gap: clamp(14px, 3vw, 40px);
   padding: clamp(20px, 2.6vw, 30px) 4px clamp(20px, 2.6vw, 30px) 16px;
   border-bottom: 1px solid var(--border);
@@ -346,6 +346,11 @@
 }
 .lvl-list > li:hover .lvl-num { color: var(--green-ink); opacity: 1; }
 
+/* El mismo render 3D del nivel que muestra el kiosco de turnos: el paso del
+   sitio a la reserva se ve como una sola cosa. */
+.lvl-ilus { width: 58px; }
+.lvl-list > li:hover .lvl-ilus { transform: rotate(-6deg) scale(1.08); }
+
 .lvl-name { margin: 0; color: var(--text); }
 .lvl-desc {
   margin: 0;
@@ -356,8 +361,8 @@
 
 @media (max-width: 820px) {
   .lvl-list > li {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: center;
     gap: 6px 16px;
     padding-left: 12px;
   }
@@ -378,7 +383,8 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  /* 230 y no 280: con 280 las cuatro condiciones quedaban 3 + 1 sola abajo. */
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 20px;
 }
 .why-card {
@@ -405,6 +411,12 @@
   box-shadow: 0 14px 32px -18px rgba(0, 33, 76, 0.4);
 }
 .why-card:hover::before { transform: scaleX(1); }
+
+.why-ilus {
+  width: 92px;
+  margin: -8px 0 14px -10px;
+}
+.why-card:hover .why-ilus { transform: rotate(-4deg) scale(1.06); }
 
 .why-title {
   margin: 0 0 0.6rem;

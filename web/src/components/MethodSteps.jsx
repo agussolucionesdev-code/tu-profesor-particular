@@ -1,4 +1,5 @@
 import { METHOD } from "../data/site.js";
+import Ilustracion from "./Ilustracion.jsx";
 import "./MethodSteps.css";
 
 /* Los cuatro pasos del método, en composición editorial: número display grande a
@@ -47,6 +48,7 @@ const MethodSteps = ({ compacto = false, nivelDeTitulo = 3 }) => {
             <Titulo className="display display--md ms-title">{step.title}</Titulo>
             {!compacto && <p className="ms-desc">{step.desc}</p>}
           </div>
+          <Ilustracion className="ms-ilus" src={step.ilustracion} />
         </li>
       ))}
     </ol>

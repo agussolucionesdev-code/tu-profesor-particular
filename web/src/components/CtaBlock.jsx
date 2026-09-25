@@ -24,12 +24,12 @@ const CtaBlock = ({
          convierte en base64 y la deja empotrada en el HTML de CADA página. Este
          monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
          `tests/imagenesServidas.test.js`. */
-      src={"/monogram.png"}
+      src={"/marca-oscuro.webp"}
       alt=""
       className="cta-watermark"
       aria-hidden="true"
-      width="128"
-      height="128"
+      width="192"
+      height="192"
       loading="lazy"
     />
 

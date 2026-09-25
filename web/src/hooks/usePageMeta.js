@@ -49,7 +49,7 @@ export default function usePageMeta(ruta, opciones = {}) {
     }
 
     const url = urlDe(ruta);
-    const imagen = image ?? IMAGEN_POR_DEFECTO;
+    const imagen = image ?? datos.imagen ?? IMAGEN_POR_DEFECTO;
 
     fijarEtiqueta('link[rel="canonical"]', {
       crearCon: { rel: "canonical" },

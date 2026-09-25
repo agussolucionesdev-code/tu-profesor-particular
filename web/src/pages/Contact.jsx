@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa6";
 import ContactForm from "../components/ContactForm.jsx";
 import SectionHead from "../components/SectionHead.jsx";
+import Ilustracion from "../components/Ilustracion.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import { BOOKING_RESERVE_URL, CONTACT, waLink } from "../data/site.js";
 import "./Inner.css";
@@ -100,14 +101,17 @@ const Contact = () => {
   return (
     <section className="section pagehead ct" aria-labelledby="contact-title">
       <div className="shell">
-        <SectionHead
-          index="01"
-          kicker="Hablemos"
-          title="Contacto"
-          titleId="contact-title"
+        <div className="con-ilus con-ilus--encabezado">
+          <SectionHead
+            index="01"
+            kicker="Hablemos"
+            title="Contacto"
+            titleId="contact-title"
             as="h1"
-          lead="Reservás directo, me escribís por WhatsApp, o me dejás tu mensaje acá sin salir del sitio. Los tres terminan en el mismo lugar."
-        />
+            lead="Reservás directo, me escribís por WhatsApp, o me dejás tu mensaje acá sin salir del sitio. Los tres terminan en el mismo lugar."
+          />
+          <Ilustracion className="con-ilus-imagen" src="/img/contacto-celular.webp" lado={640} prioridad />
+        </div>
 
         <div className="ct-layout">
           {/* ── Camino 1: reservar (la acción principal) ── */}

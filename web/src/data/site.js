@@ -147,25 +147,35 @@ export const SUBJECTS = [
   },
 ];
 
+/* `ilustracion`: los stickers de marca que hizo ChatGPT (septiembre de 2026)
+   y, en los niveles, los mismos renders 3D del kiosco de turnos, así el paso
+   del sitio a la reserva se ve como una sola cosa. Rutas de `public/`: las
+   imágenes de este sitio no se importan (tests/imagenesServidas.test.js).
+   Todas son decorativas: el texto de al lado ya dice lo que muestran. */
 export const LEVELS = [
   {
     label: "Primaria",
+    ilustracion: "/img/niveles/primaria.webp",
     desc: "Bases sólidas desde el principio. Acompañamiento en las materias troncales, con paciencia y sin apurar etapas.",
   },
   {
     label: "Secundaria",
+    ilustracion: "/img/niveles/secundaria.webp",
     desc: "El tramo donde más se necesita claridad. Matemática, Física, Química y más, alineado a lo que te toman en clase.",
   },
   {
     label: "Secundaria Técnica",
+    ilustracion: "/img/niveles/secundaria-tecnica.webp",
     desc: "Las materias técnicas con su lógica propia: dibujo, electricidad, electrónica, mecánica y las ciencias que las sostienen.",
   },
   {
     label: "Terciario / Superior",
+    ilustracion: "/img/niveles/terciario.webp",
     desc: "Formación docente y carreras superiores: pedagogía, didáctica, metodología de la investigación y más.",
   },
   {
     label: "Universitario",
+    ilustracion: "/img/niveles/universitario.webp",
     desc: "El filtro de los primeros años: Análisis, Álgebra, Física, Química, Estadística y las materias que frenan a todos.",
   },
 ];
@@ -176,21 +186,25 @@ export const METHOD = [
   {
     index: "01",
     title: "Primero entendemos dónde estás",
+    ilustracion: "/img/metodo-diagnostico.webp",
     desc: "La primera clase es de diagnóstico: vemos qué sabés, qué se dio por sabido y dónde se rompió la cadena. Sin juzgar y sin saltear pasos.",
   },
   {
     index: "02",
     title: "Armamos un plan concreto",
+    ilustracion: "/img/metodo-plan.webp",
     desc: "Con el diagnóstico sobre la mesa definimos qué trabajar y en qué orden, según la fecha que tengas encima: una prueba, un final o ponerte al día.",
   },
   {
     index: "03",
     title: "Clases con orden y cercanía",
+    ilustracion: "/img/metodo-clases.webp",
     desc: "Cada clase tiene un objetivo claro. Explico hasta que el tema hace clic, y practicamos con ejercicios parecidos a los que te van a tomar.",
   },
   {
     index: "04",
     title: "El avance queda registrado",
+    ilustracion: "/img/metodo-avance.webp",
     desc: "Cada sesión se anota: en qué punto estás, qué mejoró y qué viene. El progreso deja de ser una sensación y se vuelve algo concreto.",
   },
 ];
@@ -199,10 +213,12 @@ export const METHOD = [
 export const REASONS = [
   {
     title: "Sin pagos por adelantado",
+    ilustracion: "/img/razon-sin-adelanto.webp",
     desc: "No hay contratos ni señas. La primera clase empieza por ver qué está costando: si no sentís que avanzaste, no volvés.",
   },
   {
     title: "Online o presencial, vos elegís",
+    ilustracion: "/img/razon-online-presencial.webp",
     desc: "Por videollamada desde donde estés, o presencial en Temperley. Se elige en cada reserva, según te quede cómodo.",
   },
   {
@@ -210,10 +226,12 @@ export const REASONS = [
        Lo que sí es verificable —hay un test en el kiosco que lo fija— es que el
        precio aparece antes del paso de datos personales. */
     title: "Ves el precio antes de dejar tus datos",
+    ilustracion: "/img/razon-precio-a-la-vista.webp",
     desc: "Sin registro ni contraseña. Elegís materia, modalidad y horario, y el precio aparece antes de pedirte nada.",
   },
   {
     title: "Reprogramás cuando la vida cambia",
+    ilustracion: "/img/razon-reprogramar.webp",
     desc: "Cada reserva viene con un enlace seguro para reprogramar o cancelar sin llamadas ni trámites.",
   },
 ];

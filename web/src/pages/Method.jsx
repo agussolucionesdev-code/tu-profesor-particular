@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa6";
 import SectionHead from "../components/SectionHead.jsx";
 import CtaBlock from "../components/CtaBlock.jsx";
+import Ilustracion from "../components/Ilustracion.jsx";
 import MethodSteps from "../components/MethodSteps.jsx";
 import usePageMeta from "../hooks/usePageMeta.js";
 import { waLink } from "../data/site.js";
@@ -14,14 +15,17 @@ const Method = () => {
     <>
       <section className="section pagehead" aria-labelledby="method-title">
         <div className="shell">
-          <SectionHead
-            index="01"
-            kicker="Cómo trabajo"
-            title="Un método, no improvisación"
-            titleId="method-title"
-            as="h1"
-            lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
-          />
+          <div className="con-ilus con-ilus--encabezado">
+            <SectionHead
+              index="01"
+              kicker="Cómo trabajo"
+              title="Un método, no improvisación"
+              titleId="method-title"
+              as="h1"
+              lead="Cuatro pasos que se repiten con cada alumno, porque funcionan: entender el punto de partida, planificar, explicar hasta que cierre y medir el avance."
+            />
+            <Ilustracion className="con-ilus-imagen" src="/img/como-trabajo-escritorio.webp" lado={640} prioridad />
+          </div>
 
           {/* nivel 2: acá los pasos cuelgan directo del h1 de la página. */}
           <MethodSteps nivelDeTitulo={2} />

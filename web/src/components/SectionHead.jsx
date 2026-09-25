@@ -31,7 +31,7 @@ const SectionHead = ({ index, kicker, title, titleId, lead, as = "h2" }) => {
       <span className="head-kicker">{kicker}</span>
     </p>
     <div className="head-body">
-      <Titulo id={titleId} className="display display--lg" {...aparece("clip", 1)}>
+      <Titulo id={titleId} className="display display--lg" {...aparece(as === "h1" ? "titular" : "clip", 1)}>
         {title}
       </Titulo>
       {lead && (

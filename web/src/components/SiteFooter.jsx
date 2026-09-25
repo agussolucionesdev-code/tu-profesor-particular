@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import {
   FaArrowUpRightFromSquare,
   FaEnvelope,
+  FaInstagram,
+  FaLinkedinIn,
   FaLocationDot,
   FaWhatsapp,
 } from "react-icons/fa6";
@@ -10,6 +12,7 @@ import {
   BOOKING_RESERVE_URL,
   BRAND,
   CONTACT,
+  SOCIAL,
   waLink,
 } from "../data/site.js";
 import "./SiteFooter.css";
@@ -31,12 +34,12 @@ const SiteFooter = () => (
              convierte en base64 y la deja empotrada en el HTML de CADA página. Este
              monograma llegó a aparecer trece veces en cinco páginas. Lo cuida
              `tests/imagenesServidas.test.js`. */
-          src={"/monogram.png"}
+          src={"/marca-oscuro.webp"}
           alt=""
           className="sfoot-mark"
           aria-hidden="true"
-          width="44"
-          height="44"
+          width="192"
+          height="192"
           loading="lazy"
         />
         <p className="sfoot-tagline display display--md">
@@ -115,6 +118,20 @@ const SiteFooter = () => (
             <a href={CONTACT.mapsUrl} target="_blank" rel="noopener noreferrer">
               <FaLocationDot aria-hidden="true" />
               {CONTACT.addressLine}
+            </a>
+          </li>
+          {/* Las redes de la marca, las mismas del pie de turnos y del JSON-LD
+              (`sameAs`): Google cruza los tres para reconocer a la marca. */}
+          <li>
+            <a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer">
+              <FaInstagram aria-hidden="true" />
+              Instagram @tuprofesor.ar
+            </a>
+          </li>
+          <li>
+            <a href={SOCIAL.linkedin} target="_blank" rel="noopener noreferrer">
+              <FaLinkedinIn aria-hidden="true" />
+              LinkedIn
             </a>
           </li>
         </ul>
