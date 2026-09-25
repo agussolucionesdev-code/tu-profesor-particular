@@ -7,10 +7,8 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 import "@fontsource-variable/fraunces/opsz.css";
 import "@fontsource-variable/inter/wght.css";
 import "./index.css";
-import "react-datepicker/dist/react-datepicker.css";
-// Colores del calendario desde la capa semántica: va DESPUÉS de la hoja de la
-// librería para ganarle a sus colores fijos. Ver styles/datepicker-tema.css.
-import "./styles/datepicker-tema.css";
+// La hoja de react-datepicker y su tema NO van acá: viajan con el calendario
+// (ver styles/datepicker-tema.css).
 import App from "./App.jsx";
 import { precargarPagina } from "./paginas";
 
