@@ -9,10 +9,10 @@ import { diferido } from "./utils/diferido";
  * otra vez por la portada: un parpadeo completo.
  *
  * Cada pantalla es un componente `diferido` (utils/diferido.js), y
- * `precargarPagina(ruta)` la pide apenas arranca la app (main.jsx). En la
- * portada, main.jsx la espera antes de hidratar: con el módulo en mano, se
- * dibuja directo, sin Suspense. En el resto no espera: no hay HTML que
- * proteger. Es el mismo patrón que web/src/paginas.js.
+ * `precargarPagina(ruta)` la pide antes de hidratar la portada (main.jsx):
+ * con el módulo en mano, se dibuja directo, sin Suspense. El resto de las
+ * rutas no precarga: no hay HTML que proteger, y dibujar primero la barra es
+ * más rápido (ver main.jsx). Es el mismo patrón que web/src/paginas.js.
  */
 export const HomePage = diferido(() => import("./pages/HomePage"));
 export const BookingKiosk = diferido(() => import("./components/BookingKiosk"));
