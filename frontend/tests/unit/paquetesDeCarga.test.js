@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { paqueteDe } from "../../paquetes.js";
@@ -72,4 +73,35 @@ test("rutas de Windows también se reconocen", () => {
 
 test("el código propio lo reparte Vite, no esta función", () => {
   assert.equal(paqueteDe("C:/proyecto/src/components/KioskSlotCalendar.jsx"), undefined);
+});
+
+/* EL CSS DEL CALENDARIO VIAJA CON EL CALENDARIO.
+ *
+ * main.jsx importaba react-datepicker.css (25 KB) y su tema en TODAS las
+ * páginas: frenaban el primer pintado de la portada, que no tiene calendario.
+ * Ahora los importan los dos componentes que dibujan uno, en el orden de
+ * cascada que hace ganar a nuestros colores: librería, tema, CSS propio. Lo
+ * dibujado lo verifican los e2e (axe, contraste, modo-oscuro y
+ * modales-portal miden el día elegido). */
+const leerFuente = (ruta) => readFileSync(new URL(ruta, import.meta.url), "utf8");
+
+test("ninguna hoja del calendario se carga en todas las páginas", () => {
+  const main = leerFuente("../../src/main.jsx").replace(/^\s*\/\/.*$/gm, "");
+  assert.doesNotMatch(main, /import\s+"react-datepicker\/dist\/react-datepicker\.css"/);
+  assert.doesNotMatch(main, /datepicker-tema\.css/);
+  const pulido = leerFuente("../../src/styles/final-polish.css").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(pulido, /\.react-datepicker/, "final-polish.css es global: el calendario no va ahí");
+});
+
+test("cada calendario trae su CSS en orden: librería, tema, propio", () => {
+  for (const [componente, tema, propio] of [
+    ["../../src/components/KioskSlotCalendar.jsx", "../styles/datepicker-tema.css", "./KioskSlotCalendar.css"],
+    ["../../src/components/portal/RescheduleModal.jsx", "../../styles/datepicker-tema.css", "./RescheduleModal.css"],
+  ]) {
+    const fuente = leerFuente(componente);
+    const libreria = fuente.indexOf('import "react-datepicker/dist/react-datepicker.css";');
+    const temaEn = fuente.indexOf(`import "${tema}";`);
+    const propioEn = fuente.indexOf(`import "${propio}";`);
+    assert.ok(libreria > 0 && temaEn > libreria && propioEn > temaEn, `${componente}: el orden tiene que ser librería, tema, propio`);
+  }
 });

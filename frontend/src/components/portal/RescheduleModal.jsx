@@ -24,6 +24,10 @@ import {
   selectSlotsForDate,
 } from "../../utils/availabilitySlots";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+/* La hoja de la librería, después su tema, después lo propio: ese orden de
+   cascada es el que hace ganar a nuestros colores (ver datepicker-tema.css). */
+import "react-datepicker/dist/react-datepicker.css";
+import "../../styles/datepicker-tema.css";
 import "./RescheduleModal.css";
 
 const PORTAL_VOICE_OPTIONS = { rate: 0.86, pitch: 0.98, volume: 0.9 };

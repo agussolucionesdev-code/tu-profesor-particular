@@ -5,7 +5,8 @@ import test from "node:test";
 const leer = (ruta) => readFileSync(new URL(ruta, import.meta.url), "utf8");
 
 const calendario = leer("../../src/components/KioskSlotCalendar.css");
-const pulido = leer("../../src/styles/final-polish.css");
+/* Las reglas del calendario viven con el calendario (antes en final-polish.css). */
+const temaDelCalendario = leer("../../src/styles/datepicker-tema.css");
 
 /* Blancos táctiles de los controles que más importan.
  *
@@ -107,7 +108,7 @@ test("las flechas de mes del calendario llegan a 44 y no se encogen", () => {
 test("los días del calendario siguen en 44 en mobile", () => {
   /* Ya se había arreglado de 34 a 44 y este test evita que vuelva: es el control que hay
      que acertar para reservar, y 10 px son la diferencia entre elegir el 15 o el 16. */
-  const bloques = bloquesDe(pulido, ".react-datepicker__day");
+  const bloques = bloquesDe(temaDelCalendario, ".react-datepicker__day");
   assert.ok(bloques.length > 0, "no encontré regla para los días del calendario");
   // El tamaño vive en el bloque de mobile; otro bloque sólo ajusta la tipografía.
   const conTamaño = bloques.filter((b) => /width:\s*44px\s*!important/.test(b));

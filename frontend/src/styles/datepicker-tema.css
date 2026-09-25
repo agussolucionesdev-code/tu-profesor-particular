@@ -7,10 +7,17 @@
    el calendario de reprogramar quedaba blanco con el mes escrito en blanco
    (1,09:1). Antes lo tapaban parches por tema en cada componente.
 
-   Esta hoja se importa inmediatamente después de la de la librería (main.jsx)
-   y re-apunta sólo los colores a la capa semántica. Vale para todos los
+   Esta hoja se importa inmediatamente después de la de la librería, en los
+   dos componentes que dibujan un calendario (KioskSlotCalendar.jsx y
+   portal/RescheduleModal.jsx), antes del CSS propio de cada uno. Re-apunta
+   los colores a la capa semántica y trae el pulido. Vale para todos los
    calendarios: el del kiosco y el del modal de reprogramar ajustan encima lo
    suyo (día elegido, días libres), no la base.
+
+   Antes las dos hojas se importaban en main.jsx, en TODAS las páginas: 25 KB
+   de la librería frenaban el primer pintado de la portada, que no tiene
+   calendario. Ahora llegan con el código del calendario (paso 3 del kiosco,
+   modal de reprogramar).
    ========================================================================== */
 
 .react-datepicker {
@@ -51,4 +58,179 @@
 
 .react-datepicker__navigation:hover *::before {
   border-color: var(--ink);
+}
+
+/* =====================================================================
+   PULIDO DEL CALENDARIO (antes en final-polish.css)
+
+   Mismo texto, mismo orden relativo: estas reglas iban en final-polish.css,
+   que se cargaba después de la hoja de la librería y de la parte de arriba
+   de este archivo. Siguen yendo después de las dos.
+   ===================================================================== */
+
+/* =====================================================================
+   CALENDAR — pulido completo
+   ===================================================================== */
+
+/* Tipografía base normalizada para evitar el efecto "zoom" */
+.react-datepicker,
+.react-datepicker__month-container,
+.react-datepicker-popper {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.react-datepicker__current-month {
+  font-size: 1.05rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.react-datepicker__day-name {
+  font-size: 0.72rem !important;
+}
+
+.react-datepicker__day {
+  font-size: 0.92rem !important;
+}
+
+/* ------------------------------------------------------------------
+   FIX CRÍTICO: días de OTRO mes (ej: 1 mayo cuando ves abril).
+   La librería los marca con .react-datepicker__day--outside-month.
+   Sin estilos propios, se ven idénticos a los del mes actual y
+   confunden al usuario. Los dejamos visibles pero claramente
+   atenuados, en cursiva, y sin hover/click visual.
+   ------------------------------------------------------------------ */
+.react-datepicker__day--outside-month {
+  opacity: 0.30 !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  border: 1px dashed rgba(148, 163, 184, 0.3) !important;
+  color: var(--text-tertiary, #94a3b8) !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  position: relative;
+}
+
+.react-datepicker__day--outside-month::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  transform: translateX(-50%);
+}
+
+/* Sobreescribimos las reglas decoradas (background verde/amarillo)
+   que sí estaban afectando a los días outside-month en el monolito. */
+.react-datepicker__day--outside-month:not(.react-datepicker__day--disabled):not(
+    .react-datepicker__day--selected
+  ):not(.custom-today),
+.react-datepicker__day--outside-month:hover,
+.react-datepicker__day--outside-month:not(.react-datepicker__day--disabled):not(
+    .react-datepicker__day--selected
+  ):not(.custom-today):hover {
+  background: transparent !important;
+  color: var(--text-tertiary, #94a3b8) !important;
+  border: 1px dashed rgba(148, 163, 184, 0.3) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Refuerzo de contraste mes/año en oscuro */
+
+/* El alpha de acá se MULTIPLICA con el `opacity: 0.5` que la regla del tachado
+   aplica más abajo: 0.35 × 0.5 = 0.175 efectivo, y el número del día quedaba en
+   1.48:1 —ilegible—. El día sigue leyéndose como no disponible por el tachado y
+   por el contraste con los días libres, que van en texto pleno; no hace falta
+   además borrarlo. Con la tinta sólida el efectivo queda en 0.62 → 4.24:1. */
+
+/* Día seleccionado: contraste fuerte y reconocible al instante.
+
+   Decía «contraste fuerte» y era justamente el que no llegaba. `--brand-green`
+   es #01953c y con texto blanco encima da **3.91:1**, por debajo del 4.5 que
+   pide AA para 14.4px. El número del día elegido —el dato que confirma qué
+   reservaste— era el único texto de los dos sitios que no alcanzaba el mínimo.
+
+   El valor correcto ya estaba a mano: `tokens.css` documenta desde hace tiempo
+   que #01953c da 3.91:1 y que sobre fondo sólido va la rampa numerada. De hecho
+   `KioskSlotCalendar.css` YA usa el par `--cta-solid-bg`/`--cta-solid-ink`; lo
+   que pasaba es que estos `!important` se lo pisaban desde acá.
+
+   Con el par: 6.55:1 en claro. Y como el par se invierte por tema, deja de
+   depender de un verde fijo. El borde va un escalón más oscuro que el fondo
+   para que no desaparezca ahora que el fondo bajó de luminancia. */
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: var(--cta-solid-bg) !important;
+  color: var(--cta-solid-ink) !important;
+  font-weight: 900 !important;
+  border: 2px solid var(--cta-solid-bg-hover, #004b04) !important;
+  box-shadow: 0 0 0 1px rgba(1, 149, 60, 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tint-accent) 22%, transparent);
+  transform: scale(1.05) !important;
+}
+
+/* Hoy (custom): borde amarillo distintivo, no se confunde con seleccionado */
+.react-datepicker__day.custom-today {
+  position: relative;
+  border: 2px solid var(--brand-accent-warm, #f59e0b) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  color: var(--brand-accent-warm, #c8821e) !important;
+  font-weight: 900 !important;
+}
+
+/* Día deshabilitado (pasado): tachado liviano para clarificar.
+   0.62 y no 0.5: el tachado ya dice "no disponible", así que la opacidad no
+   necesita además tapar el número. Con la tinta sólida esto da 4.24:1. */
+.react-datepicker__day--disabled:not(.react-datepicker__day--outside-month) {
+  text-decoration: line-through !important;
+  text-decoration-color: rgba(148, 163, 184, 0.4) !important;
+  opacity: 0.62 !important;
+}
+
+/* Hover en días navegables del mes actual */
+.react-datepicker__day:not(.react-datepicker__day--outside-month):not(
+    .react-datepicker__day--disabled
+  ):not(.react-datepicker__day--selected):hover {
+  cursor: pointer;
+}
+
+/* Asegurar que el outline al focusear el día sea claro */
+.react-datepicker__day:focus-visible {
+  outline: 3px solid var(--focus-ring-color, rgba(1, 149, 60, 0.5)) !important;
+  outline: 3px solid var(--focus-ring-color, color-mix(in srgb, var(--tint-accent) 50%, transparent)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Header navegación: botones más finos y consistentes */
+
+/* Mobile del calendario.
+
+   Los días estaban en 34px: 10 por debajo del mínimo táctil de 44 (WCAG 2.5.5),
+   justo en el control que hay que acertar para reservar. Con el dedo, esos 10px
+   son la diferencia entre elegir el 15 o el 16.
+
+   Ahora 44. Entran siete columnas en la pantalla más chica de uso real
+   (7 × 44 = 308 < 320) y sigue sin scroll horizontal. Los nombres de los días
+   sí pueden quedar más bajos: no se tocan, sólo se leen. */
+@media (max-width: 480px) {
+  .react-datepicker__current-month {
+    font-size: 0.95rem !important;
+  }
+  .react-datepicker__day {
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    font-size: 0.9rem !important;
+  }
+  .react-datepicker__day-name {
+    width: 44px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    font-size: 0.72rem !important;
+  }
 }

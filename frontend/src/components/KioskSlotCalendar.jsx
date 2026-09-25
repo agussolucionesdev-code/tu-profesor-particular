@@ -10,6 +10,10 @@ import {
   FaChevronRight,
   FaClock,
 } from "react-icons/fa";
+/* La hoja de la librería, después su tema, después lo propio: ese orden de
+   cascada es el que hace ganar a nuestros colores (ver datepicker-tema.css). */
+import "react-datepicker/dist/react-datepicker.css";
+import "../styles/datepicker-tema.css";
 import "./KioskSlotCalendar.css";
 
 /* Calendario + horarios del día elegido.
