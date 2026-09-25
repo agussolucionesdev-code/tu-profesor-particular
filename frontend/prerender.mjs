@@ -22,9 +22,14 @@
  *   · el CSS de la portada en el <head>: Vite lo separa con el código diferido
  *     y el HTML se pintaría sin estilos (salto de 0,5 medido en el sitio);
  *   · redes que hacen FALLAR el build si algo de eso vuelve.
- * En el navegador React dibuja encima (createRoot) con la portada ya precargada
- * (src/paginas.js): el primer dibujo es igual al HTML y no hay parpadeo.
+ * En el navegador React HIDRATA ese HTML con la portada ya precargada
+ * (src/main.jsx, src/paginas.js): adopta los nodos y no hay parpadeo.
+ *
+ * Y DOS COSAS PARA QUE SE PINTE ANTES (septiembre de 2026, medido): tema.js va
+ * en línea en todas las páginas, y en la portada el bundle se ejecuta después
+ * del primer pintado (ver incrustarTema y arrancarDespuesDelPintado).
  */
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
@@ -119,10 +124,11 @@ export const compilar = async (entrada, urlDe) => {
   }
 };
 
-/* El CSS que generó el código de la portada (y lo que importa), sin el del
-   punto de entrada, que ya está en la plantilla. */
-const cssDe = (manifiesto, archivo) => {
+/* El CSS y los módulos JS de la portada (y lo que importa), sin los del punto
+   de entrada, que ya están en la plantilla. */
+export const recursosDe = (manifiesto, archivo) => {
   const hojas = new Set();
+  const modulos = new Set();
   const vistos = new Set();
   const recorrer = (clave) => {
     if (vistos.has(clave)) return;
@@ -130,11 +136,69 @@ const cssDe = (manifiesto, archivo) => {
     const entrada = manifiesto[clave];
     if (!entrada) throw new Error(`${clave} no está en el manifiesto de Vite: ¿se movió la portada?`);
     if (entrada.isEntry) return;
+    modulos.add(entrada.file);
     for (const hoja of entrada.css ?? []) hojas.add(hoja);
     for (const importado of entrada.imports ?? []) recorrer(importado);
   };
   recorrer(archivo);
-  return [...hojas];
+  return { hojas: [...hojas], modulos: [...modulos] };
+};
+
+/* SCRIPTS EN LÍNEA, AUTORIZADOS POR HASH.
+ *
+ * La CSP es `script-src 'self'`: un <script> en línea sólo corre si su hash
+ * está en vercel.json. El texto se normaliza (saltos de línea LF, sin espacios
+ * en los bordes) para que el hash sea el mismo en Windows, en el CI y en
+ * Vercel: con CRLF en una máquina y LF en otra, el hash no coincidiría. */
+export const TEMA = path.join(RAIZ, "public/tema.js");
+export const ARRANQUE = path.join(RAIZ, "scripts/arranque-en-linea.js");
+
+export const textoEnLinea = (archivo) => fs.readFileSync(archivo, "utf8").replace(/\r\n/g, "\n").trim();
+export const hashCsp = (texto) => `'sha256-${createHash("sha256").update(texto, "utf8").digest("base64")}'`;
+
+/* Si falta un hash, el build falla y dice cuál poner. */
+export const verificarCsp = (vercel) => {
+  const csp = vercel.headers
+    .flatMap((regla) => regla.headers)
+    .find((h) => h.key === "Content-Security-Policy")?.value;
+  if (!csp) throw new Error("vercel.json no tiene Content-Security-Policy.");
+  const scriptSrc = csp.split(";").find((d) => d.trim().startsWith("script-src")) ?? "";
+  for (const archivo of [TEMA, ARRANQUE]) {
+    const hash = hashCsp(textoEnLinea(archivo));
+    if (!scriptSrc.includes(hash)) {
+      throw new Error(`La CSP de vercel.json no autoriza ${path.relative(RAIZ, archivo)} en línea: agregá ${hash} a script-src.`);
+    }
+  }
+};
+
+/* tema.js EN LÍNEA. Era un archivo cargado de forma sincrónica en el <head>:
+   frenaba la lectura del HTML un viaje de red entero antes de poder pintar
+   (Lighthouse: ~150 ms en celular). Tiene que correr antes del primer pintado,
+   así que va en línea en todas las páginas (index.html y app.html). */
+export const incrustarTema = (html) => {
+  const etiqueta = '<script src="/tema.js"></script>';
+  if (!html.includes(etiqueta)) throw new Error(`dist/index.html no trae ${etiqueta}: ¿cambió la plantilla?`);
+  return html.replace(etiqueta, () => `<script>${textoEnLinea(TEMA)}</script>`);
+};
+
+/* EN LA PORTADA, EL JS ARRANCA DESPUÉS DEL PRIMER PINTADO (ver
+   scripts/arranque-en-linea.js). El <script type="module"> del bundle pasa a
+   ser un modulepreload —se descarga igual desde el principio— y se suman los
+   módulos de la portada, para que la hidratación no espere la red. */
+export const arrancarDespuesDelPintado = (html, modulosDeLaPortada = []) => {
+  const bundle = html.match(/<script type="module" crossorigin src="([^"]+)"><\/script>/);
+  if (!bundle) throw new Error('dist/index.html no trae el <script type="module" crossorigin src="…"> del bundle.');
+  const yaPrecargados = new Set([...html.matchAll(/<link rel="modulepreload" crossorigin href="([^"]+)">/g)].map((m) => m[1]));
+  const precargas = modulosDeLaPortada
+    .filter((href) => !yaPrecargados.has(href))
+    .map((href) => `<link rel="modulepreload" crossorigin href="${href}">`);
+  return html.replace(bundle[0], () =>
+    [
+      `<link rel="modulepreload" crossorigin href="${bundle[1]}" id="arranque-app">`,
+      ...precargas,
+      `<script>${textoEnLinea(ARRANQUE)}</script>`,
+    ].join("\n    "),
+  );
 };
 
 /* Las redes. Cada una existe porque su ausencia produjo alguna vez un
@@ -171,38 +235,46 @@ export const renderizarPortada = async (App) => {
 };
 
 const main = async () => {
-  const plantilla = fs.readFileSync(path.join(DIST, "index.html"), "utf8");
+  verificarCsp(JSON.parse(fs.readFileSync(path.join(RAIZ, "vercel.json"), "utf8")));
+  const plantilla = incrustarTema(fs.readFileSync(path.join(DIST, "index.html"), "utf8"));
   if (!plantilla.includes('<div id="root"></div>')) throw new Error("dist/index.html no trae el <div id=\"root\"></div> vacío.");
   const manifiesto = leerManifiesto();
   const urlDe = (absoluta) => urlDeRecurso(manifiesto, absoluta);
 
-  /* El HTML vacío original queda para el resto de las rutas. */
+  /* El HTML vacío original (con tema.js en línea) queda para el resto de las
+     rutas. Ahí el bundle arranca como siempre: no hay nada dibujado que
+     mostrar antes. */
   fs.writeFileSync(path.join(DIST, "app.html"), plantilla);
 
   const { default: App } = await compilar(path.join(RAIZ, "src/App.jsx"), urlDe);
   const { construirGrafo } = await compilar(path.join(RAIZ, "src/components/seo/grafoEstructurado.js"), urlDe);
   const markup = await renderizarPortada(App);
-  const hojas = cssDe(manifiesto, "src/pages/HomePage.jsx")
-    .map((h) => `    <link rel="stylesheet" crossorigin href="/${h}">`)
-    .join("\n");
+  const portada = recursosDe(manifiesto, "src/pages/HomePage.jsx");
+  const hojas = portada.hojas.map((h) => `    <link rel="stylesheet" crossorigin href="/${h}">`).join("\n");
   const grafo = JSON.stringify(construirGrafo("/")).replace(/</g, "\\u003c");
   /* Con función y no con texto: en un reemplazo de texto, un «$&» o un «$'»
      del contenido (un precio, por ejemplo) se interpretaría como patrón. */
-  const html = plantilla
+  const conPortada = plantilla
     /* data-prerender: main.jsx hidrata sólo si coincide con la ruta. */
     .replace('<div id="root"></div>', () => `<div id="root" data-prerender="/">${markup}</div>`)
     .replace(
       "</head>",
       () => `${hojas}\n    <script type="application/ld+json" id="json-ld-structured-data">${grafo}</script>\n  </head>`,
     );
-  if (!/<link[^>]+rel="stylesheet"/.test(html) || !/<script[^>]+type="module"[^>]+src=/.test(html)) {
-    throw new Error("El index.html prerenderizado quedó sin el CSS o el JS del bundle.");
+  const html = arrancarDespuesDelPintado(conPortada, portada.modulos.map((m) => `/${m}`));
+  if (!/<link[^>]+rel="stylesheet"/.test(html) || !/<link rel="modulepreload" crossorigin href="[^"]+" id="arranque-app">/.test(html)) {
+    throw new Error("El index.html prerenderizado quedó sin el CSS o sin el bundle.");
+  }
+  if (/<script type="module"/.test(html) || html.includes('src="/tema.js"')) {
+    throw new Error("El index.html prerenderizado todavía carga un script que frena el primer pintado.");
   }
   fs.writeFileSync(path.join(DIST, "index.html"), html);
 
   /* El manifiesto sólo le sirve a este script: no se publica. */
   fs.rmSync(path.join(DIST, ".vite"), { recursive: true, force: true });
-  console.log(`Prerender de la portada: ${Math.round(html.length / 1024)} KB, ${hojas.split("\n").filter(Boolean).length} hojas propias.`);
+  console.log(
+    `Prerender de la portada: ${Math.round(html.length / 1024)} KB, ${portada.hojas.length} hojas y ${portada.modulos.length} módulos propios; tema.js en línea en index.html y app.html.`,
+  );
 };
 
 /* Sólo corre cuando se lo llama (`node prerender.mjs`); el test importa las
