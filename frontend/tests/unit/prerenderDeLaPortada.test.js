@@ -60,8 +60,14 @@ test("el build corre el prerender y Vercel sirve app.html al resto de las rutas"
   assert.ok(vercel.rewrites.every((r) => r.source !== "/"));
 });
 
-test("la app precarga la portada antes del primer dibujo: sin parpadeo sobre el HTML", () => {
+test("la app precarga la portada y la hidrata sólo sobre el HTML de su ruta", () => {
+  /* Hidratar y no createRoot: createRoot reemplazaba los nodos y las
+     animaciones del título volvían a arrancar (el test de componentes
+     HidratarLaPortada verifica que el primer dibujo coincida). */
   const main = leer("src/main.jsx");
   assert.match(main, /precargarPagina\(window\.location\.pathname\)\.then\(/);
+  assert.match(main, /raiz\.dataset\.prerender === window\.location\.pathname/);
+  assert.match(main, /if \(hidratar\) hydrateRoot\(raiz, app\);\s*else createRoot\(raiz\)\.render\(app\);/);
+  assert.match(leer("prerender.mjs"), /<div id="root" data-prerender="\/">/);
   assert.match(leer("src/App.jsx"), /from "\.\/paginas"/);
 });

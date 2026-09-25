@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaArrowRight, FaWhatsapp } from "react-icons/fa";
 import SectionHead from "./SectionHead";
 import { ANOS_ENSENANDO } from "../../constants/voz";
+import { useHidratado } from "../../hooks/useHidratado";
 import agustinPhoto from "../../assets/images/agustin-hero.webp";
 import "./AboutAgustin.css";
 import { waLink } from "../../constants/contactChannels";
@@ -41,6 +42,11 @@ const CountUp = ({ target, prefix = "", suffix = "", duration = 1100 }) => {
   // Estado inicial perezoso: sin animación (reduced-motion o sin observer) el
   // número ya arranca en su valor final, sin setState dentro del efecto.
   const [shown, setShown] = useState(() => (skipCountUp() ? target : 0));
+  /* El prerender no tiene IntersectionObserver: dibuja el número final. Hasta
+     terminar de hidratar se muestra ese; si no, el texto no coincide y React
+     tira el HTML entero (ver useHidratado). La sección está más abajo del
+     pliegue: el paso a 0 no se ve. */
+  const hidratado = useHidratado();
 
   useEffect(() => {
     const el = ref.current;
@@ -80,7 +86,7 @@ const CountUp = ({ target, prefix = "", suffix = "", duration = 1100 }) => {
   return (
     <span ref={ref}>
       {prefix}
-      {shown}
+      {hidratado ? shown : target}
       {suffix}
     </span>
   );

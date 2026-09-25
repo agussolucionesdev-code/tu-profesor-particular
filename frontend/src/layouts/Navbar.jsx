@@ -15,6 +15,7 @@ import {
 } from "react-icons/lu";
 import { useUISettings } from "../components/accessibility/UISettingsContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useHidratado } from "../hooks/useHidratado";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import { conFundidoCircular } from "../utils/fundidoDeTema";
 import {
@@ -92,10 +93,15 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const sheetRef = useFocusTrap(isOpen);
   const [scrolled, setScrolled] = useState(false);
-  const [voiceMuted, setVoiceMutedState] = useState(() => isVoiceMuted());
+  const [vozApagadaGuardada, setVoiceMutedState] = useState(() => isVoiceMuted());
   const [voiceBlocked, setVoiceBlocked] = useState(false);
   const [showVoiceInvite, setShowVoiceInvite] = useState(false);
-  const [inviteDone, setInviteDone] = useState(() => readInviteState().done);
+  const [invitacionHechaGuardada, setInviteDone] = useState(() => readInviteState().done);
+  /* Hasta terminar de hidratar, lo que dibujó el prerender, que no tiene
+     localStorage: voz apagada, invitación pendiente (ver useHidratado). */
+  const hidratado = useHidratado();
+  const voiceMuted = hidratado ? vozApagadaGuardada : true;
+  const inviteDone = hidratado ? invitacionHechaGuardada : false;
   const inviteShownRef = useRef(readInviteState().shown);
   const themeTransitionTimerRef = useRef(null);
   const location = useLocation();

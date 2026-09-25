@@ -189,7 +189,8 @@ const main = async () => {
   /* Con función y no con texto: en un reemplazo de texto, un «$&» o un «$'»
      del contenido (un precio, por ejemplo) se interpretaría como patrón. */
   const html = plantilla
-    .replace('<div id="root"></div>', () => `<div id="root">${markup}</div>`)
+    /* data-prerender: main.jsx hidrata sólo si coincide con la ruta. */
+    .replace('<div id="root"></div>', () => `<div id="root" data-prerender="/">${markup}</div>`)
     .replace(
       "</head>",
       () => `${hojas}\n    <script type="application/ld+json" id="json-ld-structured-data">${grafo}</script>\n  </head>`,

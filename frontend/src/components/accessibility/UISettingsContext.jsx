@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
+import { useHidratado } from "../../hooks/useHidratado";
 
 const THEME_STORAGE_KEY = "theme";
 const ACCESSIBILITY_STORAGE_KEY = "ui_accessibility_preferences";
@@ -153,9 +154,15 @@ export const UISettingsProvider = ({ children }) => {
     setPreferences(DEFAULT_PREFERENCES);
   };
 
+  /* Lo que VEN los componentes: hasta terminar de hidratar, lo mismo que dibujó
+     el prerender, que no tiene localStorage ni matchMedia (ver useHidratado).
+     El documento, en cambio, recibe siempre lo real: el efecto de arriba usa
+     `preferences`, y tema.js ya había fijado data-theme antes de pintar. */
+  const hidratado = useHidratado();
+  const visibles = hidratado ? preferences : DEFAULT_PREFERENCES;
   const effectiveTheme = getEffectiveTheme(
-    preferences.themePreference,
-    systemTheme,
+    visibles.themePreference,
+    hidratado ? systemTheme : "light",
   );
 
   const toggleTheme = () => {
@@ -165,7 +172,7 @@ export const UISettingsProvider = ({ children }) => {
   return (
     <UISettingsContext.Provider
       value={{
-        preferences,
+        preferences: visibles,
         effectiveTheme,
         setThemePreference,
         updatePreference,
