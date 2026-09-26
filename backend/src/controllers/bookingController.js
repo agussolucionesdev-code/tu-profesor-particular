@@ -1212,14 +1212,16 @@ export const createBooking = async (req, res, next) => {
       if (idempotencyRecord) {
         await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
       }
-      if (idempotencyKey) {
-        return res.status(409).json({
-          success: false,
-          message: "Horario ocupado.",
-          requestId: req.requestId,
-        });
-      }
-      return badRequest(res, "Horario ocupado.");
+      /* 409 con o sin Idempotency-Key. Antes, sin clave, esto era un 400; pero
+         el mismo choque detectado un instante después por el índice único de
+         slots ya respondía 409 a todos. El status dependía de qué capa llegaba
+         primero, no de lo que pasó: un horario ocupado nunca es un dato mal
+         mandado. */
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
     }
 
     /* El precio se resuelve en el servidor con la tarifa configurada. Antes esto
@@ -2835,7 +2837,13 @@ export const rescheduleBooking = async (req, res, next) => {
       if (idempotencyRecord) {
         await IdempotencyKey.deleteOne({ _id: idempotencyRecord._id });
       }
-      return badRequest(res, "Horario ocupado.");
+      // El mismo 409 que el catch le da a BookingSlotConflictError: que el
+      // choque lo vea el pre-chequeo o el CAS depende sólo del timing.
+      return res.status(409).json({
+        success: false,
+        message: "Horario ocupado.",
+        requestId: req.requestId,
+      });
     }
 
     const previousTimeSlot = lockedBooking.timeSlot;
