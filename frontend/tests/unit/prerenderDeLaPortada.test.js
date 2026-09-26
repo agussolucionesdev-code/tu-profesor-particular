@@ -8,13 +8,15 @@ import { fileURLToPath } from "node:url";
 import {
   ARRANQUE,
   TEMA,
+  armarPagina,
   arrancarDespuesDelPintado,
+  conMetaDePagina,
   compilar,
   hashCsp,
-  precargarPantalla,
   incrustarTema,
   recursosDe,
   renderizarPortada,
+  renderizarRuta,
   textoEnLinea,
   verificar,
   verificarCsp,
@@ -100,7 +102,7 @@ test("las rutas sin prerender dibujan la barra primero: ni esperan ni precargan 
 });
 
 test("el prerender marca la ruta que dibujó", () => {
-  assert.match(leer("prerender.mjs"), /<div id="root" data-prerender="\/">/);
+  assert.match(leer("prerender.mjs"), /<div id="root" data-prerender="\$\{ruta\}">/);
   assert.match(leer("src/App.jsx"), /from "\.\/paginas"/);
 });
 
@@ -191,33 +193,93 @@ test("recursosDe junta el CSS y los módulos de la portada, sin los del punto de
   });
 });
 
-/* /reservar BAJA EL KIOSCO DESDE EL HTML (reservar.html).
+/* /reservar TAMBIÉN LLEGA DIBUJADA (reservar.html).
  *
- * Con red limitada de verdad, el pedido del código del kiosco salía a los
- * ~3,2 s: recién cuando React dibujaba la pantalla. Precargado en el HTML sale
- * junto con el bundle. */
+ * Con red y CPU limitados de verdad, el paso 1 del kiosco aparecía recién
+ * cuando el navegador bajaba el bundle, dibujaba la barra y pedía el código
+ * del kiosco. Ahora el HTML trae el paso 1, y React lo hidrata como a la
+ * portada. */
 
-test("precargarPantalla suma los módulos y el CSS de la pantalla, sin repetir y sin frenar el pintado", () => {
-  const html = precargarPantalla(CABEZA_DE_VITE, {
-    modulos: ["/assets/BookingKiosk-EEEE5555.js", "/assets/vendor-react-BBBB2222.js"],
-    hojas: ["/assets/BookingKiosk-FFFF6666.css"],
-  });
-  assert.match(html, /<link rel="modulepreload" crossorigin href="\/assets\/BookingKiosk-EEEE5555\.js">/);
-  assert.equal(html.match(/vendor-react-BBBB2222/g).length, 1, "lo que Vite ya precargaba no se repite");
-  /* preload y no stylesheet: una hoja en el <head> frenaría el primer pintado
-     de la barra, que en /reservar es lo primero que se ve. */
-  assert.match(html, /<link rel="preload" as="style" crossorigin href="\/assets\/BookingKiosk-FFFF6666\.css">/);
-  assert.doesNotMatch(html, /rel="stylesheet"[^>]+BookingKiosk/);
-  /* El bundle sigue arrancando como siempre. */
-  assert.match(html, /<script type="module" crossorigin src="\/assets\/index-AAAA1111\.js"><\/script>/);
-  assert.throws(() => precargarPantalla(CABEZA_DE_VITE, {}), /nada que precargar/);
+test("el paso 1 de /reservar sale dibujado y sin scripts que la CSP bloquee", async () => {
+  const { default: App } = await compilar(path.join(RAIZ, "src/App.jsx"), (absoluta) => `/assets/${path.basename(absoluta)}`);
+  const markup = await renderizarRuta(App, "/reservar");
+  assert.match(markup, /<h1[^>]*>[^<]*¿Para quién es la clase\?/);
+  assert.doesNotMatch(markup, /<div hidden id="S:|<template id="B:|<script[\s>]/);
+  assert.doesNotMatch(markup, /brand-loader/);
 });
 
-test("Vercel sirve reservar.html en /reservar, antes del comodín", () => {
+const PLANTILLA_CON_HEAD = `<head>
+    <link rel="canonical" href="https://ejemplo.test/" />
+    <meta
+      name="description"
+      content="la de la portada"
+    />
+    <meta property="og:url" content="https://ejemplo.test/" />
+    <meta property="og:title" content="título de la portada" />
+    <meta
+      property="og:description"
+      content="og de la portada"
+    />
+    <meta name="twitter:title" content="título de la portada" />
+    <meta
+      name="twitter:description"
+      content="twitter de la portada"
+    />
+    <title>título de la portada</title>
+    <script type="module" crossorigin src="/assets/index-AAAA1111.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CCCC3333.css">
+  </head>
+  <body><div id="root"></div></body>`;
+
+test("cada página prerenderizada trae su título, descripción, canónica y vista previa para redes", () => {
+  const html = conMetaDePagina(PLANTILLA_CON_HEAD, {
+    host: "https://ejemplo.test",
+    ruta: "/reservar",
+    titulo: "Reservar clase | Tu Profesor Particular",
+    descripcion: 'Elegí materia & "horario"',
+  });
+  assert.match(html, /<title>Reservar clase \| Tu Profesor Particular<\/title>/);
+  assert.match(html, /rel="canonical"\s+href="https:\/\/ejemplo\.test\/reservar"/);
+  assert.match(html, /property="og:url" content="https:\/\/ejemplo\.test\/reservar"/);
+  assert.match(html, /property="og:title" content="Reservar clase \| Tu Profesor Particular"/);
+  assert.match(html, /name="twitter:title" content="Reservar clase \| Tu Profesor Particular"/);
+  /* Escapado: unas comillas en la descripción no pueden cortar el atributo. */
+  assert.match(html, /name="description"\s+content="Elegí materia &amp; &quot;horario&quot;"/);
+  assert.match(html, /property="og:description"\s+content="Elegí materia &amp; &quot;horario&quot;"/);
+  assert.match(html, /name="twitter:description"\s+content="Elegí materia &amp; &quot;horario&quot;"/);
+  assert.doesNotMatch(html, /de la portada/);
+  /* Si la plantilla cambia y falta una etiqueta, el build falla. */
+  assert.throws(() => conMetaDePagina("<head><title>x</title></head>", { host: "h", ruta: "/", titulo: "t", descripcion: "d" }), /index\.html/);
+});
+
+test("armarPagina junta el dibujo, su CSS, su JSON-LD y el arranque después del pintado", () => {
+  const html = armarPagina({
+    plantilla: PLANTILLA_CON_HEAD,
+    ruta: "/reservar",
+    markup: "<main><h1>¿Para quién es la clase?</h1></main>",
+    hojas: ["/assets/BookingKiosk-FFFF6666.css"],
+    modulos: ["/assets/BookingKiosk-EEEE5555.js"],
+    grafo: '{"@context":"https://schema.org"}',
+    meta: { titulo: "Reservar clase | Tu Profesor Particular", descripcion: "Reservá tu clase." },
+    host: "https://ejemplo.test",
+  });
+  /* data-prerender con SU ruta: main.jsx hidrata sólo si coincide. */
+  assert.match(html, /<div id="root" data-prerender="\/reservar"><main><h1>/);
+  assert.match(html, /<link rel="stylesheet" crossorigin href="\/assets\/BookingKiosk-FFFF6666\.css">/);
+  assert.match(html, /<script type="application\/ld\+json" id="json-ld-structured-data">\{"@context"/);
+  assert.match(html, /id="arranque-app"/);
+  assert.match(html, /<link rel="modulepreload" crossorigin href="\/assets\/BookingKiosk-EEEE5555\.js">/);
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(html, /<title>Reservar clase/);
+});
+
+test("el build dibuja la portada y /reservar, y Vercel sirve reservar.html antes del comodín", () => {
+  const fuente = leer("prerender.mjs");
+  assert.match(fuente, /\{ ruta: "\/", pantalla: "src\/pages\/HomePage\.jsx", salida: "index\.html"/);
+  assert.match(fuente, /\{ ruta: "\/reservar", pantalla: "src\/components\/BookingKiosk\.jsx", salida: "reservar\.html"/);
   const { rewrites } = JSON.parse(leer("vercel.json"));
   const reservar = rewrites.findIndex((r) => r.source === "/reservar");
   assert.ok(reservar >= 0, "falta el rewrite de /reservar");
   assert.equal(rewrites[reservar].destination, "/reservar.html");
   assert.ok(reservar < rewrites.length - 1, "después del comodín no se usaría nunca");
-  assert.match(leer("prerender.mjs"), /fs\.writeFileSync\(path\.join\(DIST, "reservar\.html"\), reservar\)/);
 });

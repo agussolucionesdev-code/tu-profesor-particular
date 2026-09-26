@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { HOST, tituloDePagina } from "../constants/metaDePaginas";
 
 const BASE_TITLE = "Tu Profesor Particular | Agustín Elías Sosa";
 const BASE_DESCRIPTION =
@@ -20,7 +21,7 @@ function setMetaDescription(description) {
  */
 export function useDocumentTitle(title) {
   useEffect(() => {
-    document.title = title ? `${title} | Tu Profesor Particular` : BASE_TITLE;
+    document.title = title ? tituloDePagina(title) : BASE_TITLE;
     return () => {
       document.title = BASE_TITLE;
     };
@@ -56,8 +57,6 @@ function setRobots(noindex) {
      ofrece —volver a reservar, ver mis turnos— sí se siguen. */
   tag.setAttribute("content", "noindex, follow");
 }
-
-const HOST = "https://turnos.tuprofesorparticular.com.ar";
 
 /* La URL canónica de la ruta actual. El `index.html` trae la de la portada; sin
    esto, /reservar y /portal heredaban esa y le decían a Google que eran la

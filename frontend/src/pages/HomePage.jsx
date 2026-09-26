@@ -28,6 +28,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { usePageMeta } from "../hooks/useDocumentTitle";
+import { META_PORTADA } from "../constants/metaDePaginas";
 import useScrollReveal from "../hooks/useScrollReveal";
 import ThemeLogo from "../components/ui/ThemeLogo";
 import AboutAgustin from "../components/home/AboutAgustin";
@@ -225,10 +226,8 @@ const HomePage = () => {
      terminaba con la marca. Y los dos sitios competían por la misma búsqueda:
      la landing es para conocer el servicio, turnos para reservar. Cada portada
      nombra su intención. */
-  usePageMeta(
-    "Reservá tu clase",
-    "Reservá una clase con Agustín Elías Sosa. Elegí materia, modalidad y horario, revisá el precio y confirmá tu turno online o presencial en Temperley.",
-  );
+  /* En constants/metaDePaginas.js: prerender.mjs escribe los mismos en el HTML. */
+  usePageMeta(META_PORTADA.titulo, META_PORTADA.descripcion);
 
   // Motor de scroll-reveal: revela cada elemento [data-reveal] al entrar al
   // viewport, con stagger por grupo. Reemplaza al reveal por-sección anterior.
