@@ -6,6 +6,14 @@
 .bss {
   background: var(--sf-muted);
   padding: clamp(3.5rem, 7vw, 6rem) 1.25rem;
+  /* RENDIMIENTO: está debajo del pliegue y en el celular mide ~3.400 px. Era
+     el bloque más grande que quedaba sin content-visibility (las .hp-section
+     ya lo tienen, ver HomePage.css). Medido con traza y CPU x4 en producción,
+     tres pares de cargas: el primer diseño de la portada bajó ~27 % y el
+     primer pintado ~185 ms. El sticky del modo inmersivo sigue funcionando:
+     la contención de pintura no crea un contenedor de scroll. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3400px;
 }
 .bss-inner { max-width: 1100px; margin: 0 auto; }
 
