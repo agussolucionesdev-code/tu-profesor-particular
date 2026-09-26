@@ -28,6 +28,63 @@ vi.mock("../src/config/mailer.js", async () => {
   };
 });
 
+// Sin compuerta armada, `claimBookingSlots` es exactamente el real. Sólo los
+// tests de concurrencia la arman, con `holdSlotClaimsUntilOverlap`.
+const slotClaimGate = vi.hoisted(() => ({ beforeClaim: null }));
+vi.mock("../src/services/bookingSlotService.js", async () => {
+  const actual = await vi.importActual("../src/services/bookingSlotService.js");
+  return {
+    ...actual,
+    claimBookingSlots: (...args) => (
+      slotClaimGate.beforeClaim
+        ? slotClaimGate.beforeClaim().then(() => actual.claimBookingSlots(...args))
+        : actual.claimBookingSlots(...args)
+    ),
+  };
+});
+
+/* Solapamiento garantizado para dos reprogramaciones concurrentes.
+ *
+ * POR QUÉ HACE FALTA
+ *
+ * `Promise.all` despacha las dos requests juntas, pero no garantiza que se
+ * pisen. Antes de reclamar slots cada una hace una decena de idas y vueltas a
+ * Mongo, y con el runner cargado una puede terminar entera antes de que la
+ * otra llegue al pre-chequeo. Entonces el perdedor ya no choca contra el
+ * índice único de BookingSlot (409): lo frena `hasConflict` con un 400, y el
+ * test deja de probar la colisión que dice probar. Así falló el CI el
+ * 2026-09-26, y un rerun lo "arregló".
+ *
+ * CÓMO LO RESUELVE
+ *
+ * Retiene cada request justo antes de `claimBookingSlots`, el único punto
+ * donde ya pasó el pre-chequeo y todavía no escribió nada, hasta tener
+ * evidencia de la otra: que llegó al mismo punto o que ya respondió. No espera
+ * tiempo, espera hechos. La segunda condición evita el cuelgue cuando algo (un
+ * lock, un 400) frena a la otra antes de reclamar; en ese caso `arrivals()` lo
+ * delata y el test lo afirma. */
+const holdSlotClaimsUntilOverlap = (expectedArrivals) => {
+  let open;
+  const opened = new Promise((resolve) => {
+    open = resolve;
+  });
+  let arrivals = 0;
+  slotClaimGate.beforeClaim = () => {
+    arrivals += 1;
+    if (arrivals >= expectedArrivals) open();
+    return opened;
+  };
+  return {
+    arrivals: () => arrivals,
+    // Una respuesta prueba que esa request ya no va a llegar a reclamar.
+    track: (pending) => Promise.resolve(pending).finally(open),
+    release: () => {
+      slotClaimGate.beforeClaim = null;
+      open();
+    },
+  };
+};
+
 let app;
 let mongoServer;
 let Booking;
@@ -1630,20 +1687,30 @@ describe("booking flows", () => {
       }))
       .expect(201);
     const target = formatForApi(tomorrowAt(12));
+    const gate = holdSlotClaimsUntilOverlap(2);
 
-    const attempts = await Promise.all([
-      request(app)
-        .post("/api/bookings/reschedule")
-        .set("X-Booking-Manage-Token", first.body.data.managementToken)
-        .send({ bookingCode: first.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
-      request(app)
-        .post("/api/bookings/reschedule")
-        .set("X-Booking-Manage-Token", second.body.data.managementToken)
-        .send({ bookingCode: second.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
-    ]);
+    let attempts;
+    try {
+      attempts = await Promise.all([
+        request(app)
+          .post("/api/bookings/reschedule")
+          .set("X-Booking-Manage-Token", first.body.data.managementToken)
+          .send({ bookingCode: first.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
+        request(app)
+          .post("/api/bookings/reschedule")
+          .set("X-Booking-Manage-Token", second.body.data.managementToken)
+          .send({ bookingCode: second.body.data.bookingCode, newTimeSlot: target, newDuration: 1 }),
+      ].map(gate.track));
+    } finally {
+      gate.release();
+    }
 
-    expect(attempts.filter((response) => response.status === 200)).toHaveLength(1);
-    expect(attempts.filter((response) => response.status === 409)).toHaveLength(1);
+    expect(
+      gate.arrivals(),
+      "las dos reprogramaciones tienen que pasar el pre-chequeo y chocar al reclamar slots",
+    ).toBe(2);
+    // Ordenados para que, si falla, el diff muestre qué status respondió el perdedor.
+    expect(attempts.map((response) => response.status).sort()).toEqual([200, 409]);
     expect(await BookingSlot.countDocuments()).toBe(4);
   });
 
@@ -1653,22 +1720,33 @@ describe("booking flows", () => {
       .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
       .expect(201);
     const targets = [formatForApi(tomorrowAt(12)), formatForApi(tomorrowAt(14))];
+    const gate = holdSlotClaimsUntilOverlap(2);
 
-    const attempts = await Promise.all(
-      targets.map((newTimeSlot) =>
-        request(app)
-          .post("/api/bookings/reschedule")
-          .set("X-Booking-Manage-Token", created.body.data.managementToken)
-          .send({
-            bookingCode: created.body.data.bookingCode,
-            newTimeSlot,
-            newDuration: 1,
-          }),
-      ),
-    );
+    let attempts;
+    try {
+      attempts = await Promise.all(
+        targets.map((newTimeSlot) =>
+          request(app)
+            .post("/api/bookings/reschedule")
+            .set("X-Booking-Manage-Token", created.body.data.managementToken)
+            .send({
+              bookingCode: created.body.data.bookingCode,
+              newTimeSlot,
+              newDuration: 1,
+            }),
+        ).map(gate.track),
+      );
+    } finally {
+      gate.release();
+    }
 
-    expect(attempts.filter((response) => response.status === 200)).toHaveLength(1);
-    expect(attempts.filter((response) => response.status === 409)).toHaveLength(1);
+    // La que tomó el lock queda retenida adentro hasta que la otra responde:
+    // sin eso, en serie las dos toman el lock por turnos y ganan las dos.
+    expect(
+      gate.arrivals(),
+      "sólo la dueña del lock puede llegar a reclamar slots",
+    ).toBe(1);
+    expect(attempts.map((response) => response.status).sort()).toEqual([200, 409]);
 
     const persisted = await Booking.findOne({ bookingCode: created.body.data.bookingCode }).lean();
     const slotStarts = await BookingSlot.find({ booking: persisted._id }).lean();
