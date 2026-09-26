@@ -14,7 +14,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { precargarPagina } from "./paginas";
 
-/* LA PORTADA llega prerenderizada (prerender.mjs) y se HIDRATA: React adopta
+/* LA PORTADA Y /reservar llegan prerenderizadas (prerender.mjs) y se HIDRATAN: React adopta
    esos nodos en vez de reemplazarlos. Con createRoot los reemplazaba, y las
    animaciones de entrada del título volvían a arrancar: en un celular lento, el
    título aparecía, desaparecía y entraba otra vez. Para que coincida, el primer

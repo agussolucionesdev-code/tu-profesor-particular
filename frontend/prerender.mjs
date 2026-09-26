@@ -9,13 +9,12 @@
  * (el hero) se pintaba a los ~4 s, siempre detrás del JS. Con la portada ya
  * dibujada en el HTML, se ve apenas llega la página.
  *
- * Sólo la portada: es la que recibe gente nueva desde buscadores y enlaces.
- * /reservar, /portal y el resto siguen siendo la app de siempre, servidas por
- * `app.html` —el HTML vacío original—; si recibieran el index.html
- * prerenderizado, mostrarían la portada un instante antes de su pantalla (ver
- * el rewrite en vercel.json). /reservar recibe `reservar.html`: el mismo HTML
- * vacío, pero bajando el código del kiosco desde el principio
- * (precargarPantalla).
+ * La portada y /reservar (el paso 1 del kiosco, en `reservar.html`): son las
+ * que recibe gente nueva desde buscadores, el sitio y WhatsApp. Cada una con
+ * su <head> (conMetaDePagina). /portal y el resto siguen siendo la app de
+ * siempre, servidas por `app.html` —el HTML vacío original—; si recibieran un
+ * HTML prerenderizado ajeno, mostrarían esa página un instante antes de la
+ * suya (ver los rewrites en vercel.json).
  *
  * CÓMO: es el mismo camino que el sitio institucional (web/prerender.mjs), con
  * lo que allá se aprendió midiendo:
@@ -203,45 +202,56 @@ export const arrancarDespuesDelPintado = (html, modulosDeLaPortada = []) => {
   );
 };
 
-/* UNA PANTALLA QUE BAJA SU CÓDIGO DESDE EL HTML (reservar.html).
+/* EL <head> DE CADA PÁGINA PRERENDERIZADA.
  *
- * En las rutas que no se prerenderizan, el código de la pantalla se pedía
- * recién cuando React la dibujaba: HTML → bundle → dibujo → recién ahí el
- * kiosco. Con red limitada de verdad (Lighthouse en modo devtools, septiembre
- * de 2026) ese pedido salía a los ~3,2 s. Precargado en el HTML sale junto con
- * el bundle. Los módulos van como modulepreload y el CSS como preload (no
- * frena el primer pintado): cuando el lazy importa la pantalla, Vite agrega la
- * hoja y el navegador la encuentra ya descargada. */
-export const precargarPantalla = (html, { modulos = [], hojas = [] }) => {
-  const yaPrecargados = new Set([...html.matchAll(/<link rel="modulepreload" crossorigin href="([^"]+)">/g)].map((m) => m[1]));
-  const enlaces = [
-    ...modulos.filter((href) => !yaPrecargados.has(href)).map((href) => `<link rel="modulepreload" crossorigin href="${href}">`),
-    ...hojas.map((href) => `<link rel="preload" as="style" crossorigin href="${href}">`),
+ * La plantilla trae el título, la descripción, la canónica y las etiquetas para
+ * redes de la portada. En el navegador las corrige usePageMeta, pero lo que
+ * leen los buscadores antes de ejecutar nada —y lo ÚNICO que leen WhatsApp o
+ * Facebook para la vista previa de un enlace— es el HTML. Antes /reservar se
+ * presentaba ahí con los datos de la portada. Los textos salen de
+ * src/constants/metaDePaginas.js, los mismos que usa la pantalla. */
+const escaparAtributo = (texto) => texto.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+export const conMetaDePagina = (html, { host, ruta, titulo, descripcion }) => {
+  const url = `${host}${ruta === "/" ? "/" : ruta}`;
+  const atributos = [
+    [/(<meta\s+name="description"\s+content=")[^"]*(")/, descripcion],
+    [/(<link\s+rel="canonical"\s+href=")[^"]*(")/, url],
+    [/(<meta\s+property="og:url"\s+content=")[^"]*(")/, url],
+    [/(<meta\s+property="og:title"\s+content=")[^"]*(")/, titulo],
+    [/(<meta\s+property="og:description"\s+content=")[^"]*(")/, descripcion],
+    [/(<meta\s+name="twitter:title"\s+content=")[^"]*(")/, titulo],
+    [/(<meta\s+name="twitter:description"\s+content=")[^"]*(")/, descripcion],
   ];
-  if (!enlaces.length) throw new Error("precargarPantalla: no hay nada que precargar (¿cambió el manifiesto?).");
-  return html.replace("</head>", () => `    ${enlaces.join("\n    ")}\n  </head>`);
+  let resultado = html;
+  for (const [patron, valor] of atributos) {
+    if (!patron.test(resultado)) throw new Error(`La plantilla no trae ${patron.source}: ¿cambió index.html?`);
+    resultado = resultado.replace(patron, (_, antes, despues) => `${antes}${escaparAtributo(valor)}${despues}`);
+  }
+  if (!/<title>[^<]*<\/title>/.test(resultado)) throw new Error("La plantilla no trae <title>.");
+  return resultado.replace(/<title>[^<]*<\/title>/, () => `<title>${escaparAtributo(titulo)}</title>`);
 };
 
 /* Las redes. Cada una existe porque su ausencia produjo alguna vez un
    resultado falso en este repo (ver web/prerender.mjs). */
-export const verificar = (markup) => {
+export const verificar = (markup, ruta = "/") => {
   if (/<script[\s>]|<div hidden id="S:|<template id="B:/.test(markup)) {
-    throw new Error("La portada salió con un Suspense sin resolver o un <script> en línea: la CSP lo bloquearía.");
+    throw new Error(`${ruta} salió con un Suspense sin resolver o un <script> en línea: la CSP lo bloquearía.`);
   }
-  if (/brand-loader/.test(markup)) throw new Error("La portada salió con el cargador en vez del contenido.");
-  if (!/<h1[\s>]/.test(markup)) throw new Error("La portada salió sin <h1>, o sea sin contenido.");
+  if (/brand-loader/.test(markup)) throw new Error(`${ruta} salió con el cargador en vez del contenido.`);
+  if (!/<h1[\s>]/.test(markup)) throw new Error(`${ruta} salió sin <h1>, o sea sin contenido.`);
 };
 
-/* La portada como la ve quien llega a "/". Dos pasadas: la primera resuelve
-   los lazy y se descarta. */
-export const renderizarPortada = async (App) => {
+/* Una página como la ve quien llega a esa ruta. Dos pasadas: la primera
+   resuelve los lazy y se descarta. */
+export const renderizarRuta = async (App, ruta) => {
   const React = await import("react");
   const { StaticRouter } = await import("react-router");
   const { prerenderToNodeStream } = await import("react-dom/static");
   const errores = [];
   const renderizar = async () => {
     const { prelude } = await prerenderToNodeStream(
-      React.createElement(App, { enrutador: StaticRouter, routerProps: { location: "/" } }),
+      React.createElement(App, { enrutador: StaticRouter, routerProps: { location: ruta } }),
       { progressiveChunkSize: Number.POSITIVE_INFINITY, onError: (e) => errores.push(e) },
     );
     let html = "";
@@ -250,9 +260,35 @@ export const renderizarPortada = async (App) => {
   };
   await renderizar();
   const markup = await renderizar();
-  if (errores.length) throw new Error(`Falló el render de la portada: ${errores.map((e) => e.message).join(" | ")}`);
-  verificar(markup);
+  if (errores.length) throw new Error(`Falló el render de ${ruta}: ${errores.map((e) => e.message).join(" | ")}`);
+  verificar(markup, ruta);
   return markup;
+};
+
+export const renderizarPortada = (App) => renderizarRuta(App, "/");
+
+/* El HTML completo de una página prerenderizada: su <head>, su CSS, su JSON-LD,
+   el dibujo en #root (data-prerender: main.jsx hidrata sólo si coincide con la
+   ruta) y el bundle arrancando después del primer pintado. Con función y no
+   con texto en los replace: un «$&» o un «$'» del contenido (un precio, por
+   ejemplo) se interpretaría como patrón. */
+export const armarPagina = ({ plantilla, ruta, markup, hojas, modulos, grafo, meta, host }) => {
+  const enlacesDeHojas = hojas.map((h) => `    <link rel="stylesheet" crossorigin href="${h}">`).join("\n");
+  const conContenido = conMetaDePagina(plantilla, { host, ruta, ...meta })
+    .replace('<div id="root"></div>', () => `<div id="root" data-prerender="${ruta}">${markup}</div>`)
+    .replace(
+      "</head>",
+      () =>
+        `${enlacesDeHojas}\n    <script type="application/ld+json" id="json-ld-structured-data">${grafo}</script>\n  </head>`,
+    );
+  const html = arrancarDespuesDelPintado(conContenido, modulos);
+  if (!/<link[^>]+rel="stylesheet"/.test(html) || !/<link rel="modulepreload" crossorigin href="[^"]+" id="arranque-app">/.test(html)) {
+    throw new Error(`El HTML de ${ruta} quedó sin el CSS o sin el bundle.`);
+  }
+  if (/<script type="module"/.test(html) || html.includes('src="/tema.js"')) {
+    throw new Error(`El HTML de ${ruta} todavía carga un script que frena el primer pintado.`);
+  }
+  return html;
 };
 
 const main = async () => {
@@ -267,44 +303,37 @@ const main = async () => {
      mostrar antes. */
   fs.writeFileSync(path.join(DIST, "app.html"), plantilla);
 
-  /* /reservar: el mismo HTML vacío, pero bajando el kiosco desde el principio
-     (ver precargarPantalla y el rewrite en vercel.json). */
-  const kiosco = recursosDe(manifiesto, "src/components/BookingKiosk.jsx");
-  const reservar = precargarPantalla(plantilla, {
-    modulos: kiosco.modulos.map((m) => `/${m}`),
-    hojas: kiosco.hojas.map((h) => `/${h}`),
-  });
-  fs.writeFileSync(path.join(DIST, "reservar.html"), reservar);
-
   const { default: App } = await compilar(path.join(RAIZ, "src/App.jsx"), urlDe);
   const { construirGrafo } = await compilar(path.join(RAIZ, "src/components/seo/grafoEstructurado.js"), urlDe);
-  const markup = await renderizarPortada(App);
-  const portada = recursosDe(manifiesto, "src/pages/HomePage.jsx");
-  const hojas = portada.hojas.map((h) => `    <link rel="stylesheet" crossorigin href="/${h}">`).join("\n");
-  const grafo = JSON.stringify(construirGrafo("/")).replace(/</g, "\\u003c");
-  /* Con función y no con texto: en un reemplazo de texto, un «$&» o un «$'»
-     del contenido (un precio, por ejemplo) se interpretaría como patrón. */
-  const conPortada = plantilla
-    /* data-prerender: main.jsx hidrata sólo si coincide con la ruta. */
-    .replace('<div id="root"></div>', () => `<div id="root" data-prerender="/">${markup}</div>`)
-    .replace(
-      "</head>",
-      () => `${hojas}\n    <script type="application/ld+json" id="json-ld-structured-data">${grafo}</script>\n  </head>`,
-    );
-  const html = arrancarDespuesDelPintado(conPortada, portada.modulos.map((m) => `/${m}`));
-  if (!/<link[^>]+rel="stylesheet"/.test(html) || !/<link rel="modulepreload" crossorigin href="[^"]+" id="arranque-app">/.test(html)) {
-    throw new Error("El index.html prerenderizado quedó sin el CSS o sin el bundle.");
+  const meta = await compilar(path.join(RAIZ, "src/constants/metaDePaginas.js"), urlDe);
+
+  /* Las páginas que llegan dibujadas. /reservar se sirve desde reservar.html
+     (rewrite en vercel.json); la portada, desde index.html. */
+  const paginas = [
+    { ruta: "/", pantalla: "src/pages/HomePage.jsx", salida: "index.html", meta: meta.META_PORTADA },
+    { ruta: "/reservar", pantalla: "src/components/BookingKiosk.jsx", salida: "reservar.html", meta: meta.META_RESERVAR },
+  ];
+  const resumen = [];
+  for (const pagina of paginas) {
+    const markup = await renderizarRuta(App, pagina.ruta);
+    const recursos = recursosDe(manifiesto, pagina.pantalla);
+    const html = armarPagina({
+      plantilla,
+      ruta: pagina.ruta,
+      markup,
+      hojas: recursos.hojas.map((h) => `/${h}`),
+      modulos: recursos.modulos.map((m) => `/${m}`),
+      grafo: JSON.stringify(construirGrafo(pagina.ruta)).replace(/</g, "\\u003c"),
+      meta: { titulo: meta.tituloDePagina(pagina.meta.titulo), descripcion: pagina.meta.descripcion },
+      host: meta.HOST,
+    });
+    fs.writeFileSync(path.join(DIST, pagina.salida), html);
+    resumen.push(`${pagina.ruta} ${Math.round(html.length / 1024)} KB (${recursos.hojas.length} hojas, ${recursos.modulos.length} módulos)`);
   }
-  if (/<script type="module"/.test(html) || html.includes('src="/tema.js"')) {
-    throw new Error("El index.html prerenderizado todavía carga un script que frena el primer pintado.");
-  }
-  fs.writeFileSync(path.join(DIST, "index.html"), html);
 
   /* El manifiesto sólo le sirve a este script: no se publica. */
   fs.rmSync(path.join(DIST, ".vite"), { recursive: true, force: true });
-  console.log(
-    `Prerender de la portada: ${Math.round(html.length / 1024)} KB, ${portada.hojas.length} hojas y ${portada.modulos.length} módulos propios; tema.js en línea en index.html, app.html y reservar.html (${kiosco.modulos.length} módulos y ${kiosco.hojas.length} hojas del kiosco precargados).`,
-  );
+  console.log(`Prerender: ${resumen.join("; ")}; tema.js en línea también en app.html.`);
 };
 
 /* Sólo corre cuando se lo llama (`node prerender.mjs`); el test importa las

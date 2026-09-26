@@ -73,6 +73,7 @@ import { NO_PUEDO_AYUDARTE } from "../constants/voz";
 import { materiaCanonica } from "../utils/materiaCanonica";
 import { useNeuroToast } from "../utils/neuroToast";
 import { usePageMeta } from "../hooks/useDocumentTitle";
+import { META_RESERVAR } from "../constants/metaDePaginas";
 import { createBookingFunnelTracker } from "../utils/bookingFunnel";
 import { diferido } from "../utils/diferido";
 import "../styles/tokens.css";
@@ -106,10 +107,8 @@ const RELATIONSHIP_OPTIONS = [
 ];
 
 const BookingKiosk = () => {
-  usePageMeta(
-    "Reservar clase",
-    "Reservá tu clase particular en pocos pasos. Elegí materia, modalidad y horario. Agustín Elías Sosa, Buenos Aires.",
-  );
+  /* En constants/metaDePaginas.js: prerender.mjs escribe los mismos en el HTML. */
+  usePageMeta(META_RESERVAR.titulo, META_RESERVAR.descripcion);
 
   const { toast, showToast } = useNeuroToast({ duration: 4500 });
   const [step, setStep] = useState(1);
