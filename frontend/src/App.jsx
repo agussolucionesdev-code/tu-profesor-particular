@@ -99,7 +99,18 @@ const AppContent = () => {
           </Routes>
         </Suspense>
       </main>
-      {!isAdminRoute && <Footer />}
+      {/* Un límite de Suspense sin nada que esperar: en la portada, que se
+          HIDRATA, React adopta de un tirón lo de afuera y lo de adentro lo
+          hidrata después, en porciones cortas y con la prioridad más baja. El
+          pie está debajo del pliegue: no apura. Si alguien lo toca antes,
+          React lo hidrata en el momento y repite el toque. En las rutas que se
+          dibujan de cero no cambia nada.
+
+          SÓLO lo que no lee estado del navegador: lo que está adentro se
+          hidrata DESPUÉS de que el contexto de preferencias pasó a lo real, y
+          tiene que coincidir con el HTML. Por eso el panel de accesibilidad
+          (lee las preferencias) queda afuera. Lo cuida HidratarLaPortada. */}
+      <Suspense fallback={null}>{!isAdminRoute && <Footer />}</Suspense>
       <AccessibilityControls
         isAdminRoute={isAdminRoute}
         isBookingRoute={isBookingExperience}

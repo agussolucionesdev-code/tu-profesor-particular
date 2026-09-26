@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useHidratado } from "../../hooks/useHidratado";
 
 const THEME_STORAGE_KEY = "theme";
@@ -22,6 +22,9 @@ const DEFAULT_PREFERENCES = {
   accentBalance: "balanced",
   calmUi: false,
 };
+
+/* Todas las preferencias son valores simples: alcanza con comparar campo por campo. */
+const mismasPreferencias = (a, b) => Object.keys(DEFAULT_PREFERENCES).every((clave) => a[clave] === b[clave]);
 
 const UISettingsContext = createContext(null);
 
@@ -136,50 +139,63 @@ export const UISettingsProvider = ({ children }) => {
     }
   }, [preferences, systemTheme]);
 
-  const setThemePreference = (themePreference) => {
+  const setThemePreference = useCallback((themePreference) => {
     setPreferences((currentPreferences) => ({
       ...currentPreferences,
       themePreference,
     }));
-  };
+  }, []);
 
-  const updatePreference = (key, value) => {
+  const updatePreference = useCallback((key, value) => {
     setPreferences((currentPreferences) => ({
       ...currentPreferences,
       [key]: value,
     }));
-  };
+  }, []);
 
-  const resetAccessibilityPreferences = () => {
+  const resetAccessibilityPreferences = useCallback(() => {
     setPreferences(DEFAULT_PREFERENCES);
-  };
+  }, []);
 
   /* Lo que VEN los componentes: hasta terminar de hidratar, lo mismo que dibujó
      el prerender, que no tiene localStorage ni matchMedia (ver useHidratado).
      El documento, en cambio, recibe siempre lo real: el efecto de arriba usa
-     `preferences`, y tema.js ya había fijado data-theme antes de pintar. */
+     `preferences`, y tema.js ya había fijado data-theme antes de pintar.
+
+     Si lo guardado es igual a lo de fábrica —la mayoría de las visitas— se
+     sigue usando el MISMO objeto, y el valor del contexto está memorizado: al
+     terminar de hidratar nada cambia y nadie se redibuja. Antes el contexto
+     era un objeto nuevo en cada dibujo y la barra y el panel de accesibilidad
+     se redibujaban enteros, en una tarea sincrónica, justo después de
+     hidratar. */
   const hidratado = useHidratado();
-  const visibles = hidratado ? preferences : DEFAULT_PREFERENCES;
+  const visibles =
+    hidratado && !mismasPreferencias(preferences, DEFAULT_PREFERENCES)
+      ? preferences
+      : DEFAULT_PREFERENCES;
   const effectiveTheme = getEffectiveTheme(
     visibles.themePreference,
     hidratado ? systemTheme : "light",
   );
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setThemePreference(effectiveTheme === "dark" ? "light" : "dark");
-  };
+  }, [effectiveTheme, setThemePreference]);
+
+  const valor = useMemo(
+    () => ({
+      preferences: visibles,
+      effectiveTheme,
+      setThemePreference,
+      updatePreference,
+      resetAccessibilityPreferences,
+      toggleTheme,
+    }),
+    [visibles, effectiveTheme, setThemePreference, updatePreference, resetAccessibilityPreferences, toggleTheme],
+  );
 
   return (
-    <UISettingsContext.Provider
-      value={{
-        preferences: visibles,
-        effectiveTheme,
-        setThemePreference,
-        updatePreference,
-        resetAccessibilityPreferences,
-        toggleTheme,
-      }}
-    >
+    <UISettingsContext.Provider value={valor}>
       {children}
     </UISettingsContext.Provider>
   );
