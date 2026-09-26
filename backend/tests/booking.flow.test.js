@@ -1417,10 +1417,12 @@ describe("booking flows", () => {
       .send(validBookingPayload())
       .expect(201);
 
-    await request(app)
+    // Sin Idempotency-Key también: un horario ocupado es 409, no un dato inválido.
+    const overlapping = await request(app)
       .post("/api/bookings/reserve")
       .send(validBookingPayload({ studentName: "Pedro Perez" }))
-      .expect(400);
+      .expect(409);
+    expect(overlapping.body.message).toBe("Horario ocupado.");
   });
 
   it("allows adjacent bookings right after an occupied block ends", async () => {
@@ -1447,7 +1449,7 @@ describe("booking flows", () => {
         timeSlot: formatForApi(tomorrowAt(17, 30)),
         duration: 1,
       }))
-      .expect(400);
+      .expect(409);
   });
 
   it("protects admin routes with a bearer token", async () => {
@@ -1614,6 +1616,38 @@ describe("booking flows", () => {
       .post("/api/bookings/reserve")
       .send(validBookingPayload({ studentName: "Nuevo alumno" }))
       .expect(201);
+  });
+
+  it("answers 409 when a reschedule targets a slot another booking already holds", async () => {
+    await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({ timeSlot: formatForApi(tomorrowAt(10)) }))
+      .expect(201);
+    const mover = await request(app)
+      .post("/api/bookings/reserve")
+      .send(validBookingPayload({
+        studentName: "Lucia Perez",
+        email: "lucia@example.com",
+        timeSlot: formatForApi(tomorrowAt(14)),
+      }))
+      .expect(201);
+
+    // En serie, sin concurrencia: el choque lo detecta el pre-chequeo, no el
+    // índice único de slots. Tiene que responder lo mismo que el CAS.
+    const response = await request(app)
+      .post("/api/bookings/reschedule")
+      .set("X-Booking-Manage-Token", mover.body.data.managementToken)
+      .send({
+        bookingCode: mover.body.data.bookingCode,
+        newTimeSlot: formatForApi(tomorrowAt(10)),
+        newDuration: 1,
+      })
+      .expect(409);
+
+    expect(response.body.message).toBe("Horario ocupado.");
+    const unchanged = await Booking.findOne({ bookingCode: mover.body.data.bookingCode }).lean();
+    expect(new Date(unchanged.timeSlot).getTime()).toBe(apiInstant(tomorrowAt(14)).getTime());
+    expect(await BookingSlot.countDocuments()).toBe(4);
   });
 
   it("keeps the original slot claim when concurrent reschedules collide", async () => {
@@ -2923,7 +2957,8 @@ describe("booking flows", () => {
     }
 
     expect(cancellation.status).toBe(409);
-    expect(replacement.status).toBe(400);
+    expect(replacement.status).toBe(409);
+    expect(replacement.body.message).toBe("Horario ocupado.");
     expect(confirmation.status).toBe(200);
     expect(await Booking.countDocuments({
       status: { $nin: ["Cancelado", "Finalizado"] },
