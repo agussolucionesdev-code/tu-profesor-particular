@@ -54,14 +54,26 @@ const NAVBAR_VOICE_OPTIONS = {
 
 /* ── Descubrimiento de la guía por voz ─────────────────────────────────────
    Se anuncia en tres capas, de menor a mayor intrusión: rótulo visible en el
-   botón, un punto mientras nunca se haya usado, y una invitación a los 4 s que
-   se puede aceptar o posponer. Si la posponen vuelve cada 3 minutos, COMO
-   MÁXIMO 3 veces. Si la activan o la descartan, no molesta nunca más. */
+   botón, un punto mientras nunca se haya usado, y una invitación que se puede
+   aceptar o posponer. Si la posponen vuelve cada 3 minutos, COMO MÁXIMO 3
+   veces. Si la activan o la descartan, no molesta nunca más.
+
+   LA INVITACIÓN ESPERA UN GESTO (toque, tecla o desplazamiento), y nunca sale
+   antes de los 4 s. Antes salía sola a los 4 s de cargar y, al ser el texto
+   más grande de /reservar, el navegador la tomaba como el contenido principal
+   de la página: Lighthouse con red y CPU limitados de verdad midió LCP 7,2 s
+   por ella, y lo mismo le pasaba a cualquiera que no tocara la pantalla en
+   esos 4 s. El navegador deja de medir el LCP con la primera interacción: lo
+   que aparece después ya no cuenta. Las repeticiones también arrancan después
+   del gesto: una pestaña quieta 3 minutos si no registraba el globo. */
 const VOICE_INVITE_KEY = "voice_invite_state_v2";
 const VOICE_INVITE_MAX = 3;
 const VOICE_INVITE_FIRST_DELAY = 4000;
+/* Nunca en el mismo instante del toque: se llevaría el toque siguiente. */
+const VOICE_INVITE_AFTER_GESTURE = 800;
 const VOICE_INVITE_REPEAT_DELAY = 180000;
 const VOICE_INVITE_VISIBLE_MS = 15000;
+const GESTOS = ["pointerdown", "keydown", "touchstart", "scroll", "wheel"];
 
 const readInviteState = () => {
   try {
@@ -148,10 +160,22 @@ const Navbar = () => {
       );
     };
 
-    const first = window.setTimeout(offer, VOICE_INVITE_FIRST_DELAY);
-    const repeat = window.setInterval(offer, VOICE_INVITE_REPEAT_DELAY);
+    const montaje = Date.now();
+    const opciones = { capture: true, passive: true };
+    let first = 0;
+    let repeat = 0;
+    const dejarDeEscuchar = () =>
+      GESTOS.forEach((gesto) => window.removeEventListener(gesto, alPrimerGesto, opciones));
+    function alPrimerGesto() {
+      dejarDeEscuchar();
+      const faltan = VOICE_INVITE_FIRST_DELAY - (Date.now() - montaje);
+      first = window.setTimeout(offer, Math.max(faltan, VOICE_INVITE_AFTER_GESTURE));
+      repeat = window.setInterval(offer, VOICE_INVITE_REPEAT_DELAY);
+    }
+    GESTOS.forEach((gesto) => window.addEventListener(gesto, alPrimerGesto, opciones));
 
     return () => {
+      dejarDeEscuchar();
       window.clearTimeout(first);
       window.clearInterval(repeat);
       hideTimers.forEach((id) => window.clearTimeout(id));
