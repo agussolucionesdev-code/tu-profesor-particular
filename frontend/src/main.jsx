@@ -6,6 +6,9 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 // todos veían la fuente del sistema. Este es el cambio que da el salto de nivel.
 import "@fontsource-variable/fraunces/opsz.css";
 import "@fontsource-variable/inter/wght.css";
+// Respaldos con las medidas de Fraunces e Inter: el cambio de fuente no mueve
+// la página (ver styles/fuentes-de-respaldo.css).
+import "./styles/fuentes-de-respaldo.css";
 import "./index.css";
 // La hoja de react-datepicker y su tema NO van acá: viajan con el calendario
 // (ver styles/datepicker-tema.css).
