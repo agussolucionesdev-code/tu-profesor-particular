@@ -1,0 +1,63 @@
+/* ==========================================================================
+   FUENTES DE RESPALDO CON LAS MEDIDAS DE FRAUNCES E INTER
+
+   La portada se pinta antes de que terminen de bajar las fuentes de la marca
+   (prerender + el JS después del primer pintado). Con red lenta el primer
+   pintado sale con la fuente del sistema y, cuando llega Fraunces, el titular
+   ocupa otro espacio y empuja todo lo de abajo. Lighthouse con red y CPU
+   limitados de verdad midió CLS 0,127 en la portada por eso (septiembre de
+   2026), en .hp-hero-body: «Web font loaded fraunces-latin-opsz-normal».
+
+   Estas caras usan fuentes que ya están en el sistema (local(): no se
+   descarga nada) escaladas para medir lo mismo que la fuente de la marca:
+   mismo ancho promedio (size-adjust) y misma altura de línea (ascent,
+   descent). El cambio de fuente sigue ocurriendo —la marca se ve igual—, pero
+   ya no mueve nada.
+
+   Método (el mismo que usa Next.js en next/font): con las métricas de
+   @capsizecss/metrics,
+     size-adjust      = (anchoPromedio/unidades de la marca) / (ídem del respaldo)
+     ascent-override  = (ascendente/unidades de la marca) / size-adjust
+     descent-override = (|descendente|/unidades de la marca) / size-adjust
+   Dos respaldos por fuente: Georgia y Arial (Windows, Mac) y Noto Serif y
+   Roboto (Android, donde no hay Georgia ni Arial). Si el primero no existe en
+   el sistema, la cara no carga y el navegador pasa al siguiente.
+   ========================================================================== */
+
+/* Fraunces (UPM 2000, ascent 1956, descent -510, ancho 938) */
+@font-face {
+  font-family: "Fraunces Respaldo";
+  src: local("Georgia");
+  size-adjust: 105.2%;
+  ascent-override: 92.96%;
+  descent-override: 24.24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Fraunces Respaldo Android";
+  src: local("Noto Serif"), local("NotoSerif-Regular");
+  size-adjust: 97.51%;
+  ascent-override: 100.3%;
+  descent-override: 26.15%;
+  line-gap-override: 0%;
+}
+
+/* Inter (UPM 2048, ascent 1984, descent -494, ancho 978) */
+@font-face {
+  font-family: "Inter Respaldo";
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Inter Respaldo Android";
+  src: local("Roboto"), local("Roboto-Regular");
+  size-adjust: 107.35%;
+  ascent-override: 90.24%;
+  descent-override: 22.47%;
+  line-gap-override: 0%;
+}
