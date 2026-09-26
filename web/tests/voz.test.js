@@ -134,16 +134,16 @@ test("el caso publica MÉTODO verificable, no emoción", () => {
   assert.ok(EL_CASO.metodo.length >= 5);
 });
 
-test("los años de experiencia son nueve, y el texto no dice otro número", () => {
-  /* Se deriva de dos datos que dio él: empezó FORMALMENTE entre los 17 y los 18, y hoy
-     tiene 27. Nueve y no diez porque el redondeo para arriba, en el dato más fácil de
-     contrastar que tiene la marca, es donde menos conviene exagerar. Venía diciendo 8,
-     que subdeclaraba. */
-  assert.equal(BRAND.yearsTeaching, 9);
+test("los años de experiencia son ocho, y el texto no dice otro número", () => {
+  /* Ocho, por decisión de Agustín (2026-09-26): es lo que puso en la bio de Instagram, y
+     se lee siempre como «más de 8». Antes decía 9, derivado de que empezó FORMALMENTE
+     entre los 17 y los 18 y hoy tiene 27; él prefiere la cifra conservadora. «Más de
+     ocho» sigue siendo cierto con esa cuenta, así que la cita del origen no lo desmiente. */
+  assert.equal(BRAND.yearsTeaching, 8);
 
-  /* Y el riesgo real de este cambio: que el número quede en 9 y alguna cita siga
-     diciendo «a los diecisiete» a secas, que implica diez. Las dos frases tienen que
-     poder leerse juntas sin que una desmienta a la otra. */
+  /* Y que la cita del origen no diga «a los diecisiete» a secas, que implica diez y
+     dejaría al «más de 8» sonando a error. Las dos frases tienen que poder leerse juntas
+     sin que una desmienta a la otra. */
   assert.match(POR_QUE_ENSENO.origen, /entre los diecisiete y los dieciocho/);
 });
 

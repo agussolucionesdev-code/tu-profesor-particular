@@ -46,8 +46,9 @@ test("los dos dominios dicen los mismos años de experiencia", () => {
     BRAND.yearsTeaching,
     "turnos y el sitio institucional no coinciden en los años de experiencia",
   );
-  // Nueve: empezó formalmente entre los 17 y los 18, y hoy tiene 27. Sin redondear.
-  assert.equal(BRAND.yearsTeaching, 9);
+  // Ocho, y se lee «más de 8»: lo decidió Agustín el 2026-09-26, cuando lo puso así en
+  // la bio de Instagram. Los tres canales tienen que decir el mismo número.
+  assert.equal(BRAND.yearsTeaching, 8);
 });
 
 test("las frases de los alumnos son idénticas en los dos proyectos", () => {

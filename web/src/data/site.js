@@ -70,12 +70,14 @@ export const BRAND = {
   person: "Agustín Elías Sosa",
   tagline: "Juntos, despejando el camino a la meta.",
   claim: "Entendé de verdad, no de memoria",
-  /* Nueve, no ocho. Y nueve y no diez, por precisión del propio Agustín: empezó a dar
-     clases FORMALMENTE entre los 17 y los 18, y hoy tiene 27. Diez sería redondear para
-     arriba, y una credencial conservadora y exacta pesa más que una inflada — sobre todo
-     ésta, que cualquiera puede contrastar con las dos edades.
-     Venía diciendo 8, que subdeclaraba un año. */
-  yearsTeaching: 9,
+  /* Ocho, y se lee siempre como «más de 8». Lo decidió Agustín el 2026-09-26, cuando
+     lo puso así en la bio de Instagram: prefiere la cifra conservadora. La cuenta de
+     antes daba 9 (empezó FORMALMENTE entre los 17 y los 18, y hoy tiene 27), y «más
+     de 8» sigue siendo cierto con ella. Una credencial que se queda corta pesa más que
+     una inflada, sobre todo ésta, que cualquiera puede contrastar.
+     Instagram, este sitio y turnos tienen que decir el mismo número:
+     `tests/vozCompartida.test.js` vigila los dos dominios; la bio, a mano. */
+  yearsTeaching: 8,
 };
 
 /* `label` es lo que se lee; `bookingParam` es lo que viaja en el enlace a
