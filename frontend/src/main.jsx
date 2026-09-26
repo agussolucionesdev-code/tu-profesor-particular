@@ -5,10 +5,9 @@ import { createRoot, hydrateRoot } from "react-dom/client";
 // Inter = cuerpo/UI. Antes el sitio declaraba "Inter" pero no la enviaba nunca:
 // todos veían la fuente del sistema. Este es el cambio que da el salto de nivel.
 import "@fontsource-variable/fraunces/opsz.css";
-import "@fontsource-variable/inter/wght.css";
-// Respaldos con las medidas de Fraunces e Inter: el cambio de fuente no mueve
-// la página (ver styles/fuentes-de-respaldo.css).
-import "./styles/fuentes-de-respaldo.css";
+// Inter con font-display: optional, en lugar de la hoja de @fontsource (que usa
+// swap): así nunca cambia con la página a la vista. Ver styles/fuente-inter.css.
+import "./styles/fuente-inter.css";
 import "./index.css";
 // La hoja de react-datepicker y su tema NO van acá: viajan con el calendario
 // (ver styles/datepicker-tema.css).

@@ -301,14 +301,12 @@
   --polish-info-wash:     rgba(0, 33, 76, 0.06);
 
   /* ── Accessibility UI tokens ────────────────────────────────────────── */
-  /* Los «Respaldo» miden lo mismo que la fuente de la marca: el cambio de
-     fuente no mueve la página (ver styles/fuentes-de-respaldo.css). */
-  --ui-font-family-base:     'Inter Variable', 'Inter Respaldo', 'Inter Respaldo Android', 'Inter', system-ui, sans-serif;
+  --ui-font-family-base:     'Inter Variable', 'Inter', system-ui, sans-serif;
   --ui-font-family-readable: 'Segoe UI', 'Noto Sans', system-ui, sans-serif;
   --ui-font-family-active:   var(--ui-font-family-base);
   /* Serif de display para titulares editoriales. En modo lectura accesible
      (data-font-family="readable") se reemplaza por la sans legible. */
-  --ui-font-display:         'Fraunces Variable', 'Fraunces Respaldo', 'Fraunces Respaldo Android', 'Georgia', 'Times New Roman', serif;
+  --ui-font-display:         'Fraunces Variable', 'Georgia', 'Times New Roman', serif;
   --ui-focus-color:          #006d1f;
   --ui-focus-ring:           rgba(1, 149, 60, 0.22);
   --ui-bg-light:             #f6f7f8;
