@@ -11,6 +11,7 @@ import {
   arrancarDespuesDelPintado,
   compilar,
   hashCsp,
+  precargarPantalla,
   incrustarTema,
   recursosDe,
   renderizarPortada,
@@ -188,4 +189,35 @@ test("recursosDe junta el CSS y los módulos de la portada, sin los del punto de
     hojas: ["assets/HomePage-B.css", "assets/compartido-C.css"],
     modulos: ["assets/HomePage-B.js", "assets/compartido-C.js"],
   });
+});
+
+/* /reservar BAJA EL KIOSCO DESDE EL HTML (reservar.html).
+ *
+ * Con red limitada de verdad, el pedido del código del kiosco salía a los
+ * ~3,2 s: recién cuando React dibujaba la pantalla. Precargado en el HTML sale
+ * junto con el bundle. */
+
+test("precargarPantalla suma los módulos y el CSS de la pantalla, sin repetir y sin frenar el pintado", () => {
+  const html = precargarPantalla(CABEZA_DE_VITE, {
+    modulos: ["/assets/BookingKiosk-EEEE5555.js", "/assets/vendor-react-BBBB2222.js"],
+    hojas: ["/assets/BookingKiosk-FFFF6666.css"],
+  });
+  assert.match(html, /<link rel="modulepreload" crossorigin href="\/assets\/BookingKiosk-EEEE5555\.js">/);
+  assert.equal(html.match(/vendor-react-BBBB2222/g).length, 1, "lo que Vite ya precargaba no se repite");
+  /* preload y no stylesheet: una hoja en el <head> frenaría el primer pintado
+     de la barra, que en /reservar es lo primero que se ve. */
+  assert.match(html, /<link rel="preload" as="style" crossorigin href="\/assets\/BookingKiosk-FFFF6666\.css">/);
+  assert.doesNotMatch(html, /rel="stylesheet"[^>]+BookingKiosk/);
+  /* El bundle sigue arrancando como siempre. */
+  assert.match(html, /<script type="module" crossorigin src="\/assets\/index-AAAA1111\.js"><\/script>/);
+  assert.throws(() => precargarPantalla(CABEZA_DE_VITE, {}), /nada que precargar/);
+});
+
+test("Vercel sirve reservar.html en /reservar, antes del comodín", () => {
+  const { rewrites } = JSON.parse(leer("vercel.json"));
+  const reservar = rewrites.findIndex((r) => r.source === "/reservar");
+  assert.ok(reservar >= 0, "falta el rewrite de /reservar");
+  assert.equal(rewrites[reservar].destination, "/reservar.html");
+  assert.ok(reservar < rewrites.length - 1, "después del comodín no se usaría nunca");
+  assert.match(leer("prerender.mjs"), /fs\.writeFileSync\(path\.join\(DIST, "reservar\.html"\), reservar\)/);
 });

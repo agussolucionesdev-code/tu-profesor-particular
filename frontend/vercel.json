@@ -26,6 +26,10 @@
       "destination": "/api/preview-proxy?__proxy_path=$1"
     },
     {
+      "source": "/reservar",
+      "destination": "/reservar.html"
+    },
+    {
       "source": "/((?!_vercel).*)",
       "destination": "/app.html"
     }
