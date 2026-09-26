@@ -13,7 +13,9 @@
  * /reservar, /portal y el resto siguen siendo la app de siempre, servidas por
  * `app.html` —el HTML vacío original—; si recibieran el index.html
  * prerenderizado, mostrarían la portada un instante antes de su pantalla (ver
- * el rewrite en vercel.json).
+ * el rewrite en vercel.json). /reservar recibe `reservar.html`: el mismo HTML
+ * vacío, pero bajando el código del kiosco desde el principio
+ * (precargarPantalla).
  *
  * CÓMO: es el mismo camino que el sitio institucional (web/prerender.mjs), con
  * lo que allá se aprendió midiendo:
@@ -201,6 +203,25 @@ export const arrancarDespuesDelPintado = (html, modulosDeLaPortada = []) => {
   );
 };
 
+/* UNA PANTALLA QUE BAJA SU CÓDIGO DESDE EL HTML (reservar.html).
+ *
+ * En las rutas que no se prerenderizan, el código de la pantalla se pedía
+ * recién cuando React la dibujaba: HTML → bundle → dibujo → recién ahí el
+ * kiosco. Con red limitada de verdad (Lighthouse en modo devtools, septiembre
+ * de 2026) ese pedido salía a los ~3,2 s. Precargado en el HTML sale junto con
+ * el bundle. Los módulos van como modulepreload y el CSS como preload (no
+ * frena el primer pintado): cuando el lazy importa la pantalla, Vite agrega la
+ * hoja y el navegador la encuentra ya descargada. */
+export const precargarPantalla = (html, { modulos = [], hojas = [] }) => {
+  const yaPrecargados = new Set([...html.matchAll(/<link rel="modulepreload" crossorigin href="([^"]+)">/g)].map((m) => m[1]));
+  const enlaces = [
+    ...modulos.filter((href) => !yaPrecargados.has(href)).map((href) => `<link rel="modulepreload" crossorigin href="${href}">`),
+    ...hojas.map((href) => `<link rel="preload" as="style" crossorigin href="${href}">`),
+  ];
+  if (!enlaces.length) throw new Error("precargarPantalla: no hay nada que precargar (¿cambió el manifiesto?).");
+  return html.replace("</head>", () => `    ${enlaces.join("\n    ")}\n  </head>`);
+};
+
 /* Las redes. Cada una existe porque su ausencia produjo alguna vez un
    resultado falso en este repo (ver web/prerender.mjs). */
 export const verificar = (markup) => {
@@ -246,6 +267,15 @@ const main = async () => {
      mostrar antes. */
   fs.writeFileSync(path.join(DIST, "app.html"), plantilla);
 
+  /* /reservar: el mismo HTML vacío, pero bajando el kiosco desde el principio
+     (ver precargarPantalla y el rewrite en vercel.json). */
+  const kiosco = recursosDe(manifiesto, "src/components/BookingKiosk.jsx");
+  const reservar = precargarPantalla(plantilla, {
+    modulos: kiosco.modulos.map((m) => `/${m}`),
+    hojas: kiosco.hojas.map((h) => `/${h}`),
+  });
+  fs.writeFileSync(path.join(DIST, "reservar.html"), reservar);
+
   const { default: App } = await compilar(path.join(RAIZ, "src/App.jsx"), urlDe);
   const { construirGrafo } = await compilar(path.join(RAIZ, "src/components/seo/grafoEstructurado.js"), urlDe);
   const markup = await renderizarPortada(App);
@@ -273,7 +303,7 @@ const main = async () => {
   /* El manifiesto sólo le sirve a este script: no se publica. */
   fs.rmSync(path.join(DIST, ".vite"), { recursive: true, force: true });
   console.log(
-    `Prerender de la portada: ${Math.round(html.length / 1024)} KB, ${portada.hojas.length} hojas y ${portada.modulos.length} módulos propios; tema.js en línea en index.html y app.html.`,
+    `Prerender de la portada: ${Math.round(html.length / 1024)} KB, ${portada.hojas.length} hojas y ${portada.modulos.length} módulos propios; tema.js en línea en index.html, app.html y reservar.html (${kiosco.modulos.length} módulos y ${kiosco.hojas.length} hojas del kiosco precargados).`,
   );
 };
 
