@@ -88,7 +88,7 @@ const Home = () => {
                 (GPT-6 Astra) de por medio. La bajada dice qué hace él, no qué le
                 pasa al chico: el titular ya nombró el problema. */}
             <p className="lead hero-lead" data-entrada="up" style={{ "--i": 2 }}>
-              Soy {BRAND.person}. Hace {BRAND.yearsTeaching} años doy clases
+              Soy {BRAND.person}. Hace más de {BRAND.yearsTeaching} años doy clases
               particulares. Reviso qué le está costando y preparo la clase para
               trabajar sobre eso, con explicaciones y práctica.
             </p>

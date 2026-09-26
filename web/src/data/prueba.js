@@ -152,7 +152,7 @@ export const HECHOS = [
       "Para otra materia, y sin que nadie los atara: se fueron, y eligieron volver.",
   },
   {
-    dato: "Más de nueve años enseñando",
+    dato: "Más de ocho años enseñando",
     detalle:
       "Empecé entre los diecisiete y los dieciocho, un poco antes de recibirme de técnico químico. La cuenta la puede hacer cualquiera.",
   },

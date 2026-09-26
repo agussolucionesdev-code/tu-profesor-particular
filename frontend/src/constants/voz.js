@@ -33,10 +33,11 @@
    sitio institucional ya decía otra cosa. Los dos dominios se contradecían en producción sobre
    hace cuánto enseña — que es exactamente el problema de tener dos fuentes de verdad,
    en el dato más fácil de verificar que tiene la marca.
-   Nueve sale de dos datos que dio él: empezó a dar clases FORMALMENTE entre los 17 y
-   los 18, y hoy tiene 27. Diez sería redondear para arriba, y en el dato más fácil de
-   contrastar que tiene la marca no se redondea para arriba. */
-export const ANOS_ENSENANDO = 9;
+   Ocho, y se lee «más de 8»: lo decidió Agustín el 2026-09-26, cuando lo puso así en
+   la bio de Instagram. La cuenta de antes daba 9 (empezó FORMALMENTE entre los 17 y
+   los 18, y hoy tiene 27); él prefiere la cifra conservadora, y en el dato más fácil
+   de contrastar que tiene la marca no se redondea para arriba. */
+export const ANOS_ENSENANDO = 8;
 
 /* Lo que dicen sus alumnos de sí mismos. El material más potente del sitio: quien lo
    lee ya se lo escuchó decir a su hijo. */
