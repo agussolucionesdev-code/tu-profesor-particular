@@ -88,7 +88,7 @@ const PERFILES = [
     id: "linkedin",
     label: "LinkedIn",
     detalle: "Agustín Elías Sosa",
-    href: "https://www.linkedin.com/in/agustin-sosa",
+    href: "https://www.linkedin.com/in/agustineliassosa/",
   },
   /* Cuando exista la página: descomentar y poner su URL. El pie ya tiene el logo
      oficial y el estilo listos, así que aparece sola. */

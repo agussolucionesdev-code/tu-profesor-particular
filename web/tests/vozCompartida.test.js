@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BRAND } from "../src/data/site.js";
+import { BRAND, SOCIAL } from "../src/data/site.js";
 import {
   A_UNA_MADRE,
   COMO_EXPLICO,
@@ -15,6 +15,7 @@ import {
   METODO_CITA,
   NO_PUEDO_AYUDARTE,
 } from "../../frontend/src/constants/voz.js";
+import { SOCIAL_PROFILES } from "../../frontend/src/constants/contactChannels.js";
 
 /* LOS DOS DOMINIOS TIENEN QUE DECIR LO MISMO.
  *
@@ -49,6 +50,27 @@ test("los dos dominios dicen los mismos años de experiencia", () => {
   // Ocho, y se lee «más de 8»: lo decidió Agustín el 2026-09-26, cuando lo puso así en
   // la bio de Instagram. Los tres canales tienen que decir el mismo número.
   assert.equal(BRAND.yearsTeaching, 8);
+});
+
+test("los dos dominios publican el LinkedIn que Agustín confirmó como suyo", () => {
+  /* Los dos sitios publicaban `linkedin.com/in/agustin-sosa`, que no es el enlace que
+     Agustín confirmó como suyo el 2026-10-07 (`agustineliassosa`, con la barra final
+     tal como él lo pasó). Es el mismo error que ya hubo con Instagram: el perfil de
+     otra persona es una URL válida, así que no falló el build ni ningún test.
+
+     Se mide contra el literal y no sólo entre los dos sitios: dos copias que
+     coinciden pueden estar equivocadas las dos, y eso fue exactamente lo que pasó.
+     Cambiar de perfil a propósito sigue siendo posible; lo que no puede pasar es que
+     cambie sin que alguien lea este diff. */
+  const LINKEDIN_DE_AGUSTIN = "https://www.linkedin.com/in/agustineliassosa/";
+  const enTurnos = SOCIAL_PROFILES.find((perfil) => perfil.id === "linkedin")?.href;
+
+  assert.equal(
+    SOCIAL.linkedin,
+    LINKEDIN_DE_AGUSTIN,
+    "el sitio institucional no publica el LinkedIn de Agustín",
+  );
+  assert.equal(enTurnos, LINKEDIN_DE_AGUSTIN, "turnos no publica el LinkedIn de Agustín");
 });
 
 test("las frases de los alumnos son idénticas en los dos proyectos", () => {
