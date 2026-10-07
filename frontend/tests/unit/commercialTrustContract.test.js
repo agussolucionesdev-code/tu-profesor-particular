@@ -58,7 +58,7 @@ test("renders only explicitly configured social profiles", () => {
   for (const href of [
     "https://facebook.com/tu-profesor-particular",
     "https://www.instagram.com/tu_profesor_particular/",
-    "https://linkedin.com/in/agustin-sosa",
+    "https://www.linkedin.com/in/agustineliassosa/",
   ]) {
     assert.equal(isConfiguredSocialUrl(href), true, `${href} must stay visible`);
   }

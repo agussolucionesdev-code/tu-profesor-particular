@@ -59,7 +59,7 @@ export const CONTACT = {
    cuando la página exista: un enlace a una página vacía resta. */
 export const SOCIAL = {
   instagram: "https://www.instagram.com/tuprofesor.ar/",
-  linkedin: "https://www.linkedin.com/in/agustin-sosa",
+  linkedin: "https://www.linkedin.com/in/agustineliassosa/",
 };
 
 export const waLink = (message) =>
